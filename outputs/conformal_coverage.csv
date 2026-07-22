@@ -1,0 +1,3 @@
+target,method,target_coverage,empirical_coverage,avg_interval_width,n_test
+SOH (Stacking-Ridge),MAPIE.SplitConformalRegressor,0.9,0.951473136915078,4.643053867868218,3462
+RUL (joint-adaptive),MAPIE.SplitConformalRegressor,0.9,0.8887926054303871,871.4168090820312,3462

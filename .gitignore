@@ -1,0 +1,27 @@
+# Raw datasets (~11GB) - NASA/CALCE/MIT source files, not meant for git.
+# See STATUS.md / OVERNIGHT_LOG.md for exact download sources/instructions
+# to regenerate data/processed/ from scratch.
+data/raw/
+
+# Raw data file formats, wherever they might appear
+*.mat
+*.h5
+*.hdf5
+*.zip
+
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Claude Code harness internals - not project content
+.claude/
+
+# Catch-all safety net: nothing over 50MB should ever be committed.
+# (data/processed/ and models/ are all well under this - largest tracked
+# file is ~9MB - so this line should never actually match anything, but
+# keeps future large artifacts from being added by accident.)

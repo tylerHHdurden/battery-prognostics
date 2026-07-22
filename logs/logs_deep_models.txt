@@ -1,0 +1,118 @@
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[deep] loaded 32 batteries in 99.0s
+[deep] fit batteries: 21, val batteries: 5, test batteries: 6
+[deep] fit cycles=14872, val cycles=3973, test cycles=5208
+[deep/VLSTM] epoch   0 train_mse=0.8902 val_mse=1.8960
+[deep/VLSTM] epoch   1 train_mse=0.5745 val_mse=1.1321
+[deep/VLSTM] epoch   2 train_mse=0.5039 val_mse=0.9665
+[deep/VLSTM] epoch   3 train_mse=0.4901 val_mse=0.9278
+[deep/VLSTM] epoch   4 train_mse=0.4762 val_mse=0.8958
+[deep/VLSTM] epoch   5 train_mse=0.4656 val_mse=0.8579
+[deep/VLSTM] epoch   6 train_mse=0.4553 val_mse=0.9238
+[deep/VLSTM] epoch   7 train_mse=0.4143 val_mse=0.6263
+[deep/VLSTM] epoch   8 train_mse=0.2955 val_mse=0.5770
+[deep/VLSTM] epoch   9 train_mse=0.2502 val_mse=0.6216
+[deep/VLSTM] epoch  10 train_mse=0.2324 val_mse=0.5129
+[deep/VLSTM] epoch  11 train_mse=0.2288 val_mse=0.4953
+[deep/VLSTM] epoch  12 train_mse=0.2224 val_mse=0.5233
+[deep/VLSTM] epoch  13 train_mse=0.2162 val_mse=0.5634
+[deep/VLSTM] epoch  14 train_mse=0.2138 val_mse=0.4788
+[deep/VLSTM] epoch  15 train_mse=0.2097 val_mse=0.5021
+[deep/VLSTM] epoch  16 train_mse=0.2087 val_mse=0.4787
+[deep/VLSTM] epoch  17 train_mse=0.2054 val_mse=0.5133
+[deep/VLSTM] epoch  18 train_mse=0.2008 val_mse=0.4700
+[deep/VLSTM] epoch  19 train_mse=0.1997 val_mse=0.5040
+[deep/VLSTM] epoch  20 train_mse=0.1973 val_mse=0.5224
+[deep/VLSTM] epoch  21 train_mse=0.1890 val_mse=0.4585
+[deep/VLSTM] epoch  22 train_mse=0.1810 val_mse=0.4596
+[deep/VLSTM] epoch  23 train_mse=0.1781 val_mse=0.4291
+[deep/VLSTM] epoch  24 train_mse=0.1707 val_mse=0.4321
+[deep/VLSTM] epoch  25 train_mse=0.1527 val_mse=0.4244
+[deep/VLSTM] epoch  26 train_mse=0.4065 val_mse=0.8800
+[deep/VLSTM] epoch  27 train_mse=0.4748 val_mse=0.8697
+[deep/VLSTM] epoch  28 train_mse=0.4613 val_mse=0.8703
+[deep/VLSTM] epoch  29 train_mse=0.4263 val_mse=0.8060
+[deep/VLSTM] epoch  30 train_mse=0.2700 val_mse=0.3863
+[deep/VLSTM] epoch  31 train_mse=0.1814 val_mse=0.4229
+[deep/VLSTM] epoch  32 train_mse=0.1485 val_mse=0.3907
+[deep/VLSTM] epoch  33 train_mse=0.1286 val_mse=0.4067
+[deep/VLSTM] epoch  34 train_mse=0.1323 val_mse=0.4200
+[deep/VLSTM] epoch  35 train_mse=0.1116 val_mse=0.3734
+[deep/VLSTM] epoch  36 train_mse=0.1206 val_mse=0.3674
+[deep/VLSTM] epoch  37 train_mse=0.1018 val_mse=0.3476
+[deep/VLSTM] epoch  38 train_mse=0.0905 val_mse=0.3098
+[deep/VLSTM] epoch  39 train_mse=0.1025 val_mse=0.3599
+[deep/CNNLSTM] epoch   0 train_mse=0.8852 val_mse=2.8391
+[deep/CNNLSTM] epoch   1 train_mse=0.8231 val_mse=2.8477
+[deep/CNNLSTM] epoch   2 train_mse=0.7927 val_mse=2.8872
+[deep/CNNLSTM] epoch   3 train_mse=0.7864 val_mse=2.8782
+[deep/CNNLSTM] epoch   4 train_mse=0.7540 val_mse=2.8846
+[deep/CNNLSTM] epoch   5 train_mse=0.7263 val_mse=2.8710
+[deep/CNNLSTM] epoch   6 train_mse=0.6991 val_mse=2.8816
+[deep/CNNLSTM] epoch   7 train_mse=0.7390 val_mse=2.8728
+[deep/CNNLSTM] epoch   8 train_mse=0.6735 val_mse=2.9048
+[deep/CNNLSTM] early stopping at epoch 8
+[deep/PiFormer] epoch   0 train_mse=1.0030 val_mse=2.8391
+[deep/PiFormer] epoch   1 train_mse=0.8301 val_mse=1.6618
+[deep/PiFormer] epoch   2 train_mse=0.5342 val_mse=1.5910
+[deep/PiFormer] epoch   3 train_mse=0.4129 val_mse=1.2197
+[deep/PiFormer] epoch   4 train_mse=0.3535 val_mse=1.2348
+[deep/PiFormer] epoch   5 train_mse=0.3193 val_mse=0.9904
+[deep/PiFormer] epoch   6 train_mse=0.2878 val_mse=1.0424
+[deep/PiFormer] epoch   7 train_mse=0.2722 val_mse=0.9274
+[deep/PiFormer] epoch   8 train_mse=0.2501 val_mse=0.8453
+[deep/PiFormer] epoch   9 train_mse=0.2342 val_mse=0.6777
+[deep/PiFormer] epoch  10 train_mse=0.2220 val_mse=0.7231
+[deep/PiFormer] epoch  11 train_mse=0.2088 val_mse=0.5882
+[deep/PiFormer] epoch  12 train_mse=0.1971 val_mse=0.5874
+[deep/PiFormer] epoch  13 train_mse=0.1887 val_mse=0.3966
+[deep/PiFormer] epoch  14 train_mse=0.1740 val_mse=0.4789
+[deep/PiFormer] epoch  15 train_mse=0.1630 val_mse=0.2845
+[deep/PiFormer] epoch  16 train_mse=0.1417 val_mse=0.3497
+[deep/PiFormer] epoch  17 train_mse=0.1231 val_mse=0.5066
+[deep/PiFormer] epoch  18 train_mse=0.1158 val_mse=0.4165
+[deep/PiFormer] epoch  19 train_mse=0.0973 val_mse=0.2312
+[deep/PiFormer] epoch  20 train_mse=0.0906 val_mse=0.2967
+[deep/PiFormer] epoch  21 train_mse=0.0894 val_mse=0.4258
+[deep/PiFormer] epoch  22 train_mse=0.0811 val_mse=0.3398
+[deep/PiFormer] epoch  23 train_mse=0.0722 val_mse=0.3393
+[deep/PiFormer] epoch  24 train_mse=0.0715 val_mse=0.2832
+[deep/PiFormer] epoch  25 train_mse=0.0715 val_mse=0.3566
+[deep/PiFormer] epoch  26 train_mse=0.0698 val_mse=0.3192
+[deep/PiFormer] epoch  27 train_mse=0.0652 val_mse=0.2675
+[deep/PiFormer] early stopping at epoch 27
+[deep] VLSTM TEST RMSE=2.6940 MAE=1.6340 R2=0.6897
+[deep] CNNLSTM TEST RMSE=5.0055 MAE=3.9518 R2=-0.0712
+[deep] PiFormer TEST RMSE=2.4905 MAE=1.5709 R2=0.7348
+[deep] ALL DONE in 3874.0s

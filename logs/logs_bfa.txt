@@ -1,0 +1,16 @@
+[bfa] loaded hi_table: (26996, 22)
+[bfa] imputed 8829 NaN cells (median-per-column, mostly CALCE MATC/MATD/MATDL)
+[BFA] baseline RMSE (all 16 features): 3.8969
+[BFA] iter   0: best_fitness=0.2238 best_rmse=3.0309 n_selected=10/16
+[BFA] iter  10: best_fitness=0.2472 best_rmse=2.9461 n_selected=7/16
+[BFA] iter  20: best_fitness=0.2510 best_rmse=2.9311 n_selected=7/16
+[BFA] iter  30: best_fitness=0.2510 best_rmse=2.9311 n_selected=7/16
+[BFA] iter  40: best_fitness=0.2510 best_rmse=2.9311 n_selected=7/16
+[BFA] iter  50: best_fitness=0.2608 best_rmse=2.8926 n_selected=7/16
+[BFA] iter  60: best_fitness=0.2680 best_rmse=2.8641 n_selected=7/16
+[BFA] iter  70: best_fitness=0.2680 best_rmse=2.8641 n_selected=7/16
+[BFA] iter  80: best_fitness=0.2680 best_rmse=2.8641 n_selected=7/16
+[BFA] iter  90: best_fitness=0.2680 best_rmse=2.8641 n_selected=7/16
+[BFA] iter  99: best_fitness=0.2680 best_rmse=2.8641 n_selected=7/16
+[BFA] DONE. Selected 7/16 features: ['ICHV', 'SCV', 'VDEDT', 'VIECT', 'MATC', 'MATD', 'TEVI']
+[bfa] DONE. Selected features saved to bfa_selected_features.txt

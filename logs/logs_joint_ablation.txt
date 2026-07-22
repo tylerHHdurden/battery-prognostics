@@ -1,0 +1,82 @@
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[joint] fit=14872 val=3973 test=5208 (loaded in 132.1s)
+
+[joint] === training variant: fixed_balanced ===
+[joint/fixed_balanced] epoch  0 train=0.9198 val_soh=2.8446 val_rul=0.4918 alpha=0.500 beta=0.500
+[joint/fixed_balanced] epoch  5 train=0.7479 val_soh=2.8326 val_rul=0.4840 alpha=0.500 beta=0.500
+[joint/fixed_balanced] epoch 10 train=0.6952 val_soh=2.8130 val_rul=0.4489 alpha=0.500 beta=0.500
+[joint/fixed_balanced] epoch 15 train=0.5346 val_soh=2.8447 val_rul=0.5374 alpha=0.500 beta=0.500
+[joint/fixed_balanced] epoch 20 train=0.4230 val_soh=2.8412 val_rul=0.5580 alpha=0.500 beta=0.500
+[joint/fixed_balanced] epoch 24 train=0.3832 val_soh=2.8558 val_rul=0.6815 alpha=0.500 beta=0.500
+[joint/fixed_balanced] TEST SOH: {'rmse': 4.943991920155956, 'mae': 3.8052117824554443, 'r2': -0.044986724853515625}
+[joint/fixed_balanced] TEST RUL: {'rmse': 337.029324577254, 'mae': 292.1734313964844, 'r2': -0.009758472442626953}
+
+[joint] === training variant: soh_only ===
+[joint/soh_only] epoch  0 train=0.9007 val_soh=2.8646 val_rul=0.4568 alpha=1.000 beta=0.000
+[joint/soh_only] epoch  5 train=0.7408 val_soh=2.8906 val_rul=0.4514 alpha=1.000 beta=0.000
+[joint/soh_only] epoch 10 train=0.6712 val_soh=2.8791 val_rul=0.4454 alpha=1.000 beta=0.000
+[joint/soh_only] epoch 15 train=0.5972 val_soh=2.8692 val_rul=0.4436 alpha=1.000 beta=0.000
+[joint/soh_only] epoch 20 train=0.5810 val_soh=2.8800 val_rul=0.4403 alpha=1.000 beta=0.000
+[joint/soh_only] epoch 24 train=0.5886 val_soh=2.8900 val_rul=0.4449 alpha=1.000 beta=0.000
+[joint/soh_only] TEST SOH: {'rmse': 4.873988511226545, 'mae': 3.577407121658325, 'r2': -0.015603780746459961}
+[joint/soh_only] TEST RUL: {'rmse': 350.33747123309547, 'mae': 292.7037048339844, 'r2': -0.09107673168182373}
+
+[joint] === training variant: rul_only ===
+[joint/rul_only] epoch  0 train=0.9549 val_soh=2.9969 val_rul=0.4962 alpha=0.000 beta=1.000
+[joint/rul_only] epoch  5 train=0.8697 val_soh=2.9803 val_rul=0.5299 alpha=0.000 beta=1.000
+[joint/rul_only] epoch 10 train=0.5066 val_soh=2.9559 val_rul=0.4915 alpha=0.000 beta=1.000
+[joint/rul_only] epoch 15 train=0.8456 val_soh=3.0325 val_rul=0.5170 alpha=0.000 beta=1.000
+[joint/rul_only] epoch 20 train=0.8539 val_soh=3.0357 val_rul=0.6178 alpha=0.000 beta=1.000
+[joint/rul_only] epoch 24 train=0.7843 val_soh=3.0065 val_rul=0.5198 alpha=0.000 beta=1.000
+[joint/rul_only] TEST SOH: {'rmse': 4.850080328207305, 'mae': 3.17144513130188, 'r2': -0.0056645870208740234}
+[joint/rul_only] TEST RUL: {'rmse': 337.68929876441155, 'mae': 288.1335144042969, 'r2': -0.013717055320739746}
+
+[joint] === training variant: adaptive ===
+[joint/adaptive] epoch  0 train=0.9130 val_soh=2.8931 val_rul=0.4952 alpha=0.559 beta=0.533
+[joint/adaptive] epoch  5 train=0.7431 val_soh=2.8142 val_rul=0.4677 alpha=0.703 beta=0.589
+[joint/adaptive] epoch 10 train=0.6154 val_soh=2.9071 val_rul=0.6144 alpha=0.773 beta=0.693
+[joint/adaptive] epoch 15 train=0.3621 val_soh=2.8537 val_rul=0.5097 alpha=0.883 beta=1.007
+[joint/adaptive] epoch 20 train=0.2529 val_soh=2.8541 val_rul=0.5388 alpha=0.974 beta=1.122
+[joint/adaptive] epoch 24 train=0.2911 val_soh=2.8784 val_rul=0.6255 alpha=0.998 beta=1.081
+[joint/adaptive] TEST SOH: {'rmse': 4.891080109989407, 'mae': 3.642860174179077, 'r2': -0.022739052772521973}
+[joint/adaptive] TEST RUL: {'rmse': 335.6540490222038, 'mae': 290.07086181640625, 'r2': -0.001534581184387207}
+
+[joint] === ABLATION SUMMARY ===
+target                 RUL       SOH
+variant                             
+adaptive        335.654049  4.891080
+fixed_balanced  337.029325  4.943992
+rul_only        337.689299  4.850080
+soh_only        350.337471  4.873989
+[joint] ALL DONE in 1308.3s

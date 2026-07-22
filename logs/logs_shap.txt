@@ -1,0 +1,34 @@
+
+[shap] === TreeSHAP: XGBoost base learner ===
+[shap] XGBoost (base learner) TreeSHAP mean|SHAP| ranking of BFA-selected features:
+    SCV: 2.2661
+    VIECT: 1.9343
+    TEVI: 0.9051
+    ICHV: 0.2442
+    MATC: 0.1991
+    MATD: 0.1359
+    VDEDT: 0.0660
+
+[shap] === TreeSHAP: Stacking-XGBoost meta-learner ===
+[shap] Stacking-XGBoost meta-learner TreeSHAP ranking of base learners:
+    pred_XGBoost: 4.1386
+    pred_PiFormer: 0.0026
+    pred_VLSTM: 0.0007
+    pred_CNNLSTM: 0.0000
+
+[shap] === Deep models: DeepSHAP (fallback KernelSHAP) ===
+[shap] VLSTM: DeepSHAP succeeded.
+[shap] VLSTM: fraction of |SHAP| mass in [3.55,3.8]V = 0.518
+[shap] CNNLSTM: DeepSHAP succeeded.
+[shap] CNNLSTM: fraction of |SHAP| mass in [3.55,3.8]V = 0.000
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\shap\explainers\_deep\deep_pytorch.py:255: UserWarning: unrecognized nn.Module: LayerNorm
+  warnings.warn(f"unrecognized nn.Module: {module_type}")
+[shap] PiFormer: DeepSHAP succeeded.
+[shap] PiFormer: fraction of |SHAP| mass in [3.55,3.8]V = 0.040
+
+[shap] === METHOD USED PER MODEL ===
+   model shap_method  frac_mass_3.55_3.8V
+   VLSTM    DeepSHAP             0.518274
+ CNNLSTM    DeepSHAP             0.000031
+PiFormer    DeepSHAP             0.040459
+[shap] DONE

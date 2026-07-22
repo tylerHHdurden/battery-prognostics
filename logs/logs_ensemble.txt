@@ -1,0 +1,13 @@
+[ensemble] train: xgb rows=18845, deep rows=18845, merged (inner) rows=18845
+[ensemble] test: xgb rows=5208, deep rows=5208, merged (inner) rows=5208
+[ensemble] Ridge meta-learner coefficients: {'pred_XGBoost': np.float64(1.011), 'pred_VLSTM': np.float64(-0.007), 'pred_CNNLSTM': np.float64(-0.036), 'pred_PiFormer': np.float64(-0.004)}, intercept=3.346
+
+[ensemble] === FULL COMPARISON TABLE (test set, SOH%) ===
+           model     rmse      mae        r2
+         XGBoost 1.478458 0.990344  0.906551
+  Stacking-Ridge 1.479927 0.989102  0.906365
+Stacking-XGBoost 1.490293 0.991743  0.905049
+        PiFormer 2.490530 1.570884  0.734821
+           VLSTM 2.694008 1.633977  0.689721
+         CNNLSTM 5.005509 3.951807 -0.071154
+[ensemble] DONE

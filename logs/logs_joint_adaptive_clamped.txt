@@ -1,0 +1,53 @@
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[joint] fit=14872 val=3973 test=5208 (loaded in 157.4s)
+
+[joint] === training variant: adaptive ===
+[joint/adaptive] epoch  0 train=0.5530 val_soh=1.1951 val_rul=0.5845 alpha=0.686 beta=0.747
+[joint/adaptive] epoch  5 train=-0.8726 val_soh=1.0737 val_rul=0.8704 alpha=2.028 beta=2.028
+[joint/adaptive] epoch 10 train=-0.9718 val_soh=0.9627 val_rul=0.8198 alpha=2.028 beta=2.028
+[joint/adaptive] epoch 15 train=-1.0774 val_soh=1.2605 val_rul=1.3353 alpha=2.028 beta=2.028
+[joint/adaptive] epoch 20 train=-1.0561 val_soh=1.1146 val_rul=1.1108 alpha=2.028 beta=2.028
+[joint/adaptive] epoch 24 train=-1.1613 val_soh=1.2050 val_rul=1.2956 alpha=2.028 beta=2.028
+[joint/adaptive] TEST SOH: {'rmse': 3.9179700887569373, 'mae': 2.9191105365753174, 'r2': 0.3437376022338867}
+[joint/adaptive] TEST RUL: {'rmse': 252.79851630053133, 'mae': 192.53335571289062, 'r2': 0.43189162015914917}
+[joint] merged re-run of ['adaptive'] into existing ablation tables (kept ['fixed_balanced', 'soh_only', 'rul_only'] from the prior run)
+
+[joint] === ABLATION SUMMARY ===
+target                 RUL       SOH
+variant                             
+adaptive        252.798516  3.917970
+fixed_balanced  253.731696  3.694565
+rul_only        263.828558  4.931641
+soh_only        330.292259  4.758906
+[joint] ALL DONE in 1348.2s

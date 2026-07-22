@@ -1,0 +1,142 @@
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[deep] loaded 32 batteries in 441.0s
+[deep] fit batteries: 21, val batteries: 5, test batteries: 6
+[deep] fit cycles=14872, val cycles=3973, test cycles=5208
+[deep] channel 0 (V_t) norm: clip=[2,3.62] mean=2.96 std=0.528
+[deep] channel 1 (I_t) norm: clip=[-4,2.01] mean=-2.09 std=1.97
+[deep] channel 2 (T_t) norm: clip=[29,40.4] mean=34.1 std=2.42
+[deep] channel 3 (dQdV) norm: clip=[-1.16,0.0021] mean=-0.0256 std=0.126
+[deep] channel 4 (dVdQ) norm: clip=[-5.38e+04,4.99e+03] mean=-2.5e+03 std=7.8e+03
+[deep] channel 5 (dIdV) norm: clip=[-45.3,41.1] mean=1.8 std=10.6
+[deep/VLSTM] epoch   0 train_mse=0.8463 val_mse=2.7894
+[deep/VLSTM] epoch   1 train_mse=0.6579 val_mse=1.9225
+[deep/VLSTM] epoch   2 train_mse=0.5259 val_mse=1.0470
+[deep/VLSTM] epoch   3 train_mse=0.3705 val_mse=0.6273
+[deep/VLSTM] epoch   4 train_mse=0.2193 val_mse=0.6496
+[deep/VLSTM] epoch   5 train_mse=0.1613 val_mse=0.5900
+[deep/VLSTM] epoch   6 train_mse=0.1435 val_mse=0.5288
+[deep/VLSTM] epoch   7 train_mse=0.1362 val_mse=0.5024
+[deep/VLSTM] epoch   8 train_mse=0.1348 val_mse=0.4410
+[deep/VLSTM] epoch   9 train_mse=0.1252 val_mse=0.4214
+[deep/VLSTM] epoch  10 train_mse=0.1210 val_mse=0.4823
+[deep/VLSTM] epoch  11 train_mse=0.1159 val_mse=0.4132
+[deep/VLSTM] epoch  12 train_mse=0.0978 val_mse=0.4154
+[deep/VLSTM] epoch  13 train_mse=0.0835 val_mse=0.3299
+[deep/VLSTM] epoch  14 train_mse=0.0856 val_mse=0.3578
+[deep/VLSTM] epoch  15 train_mse=0.0814 val_mse=0.3176
+[deep/VLSTM] epoch  16 train_mse=0.0759 val_mse=0.2958
+[deep/VLSTM] epoch  17 train_mse=0.1656 val_mse=0.4701
+[deep/VLSTM] epoch  18 train_mse=0.1211 val_mse=0.3585
+[deep/VLSTM] epoch  19 train_mse=0.0952 val_mse=0.2898
+[deep/VLSTM] epoch  20 train_mse=0.0766 val_mse=0.2957
+[deep/VLSTM] epoch  21 train_mse=0.0709 val_mse=0.2839
+[deep/VLSTM] epoch  22 train_mse=0.0743 val_mse=0.3110
+[deep/VLSTM] epoch  23 train_mse=0.0696 val_mse=0.3011
+[deep/VLSTM] epoch  24 train_mse=0.0692 val_mse=0.2825
+[deep/VLSTM] epoch  25 train_mse=0.0665 val_mse=0.2894
+[deep/VLSTM] epoch  26 train_mse=0.0657 val_mse=0.2987
+[deep/VLSTM] epoch  27 train_mse=0.0663 val_mse=0.3007
+[deep/VLSTM] epoch  28 train_mse=0.0625 val_mse=0.3246
+[deep/VLSTM] epoch  29 train_mse=0.0645 val_mse=0.2761
+[deep/VLSTM] epoch  30 train_mse=0.0604 val_mse=0.2879
+[deep/VLSTM] epoch  31 train_mse=0.0676 val_mse=0.3035
+[deep/VLSTM] epoch  32 train_mse=0.0610 val_mse=0.2859
+[deep/VLSTM] epoch  33 train_mse=0.0595 val_mse=0.3176
+[deep/VLSTM] epoch  34 train_mse=0.0634 val_mse=0.2691
+[deep/VLSTM] epoch  35 train_mse=0.0602 val_mse=0.3064
+[deep/VLSTM] epoch  36 train_mse=0.0558 val_mse=0.2917
+[deep/VLSTM] epoch  37 train_mse=0.0570 val_mse=0.2728
+[deep/VLSTM] epoch  38 train_mse=0.0550 val_mse=0.2919
+[deep/VLSTM] epoch  39 train_mse=0.0542 val_mse=0.2789
+[deep/CNNLSTM] epoch   0 train_mse=0.6651 val_mse=2.2462
+[deep/CNNLSTM] epoch   1 train_mse=0.3427 val_mse=1.8898
+[deep/CNNLSTM] epoch   2 train_mse=0.2898 val_mse=1.9265
+[deep/CNNLSTM] epoch   3 train_mse=0.2744 val_mse=1.9867
+[deep/CNNLSTM] epoch   4 train_mse=0.2506 val_mse=1.4395
+[deep/CNNLSTM] epoch   5 train_mse=0.1976 val_mse=1.7226
+[deep/CNNLSTM] epoch   6 train_mse=0.1640 val_mse=1.0290
+[deep/CNNLSTM] epoch   7 train_mse=0.1451 val_mse=1.1015
+[deep/CNNLSTM] epoch   8 train_mse=0.1184 val_mse=1.1295
+[deep/CNNLSTM] epoch   9 train_mse=0.1052 val_mse=1.3579
+[deep/CNNLSTM] epoch  10 train_mse=0.0842 val_mse=0.9952
+[deep/CNNLSTM] epoch  11 train_mse=0.0963 val_mse=1.3723
+[deep/CNNLSTM] epoch  12 train_mse=0.0868 val_mse=0.9377
+[deep/CNNLSTM] epoch  13 train_mse=0.0741 val_mse=1.5471
+[deep/CNNLSTM] epoch  14 train_mse=0.0776 val_mse=1.0033
+[deep/CNNLSTM] epoch  15 train_mse=0.0702 val_mse=1.0088
+[deep/CNNLSTM] epoch  16 train_mse=0.0713 val_mse=0.9034
+[deep/CNNLSTM] epoch  17 train_mse=0.0627 val_mse=0.8820
+[deep/CNNLSTM] epoch  18 train_mse=0.0665 val_mse=1.0426
+[deep/CNNLSTM] epoch  19 train_mse=0.0632 val_mse=0.9316
+[deep/CNNLSTM] epoch  20 train_mse=0.0636 val_mse=1.2354
+[deep/CNNLSTM] epoch  21 train_mse=0.0595 val_mse=0.9708
+[deep/CNNLSTM] epoch  22 train_mse=0.0592 val_mse=0.9519
+[deep/CNNLSTM] epoch  23 train_mse=0.0527 val_mse=0.8306
+[deep/CNNLSTM] epoch  24 train_mse=0.0528 val_mse=0.8418
+[deep/CNNLSTM] epoch  25 train_mse=0.0887 val_mse=0.7331
+[deep/CNNLSTM] epoch  26 train_mse=0.0600 val_mse=0.8651
+[deep/CNNLSTM] epoch  27 train_mse=0.0525 val_mse=1.0139
+[deep/CNNLSTM] epoch  28 train_mse=0.0487 val_mse=0.9225
+[deep/CNNLSTM] epoch  29 train_mse=0.0453 val_mse=0.8967
+[deep/CNNLSTM] epoch  30 train_mse=0.0457 val_mse=0.9901
+[deep/CNNLSTM] epoch  31 train_mse=0.0554 val_mse=0.8718
+[deep/CNNLSTM] epoch  32 train_mse=0.0475 val_mse=0.9094
+[deep/CNNLSTM] epoch  33 train_mse=0.0473 val_mse=1.0408
+[deep/CNNLSTM] early stopping at epoch 33
+[deep/PiFormer] epoch   0 train_mse=0.4019 val_mse=1.0323
+[deep/PiFormer] epoch   1 train_mse=0.1347 val_mse=0.9995
+[deep/PiFormer] epoch   2 train_mse=0.0754 val_mse=0.7286
+[deep/PiFormer] epoch   3 train_mse=0.0626 val_mse=0.6539
+[deep/PiFormer] epoch   4 train_mse=0.0571 val_mse=0.6673
+[deep/PiFormer] epoch   5 train_mse=0.0507 val_mse=0.8709
+[deep/PiFormer] epoch   6 train_mse=0.0426 val_mse=0.6776
+[deep/PiFormer] epoch   7 train_mse=0.0391 val_mse=0.6107
+[deep/PiFormer] epoch   8 train_mse=0.0363 val_mse=0.5031
+[deep/PiFormer] epoch   9 train_mse=0.0356 val_mse=0.5900
+[deep/PiFormer] epoch  10 train_mse=0.0335 val_mse=0.6196
+[deep/PiFormer] epoch  11 train_mse=0.0332 val_mse=0.5298
+[deep/PiFormer] epoch  12 train_mse=0.0325 val_mse=0.4837
+[deep/PiFormer] epoch  13 train_mse=0.0327 val_mse=0.5253
+[deep/PiFormer] epoch  14 train_mse=0.0270 val_mse=0.5925
+[deep/PiFormer] epoch  15 train_mse=0.0344 val_mse=0.5079
+[deep/PiFormer] epoch  16 train_mse=0.0274 val_mse=0.5051
+[deep/PiFormer] epoch  17 train_mse=0.0294 val_mse=0.5631
+[deep/PiFormer] epoch  18 train_mse=0.0245 val_mse=0.6281
+[deep/PiFormer] epoch  19 train_mse=0.0234 val_mse=0.5889
+[deep/PiFormer] epoch  20 train_mse=0.0222 val_mse=0.5922
+[deep/PiFormer] early stopping at epoch 20
+[deep] VLSTM TEST RMSE=2.1308 MAE=1.5641 R2=0.8059
+[deep] CNNLSTM TEST RMSE=3.9483 MAE=2.9264 R2=0.3335
+[deep] PiFormer TEST RMSE=2.9930 MAE=1.9275 R2=0.6170
+[deep] ALL DONE in 6507.7s
