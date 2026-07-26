@@ -1,0 +1,16 @@
+[bagging] seed=42: {'rmse': 1.392057601367466, 'mae': 0.9593311761358876, 'r2': 0.9171543527393436}
+[bagging] seed=0: {'rmse': 1.4874477954836478, 'mae': 0.986863807018498, 'r2': 0.9054114108298996}
+[bagging] seed=1: {'rmse': 1.366588717347974, 'mae': 0.9338653927752344, 'r2': 0.9201580850259063}
+[bagging] seed=7: {'rmse': 1.5020625681026474, 'mae': 0.9801038392516926, 'r2': 0.903543537551102}
+[bagging] seed=123: {'rmse': 1.4035335657849803, 'mae': 0.9459531210638022, 'r2': 0.915782782239135}
+
+[bagging] Homogeneous bag of 5 XGBoost seeds: {'rmse': 1.423378657199826, 'mae': 0.9583769070130007, 'r2': 0.9133843872368569}
+[bagging] Single XGBoost-fusion (seed=42): {'rmse': 1.392057601367466, 'mae': 0.9593311761358876, 'r2': 0.9171543527393436}
+[bagging] Heterogeneous Stacking-Ridge-fusion (reference): rmse=1.3938 mae=0.9660 r2=0.9169
+
+[bagging] === COMPARISON TABLE ===
+                              model     rmse      mae       r2
+    Single XGBoost-fusion (seed=42) 1.392058 0.959331 0.917154
+Heterogeneous Stacking-Ridge-fusion 1.393796 0.966045 0.916947
+  Homogeneous bag (5 XGBoost seeds) 1.423379 0.958377 0.913384
+[bagging] DONE

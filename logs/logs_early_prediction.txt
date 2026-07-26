@@ -1,0 +1,24 @@
+[early] per-battery early-life cutoff (first 20% of cycles):
+    B0018: cycles 1-26 of 132 total (26 rows)
+    b1c4: cycles 1-245 of 1225 total (245 rows)
+    b2c24: cycles 1-105 of 523 total (105 rows)
+    b3c0: cycles 1-201 of 1007 total (201 rows)
+    b3c35: cycles 1-218 of 1091 total (218 rows)
+    b4c38: cycles 1-246 of 1230 total (246 rows)
+[early] total early-life rows: 1041 (full test set: 5208)
+
+[early] Stacking-Ridge-fusion FULL test-lifetime: {'rmse': 1.3937962441236587, 'mae': 0.966045261836345, 'r2': 0.9169472795050577}
+[early] Stacking-Ridge-fusion EARLY-LIFE (first 20%): {'rmse': 0.8474757159006437, 'mae': 0.2866994183197165, 'r2': -0.5838054246513291}
+[early] XGBoost-fusion FULL test-lifetime: {'rmse': 1.392057601367466, 'mae': 0.9593311761358878, 'r2': 0.9171543527393436}
+[early] XGBoost-fusion EARLY-LIFE (first 20%): {'rmse': 0.8469556183677522, 'mae': 0.28656500178002314, 'r2': -0.5818620520800322}
+
+[early] per-battery early-life breakdown:
+battery_id  n_early_cycles  soh_range     rmse      mae         r2
+     B0018              26 92.6-100.6 5.074243 3.982676  -3.371695
+      b1c4             245 99.9-100.5 0.295322 0.146057  -3.043909
+     b2c24             105 99.9-100.4 0.601488 0.583047 -52.320772
+      b3c0             201 99.8-100.3 0.198418 0.183489  -1.166998
+     b3c35             218 99.5-100.2 0.158897 0.148738   0.279311
+     b4c38             246 99.7-100.3 0.148745 0.116238   0.308744
+
+[early] DONE

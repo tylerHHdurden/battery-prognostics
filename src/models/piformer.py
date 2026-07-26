@@ -17,7 +17,7 @@ the block skeleton follows a standard pre-norm Transformer encoder):
     distilling conv, Autoformer-style local convs) - a reasonable
     concretization of "LocalConvFFN" given no exact spec was provided.
   - 2 encoder layers, 4 attention heads, d_model=32 (kept small
-    deliberately: CPU-only training budget, see OVERNIGHT_LOG.md).
+    deliberately: CPU-only training budget, see DEVELOPMENT_LOG.md).
 """
 
 import torch

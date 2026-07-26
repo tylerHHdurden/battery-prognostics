@@ -106,7 +106,7 @@ def render_context(ctx: dict, dataset: str, battery_id: str, true_soh=None, true
         st.warning(
             "**OUT-OF-DOMAIN — conformal interval reliability not guaranteed.**\n\n"
             "Reasons: " + "; ".join(ctx["domain_reasons"]) + ".\n\n"
-            "Tonight's CALCE zero-retrain evaluation found the exact failure mode this "
+            "The CALCE zero-retrain evaluation found the exact failure mode this "
             "warning exists to prevent: the conformal interval below looked **identically "
             "confident** in-domain and out-of-domain (same fixed width, ±2.37 SOH points "
             "either way), while actual empirical coverage collapsed from 95.6% (NASA/MIT) "

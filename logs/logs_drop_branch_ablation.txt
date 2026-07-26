@@ -1,0 +1,16 @@
+[ensemble-fusion] train: merged rows=18845
+[ensemble-fusion] test: merged rows=5208
+[drop-branch] FULL (all 4 base learners): {'rmse': 1.3937962441236589, 'mae': 0.966045261836345, 'r2': 0.9169472795050577}
+[drop-branch] DROP pred_XGBoost_fusion: {'rmse': 2.0693500775811624, 'mae': 1.2903347761094577, 'r2': 0.8169274552303921} (delta RMSE=+0.6756, delta R2=-0.1000)
+[drop-branch] DROP pred_VLSTM: {'rmse': 1.3950305334332536, 'mae': 0.9645836236219074, 'r2': 0.9168001181458598} (delta RMSE=+0.0012, delta R2=-0.0001)
+[drop-branch] DROP pred_CNNLSTM: {'rmse': 1.3937328750364213, 'mae': 0.9631727797629526, 'r2': 0.9169548313340595} (delta RMSE=-0.0001, delta R2=+0.0000)
+[drop-branch] DROP pred_PiFormer: {'rmse': 1.3942360617151512, 'mae': 0.9662903037524887, 'r2': 0.91689485604513} (delta RMSE=+0.0004, delta R2=-0.0001)
+
+[drop-branch] === FULL TABLE (sorted by RMSE) ===
+                 variant             dropped     rmse      mae       r2  delta_rmse  delta_r2
+       drop_pred_CNNLSTM        pred_CNNLSTM 1.393733 0.963173 0.916955   -0.000063  0.000008
+           full_4_branch                none 1.393796 0.966045 0.916947    0.000000  0.000000
+      drop_pred_PiFormer       pred_PiFormer 1.394236 0.966290 0.916895    0.000440 -0.000052
+         drop_pred_VLSTM          pred_VLSTM 1.395031 0.964584 0.916800    0.001234 -0.000147
+drop_pred_XGBoost_fusion pred_XGBoost_fusion 2.069350 1.290335 0.816927    0.675554 -0.100020
+[drop-branch] DONE

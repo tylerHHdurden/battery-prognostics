@@ -1,5 +1,5 @@
 """
-Generates and saves every summary plot referenced in OVERNIGHT_LOG.md /
+Generates and saves every summary plot referenced in DEVELOPMENT_LOG.md /
 STATUS reporting, per the task's "save every plot and metrics table as
 files" instruction. Run after all 6 phases complete. All figures saved
 to outputs/ as PNG.

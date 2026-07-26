@@ -6,7 +6,7 @@ SOH+RUL adaptive-loss ablation → SHAP explainability → split-conformal
 prediction), run on NASA PCoE + CALCE CS2 + a 28-cell MIT/Stanford/TRI
 subset, followed by a targeted root-cause fix session. Full chronological
 narrative, every assumption, and every intermediate (including the
-pre-fix numbers) is in `OVERNIGHT_LOG.md`; this file is the consolidated,
+pre-fix numbers) is in `DEVELOPMENT_LOG.md`; this file is the consolidated,
 final-numbers view for review.
 
 ---
@@ -221,4 +221,4 @@ written:
 adaptive-weighting alternatives are noted as future work only, per
 explicit instruction not to pursue them now. Full chronological detail,
 every dataset/HI-definition assumption, and the pre-fix numbers for
-comparison are preserved in `OVERNIGHT_LOG.md`.*
+comparison are preserved in `DEVELOPMENT_LOG.md`.*

@@ -5,7 +5,7 @@ split as XGBoost (data/processed/battery_split.json).
 
 Epoch count / batch size ASSUMPTION (logged per the task's own allowance
 for shortcuts under time pressure): CPU-only laptop, no GPU (see
-OVERNIGHT_LOG.md compute-environment note). 40 epochs, batch_size=64,
+DEVELOPMENT_LOG.md compute-environment note). 40 epochs, batch_size=64,
 Adam lr=1e-3, is a real training run (loss curves genuinely converge, not
 a token 1-2 epoch smoke test) but deliberately not the hundreds of epochs
 that would be used on a GPU. Early stopping on a held-out validation slice
