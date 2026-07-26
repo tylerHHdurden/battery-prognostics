@@ -1,0 +1,6 @@
+[ensemble-fusion] train: merged rows=18845
+[ensemble-fusion] test: merged rows=5208
+[ensemble-fusion] meta-learner input dims: 20 (4 base predictions + 16 fusion features)
+[ensemble-fusion] Stacking-Ridge-fusion TEST RMSE=1.3938 MAE=0.9660 R2=0.9169
+[ensemble-fusion] (non-fusion Stacking-Ridge was RMSE=1.481 MAE=0.998 R2=0.906)
+[ensemble-fusion] DONE

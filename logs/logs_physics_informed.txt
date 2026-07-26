@@ -1,0 +1,73 @@
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[physics] fit=14872 val=3973 test=5208 (loaded in 343.6s)
+[physics] fitted exponential fade curves for 21/21 batteries. k range: [0.00007, 0.00621] (all >=0 by construction - confirms no battery's training data fits a capacity-recovering trend)
+
+[physics] === training VLSTM with physics-informed loss ===
+[physics/VLSTM] epoch   0 train_mse=0.8468 train_penalty=0.0014 train_total=0.8469 val_mse=2.7970
+[physics/VLSTM] epoch   5 train_mse=0.1636 train_penalty=0.0126 train_total=0.1648 val_mse=0.5973
+[physics/VLSTM] epoch  10 train_mse=0.1244 train_penalty=0.0137 train_total=0.1257 val_mse=0.5904
+[physics/VLSTM] epoch  15 train_mse=0.0920 train_penalty=0.0130 train_total=0.0933 val_mse=0.4482
+[physics/VLSTM] epoch  20 train_mse=0.0727 train_penalty=0.0106 train_total=0.0738 val_mse=0.2946
+[physics/VLSTM] epoch  25 train_mse=0.0640 train_penalty=0.0102 train_total=0.0650 val_mse=0.2817
+[physics/VLSTM] early stopping at epoch 27
+[physics/VLSTM] stable at lambda=0.1, no retry needed
+[physics] VLSTM TEST (physics-informed) RMSE=2.2340 MAE=1.6110 R2=0.7866 (lambda=0.1, diverged_at_initial_lambda=False)
+
+[physics] === training CNNLSTM with physics-informed loss ===
+[physics/CNNLSTM] epoch   0 train_mse=0.6487 train_penalty=0.0337 train_total=0.6521 val_mse=1.4507
+[physics/CNNLSTM] epoch   5 train_mse=0.2063 train_penalty=0.0197 train_total=0.2083 val_mse=1.0588
+[physics/CNNLSTM] epoch  10 train_mse=0.1153 train_penalty=0.0133 train_total=0.1167 val_mse=0.9844
+[physics/CNNLSTM] epoch  15 train_mse=0.1035 train_penalty=0.0119 train_total=0.1046 val_mse=1.1114
+[physics/CNNLSTM] early stopping at epoch 18
+[physics/CNNLSTM] stable at lambda=0.1, no retry needed
+[physics] CNNLSTM TEST (physics-informed) RMSE=4.2609 MAE=3.2390 R2=0.2238 (lambda=0.1, diverged_at_initial_lambda=False)
+
+[physics] === training PiFormer with physics-informed loss ===
+[physics/PiFormer] epoch   0 train_mse=0.4406 train_penalty=0.0195 train_total=0.4425 val_mse=0.7964
+[physics/PiFormer] epoch   5 train_mse=0.0578 train_penalty=0.0082 train_total=0.0587 val_mse=0.5957
+[physics/PiFormer] epoch  10 train_mse=0.0335 train_penalty=0.0060 train_total=0.0341 val_mse=0.7218
+[physics/PiFormer] early stopping at epoch 13
+[physics/PiFormer] stable at lambda=0.1, no retry needed
+[physics] PiFormer TEST (physics-informed) RMSE=3.0434 MAE=2.0100 R2=0.6040 (lambda=0.1, diverged_at_initial_lambda=False)
+
+[physics] === BASELINE (no physics loss) vs PHYSICS-INFORMED ===
+   model     rmse      mae       r2
+   VLSTM 2.130829 1.564114 0.805888
+ CNNLSTM 3.948296 2.926351 0.333539
+PiFormer 2.992997 1.927512 0.617027
+           model     rmse      mae       r2
+   VLSTM-physics 2.234022 1.610987 0.786632
+ CNNLSTM-physics 4.260950 3.238981 0.223810
+PiFormer-physics 3.043431 2.009952 0.604012
+[physics] ALL DONE in 2919.0s

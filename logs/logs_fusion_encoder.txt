@@ -1,0 +1,60 @@
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[fusion] fit cycles=14872, val cycles=3973 (loaded in 536.4s)
+[deep/ICAEncoder] epoch   0 train_mse=0.8615 val_mse=2.7515
+[deep/ICAEncoder] epoch   1 train_mse=0.7942 val_mse=2.5104
+[deep/ICAEncoder] epoch   2 train_mse=0.7412 val_mse=2.2576
+[deep/ICAEncoder] epoch   3 train_mse=0.6701 val_mse=1.9217
+[deep/ICAEncoder] epoch   4 train_mse=0.5978 val_mse=1.6691
+[deep/ICAEncoder] epoch   5 train_mse=0.5480 val_mse=1.6131
+[deep/ICAEncoder] epoch   6 train_mse=0.5191 val_mse=1.5014
+[deep/ICAEncoder] epoch   7 train_mse=0.5030 val_mse=1.5384
+[deep/ICAEncoder] epoch   8 train_mse=0.4978 val_mse=1.4111
+[deep/ICAEncoder] epoch   9 train_mse=0.4846 val_mse=1.4081
+[deep/ICAEncoder] epoch  10 train_mse=0.4804 val_mse=1.4048
+[deep/ICAEncoder] epoch  11 train_mse=0.4675 val_mse=1.3592
+[deep/ICAEncoder] epoch  12 train_mse=0.4638 val_mse=1.3463
+[deep/ICAEncoder] epoch  13 train_mse=0.4597 val_mse=1.3710
+[deep/ICAEncoder] epoch  14 train_mse=0.4523 val_mse=1.3162
+[deep/ICAEncoder] epoch  15 train_mse=0.4416 val_mse=1.3867
+[deep/ICAEncoder] epoch  16 train_mse=0.4312 val_mse=1.2963
+[deep/ICAEncoder] epoch  17 train_mse=0.4266 val_mse=1.2970
+[deep/ICAEncoder] epoch  18 train_mse=0.4104 val_mse=1.2463
+[deep/ICAEncoder] epoch  19 train_mse=0.4027 val_mse=1.2516
+[deep/ICAEncoder] epoch  20 train_mse=0.3976 val_mse=1.2009
+[deep/ICAEncoder] epoch  21 train_mse=0.3862 val_mse=1.2278
+[deep/ICAEncoder] epoch  22 train_mse=0.3770 val_mse=1.1916
+[deep/ICAEncoder] epoch  23 train_mse=0.3662 val_mse=1.2160
+[deep/ICAEncoder] epoch  24 train_mse=0.3573 val_mse=1.1945
+[fusion] saved 24053 embeddings (16-dim) to data/processed/fusion_embeddings.csv
+[fusion] ALL DONE in 651.1s

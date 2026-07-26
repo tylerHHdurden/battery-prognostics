@@ -1,0 +1,112 @@
+
+=== MIT/b1c4 cycle 67 ===
+PROMPT:
+ You are writing a short, plain-English battery health report for a non-expert reader (e.g. a fleet operator or equipment owner), based on structured predictions from a trained machine-learning pipeline. Do not invent any numbers - use only the figures given below. Keep the report to 2-3 sentences, in the style of a concise diagnostic summary.
+
+Battery: b1c4 (dataset: MIT), cycle 67
+
+State of Health (SOH) prediction: 100.4% (90% confidence interval: 98.0% - 102.7%)
+
+Remaining Useful Life (RUL) prediction: approximately 796 cycles remaining (90% confidence interval: 360 - 1232 cycles)
+
+Top contributing factors to this SOH prediction, most important first:
+  - SCV: average capacity-vs-voltage slope during discharge
+  - VIECT: voltage reached at a fixed elapsed time into charging
+  - TEVI: time spent traversing the mid-range of the discharge voltage curve
+
+Voltage region most associated with this cell's degradation signature: 2.0V - 3.11V (this region accounts for about 69% of the model's attention in explaining this cell's discharge behavior)
+
+Write the report now. Mention the SOH percentage, the voltage region likely driving degradation, and the RUL estimate with its confidence range - in a natural, flowing style similar to this example: "This battery is at 84% health, likely due to degradation concentrated in the 3.6-3.8V region; expect approximately 120 cycles remaining, with 90% confidence between 95-145 cycles."
+
+REPORT:
+ At cycle 67, battery b1c4 is at 100.4% state of health, with degradation behavior primarily concentrated in the 2.0V - 3.11V voltage range. Expect approximately 796 cycles remaining, with 90% confidence that the true remaining useful life is between 360 and 1232 cycles.
+
+=== MIT/b4c38 cycle 250 ===
+PROMPT:
+ You are writing a short, plain-English battery health report for a non-expert reader (e.g. a fleet operator or equipment owner), based on structured predictions from a trained machine-learning pipeline. Do not invent any numbers - use only the figures given below. Keep the report to 2-3 sentences, in the style of a concise diagnostic summary.
+
+Battery: b4c38 (dataset: MIT), cycle 250
+
+State of Health (SOH) prediction: 100.0% (90% confidence interval: 97.6% - 102.4%)
+
+Remaining Useful Life (RUL) prediction: approximately 774 cycles remaining (90% confidence interval: 339 - 1210 cycles)
+
+Top contributing factors to this SOH prediction, most important first:
+  - SCV: average capacity-vs-voltage slope during discharge
+  - VIECT: voltage reached at a fixed elapsed time into charging
+  - TEVI: time spent traversing the mid-range of the discharge voltage curve
+
+Voltage region most associated with this cell's degradation signature: 2.0V - 3.23V (this region accounts for about 82% of the model's attention in explaining this cell's discharge behavior)
+
+Write the report now. Mention the SOH percentage, the voltage region likely driving degradation, and the RUL estimate with its confidence range - in a natural, flowing style similar to this example: "This battery is at 84% health, likely due to degradation concentrated in the 3.6-3.8V region; expect approximately 120 cycles remaining, with 90% confidence between 95-145 cycles."
+
+REPORT:
+ Battery b4c38 is currently at 100.0% health, with degradation behavior concentrated primarily in the 2.0V - 3.23V voltage region. You can expect approximately 774 cycles remaining, with 90% confidence that the actual remaining useful life is between 339 and 1210 cycles.
+
+=== MIT/b1c4 cycle 674 ===
+PROMPT:
+ You are writing a short, plain-English battery health report for a non-expert reader (e.g. a fleet operator or equipment owner), based on structured predictions from a trained machine-learning pipeline. Do not invent any numbers - use only the figures given below. Keep the report to 2-3 sentences, in the style of a concise diagnostic summary.
+
+Battery: b1c4 (dataset: MIT), cycle 674
+
+State of Health (SOH) prediction: 99.4% (90% confidence interval: 97.1% - 101.8%)
+
+Remaining Useful Life (RUL) prediction: approximately 678 cycles remaining (90% confidence interval: 243 - 1114 cycles)
+
+Top contributing factors to this SOH prediction, most important first:
+  - SCV: average capacity-vs-voltage slope during discharge
+  - VIECT: voltage reached at a fixed elapsed time into charging
+  - TEVI: time spent traversing the mid-range of the discharge voltage curve
+
+Voltage region most associated with this cell's degradation signature: 3.08V - 3.55V (this region accounts for about 60% of the model's attention in explaining this cell's discharge behavior)
+
+Write the report now. Mention the SOH percentage, the voltage region likely driving degradation, and the RUL estimate with its confidence range - in a natural, flowing style similar to this example: "This battery is at 84% health, likely due to degradation concentrated in the 3.6-3.8V region; expect approximately 120 cycles remaining, with 90% confidence between 95-145 cycles."
+
+REPORT:
+ Battery b1c4 is currently at 99.4% health, with its degradation signature most strongly associated with the 3.08V - 3.55V voltage region. You can expect approximately 678 remaining cycles, with 90% confidence that the actual remaining useful life is between 243 and 1114 cycles.
+
+=== MIT/b3c0 cycle 747 ===
+PROMPT:
+ You are writing a short, plain-English battery health report for a non-expert reader (e.g. a fleet operator or equipment owner), based on structured predictions from a trained machine-learning pipeline. Do not invent any numbers - use only the figures given below. Keep the report to 2-3 sentences, in the style of a concise diagnostic summary.
+
+Battery: b3c0 (dataset: MIT), cycle 747
+
+State of Health (SOH) prediction: 97.1% (90% confidence interval: 94.7% - 99.5%)
+
+Remaining Useful Life (RUL) prediction: approximately 112 cycles remaining (90% confidence interval: 0 - 548 cycles)
+
+Top contributing factors to this SOH prediction, most important first:
+  - VIECT: voltage reached at a fixed elapsed time into charging
+  - SCV: average capacity-vs-voltage slope during discharge
+  - TEVI: time spent traversing the mid-range of the discharge voltage curve
+
+Voltage region most associated with this cell's degradation signature: 2.23V - 3.24V (this region accounts for about 87% of the model's attention in explaining this cell's discharge behavior)
+
+Write the report now. Mention the SOH percentage, the voltage region likely driving degradation, and the RUL estimate with its confidence range - in a natural, flowing style similar to this example: "This battery is at 84% health, likely due to degradation concentrated in the 3.6-3.8V region; expect approximately 120 cycles remaining, with 90% confidence between 95-145 cycles."
+
+REPORT:
+ This battery is currently at 97.1% health, with degradation primarily concentrated in the 2.23V–3.24V voltage region. Expect approximately 112 cycles remaining, with 90% confidence that the remaining useful life falls between 0 and 548 cycles.
+
+=== MIT/b4c38 cycle 1096 ===
+PROMPT:
+ You are writing a short, plain-English battery health report for a non-expert reader (e.g. a fleet operator or equipment owner), based on structured predictions from a trained machine-learning pipeline. Do not invent any numbers - use only the figures given below. Keep the report to 2-3 sentences, in the style of a concise diagnostic summary.
+
+Battery: b4c38 (dataset: MIT), cycle 1096
+
+State of Health (SOH) prediction: 79.3% (90% confidence interval: 76.9% - 81.7%)
+
+Remaining Useful Life (RUL) prediction: approximately 419 cycles remaining (90% confidence interval: 0 - 855 cycles)
+
+Top contributing factors to this SOH prediction, most important first:
+  - SCV: average capacity-vs-voltage slope during discharge
+  - VIECT: voltage reached at a fixed elapsed time into charging
+  - fusion_5: a learned discharge-curve-shape feature (from the ICA/DV/DC fusion encoder)
+
+Voltage region most associated with this cell's degradation signature: 3.13V - 3.28V (this region accounts for about 81% of the model's attention in explaining this cell's discharge behavior)
+
+Write the report now. Mention the SOH percentage, the voltage region likely driving degradation, and the RUL estimate with its confidence range - in a natural, flowing style similar to this example: "This battery is at 84% health, likely due to degradation concentrated in the 3.6-3.8V region; expect approximately 120 cycles remaining, with 90% confidence between 95-145 cycles."
+
+REPORT:
+ At cycle 1096, battery b4c38 is at 79.3% health, with degradation largely concentrated in the 3.13V - 3.28V voltage region. The model estimates approximately 419 remaining cycles of useful life, with 90% confidence placing the true value between 0 and 855 cycles.
+
+Saved 5 examples to outputs/health_reports_examples.json

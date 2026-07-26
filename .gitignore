@@ -14,6 +14,9 @@ data/raw/
 __pycache__/
 *.pyc
 
+# Secrets - never commit API keys
+.env
+
 # OS junk
 .DS_Store
 Thumbs.db

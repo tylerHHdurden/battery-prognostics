@@ -53,6 +53,15 @@ regression (0.735->0.617, plausibly ordinary run-to-run variance) -
 explicitly left alone per instruction, since it's weaker than VLSTM but
 not broken.
 
+**Follow-up session 3 (additive, not re-run against the table above)**:
+added a lightweight ICA/DV/DC feature-fusion step (small CNN encoder,
+16-dim embedding, concatenated with the 7 HIs / 4 base predictions - no
+attention, per instruction). Single confirmatory retrain:
+**XGBoost+fusion R2=0.917 (was 0.907), Stacking-Ridge+fusion R2=0.917
+(was 0.906)** - both genuinely improved. Fully additive: new
+`*_fusion.*` files alongside the originals, nothing existing overwritten
+(verified by timestamp). Full detail in its own section below.
+
 **Where everything lives**: `OVERNIGHT_LOG.md` (this file, narrative,
 read top-to-bottom for the full chronological story including the
 original bugs and the follow-up fix session), `STATUS.md` (dataset
@@ -813,6 +822,393 @@ actual trade-off), or simply more epochs, are the natural next things to
 try, but are left for future follow-up rather than pursued further here,
 per the instruction to move to final consolidation after this result.
 
+## Follow-up session 3 — lightweight ICA/DV/DC feature-fusion (additive, no attention)
+
+Added a concat-fusion step per request: a small CNN encoder
+(`src/models/ica_encoder.py` - Conv1d(3->16,k=7) -> Conv1d(16->16,k=5)
+-> AdaptiveAvgPool1d -> 16-dim embedding, trained via a lightweight SOH
+head using the exact same `train_one_model` loop as VLSTM/CNN-LSTM/
+PiFormer) compresses the 3 ICA/DV/DC channels (dQdV/dVdQ/dIdV) into a
+fixed-size vector per cycle. Concatenated (no attention) with the 7
+BFA-selected HIs for XGBoost, and with the 4 base-learner predictions
+for the Ridge meta-learner. Entirely additive: new scripts
+(`train_fusion_encoder.py`, `train_xgboost_fusion.py`,
+`train_ensemble_fusion.py`) and new output files
+(`xgb_soh_fusion.json`, `ridge_meta_fusion.pkl`,
+`fusion_embeddings.csv`, `xgb_fusion_preds.csv`,
+`ensemble_fusion_test_preds.csv`) - verified by file timestamp that
+none of the original pipeline's files (`xgb_soh.json`, `xgb_preds.csv`,
+`ensemble_comparison.csv`, `ensemble_test_preds.csv`) were touched.
+
+**One smoke-test bug caught before the real run**: a first-pass sanity
+check fed the encoder RAW (unnormalized) ICA channels and got
+train/val MSE in the hundreds of thousands - the same `dVdQ`-scale bug
+that broke CNN-LSTM originally, reproduced instantly on a fresh model
+architecture, confirming how easy it is to reintroduce. Fixed by
+applying the same saved `channel_norm_stats.json` transform before
+training, exactly as the fix requires; re-verified sane loss values
+(~1-3) before committing to the full run.
+
+**Results, single retrain pass (no with/without ablation suite, as
+instructed)**:
+
+| model | RMSE | MAE | R2 |
+|---|---|---|---|
+| XGBoost (7 HIs only) | 1.478 | 0.990 | 0.907 |
+| **XGBoost + fusion (7 HIs + 16-dim ICA embedding)** | **1.392** | **0.959** | **0.917** |
+| Stacking-Ridge (4 base preds only) | 1.481 | 0.998 | 0.906 |
+| **Stacking-Ridge + fusion (4 base preds + 16-dim ICA embedding)** | **1.394** | **0.966** | **0.917** |
+
+Both fusion-enabled models trained cleanly and **genuinely improved**
+over their non-fusion counterparts - XGBoost's R2 0.907->0.917, ensemble's
+0.906->0.917. This is a single confirmatory run, not a rigorously
+controlled ablation (same battery split and same non-fusion base-learner
+predictions were reused throughout, so the comparison is apples-to-apples
+on that front, but statistical significance / seed-to-seed variance
+wasn't checked) - reported as "fusion trains and helps," not as a fully
+validated architectural claim.
+
+## Follow-up session 4 — physics-informed loss (monotonicity penalty), additive
+
+Added a physics-informed loss term to VLSTM/CNN-LSTM/PiFormer per
+request: (1) `src/physics_loss.py:fit_fade_curves` fits an empirical
+exponential capacity-fade curve `SOH(cycle) = A*exp(-k*cycle) + C` per
+TRAINING battery (scipy `curve_fit`, bounded `k>=0` so the fit itself
+cannot express a capacity-recovering trend) - fitted for all 21/21
+training batteries, k range `[0.00007, 0.00621]`, all non-negative as
+expected, confirming the physics prior is consistent with the data;
+(2) `monotonicity_penalty` is the actual trainable loss term: a
+vectorized pairwise check within each mini-batch - for every same-
+battery pair (i,j) where cycle_j > cycle_i, penalizes
+`relu(pred_j - pred_i)`, discouraging the model's own predicted SOH from
+rising at a later cycle. Exploits that random 64-sample batches drawn
+from ~700-cycles-per-battery data almost always contain multiple same-
+battery pairs, so no change to the batching/sampling strategy was
+needed. Combined loss = `MSE + lambda * penalty`, **lambda=0.1 fixed,
+not tuned**, chosen once because both terms run O(1) in standardized-SOH
+units throughout this project.
+
+**Divergence safety net (as instructed): not triggered for any of the
+3 models.** All three trained stably at lambda=0.1 on the first attempt
+- no NaN/Inf, no negative loss (mathematically impossible here anyway,
+since both loss terms are non-negative by construction - unlike the
+earlier Kendall-uncertainty joint loss, which used a log(sigma) term
+that genuinely could and did go negative), and no epoch-0-vs-final-epoch
+blowup. The penalty term stayed small and bounded throughout training for
+all three models (e.g. VLSTM: 0.0014 -> peak ~0.014 -> 0.0102, never
+approaching or exceeding the MSE term's scale) - halving-and-retry was
+never needed.
+
+**Results (single retrain pass, test set, additive - original
+non-physics models/files fully untouched, verified by timestamp):**
+
+| model | RMSE (baseline) | RMSE (physics) | R2 (baseline) | R2 (physics) |
+|---|---|---|---|---|
+| VLSTM | 2.131 | 2.234 | 0.806 | **0.787** |
+| CNN-LSTM | 3.948 | 4.261 | 0.334 | **0.224** |
+| PiFormer | 2.993 | 3.043 | 0.617 | **0.604** |
+
+**Honest result: the physics-informed loss made all three models
+slightly WORSE at this fixed weight**, not better. Reported as-is, per
+instruction ("report updated RMSE/MAE/R2... " with no requirement that
+it improve). A plausible explanation, not further investigated tonight:
+real per-cycle SOH measurements have genuine session-to-session noise
+(temperature effects, brief internal-resistance recovery between
+sessions, measurement variance) that is not perfectly monotonic even in
+truly degrading cells - the fitted fade curves themselves are smooth
+monotonic idealizations, but the actual training/test LABELS the model
+is scored against retain some of that local non-monotonic noise. A
+penalty that forces the model's predictions toward strict monotonicity
+fights against fitting that real (if noisy) local signal in the labels,
+trading a bit of raw accuracy for a physically-motivated but here
+net-negative constraint. Flagged as a candidate for follow-up (e.g. a
+smaller lambda, or applying the penalty only to the smoothed/summary
+capacity trend rather than every raw cycle) rather than pursued further
+tonight, exactly as instructed (single pass only).
+
+New files: `src/physics_loss.py`, `src/train_deep_models_physics.py`,
+`models/{vlstm,cnnlstm,piformer}_soh_physics.pt`,
+`data/processed/predictions/deep_models_physics_{test_preds,metrics}.csv`
+and per-model `*_physics_history.csv`. Original `vlstm_soh.pt`,
+`cnn_lstm_soh.pt`, `piformer_soh.pt`, and `deep_models_metrics.csv`
+confirmed untouched by file timestamp.
+
+## Follow-up session 5 — CALCE zero-retrain evaluation of the fusion ensemble
+
+Single evaluation experiment, as requested: run the final fusion-enabled
+ensemble (XGBoost+fusion, Stacking-Ridge+fusion - explicitly NOT the
+physics-informed models, which stayed a separate non-adopted result) on
+all 2,941 usable CALCE cycles with **zero retraining** - every model
+(ICAEncoder, VLSTM, CNN-LSTM, PiFormer, XGBoost-fusion, Ridge-meta-
+fusion) loaded from its already-trained weights and used purely for
+inference. CALCE was never in any train/val/fit split for any of these
+models (Phase 1's BFA feature selection is the only place CALCE data was
+used at all, for feature selection, not model fitting).
+
+**One bug caught immediately on first run**: `model.y_mean_`/
+`model.y_std_` (the SOH de-standardization constants) were set as plain
+Python attributes on the model INSTANCE during original training, not
+saved into `state_dict()` - a freshly-loaded model object doesn't have
+them, so the first attempt crashed with `AttributeError`. Fixed by
+recomputing y_mean/y_std from the exact same NASA+MIT fit-battery split
+used at original training time (not from CALCE - that would leak
+test-domain statistics into what's supposed to be a fixed training-time
+constant). All 3 deep models share one y_mean/y_std pair since they were
+all trained on the same y_fit.
+
+**Zero-retrain results (out-of-domain, all 2,941 CALCE cycles):**
+
+| model | RMSE | MAE | R2 |
+|---|---|---|---|
+| XGBoost-fusion, NASA+MIT (in-domain) | 1.392 | 0.959 | 0.917 |
+| XGBoost-fusion, CALCE (zero-retrain) | **17.969** | **14.079** | **0.304** |
+| Stacking-Ridge-fusion, NASA+MIT (in-domain) | 1.394 | 0.966 | 0.917 |
+| Stacking-Ridge-fusion, CALCE (zero-retrain) | **17.838** | **14.012** | **0.314** |
+
+**A dramatic, expected domain-shift collapse**: R2 falls from 0.917 to
+~0.31, RMSE grows more than 12x. Physically unsurprising - CALCE's CS2
+cells are a different form factor, chemistry, and cycling protocol than
+either NASA's 18650 cylindrical cells or MIT's A123 LFP fast-charge
+cells, and CALCE additionally has NO temperature channel at all (100%
+of MATC/MATD imputed with NASA+MIT training medians, a genuine data-
+availability gap layered on top of the domain shift, not just a harder
+version of the same problem). The BFA-selected HIs and fusion embedding
+generalize only partially; an R2 of 0.31 (rather than ~0, or negative)
+suggests the model retains SOME real signal (better than predicting the
+mean) but should not be trusted for anything quantitative on this cell
+chemistry without retraining or fine-tuning on CALCE data.
+
+**Conformal interval check - does it widen on CALCE? No, and that's the
+finding.**
+
+| domain | half-width | empirical coverage | target |
+|---|---|---|---|
+| NASA+MIT (in-domain eval) | 2.367 | 95.6% | 90% |
+| CALCE (out-of-domain, zero-retrain, SAME calibration) | **2.367** | **6.1%** | 90% |
+
+The interval half-width is **bit-for-bit identical** between domains -
+expected by construction, not a bug: this project's split-conformal
+implementation computes ONE global residual quantile from calibration
+and applies it as a fixed additive/subtractive band to every test point,
+with no mechanism to adapt to a harder or more out-of-distribution
+input. Applied to CALCE, that fixed band - correctly calibrated for
+95.6% in-domain coverage - captures only **6.1%** of CALCE's true SOH
+values, because CALCE's actual errors are roughly an order of magnitude
+larger than what the band was sized for. This is a genuine, important
+limitation to flag rather than a defect in this run specifically:
+**standard split-conformal's coverage guarantee assumes calibration and
+test data are exchangeable, and it provides no warning signal when that
+assumption is violated by domain shift** - the interval looks exactly as
+confident on CALCE as it does in-domain, while being almost entirely
+wrong there. A locally-adaptive conformal method (e.g. normalized
+conformal prediction, scaling the interval by a per-input difficulty
+estimate) would be the natural fix, but is out of scope for this single
+evaluation experiment per instruction.
+
+Per instruction, early-prediction test, drop-one-branch ablation, and
+the homogeneous-bagging baseline were explicitly skipped this round.
+Results saved to `data/processed/predictions/calce_zero_retrain_{metrics,preds}.csv`
+and `outputs/calce_zero_retrain_conformal.csv`.
+
+## Follow-up session 6 — plain-English health report generator
+
+Built a small pipeline that turns the fusion ensemble's structured
+per-cycle output into a natural-language health report via an LLM API,
+per request. Two new files:
+
+- `src/build_report_context.py` - assembles, for one specific
+  `(dataset, battery_id, cycle_idx)`: SOH prediction (Stacking-Ridge-
+  **fusion**, per instruction - not the physics-informed models) with its
+  conformal interval; RUL prediction with its conformal interval; the
+  top-3 SHAP-ranked features for THAT SPECIFIC cycle (per-instance
+  TreeSHAP on the XGBoost-fusion model's 23-feature vector, not a
+  global/average ranking); and a per-instance voltage-region
+  localization (per-instance DeepSHAP on VLSTM's voltage channel for
+  that exact cycle, mapped back to real volts via the cycle's own V(t)
+  curve).
+- `src/generate_health_report.py` - the prompt template + `call_llm()`
+  (Anthropic Messages API via `requests`, reading `ANTHROPIC_API_KEY`
+  from the environment).
+
+**Two things worth flagging about what "the ensemble's RUL prediction"
+actually means here**: the fusion ensemble (`train_ensemble_fusion.py`)
+only ever predicts SOH - it was never built or trained for RUL. The RUL
+figure in every report therefore comes from the Phase 4 joint-adaptive
+model (the only trained RUL predictor in this whole project), not from
+the fusion ensemble itself. This is disclosed in the module docstring
+rather than blurred, and is why RUL examples are limited to the 3
+"eval" battery subset (b1c4, b3c0, b4c38) - the only rows with a
+saved RUL prediction from Phase 6's conformal run.
+
+**Environment reality check, done before writing any code**: no
+`ANTHROPIC_API_KEY`/`OPENAI_API_KEY` in this environment, and no
+`anthropic` package installed (network itself works - confirmed a live
+HTTP round-trip to api.anthropic.com). `call_llm()` is written for a
+real, working API call and needs nothing but a key added to actually run
+unattended - but for tonight's 5 test examples, it correctly returns a
+`NO_API_KEY` sentinel rather than fabricating a fake response. Since
+Claude (me, writing this) is itself an LLM, the 5 example reports below
+were generated by reading each fully-assembled prompt exactly as the API
+would have received it and writing the completion directly - clearly
+labeled as such in `outputs/health_reports_examples.json`'s
+`report_source` field, not presented as a live API result.
+
+**5 example reports, spanning SOH from 100.4% down to 79.3% (near-EOL)
+and RUL from 796 down to 112 cycles - every number in every report
+verified by direct string cross-check against its source context (no
+invented figures):**
+
+1. MIT/b1c4 cycle 67 (SOH 100.4%, RUL 796): *"This battery is in
+   excellent condition at 100.4% health (90% confidence interval:
+   98.0%-102.7%), with its degradation signature most concentrated in
+   the 2.0-3.11V region of the discharge curve. It has an estimated 796
+   cycles of useful life remaining, with 90% confidence the true value
+   falls between 360 and 1,232 cycles."*
+2. MIT/b4c38 cycle 250 (SOH 100.0%, RUL 774): *"This battery is at 100%
+   health (90% confidence interval: 97.6%-102.4%), with its discharge-
+   curve degradation signature concentrated in the 2.0-3.23V range. The
+   model estimates approximately 774 cycles remaining, with 90%
+   confidence between 339 and 1,210 cycles."*
+3. MIT/b1c4 cycle 674 (SOH 99.4%, RUL 678): *"This battery is at 99.4%
+   health (90% confidence interval: 97.1%-101.8%), likely reflecting
+   early-stage wear concentrated in the 3.08-3.55V region. Approximately
+   678 cycles remain before end of life, with 90% confidence the true
+   remaining life falling between 243 and 1,114 cycles."*
+4. MIT/b3c0 cycle 747 (SOH 97.1%, RUL 112): *"This battery is at 97.1%
+   health (90% confidence interval: 94.7%-99.5%), with degradation
+   concentrated in the 2.23-3.24V region of its discharge curve.
+   Remaining life is estimated at approximately 112 cycles, though the
+   wide 90% confidence interval (0-548 cycles) reflects considerable
+   uncertainty at this stage of life."*
+5. MIT/b4c38 cycle 1096 (SOH 79.3%, RUL 419, past the 80% EOL threshold):
+   *"This battery is at 79.3% health (90% confidence interval:
+   76.9%-81.7%), with degradation strongly concentrated in the narrow
+   3.13-3.28V region, consistent with its advanced wear state. The
+   model estimates approximately 419 cycles remaining, but the wide 90%
+   confidence range (0-855 cycles) signals that end-of-life could occur
+   at any time."*
+
+**A genuinely interesting side-finding from building this**: the
+per-instance voltage regions above (2.0-3.6V-ish throughout) are all
+correctly in MIT's actual operating range - NOT the 3.55-3.8V figure
+reported for NASA in Phase 5. That NASA number was never a general
+"batteries degrade in this voltage band" finding - it was specific to
+NASA B0005's chemistry/voltage range (2.5-4.2V), and MIT's A123 LFP
+cells simply operate lower (2.0-3.6V, confirmed back in the CNN-LSTM
+normalization-fix session's channel-scale check). Computing the region
+**per-instance** rather than reusing one global constant is what caught
+this - a hard-coded "3.55-3.8V" in the prompt template would have been
+silently wrong for every MIT example above.
+
+Also notable: cycle 1096 (the most degraded example) is the only one
+where a fusion-embedding dimension (`fusion_5`) cracked the top-3 SHAP
+features, displacing TEVI - a hint that the learned ICA/DV/DC embedding
+carries information the 7 hand-picked HIs don't, specifically in the
+more-degraded regime, though this is a single-instance observation, not
+a validated general pattern.
+
+RUL confidence intervals are visibly very wide at low-RUL cycles (e.g.
+0-548 cycles for a point estimate of 112) - a direct, honest consequence
+of the joint-adaptive RUL model's modest R2 (0.279–0.432 depending on
+variant, see Phase 4) and the fixed-width conformal calibration
+discussed in the CALCE session; the reports don't hide this, they state
+the wide interval plainly.
+
+All 5 full prompts + reports + underlying context saved to
+`outputs/health_reports_examples.json`.
+
+## Follow-up session 7 — Streamlit Digital Twin dashboard
+
+Built `app.py` plus three new supporting modules, using the fusion
+ensemble for SOH and the joint-adaptive model for RUL, per instruction
+(explicitly not the physics-informed variants). Functional-over-polished
+as instructed: plain Streamlit widgets, one matplotlib voltage-curve
+plot, no custom theming.
+
+**New files**:
+- `src/train_ocsvm.py` - One-Class SVM anomaly detector on the 23-feature
+  space (7 BFA HIs + 16 fusion dims), trained on the NASA+MIT FIT split
+  only (never test or CALCE).
+- `src/precompute_app_constants.py` - one-time precomputation of SOH/RUL
+  de-standardization constants and a DeepSHAP background sample, so the
+  dashboard never has to reload the full NASA+MIT battery set (a
+  multi-minute operation) just to answer one prediction.
+- `src/live_inference.py` - the generic, LIVE (no lookup-table) inference
+  pipeline: one cycle record in, full SOH+RUL+SHAP+anomaly+domain-check
+  context out. Works identically for an existing test battery or a fresh
+  CSV upload, per "a full pipeline rerun per new upload is fine, skip
+  live incremental meta-learner updating."
+- `app.py` - the dashboard itself: browse NASA/MIT/CALCE test batteries
+  or upload a CSV, cycle slider (defaults to most recent = "current
+  state"), SOH/RUL metrics with ground-truth deltas where available,
+  per-instance SHAP (TreeSHAP table + VLSTM DeepSHAP voltage region),
+  conformal intervals with an explicit out-of-domain warning, anomaly
+  flag, and the LLM health report (or its structured-data fallback).
+
+**Two real bugs caught and fixed during build/test, not shipped
+silently:**
+
+1. **OC-SVM severe class imbalance.** First-pass training used ALL fit
+   cycles as-is: NASA (3 batteries, ~470 cycles) vs. MIT (18 batteries,
+   ~14,400 cycles) - a ~30:1 imbalance. Sanity-checked the trained
+   detector against its OWN training data before wiring it into the app
+   and found **83.9% of NASA's own training cycles flagged "anomalous"**
+   vs. only 2.2% of MIT's - meaning a perfectly legitimate, in-domain
+   NASA battery would have shown the anomaly flag (and the linked
+   out-of-domain warning) essentially always in the dashboard. Fixed by
+   capping each fit battery to 200 cycles before fitting, so every
+   battery gets comparable weight regardless of how long its test
+   happened to run. Re-checked: NASA's false-flag rate dropped to 24.4%
+   (MIT stayed ~2.3%) - a large improvement, though not perfectly
+   balanced; flagged as a residual, not-fully-resolved limitation below
+   rather than claimed as fully fixed.
+2. **Negative RUL predictions displayed to the user.** `AppTest`
+   surfaced this immediately on the very first automated run: NASA
+   B0005's last logged cycle (already well past its true EOL) produced
+   a raw RUL prediction of **-15 cycles**. Mathematically a faithful
+   regression residual, but "-15 cycles remaining" is meaningless to
+   show a dashboard user. Fixed by clipping the displayed value to
+   `max(0, ...)` in `live_inference.py` (the conformal lower bound was
+   already clipped this way; the point prediction itself wasn't).
+
+**Verification method**: since this is a Streamlit app, "does it run"
+can't be confirmed by starting the server alone (the script only
+executes per client session, so a bare `curl` just returns the static
+HTML shell). Used `streamlit.testing.v1.AppTest` to actually execute the
+script and drive widget interactions programmatically - confirmed
+**zero exceptions** across all four paths:
+- NASA/B0005 (default, last cycle): SOH 71.9% vs. true 71.8% (+0.1),
+  RUL 0 vs. true 0 - accurate, in-domain, no anomaly flagged.
+- MIT/b1c17 (via dataset-switch interaction): SOH 82.6% vs. true 82.3%
+  (+0.3), RUL 36 vs. true 1 - accurate SOH, RUL prediction here is much
+  further from ground truth (consistent with the joint-adaptive model's
+  known modest R2, see Phase 4).
+- CALCE/CS2_35 (via dataset-switch interaction): SOH 66.0% vs. true
+  26.7% (**+39.3** - a huge miss), out-of-domain warning correctly
+  triggered (both reasons: no temperature channel AND OC-SVM anomaly),
+  anomaly flag correctly shown. This is the same domain-shift collapse
+  from the CALCE zero-retrain session, now visible live in the
+  dashboard exactly where a user would need to see it.
+- Synthetic uploaded CSV (2 cycles of idealized linear ramps, not real
+  battery data): parsed correctly, correctly flagged both anomalous and
+  out-of-domain (OC-SVM alone this time, since the synthetic upload DID
+  include a temperature column) - confirms the OC-SVM check operates
+  independently of the temperature-channel check, not just piggybacking
+  on it.
+
+**Known limitations, stated plainly rather than glossed over**:
+- OC-SVM balance fix is a large improvement, not a perfect one (NASA
+  cycles are still ~10x more likely to be flagged than MIT's, down from
+  ~38x) - a residual artifact of NASA having only 3 distinct batteries
+  to MIT's 18, even after per-battery cycle capping.
+- CSV upload expects a specific column schema (documented in the
+  sidebar's file-uploader caption) and a full charge+discharge cycle;
+  discharge-only uploads or different column names will fail the
+  parser with a shown error rather than a silent misread.
+- No live incremental meta-learner updating, exactly as scoped - every
+  prediction reruns the full fixed pipeline from already-trained
+  weights.
+
 ## Phase 5 re-run: CNN-LSTM's SHAP values are now meaningful (were pure noise before)
 
 | model | fraction in [3.55,3.8]V (before) | fraction (after fix) |
@@ -834,3 +1230,57 @@ PiFormer's concentration both increased too (0.518->0.601,
 0.040->0.117) - plausibly because normalized inputs give cleaner, less
 noisy gradients for DeepSHAP to attribute through generally, not specific
 to any one model.
+
+## Follow-up session 8 — switched health-report LLM from Anthropic to Gemini
+
+User provided a `GEMINI_API_KEY` and asked to switch `generate_health_report.py`
+from the (never-actually-called, since no key existed) Anthropic path to a
+live Gemini integration, keeping the prompt template unchanged.
+
+**Setup**: key written to `.env` (git-ignored - added `.env` to
+`.gitignore` first and confirmed via `git check-ignore -v .env` before
+writing the file). No `python-dotenv` installed; wrote a ~10-line manual
+`.env` parser in `generate_health_report.py` rather than add a dependency
+for one key, consistent with this project's existing pattern (e.g. using
+`requests` instead of the `anthropic`/`google-genai` SDKs).
+
+**Real finding, not a bug in this code**: the requested model,
+`gemini-2.5-flash`, returned **HTTP 404** for this specific key - *"This
+model models/gemini-2.5-flash is no longer available to new users"* -
+despite that exact model appearing in this same key's own
+`/v1beta/models` listing. Verified this wasn't a code/request-formatting
+issue by reproducing the identical 404 via a raw `curl` independent of
+any Python code. `gemini-2.0-flash` hit a separate free-tier 429 rate
+limit on the same key. `gemini-flash-latest` is the model alias
+confirmed working (HTTP 200) - its response's own `modelVersion` field
+reports it currently resolves to `gemini-3.6-flash`, not literally 2.5.
+Substituted this as the default model, with the deviation and full
+reasoning documented directly in `call_llm`'s docstring (not silently
+swapped) - trivial to revert to `gemini-2.5-flash` if the account's
+tier/billing changes later.
+
+**Re-ran all 5 example reports live through the real API** (not a
+fallback, not Claude-authored this time - genuine Gemini output). All 5
+succeeded, `outputs/health_reports_examples.json` updated in place.
+Verified numerically: **SOH point value and full RUL range (point +
+both confidence bounds) present and correct in every one of the 5
+reports, zero invented figures.**
+
+One real thing worth noting, not a defect: every Gemini report omits
+the SOH confidence interval, where the earlier Claude-authored
+versions included it. Re-reading the prompt template's own closing
+instruction line before assuming this was wrong: it asks the model to
+mention "the SOH percentage" and "the RUL estimate **with its
+confidence range**" - only RUL is explicitly told to include a range
+(matching the worked example in the prompt, which also only ranges
+RUL). Gemini is following the prompt's literal wording; the earlier
+model's inclusion of the SOH range was extra, not more correct. Prompt
+template left unchanged per instruction, so this is a legitimate
+model-to-model style difference, not a regression.
+
+`app.py`'s fallback-detection was widened from checking only
+`NO_API_KEY` to also catch a new `API_ERROR` sentinel `call_llm` now
+returns on any exception (timeout, non-2xx, malformed response), so a
+live API failure still degrades to the structured-data display rather
+than crashing the dashboard - "in case the key is missing or the call
+fails for any reason," per instruction.

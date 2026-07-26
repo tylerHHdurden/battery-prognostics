@@ -1,0 +1,124 @@
+2026-07-27 03:16:36.881 Uvicorn server started on :::8501
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.29.30:8501
+
+  Help agents write better Streamlit apps?
+  Install the official Streamlit skills by running streamlit skills in your terminal.
+
+2026-07-27 03:16:53.686 One-click skills install failed
+Traceback (most recent call last):
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\streamlit\runtime\backend_operation_handler.py", line 241, in handle
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+        skills.install_skills, global_mode=False, yes=True, app_dir=app_dir
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\concurrent\futures\thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\concurrent\futures\thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\streamlit\web\skills.py", line 830, in install_skills
+    return _install_project_skills(yes=yes, app_dir=app_dir)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\streamlit\web\skills.py", line 608, in _install_project_skills
+    click.secho(
+    ~~~~~~~~~~~^
+        "\n\u26a0 Symlinks not supported on this system.",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        fg="yellow",
+        ^^^^^^^^^^^^
+        bold=True,
+        ^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\click\termui.py", line 752, in secho
+    return echo(message, file=file, nl=nl, err=err, color=color)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\click\utils.py", line 345, in echo
+    file.write(out)  # type: ignore
+    ~~~~~~~~~~^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 2: character maps to <undefined>
+2026-07-27 03:16:55.914 One-click skills install failed
+Traceback (most recent call last):
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\streamlit\runtime\backend_operation_handler.py", line 241, in handle
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+        skills.install_skills, global_mode=False, yes=True, app_dir=app_dir
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\concurrent\futures\thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\concurrent\futures\thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\streamlit\web\skills.py", line 830, in install_skills
+    return _install_project_skills(yes=yes, app_dir=app_dir)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\streamlit\web\skills.py", line 608, in _install_project_skills
+    click.secho(
+    ~~~~~~~~~~~^
+        "\n\u26a0 Symlinks not supported on this system.",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        fg="yellow",
+        ^^^^^^^^^^^^
+        bold=True,
+        ^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\click\termui.py", line 752, in secho
+    return echo(message, file=file, nl=nl, err=err, color=color)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\click\utils.py", line 345, in echo
+    file.write(out)  # type: ignore
+    ~~~~~~~~~~^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 2: character maps to <undefined>
+2026-07-27 03:16:56.724 One-click skills install failed
+Traceback (most recent call last):
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\streamlit\runtime\backend_operation_handler.py", line 241, in handle
+    result = await asyncio.to_thread(
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+        skills.install_skills, global_mode=False, yes=True, app_dir=app_dir
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\asyncio\threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\concurrent\futures\thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\concurrent\futures\thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\streamlit\web\skills.py", line 830, in install_skills
+    return _install_project_skills(yes=yes, app_dir=app_dir)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\streamlit\web\skills.py", line 608, in _install_project_skills
+    click.secho(
+    ~~~~~~~~~~~^
+        "\n\u26a0 Symlinks not supported on this system.",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        fg="yellow",
+        ^^^^^^^^^^^^
+        bold=True,
+        ^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\click\termui.py", line 752, in secho
+    return echo(message, file=file, nl=nl, err=err, color=color)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\click\utils.py", line 345, in echo
+    file.write(out)  # type: ignore
+    ~~~~~~~~~~^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u26a0' in position 2: character maps to <undefined>

@@ -1,0 +1,62 @@
+[calce] === building CALCE sequence tensors (zero-retrain, reusing NASA+MIT norm stats) ===
+[calce] CS2_35: 932 cycles usable for sequence models
+[calce] CS2_36: 972 cycles usable for sequence models
+[calce] CS2_37: 1037 cycles usable for sequence models
+[calce] total usable sequence-model cycles: 2941
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[calce] recomputed de-standardization constants from NASA+MIT fit split: y_mean=95.533 y_std=5.966
+[calce] deep model predictions done (VLSTM/CNNLSTM/PiFormer, non-physics weights)
+[calce] fusion embeddings extracted: (2941, 16)
+[calce] hi_table CALCE rows=2943, sequence-model rows=2941, merged (inner) rows=2941
+[calce] imputed 5882 NaN cells (MATC/MATD, 100% missing on CALCE) with NASA+MIT training medians
+
+[calce] === ZERO-RETRAIN RESULTS (out-of-domain, all 3 CALCE cells) ===
+[calce] XGBoost-fusion (CALCE, zero-retrain): RMSE=17.9692 MAE=14.0788 R2=0.3037
+[calce] Stacking-Ridge-fusion (CALCE, zero-retrain): RMSE=17.8383 MAE=14.0120 R2=0.3138
+
+[calce] in-domain (NASA+MIT test) reference: XGBoost-fusion R2=0.917 (RMSE=1.392, MAE=0.959), Stacking-Ridge-fusion R2=0.917 (RMSE=1.394, MAE=0.966)
+
+[calce] === Conformal interval check: does it widen on CALCE? ===
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[conformal] SOH in-domain (NASA+MIT eval, fusion ensemble): method=MAPIE.SplitConformalRegressor target_coverage=90% empirical_coverage=0.956 avg_interval_width=4.733 n_test=3462
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[conformal] SOH out-of-domain (CALCE, zero-retrain, SAME calibration): method=MAPIE.SplitConformalRegressor target_coverage=90% empirical_coverage=0.061 avg_interval_width=4.733 n_test=2941
+
+[calce] in-domain (NASA+MIT eval) half-width=2.367, coverage=0.956
+[calce] out-of-domain (CALCE) half-width=2.367, coverage=0.061
+[calce] FINDING: interval width is IDENTICAL on CALCE vs NASA+MIT eval - this split-conformal implementation uses a single GLOBAL fixed-width quantile from calibration, so it does NOT adapt/widen per-input. It does not 'know' CALCE is out-of-domain.
+
+[calce] DONE
