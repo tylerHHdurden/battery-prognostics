@@ -19,7 +19,11 @@ Conformal interval widths are the FIXED half-widths already calibrated
 in prior sessions (both are GLOBAL, non-adaptive split-conformal per the
 CALCE zero-retrain finding - the width does not change per-input):
   SOH: +/- 2.367 (fusion-ensemble calibration, from the CALCE session)
-  RUL: +/- 435.7 (joint-adaptive calibration, from Phase 6; 871.417/2)
+  RUL: +/- 414.36 (joint-adaptive calibration, re-measured against the
+    current joint_adaptive.pt checkpoint in the "RUL conformal coverage
+    investigation" - see DEVELOPMENT_LOG.md, Follow-up session 11. The
+    previous +/-435.7 was stale: measured before that checkpoint's
+    log_sigma-clamping retrain and never refreshed afterward.)
 """
 
 import json
@@ -48,7 +52,7 @@ PROC_DIR = ROOT / "data" / "processed"
 PRED_DIR = PROC_DIR / "predictions"
 
 SOH_CONFORMAL_HALF_WIDTH = 2.367
-RUL_CONFORMAL_HALF_WIDTH = 871.417 / 2
+RUL_CONFORMAL_HALF_WIDTH = 828.7103271484375 / 2
 
 HI_DESCRIPTIONS = {
     "ICHV": "time spent charging near peak voltage (high-voltage/CV-tail duration)",

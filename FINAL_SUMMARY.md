@@ -127,12 +127,15 @@ pattern, not a failure of the analysis.
 | target | method | target coverage | empirical coverage | avg interval width | n |
 |---|---|---|---|---|---|
 | SOH (Stacking-Ridge) | MAPIE split-conformal | 90% | **95.1%** | 4.64 (SOH %) | 3,462 |
-| RUL (joint-adaptive) | MAPIE split-conformal | 90% | **88.9%** | 871.4 (cycles) | 3,462 |
+| RUL (joint-adaptive) | MAPIE split-conformal | 90% | **93.0%** | 828.7 (cycles) | 3,462 |
 
 SOH slightly over-covers (the safe direction for finite-sample
-split-conformal). RUL slightly under-covers, improved from 83.3% to
-88.9% as a side effect of the CNN-LSTM/joint-model fix (not from any
-change to the calibration method itself).
+split-conformal). RUL now over-covers too (93.0%, corrected from a
+previously-reported 88.9% that turned out to be stale documentation -
+see Known Limitations #2 and the calibration-investigation entry in
+`DEVELOPMENT_LOG.md` for the full story, including why this specific
+number should not be over-interpreted as a precise, stable property of
+the method).
 
 ---
 
@@ -142,10 +145,31 @@ change to the calibration method itself).
    converged deep models. Not broken — it trains and converges cleanly,
    just with lower final accuracy at this model scale/epoch budget.
    Left as-is per explicit instruction; not investigated further.
-2. **RUL conformal coverage (88.9%) is still slightly under the 90%
-   target.** Improved substantially as a side effect of the CNN-LSTM
-   fix, but not independently investigated or corrected — a real,
-   open calibration gap.
+2. **RUL conformal coverage is inherently noisy across battery
+   partitions, with only 6 distinct test batteries to draw on.**
+   Investigated directly: re-running calibration against every one of
+   the 20 possible 3-battery calib/3-battery eval partitions of the 6
+   test batteries (same code, same already-trained joint-adaptive
+   model, no retraining) swings empirical coverage from **64.7% to
+   99.6%** (mean 87.4%, std 10 points) - purely from which specific
+   batteries land in which half. Root cause: RUL residual RMSE varies
+   ~13x across the 6 test batteries (24.7 to 319.3 cycles), so with
+   only 3 batteries per half, whichever happens to be "easy" or "hard"
+   dominates the calibrated interval width and the resulting coverage.
+   Calibration-set *row* count (1,700-3,500 cycles) is not the
+   bottleneck - the finite-sample quantile correction is negligible at
+   that size - and the quantile interpolation method was verified
+   identical to MAPIE's own internal implementation
+   (`np.quantile(..., method="higher")` on `ceil((n+1)(1-alpha))/n`).
+   The real constraint is the number of *distinct test batteries* (6),
+   which is a data-availability limit, not a calibration-code bug -
+   fixing it would require either more held-out batteries or a
+   different conformal scheme (e.g. batched/cluster-robust conformal),
+   both out of scope for a calibration-layer-only investigation.
+   Documented split's current coverage is 93.0% (see above) - a
+   previously-reported 88.9% was simply stale: it was measured before
+   the log_sigma-clamping retraining of the joint-adaptive model, and
+   never re-measured afterward.
 3. **Adaptive loss weighting's homoscedastic parametrization has a
    structural limitation**: even correctly bounded (log_sigma clamped
    to [-0.7, 0.7]), it converged to α=β rather than an asymmetric

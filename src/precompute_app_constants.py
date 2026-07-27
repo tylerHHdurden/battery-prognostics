@@ -45,7 +45,11 @@ def main():
         "soh_mean": soh_mean, "soh_std": soh_std,
         "rul_mean": rul_mean, "rul_std": rul_std,
         "soh_conformal_half_width": 2.3667296955479173,
-        "rul_conformal_half_width": 871.417 / 2,
+        # was 871.417/2 - stale: measured before the log_sigma-clamping
+        # retrain of joint_adaptive.pt (see DEVELOPMENT_LOG.md, Follow-up
+        # session 11). Re-run src/run_conformal.py and copy its RUL
+        # avg_interval_width here if joint_adaptive.pt is ever retrained.
+        "rul_conformal_half_width": 828.7103271484375 / 2,
         "fit_battery_ids": fit_ids,
     }
     with open(PROC_DIR / "destandardization_constants.json", "w") as f:

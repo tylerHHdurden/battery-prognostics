@@ -1437,3 +1437,90 @@ homogeneous_bagging}.png`.
 Verified via `streamlit.testing.v1.AppTest`: zero exceptions, the new
 expander renders with 5 dataframes total on initial load (4 new + the
 1 already shown by the default battery selection).
+
+## Follow-up session 11 — RUL conformal coverage investigation (calibration-layer only)
+
+User asked why RUL conformal coverage sits at 88.9% instead of 90%,
+scoped explicitly to the calibration layer: check calibration-set size,
+check quantile-interpolation correctness, check whether 88.9% is stable
+across a fresh split - no retraining of any base/deep/fusion/joint
+model, no switching conformal schemes (e.g. CQR) if there's no small
+fix.
+
+**Finding 1 - the 88.9% figure itself was stale, not a live bug.**
+Re-running `src/run_conformal.py` unmodified, against the exact same
+documented calib/eval battery split (`calib=[B0018,b2c24,b3c35]`,
+`eval=[b1c4,b3c0,b4c38]`), now gives **93.0% coverage** (avg width
+828.7), not 88.9%. Root cause: the 88.9% number was measured right
+after the CNN-LSTM channel-normalization fix (RUL R2 -0.002 -> 0.279,
+see "Phase 6 re-run" above) - but "Follow-up session 2" (log_sigma
+clamping) retrained `joint_adaptive.pt` again immediately afterward
+(RUL R2 0.279 -> 0.432, confirmed via `models/joint_adaptive.pt`'s
+mtime, 13:23, the latest of all 4 joint-model checkpoints, and via the
+document order - the log_sigma-clamp session comes strictly after the
+Phase 6 re-run entry). Conformal calibration was simply never re-run
+after that second retraining, so the docs kept reporting a number that
+no longer matched the checkpoint on disk. No calibration code was
+touched to get 93.0% - it's the same script, same split, same
+(already-trained, untouched-by-this-session) model, just actually
+re-executed.
+
+**Finding 2 - calibration-set size and quantile interpolation both
+check out; they are not the problem.**
+- Calibration-set size: n_calib=1,746 rows (documented split) up to
+  ~3,500 for other partitions - the finite-sample correction
+  `ceil((n+1)(1-alpha))/n` shifts the target quantile level from 0.9 to
+  only 0.900916 at this size, moving the calibrated residual quantile
+  by about 1.5 cycles out of ~414 - negligible. Small calibration sets
+  (tens of points) would make this correction matter; 1,700+ does not.
+- Interpolation method: confirmed MAPIE 1.4.1's own internal
+  `_compute_quantiles` (`mapie/utils.py`) uses the exact same formula
+  and `method="higher"` as `run_conformal.py`'s manual fallback -
+  bit-for-bit the same approach, verified by reading MAPIE's source,
+  not assumed. No interpolation bug.
+
+**Finding 3 - the real issue: only 6 test batteries means single-split
+coverage is inherently high-variance, and this has no small fix.**
+Computed RUL predictions once (pure inference, no retraining) for all
+6 test batteries, then evaluated coverage under every one of the 20
+possible 3-battery-calib / 3-battery-eval partitions of those same 6
+batteries (same quantile code, same model, only the calib/eval
+battery assignment changes):
+
+| calib batteries | n_calib | coverage | width |
+|---|---|---|---|
+| B0018, b2c24, b3c35 (documented split) | 1,746 | 0.930 | 828.8 |
+| B0018, b3c0, b4c38 | 2,369 | **0.647** | 629.3 |
+| b1c4, b2c24, b3c35 | 2,839 | **0.996** | 902.6 |
+| ...(17 more) | | | |
+
+Full range across all 20 partitions: **coverage 64.7% to 99.6%**, mean
+87.4%, std 10 percentage points - purely a function of which 3
+batteries happen to land in calib vs. eval. Root cause: per-battery RUL
+RMSE varies about 13x across the 6 test batteries (B0018: 24.7 cycles;
+b1c4: 319.3 cycles), so whichever batteries happen to be "easy" or
+"hard" in a given half dominates that half's residual quantile /
+realized coverage. With only 6 distinct batteries (an inherent data
+limit - not something this calibration-layer investigation can
+manufacture more of), there aren't enough independent "battery-level"
+units for split-conformal's marginal-coverage guarantee to concentrate
+near 90% for any single partition; 1,700-3,500 calibration *rows* looks
+like a lot but the effective sample size for this guarantee is closer
+to "3 batteries," which is not enough.
+
+**Verdict: fixed one thing, documented one thing.**
+- Fixed: the stale 88.9% -> updated `FINAL_SUMMARY.md` and
+  `outputs/conformal_coverage.csv` to the current, correctly-measured
+  93.0% (re-running the untouched calibration script against the
+  untouched, already-trained model - no model retraining, no
+  calibration-method change, no touching of SOH's conformal numbers,
+  which remain exactly 95.1%/4.64 as before).
+- Left as a documented, structural limitation (per instruction, not
+  pursued further): RUL coverage for any single 3/3 battery partition
+  of this 6-battery test set is inherently noisy (64.7%-99.6% observed
+  range) due to high per-battery RUL-residual heterogeneity combined
+  with too few distinct test batteries. Not a calibration-code bug,
+  not fixable by a different quantile formula or a bigger calibration
+  set drawn from the same 6 batteries - would require either more held-
+  out test batteries or a different, battery-cluster-aware conformal
+  scheme, both explicitly out of scope here.
