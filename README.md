@@ -81,3 +81,11 @@ and get a live SOH/RUL prediction with conformal intervals, SHAP-based
 explanations, an LLM-generated plain-English health report (Gemini, falling
 back to Groq), an out-of-domain warning, and the evaluation-protocol
 experiments used to validate the pipeline.
+
+`data/raw/` (the NASA/CALCE/MIT research datasets) is gitignored - too
+large and not ours to redistribute - so "Browse existing battery" only
+works where those files have been downloaded locally (see `STATUS.md`).
+Without them, the dashboard shows a clear message per dataset rather than
+crashing; **"Upload your own cycle data" always works fully**, since it
+needs none of them - this is the recommended path for a fresh clone or a
+cloud deployment.

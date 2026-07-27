@@ -26,7 +26,10 @@ import pandas as pd
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
-from data_adapters import iterate_nasa_cycles, iterate_mit_cycles, iterate_calce_cycles
+from data_adapters import (
+    iterate_nasa_cycles, iterate_mit_cycles, iterate_calce_cycles,
+    nasa_data_available, mit_data_available, calce_data_available,
+)
 from live_inference import load_resources, predict_and_explain
 from generate_health_report import build_prompt, call_llm
 
@@ -266,16 +269,35 @@ def main():
 
         if mode == "Browse existing battery":
             dataset = st.selectbox("Dataset", ["NASA", "MIT", "CALCE"])
-            if dataset == "NASA":
-                battery_id = st.selectbox("Battery", NASA_CELLS)
-            elif dataset == "MIT":
-                battery_id = st.selectbox("Battery", sorted(get_mit_subset().keys()))
+            dataset_available = {
+                "NASA": nasa_data_available, "MIT": mit_data_available, "CALCE": calce_data_available,
+            }[dataset]()
+
+            if not dataset_available:
+                st.warning(
+                    f"⚠️ {dataset}'s raw data isn't available in this environment - the "
+                    f"NASA/CALCE/MIT research datasets aren't bundled with this app (size + "
+                    f"third-party redistribution terms), so pre-loaded browsing only works "
+                    f"where they've been downloaded locally (see README). Try a different "
+                    f"dataset, or use 'Upload your own cycle data' below - it works fully "
+                    f"without any of them."
+                )
             else:
-                battery_id = st.selectbox("Battery", CALCE_CELLS)
-                st.caption("⚠️ CALCE has no temperature channel and is a different cell "
-                           "chemistry/format than NASA+MIT training data - expect the "
-                           "out-of-domain warning to trigger.")
-            cycles = load_battery_cycles(dataset, battery_id)
+                if dataset == "NASA":
+                    battery_id = st.selectbox("Battery", NASA_CELLS)
+                elif dataset == "MIT":
+                    battery_id = st.selectbox("Battery", sorted(get_mit_subset().keys()))
+                else:
+                    battery_id = st.selectbox("Battery", CALCE_CELLS)
+                    st.caption("⚠️ CALCE has no temperature channel and is a different cell "
+                               "chemistry/format than NASA+MIT training data - expect the "
+                               "out-of-domain warning to trigger.")
+                try:
+                    cycles = load_battery_cycles(dataset, battery_id)
+                except (FileNotFoundError, OSError, KeyError) as e:
+                    st.error(f"Could not load {dataset}/{battery_id}'s raw data: {e}. "
+                             f"It may be missing or incomplete locally - try a different "
+                             f"battery, or use 'Upload your own cycle data' below.")
         else:
             st.caption("CSV columns required: `cycle_idx, phase (charge/discharge), "
                        "time_s, voltage_v, current_a`. Optional: `temperature_c`.")

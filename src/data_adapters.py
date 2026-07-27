@@ -31,6 +31,28 @@ MIT_DIR = ROOT / "data" / "raw" / "mit"
 
 
 # --------------------------------------------------------------------------
+# Raw-data availability checks
+#
+# data/raw/ is entirely gitignored (third-party research datasets - size +
+# redistribution licensing concerns), so a fresh clone (e.g. Streamlit
+# Community Cloud) has none of these files. These let a caller (the
+# dashboard) check BEFORE trying to load, instead of hitting a raw
+# FileNotFoundError/OSError deep inside loadmat/h5py/openpyxl.
+# --------------------------------------------------------------------------
+
+def nasa_data_available() -> bool:
+    return NASA_DIR.is_dir() and any(NASA_DIR.glob("*.mat"))
+
+
+def calce_data_available() -> bool:
+    return CALCE_DIR.is_dir() and any(CALCE_DIR.glob("*.zip"))
+
+
+def mit_data_available() -> bool:
+    return MIT_DIR.is_dir() and any((MIT_DIR / bf).exists() for bf in MIT_BATCH_FILES)
+
+
+# --------------------------------------------------------------------------
 # NASA
 # --------------------------------------------------------------------------
 

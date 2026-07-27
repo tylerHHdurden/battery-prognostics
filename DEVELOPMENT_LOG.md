@@ -1524,3 +1524,58 @@ to "3 batteries," which is not enough.
   set drawn from the same 6 batteries - would require either more held-
   out test batteries or a different, battery-cluster-aware conformal
   scheme, both explicitly out of scope here.
+
+## Follow-up session 12 — graceful degradation when raw datasets aren't present (deploy fix)
+
+Streamlit Community Cloud deployment crashed: `data/raw/` (NASA .mat,
+CALCE .zip, MIT .mat/HDF5 files) is entirely gitignored - correctly, per
+size (~11GB locally) and third-party redistribution-licensing concerns
+for these research datasets - so a fresh clone has none of them, and
+"Browse existing battery" hit a raw `FileNotFoundError`/`OSError` deep
+inside `scipy.io.loadmat`/`h5py.File`/`zipfile.ZipFile` with no handling.
+
+**Considered and rejected: serving "Browse existing battery" from
+already-processed/derived data instead of raw files.** Checked what
+`predict_and_explain` (`live_inference.py`) actually consumes: it calls
+`compute_health_indicators(cycle)` and `get_cycle_tensor(cycle,
+n_bins=200)` directly on the RAW per-cycle `{t, V, I, T}` waveform
+arrays - not on anything in `hi_table.parquet` or
+`fusion_embeddings.csv` (both already-reduced: scalar HI columns / a
+fixed 16-dim embedding, no raw sequences). VLSTM/CNN-LSTM/PiFormer/the
+joint-adaptive model and the per-instance DeepSHAP voltage-region
+localization all need the full raw sequence tensor to run a genuine
+forward pass and explanation for a chosen cycle - there's no derived
+table that substitutes for this without literally re-embedding the raw
+waveforms into some other file, which is the same redistribution
+concern in a different format, not a way around it. So a
+derived-data-only fix for "Browse existing battery" isn't feasible;
+only the raw files (or none) will do.
+
+**Fix implemented: per-dataset graceful degradation, upload path
+untouched.** Added `nasa_data_available()` / `calce_data_available()` /
+`mit_data_available()` to `data_adapters.py` (cheap existence checks:
+does the expected raw directory/file exist on disk right now).
+`app.py`'s sidebar checks the SELECTED dataset's availability before
+attempting to load it: if unavailable, shows a clear `st.warning`
+explaining why (size + licensing, not a bug) and to try a different
+dataset or use upload instead - no attempt to load, no crash. If
+available, loads as before, now wrapped in a `try/except
+(FileNotFoundError, OSError, KeyError)` as a defensive second layer
+(handles a partially-populated or corrupted local raw dataset, not just
+total absence) that shows a clear inline `st.error` instead of an
+uncaught traceback. "Upload your own cycle data" needed no changes -
+verified it already never touches `data/raw` anywhere in
+`parse_uploaded_csv`/`predict_and_explain`.
+
+**Verified both ways, not just read the code:**
+- Renamed `data/raw` away entirely (its full ~11GB, confirmed untracked
+  via `git status`, so trivially restorable) to reproduce the exact
+  deployed condition. Re-ran `AppTest` against NASA/MIT/CALCE: zero
+  exceptions, each shows the new per-dataset warning message, nothing
+  crashes.
+  - Ran the upload path in this same no-raw-data state with a synthetic
+    CSV: 4 tabs render, zero exceptions - confirms it's genuinely
+    independent of `data/raw`, not just untested.
+  - Restored `data/raw`, re-ran `AppTest` on the NASA default path:
+  back to normal, zero sidebar warnings, 4 tabs - confirms the fix adds
+  a check, not a regression, for the existing local-dev experience.
