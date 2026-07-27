@@ -217,6 +217,52 @@ def plot_conformal():
     plt.close(fig)
 
 
+def plot_early_prediction_test():
+    df = pd.read_csv(PRED_DIR / "early_prediction_test.csv")
+    per_battery = pd.read_csv(PRED_DIR / "early_prediction_per_battery.csv")
+
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+    pivot = df.pivot(index="model", columns="regime", values="rmse")
+    pivot.plot(kind="bar", ax=axes[0])
+    axes[0].set_title("Early-life (first 20%) vs full-lifetime RMSE\n(lower=better; note R2 is NOT shown here - see log)")
+    axes[0].set_ylabel("RMSE (SOH %)")
+    axes[0].tick_params(axis="x", rotation=0)
+
+    axes[1].bar(per_battery["battery_id"], per_battery["r2"], color="tab:red")
+    axes[1].axhline(0, color="black", linewidth=0.8)
+    axes[1].set_title("Per-battery early-life R2\n(deeply negative here = near-zero target variance, NOT model failure)")
+    axes[1].set_ylabel("R2")
+    axes[1].tick_params(axis="x", rotation=30)
+    fig.tight_layout()
+    fig.savefig(OUT_DIR / "phase7_early_prediction_test.png", dpi=120)
+    plt.close(fig)
+
+
+def plot_drop_branch_ablation():
+    df = pd.read_csv(PRED_DIR / "drop_branch_ablation.csv")
+    fig, ax = plt.subplots(figsize=(8, 5))
+    colors = ["tab:red" if v == "drop_pred_XGBoost_fusion" else "tab:blue" for v in df["variant"]]
+    ax.barh(df["variant"], df["rmse"], color=colors)
+    ax.set_xlabel("RMSE (SOH %)")
+    ax.set_title("Drop-one-branch ablation: test RMSE with each base learner removed")
+    ax.invert_yaxis()
+    fig.tight_layout()
+    fig.savefig(OUT_DIR / "phase7_drop_branch_ablation.png", dpi=120)
+    plt.close(fig)
+
+
+def plot_homogeneous_bagging():
+    df = pd.read_csv(PRED_DIR / "homogeneous_bagging_comparison.csv")
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    ax.barh(df["model"], df["r2"])
+    ax.set_xlabel("R2 (test set)")
+    ax.set_title("Homogeneous bagging (5 XGBoost seeds) vs single fit vs heterogeneous ensemble")
+    ax.invert_yaxis()
+    fig.tight_layout()
+    fig.savefig(OUT_DIR / "phase7_homogeneous_bagging.png", dpi=120)
+    plt.close(fig)
+
+
 def main():
     plot_bfa_convergence()
     print("[plots] BFA convergence saved")
@@ -234,6 +280,12 @@ def main():
     print("[plots] SHAP rankings saved")
     plot_conformal()
     print("[plots] conformal plots saved")
+    plot_early_prediction_test()
+    print("[plots] early-prediction test plot saved")
+    plot_drop_branch_ablation()
+    print("[plots] drop-branch ablation plot saved")
+    plot_homogeneous_bagging()
+    print("[plots] homogeneous bagging plot saved")
     print("[plots] ALL DONE")
 
 

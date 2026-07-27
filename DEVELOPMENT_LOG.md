@@ -1412,3 +1412,28 @@ though R2 (the wrong metric there) suggests otherwise (Experiment 1).
 None of this was tuned or cherry-picked to produce this narrative - it's
 the consistent result of every ensembling angle tried across this
 project's sessions.
+
+## Follow-up session 10 — surfaced the 3 evaluation-protocol experiments in the dashboard
+
+The early-prediction test, drop-one-branch ablation, and homogeneous-
+bagging baseline (Follow-up session 9) previously existed only as CSVs
+and this log entry - not visible anywhere in `app.py`. Added a
+collapsed "Evaluation protocol" expander to the dashboard (always
+visible, independent of whichever battery/cycle is currently selected,
+since these 3 experiments evaluate the fixed test set as a whole) that
+reads and displays all 4 result tables directly - no re-computation,
+just a read-only view of the same CSVs already referenced above. The
+early-prediction table carries its own in-app warning reiterating the
+R2-vs-near-zero-variance caveat, so a dashboard viewer doesn't
+misread the negative R2 values as a regression the way a bare number
+might suggest.
+
+Also added matching plots (`plot_early_prediction_test`,
+`plot_drop_branch_ablation`, `plot_homogeneous_bagging` in
+`make_plots.py`) for consistency with every earlier phase, saved as
+`outputs/phase7_{early_prediction_test,drop_branch_ablation,
+homogeneous_bagging}.png`.
+
+Verified via `streamlit.testing.v1.AppTest`: zero exceptions, the new
+expander renders with 5 dataframes total on initial load (4 new + the
+1 already shown by the default battery selection).

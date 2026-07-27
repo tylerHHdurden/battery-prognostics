@@ -28,6 +28,7 @@ from generate_health_report import build_prompt, call_llm
 
 ROOT = Path(__file__).resolve().parent
 PROC_DIR = ROOT / "data" / "processed"
+PRED_DIR = PROC_DIR / "predictions"
 
 NASA_CELLS = ["B0005", "B0006", "B0007", "B0018"]
 CALCE_CELLS = ["CS2_35", "CS2_36", "CS2_37"]
@@ -168,11 +169,47 @@ def render_context(ctx: dict, dataset: str, battery_id: str, true_soh=None, true
         st.write(report)
 
 
+def render_evaluation_protocol_section():
+    """
+    Surfaces the 3 evaluation-protocol experiments (early-prediction test,
+    drop-one-branch ablation, homogeneous-bagging baseline) that were run
+    as standalone analyses (src/run_early_prediction_test.py,
+    run_drop_branch_ablation.py, run_homogeneous_bagging.py) against the
+    fixed test set - NOT re-run live per battery/cycle like the rest of
+    this dashboard. Read-only display of already-computed CSVs; see
+    DEVELOPMENT_LOG.md for the full narrative and caveats (especially the
+    R2-vs-near-zero-target-variance caveat on the early-prediction table).
+    """
+    with st.expander("📊 Evaluation protocol: early-prediction / drop-branch / bagging experiments"):
+        st.caption("These 3 experiments evaluate the fixed test set as a whole (not the "
+                   "currently-selected battery/cycle above) - see DEVELOPMENT_LOG.md for "
+                   "full discussion.")
+
+        st.markdown("**1. Early-prediction test** (first 20% of each battery's cycles)")
+        st.warning("R² goes negative here (early-life SOH has almost no variance to "
+                   "explain), but RMSE/MAE actually *improve* - use RMSE/MAE, not R², "
+                   "to judge this table.")
+        early_df = pd.read_csv(PRED_DIR / "early_prediction_test.csv")
+        st.dataframe(early_df, hide_index=True, width="stretch")
+        early_battery_df = pd.read_csv(PRED_DIR / "early_prediction_per_battery.csv")
+        st.dataframe(early_battery_df, hide_index=True, width="stretch")
+
+        st.markdown("**2. Drop-one-branch ablation** (Ridge meta-learner refit without each base learner)")
+        drop_df = pd.read_csv(PRED_DIR / "drop_branch_ablation.csv")
+        st.dataframe(drop_df, hide_index=True, width="stretch")
+
+        st.markdown("**3. Homogeneous-bagging baseline** (5 XGBoost seeds averaged)")
+        bag_df = pd.read_csv(PRED_DIR / "homogeneous_bagging_comparison.csv")
+        st.dataframe(bag_df, hide_index=True, width="stretch")
+
+
 def main():
     st.title("🔋 Battery Digital Twin Dashboard")
     st.caption("Fusion-enabled ensemble (XGBoost+fusion / Stacking-Ridge+fusion) for SOH, "
                "joint-adaptive model for RUL. Every prediction below is computed live from "
                "trained weights - no retraining happens in this app.")
+
+    render_evaluation_protocol_section()
 
     with st.sidebar:
         st.header("Battery selection")
