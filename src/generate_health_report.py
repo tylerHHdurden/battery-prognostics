@@ -16,11 +16,16 @@ avoids adding dependencies for something this simple - see e.g. the
 Anthropic-via-`requests` precedent this replaces). `.env` is
 git-ignored; never commit it.
 
-If no key is configured or the API call fails for any reason, `call_llm`
-returns a clear `NO_API_KEY`/`API_ERROR` sentinel rather than silently
-failing or fabricating a response - `app.py` and this module's own
-fallback both check for that prefix and show the structured data
-instead of a narrative in that case.
+Fallback chain: `call_llm` tries Gemini first; if that fails for any
+reason (missing key, rate limit, any other error), it tries Groq
+(`llama-3.3-70b-versatile` via Groq's OpenAI-compatible chat-completions
+endpoint, same prompt template, key from `GROQ_API_KEY`); only if BOTH
+fail does the caller fall back to displaying the structured data
+instead of a narrative. `call_llm` returns `(report_text, provider)`
+where `provider` is `"Gemini"`, `"Groq"`, or `None` (both failed) - the
+caller uses `provider` to label which model actually answered, and
+still checks the `NO_API_KEY`/`API_ERROR` prefix on `report_text` to
+decide whether to show the structured-data fallback.
 """
 
 import json
@@ -90,7 +95,11 @@ def build_prompt(context: dict) -> str:
     )
 
 
-def call_llm(prompt: str, model: str = "gemini-flash-latest") -> str:
+def _is_error(text: str) -> bool:
+    return text.startswith("NO_API_KEY") or text.startswith("API_ERROR")
+
+
+def call_gemini(prompt: str, model: str = "gemini-flash-latest") -> str:
     """
     ASSUMPTION/deviation, disclosed: requested model was "gemini-2.5-flash",
     but the provided GEMINI_API_KEY's account gets a 404
@@ -124,11 +133,50 @@ def call_llm(prompt: str, model: str = "gemini-flash-latest") -> str:
         return f"API_ERROR: Gemini call failed ({type(e).__name__}: {e})"
 
 
+def call_groq(prompt: str, model: str = "llama-3.3-70b-versatile") -> str:
+    """Groq's OpenAI-compatible chat-completions endpoint - same prompt
+    template as Gemini, used only as a fallback when Gemini fails."""
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        return "NO_API_KEY: set GROQ_API_KEY (in .env) to enable the Groq fallback."
+    try:
+        resp = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {api_key}", "content-type": "application/json"},
+            json={"model": model, "messages": [{"role": "user", "content": prompt}]},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"].strip()
+    except Exception as e:
+        return f"API_ERROR: Groq call failed ({type(e).__name__}: {e})"
+
+
+def call_llm(prompt: str, gemini_model: str = "gemini-flash-latest",
+             groq_model: str = "llama-3.3-70b-versatile") -> tuple[str, str | None]:
+    """Try Gemini first; on any failure (missing key, rate limit, or any
+    other error) fall through to Groq; only if both fail does the caller
+    see an error sentinel. Returns (report_text, provider) where
+    provider is "Gemini", "Groq", or None if both failed."""
+    gemini_result = call_gemini(prompt, gemini_model)
+    if not _is_error(gemini_result):
+        return gemini_result, "Gemini"
+
+    groq_result = call_groq(prompt, groq_model)
+    if not _is_error(groq_result):
+        return groq_result, "Groq"
+
+    combined = ("NO_API_KEY" if gemini_result.startswith("NO_API_KEY")
+                and groq_result.startswith("NO_API_KEY") else "API_ERROR")
+    return f"{combined}: both providers failed - Gemini: {gemini_result}; Groq: {groq_result}", None
+
+
 def generate_report(dataset: str, battery_id: str, cycle_idx: int) -> dict:
     context = get_report_context(dataset, battery_id, cycle_idx)
     prompt = build_prompt(context)
-    report_text = call_llm(prompt)
-    return {"context": context, "prompt": prompt, "report": report_text}
+    report_text, provider = call_llm(prompt)
+    return {"context": context, "prompt": prompt, "report": report_text, "provider": provider}
 
 
 if __name__ == "__main__":
@@ -144,7 +192,7 @@ if __name__ == "__main__":
         print(f"\n=== {dataset}/{battery_id} cycle {cycle_idx} ===")
         r = generate_report(dataset, battery_id, cycle_idx)
         print("PROMPT:\n", r["prompt"])
-        print("REPORT:\n", r["report"])
+        print(f"REPORT (via {r['provider']}):\n", r["report"])
         results.append(r)
 
     with open(OUT_DIR / "health_reports_examples.json", "w") as f:

@@ -8,8 +8,12 @@ src/live_inference.py (no lookup tables) - "a full pipeline rerun per
 new upload is fine" per instruction, so this app does not attempt any
 incremental/cached meta-learner updating.
 
-Functional over polished: plain Streamlit widgets, one matplotlib plot,
-no custom theming.
+UI is organized into 4 tabs (Prediction / Explainability / Health Report
+/ Model Validation) purely for presentation - no change to any
+underlying computation, model, or data versus the single-page layout
+this replaced. Functional over polished: plain Streamlit widgets, one
+matplotlib plot, no custom theming beyond native `st.metric`/colored-
+markdown/status-container idioms.
 """
 
 import json
@@ -98,68 +102,104 @@ def parse_uploaded_csv(df: pd.DataFrame) -> list[dict]:
     return sorted(records, key=lambda r: r["cycle_idx"])
 
 
-def render_context(ctx: dict, dataset: str, battery_id: str, true_soh=None, true_rul=None):
-    if "error" in ctx:
-        st.error(ctx["error"])
-        return
+def soh_band(soh_pred: float) -> tuple[str, str, str]:
+    """Returns (emoji, streamlit-markdown-color, label) for the 3 SOH health bands."""
+    if soh_pred > 80:
+        return "🟢", "green", "Healthy"
+    elif soh_pred >= 50:
+        return "🟡", "orange", "Degraded"
+    else:
+        return "🔴", "red", "Critical"
 
-    if ctx["out_of_domain"]:
-        st.warning(
-            "**OUT-OF-DOMAIN — conformal interval reliability not guaranteed.**\n\n"
-            "Reasons: " + "; ".join(ctx["domain_reasons"]) + ".\n\n"
-            "The CALCE zero-retrain evaluation found the exact failure mode this "
-            "warning exists to prevent: the conformal interval below looked **identically "
-            "confident** in-domain and out-of-domain (same fixed width, ±2.37 SOH points "
-            "either way), while actual empirical coverage collapsed from 95.6% (NASA/MIT) "
-            "to just 6.1% (CALCE). The interval is shown below for reference, but treat it "
-            "as decorative, not a real confidence guarantee, for this battery."
-        )
+
+def render_about_section():
+    st.markdown(
+        "**About this dashboard**: this tool estimates a lithium-ion battery's current "
+        "**State of Health (SOH)** - its remaining capacity as a percentage of what it "
+        "could hold when new - and its **Remaining Useful Life (RUL)** - roughly how many "
+        "more charge/discharge cycles it can complete before reaching end of life "
+        "(conventionally, 80% of its original capacity). Both predictions come with a "
+        "**90% conformal interval**: a statistically-calibrated range built so that, for "
+        "batteries similar to the ones this model was trained on, the true value falls "
+        "inside that range about 90% of the time - it is a genuine calibrated uncertainty "
+        "estimate, not just an arbitrary error bar, though (as this dashboard will warn "
+        "you explicitly) that guarantee can break down for batteries unlike the training data."
+    )
+    st.divider()
+
+
+def render_prediction_tab(ctx: dict, true_soh, true_rul):
+    st.caption("Live predictions for the currently-selected cycle, computed fresh from "
+               "trained model weights (no retraining happens in this app).")
 
     col1, col2 = st.columns(2)
     with col1:
         delta = None if true_soh is None else round(ctx["soh_pred"] - true_soh, 1)
         st.metric("Predicted SOH", f"{ctx['soh_pred']}%",
                    delta=(f"{delta:+.1f} vs. true {true_soh}%" if delta is not None else None))
+        emoji, color, label = soh_band(ctx["soh_pred"])
+        st.markdown(f"{emoji} :{color}[**{label}**] "
+                    f"(bands: green >80% healthy, yellow 50-80% degraded, red <50% critical)")
         st.caption(f"90% conformal interval: {ctx['soh_conformal_lo']}% – {ctx['soh_conformal_hi']}%"
-                   + (" ⚠️ unreliable (see warning above)" if ctx["out_of_domain"] else ""))
+                   + (" ⚠️ unreliable, see banner above" if ctx["out_of_domain"] else ""))
     with col2:
         delta = None if true_rul is None else round(ctx["rul_pred"] - true_rul)
         st.metric("Predicted RUL", f"{ctx['rul_pred']} cycles",
                    delta=(f"{delta:+d} vs. true {true_rul}" if delta is not None else None))
         st.caption(f"90% conformal interval: {ctx['rul_conformal_lo']} – {ctx['rul_conformal_hi']} cycles"
-                   + (" ⚠️ unreliable (see warning above)" if ctx["out_of_domain"] else ""))
+                   + (" ⚠️ unreliable, see banner above" if ctx["out_of_domain"] else ""))
         st.caption("_RUL comes from the Phase 4 joint-adaptive model, the only trained RUL "
                    "predictor in this project - the fusion ensemble itself is SOH-only._")
 
+    st.divider()
     if ctx["anomaly_flag"]:
         st.error("🚨 **Anomaly flag**: the One-Class SVM considers this cycle's feature "
                   "vector unlike the NASA+MIT training distribution.")
     else:
-        st.success("✅ No anomaly flagged (One-Class SVM).")
+        st.success("✅ No anomaly flagged (One-Class SVM) - this cycle's feature vector "
+                    "looks consistent with the NASA+MIT training distribution.")
+    st.caption("The anomaly detector is trained only on NASA+MIT data, so it doubles as an "
+               "early signal of out-of-domain data alongside the missing-temperature check.")
 
-    st.subheader("Why this prediction? (per-instance SHAP)")
+
+def render_explainability_tab(ctx: dict):
+    st.caption("Per-instance explanation for THIS specific cycle's prediction - not an "
+               "average over many cycles.")
+
+    st.subheader("Top contributing features (TreeSHAP)")
     feat_df = pd.DataFrame(ctx["top_features"])
     st.dataframe(feat_df[["feature", "description", "shap_value"]], hide_index=True,
                  width="stretch")
+    st.caption("Ranked by |SHAP value| - how much each feature pushed this cycle's SOH "
+               "prediction up or down, computed via TreeSHAP on the fusion feature vector.")
+
+    st.subheader("Voltage region driving this prediction (VLSTM DeepSHAP)")
     if ctx["voltage_region"]:
         vr = ctx["voltage_region"]
-        st.write(f"**Voltage region driving this prediction (VLSTM DeepSHAP):** "
-                 f"{vr['v_lo']}V – {vr['v_hi']}V "
+        st.write(f"**{vr['v_lo']}V – {vr['v_hi']}V** "
                  f"(~{round(vr['frac_of_attribution']*100)}% of attribution)")
+        st.caption("This is the voltage window where VLSTM's own gradient-based explanation "
+                   "(DeepSHAP) concentrates most of its attention when predicting this "
+                   "specific cycle's SOH - computed fresh per cycle, not a fixed constant.")
     elif ctx["voltage_region_error"]:
         st.caption(f"(voltage-region explanation unavailable: {ctx['voltage_region_error']})")
 
-    st.subheader("Plain-English health report")
+
+def render_health_report_tab(ctx: dict, dataset: str, battery_id: str):
+    st.caption("A plain-English summary of the two panels above, generated by an LLM from "
+               "the exact structured numbers shown there (no numbers are invented).")
+
     context_for_llm = dict(ctx)
     context_for_llm["battery_id"] = battery_id
     context_for_llm["dataset"] = dataset
     prompt = build_prompt(context_for_llm)
-    report = call_llm(prompt)
+
+    with st.spinner("Generating plain-English report (Gemini, falling back to Groq if needed)..."):
+        report, provider = call_llm(prompt)
+
     if report.startswith("NO_API_KEY") or report.startswith("API_ERROR"):
-        reason = ("No `GEMINI_API_KEY` configured" if report.startswith("NO_API_KEY")
-                   else f"Gemini API call failed ({report})")
-        st.info(f"{reason} - showing the structured data the LLM would have used instead "
-                f"of a generated narrative:")
+        st.info(f"Both Gemini and Groq were unavailable ({report}) - showing the structured "
+                f"data the LLM would have used instead of a generated narrative:")
         st.json({
             "soh_pred": ctx["soh_pred"], "soh_interval": [ctx["soh_conformal_lo"], ctx["soh_conformal_hi"]],
             "rul_pred": ctx["rul_pred"], "rul_interval": [ctx["rul_conformal_lo"], ctx["rul_conformal_hi"]],
@@ -167,6 +207,7 @@ def render_context(ctx: dict, dataset: str, battery_id: str, true_soh=None, true
         })
     else:
         st.write(report)
+        st.caption(f"_Generated via {provider}._")
 
 
 def render_evaluation_protocol_section():
@@ -180,11 +221,12 @@ def render_evaluation_protocol_section():
     DEVELOPMENT_LOG.md for the full narrative and caveats (especially the
     R2-vs-near-zero-target-variance caveat on the early-prediction table).
     """
-    with st.expander("📊 Evaluation protocol: early-prediction / drop-branch / bagging experiments"):
-        st.caption("These 3 experiments evaluate the fixed test set as a whole (not the "
-                   "currently-selected battery/cycle above) - see DEVELOPMENT_LOG.md for "
-                   "full discussion.")
+    st.caption("These 3 experiments evaluate the FIXED TEST SET as a whole - static research "
+               "validation, unrelated to whichever battery/cycle is selected in the sidebar. "
+               "See DEVELOPMENT_LOG.md for full discussion.")
 
+    with st.expander("📊 Evaluation protocol: early-prediction / drop-branch / bagging experiments",
+                      expanded=True):
         st.markdown("**1. Early-prediction test** (first 20% of each battery's cycles)")
         st.warning("R² goes negative here (early-life SOH has almost no variance to "
                    "explain), but RMSE/MAE actually *improve* - use RMSE/MAE, not R², "
@@ -197,19 +239,23 @@ def render_evaluation_protocol_section():
         st.markdown("**2. Drop-one-branch ablation** (Ridge meta-learner refit without each base learner)")
         drop_df = pd.read_csv(PRED_DIR / "drop_branch_ablation.csv")
         st.dataframe(drop_df, hide_index=True, width="stretch")
+        st.caption("Dropping XGBoost collapses performance; dropping any deep model changes "
+                   "almost nothing - the ensemble's accuracy is carried almost entirely by "
+                   "XGBoost + the fusion embedding.")
 
         st.markdown("**3. Homogeneous-bagging baseline** (5 XGBoost seeds averaged)")
         bag_df = pd.read_csv(PRED_DIR / "homogeneous_bagging_comparison.csv")
         st.dataframe(bag_df, hide_index=True, width="stretch")
+        st.caption("Averaging 5 same-model seeds underperforms both the single best seed "
+                   "and the heterogeneous ensemble here - bagging smooths noise without "
+                   "adding useful diversity for this dataset.")
 
 
 def main():
     st.title("🔋 Battery Digital Twin Dashboard")
     st.caption("Fusion-enabled ensemble (XGBoost+fusion / Stacking-Ridge+fusion) for SOH, "
-               "joint-adaptive model for RUL. Every prediction below is computed live from "
-               "trained weights - no retraining happens in this app.")
-
-    render_evaluation_protocol_section()
+               "joint-adaptive model for RUL.")
+    render_about_section()
 
     with st.sidebar:
         st.header("Battery selection")
@@ -251,7 +297,7 @@ def main():
             selected_cycle = None
 
     if selected_cycle is None:
-        st.info("Select a battery (or upload a CSV) in the sidebar to begin.")
+        st.info("👈 Select a battery (or upload a CSV) in the sidebar to begin.")
         return
 
     st.header(f"{battery_id} — cycle {selected_cycle['cycle_idx']} of {len(cycles)}")
@@ -262,10 +308,16 @@ def main():
     ax.set_ylabel("voltage (V)")
     ax.set_title("Discharge voltage curve for this cycle")
     st.pyplot(fig)
+    st.caption("Raw voltage-vs-time trace for the selected cycle's discharge phase - the "
+               "signal every prediction below is ultimately derived from.")
 
     res = get_resources()
-    with st.spinner("Running fusion ensemble + joint-adaptive model + SHAP..."):
+    with st.spinner("Running fusion ensemble + joint-adaptive model + SHAP explanation..."):
         ctx = predict_and_explain(selected_cycle, res)
+
+    if "error" in ctx:
+        st.error(ctx["error"])
+        return
 
     true_soh = true_rul = None
     if dataset in ("NASA", "MIT", "CALCE"):
@@ -276,7 +328,29 @@ def main():
             true_soh = round(float(row.iloc[0]["SOH"]), 1)
             true_rul = int(row.iloc[0]["RUL"])
 
-    render_context(ctx, dataset, battery_id, true_soh, true_rul)
+    if ctx["out_of_domain"]:
+        st.error(
+            "🚨 **OUT-OF-DOMAIN — conformal interval reliability NOT guaranteed.** 🚨\n\n"
+            "Reasons: " + "; ".join(ctx["domain_reasons"]) + ".\n\n"
+            "The CALCE zero-retrain evaluation found the exact failure mode this warning "
+            "exists to prevent: the conformal interval shown in the Prediction tab looked "
+            "**identically confident** in-domain and out-of-domain (same fixed width, "
+            "±2.37 SOH points either way), while actual empirical coverage collapsed from "
+            "95.6% (NASA/MIT) to just 6.1% (CALCE). Treat any interval below as decorative, "
+            "not a real confidence guarantee, for this battery."
+        )
+
+    tab_prediction, tab_explain, tab_report, tab_validation = st.tabs(
+        ["🔮 Prediction", "🔍 Explainability", "📝 Health Report", "🧪 Model Validation"]
+    )
+    with tab_prediction:
+        render_prediction_tab(ctx, true_soh, true_rul)
+    with tab_explain:
+        render_explainability_tab(ctx)
+    with tab_report:
+        render_health_report_tab(ctx, dataset, battery_id)
+    with tab_validation:
+        render_evaluation_protocol_section()
 
 
 if __name__ == "__main__":
