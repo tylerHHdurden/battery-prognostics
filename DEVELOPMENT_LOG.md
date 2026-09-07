@@ -3619,3 +3619,65 @@ no new source files). Changed: `app.py` (new Showcase tab + its render
 function, first-tab wiring, `import plotly.graph_objects as go`,
 docstring updated), `requirements.txt` (+`plotly==7.0.0`).
 
+## Follow-up session 31 — fix graceful-degradation gaps + visual pass (time-boxed to 1h)
+
+**Priority 1 root cause, confirmed by reproduction, not guessed**: hid
+`data/raw/` locally (renamed it away, then restored - the exact method
+session 12 already used to test this scenario) to simulate the
+deployed/no-raw-data condition. Reproduced the reported error
+bit-for-bit: `"Could not load NASA/B0018: Reader needs file name or
+open file-like object"`. Root cause: the Streaming Digital Twin tab's
+own `load_battery_cycles()` call (independent of the sidebar's) had no
+`nasa_data_available()`/`mit_data_available()` check - unlike the
+sidebar's "Browse existing battery" path, which session 12 already
+protects. Fix was exactly as fast as the task expected given the
+existing pattern: applied the same 2-layer check (availability check +
+try/except fallback, matching the sidebar's exact wording style) to
+that one call site - genuinely wiring, not new debugging, confirmed
+honestly since the whole investigation-to-fix took a fraction of the
+20-minute budget.
+
+Also explains Prediction/Explainability/Health Report's "silent
+placeholder": with no raw data, the SIDEBAR's own (already-correct)
+check fires a clear warning and leaves `selected_cycle=None` - by
+design, not a bug - but each of those 3 tabs ALSO printed its own
+near-identical "select a battery" placeholder, stacking on top of the
+one shared message already shown above the tabs. That's Priority 3's
+"duplication," and it's the same root cause manifesting differently, not
+a second bug requiring separate diagnosis.
+
+**Verified both states**: data hidden -> zero exceptions, one clear
+`st.warning` per gap instead of a crash, "Select a battery" text count
+4->1. Data restored -> real predictions confirmed for NASA/B0018 (SOH
+81.5%) and MIT/b1c17 (SOH 82.6%, matching session 7's own originally-
+recorded number exactly) and the streaming tab loading real data with
+zero errors.
+
+**Priority 2**: Showcase gauge's SOH number had no explicit font color
+against a transparent `paper_bgcolor` - inherited near-invisible dark
+text on a dark app background. Fixed with an opaque dark card
+background + explicit white number/title/axis-tick colors, so contrast
+holds regardless of the surrounding theme rather than depending on it.
+
+**Priority 4, scoped to exactly 3 changes as instructed, nothing more
+attempted**: app-wide CSS injection (Outfit/Inter Google Font pairing;
+restyled `[data-testid="stAlert"]` boxes - consistent rounded card +
+accent left-border replacing the default muddy fills; restyled
+`.stButton > button` with the accent color + hover/active states).
+Accent color `#2166ac` reused from the Showcase tab (session 30) rather
+than introducing a second competing accent.
+
+**Priority 5**: full AppTest suite re-run (6/6 pass: initial load,
+Showcase toggle, sidebar dataset -> MIT, sidebar dataset -> CALCE,
+streaming-twin selectbox present, streaming-twin live run) - confirms
+nothing else broke.
+
+**What got cut for time**: nothing from the pre-authorized scope -
+hero-section redesign, animated/gradient backgrounds, per-chart Plotly
+theming, sidebar restyling, and tab-pill redesign were never attempted,
+exactly as pre-scoped as out-of-bounds for this session.
+
+Changed: `app.py` only (97 insertions, 16 deletions - the 4-tab
+availability-check fix, 3-tab duplicate-placeholder removal, gauge
+contrast fix, and the CSS injection block). No new files.
+
