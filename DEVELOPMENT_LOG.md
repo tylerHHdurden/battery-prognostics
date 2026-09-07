@@ -3561,3 +3561,61 @@ overwritten with the ACI-based per-cycle records (raw per-cycle history
 from session 28's run is superseded, not separately preserved, since
 these are derived/regenerable analysis outputs, not source data).
 
+## Follow-up session 30 — Digital Twin Showcase tab (time-boxed to 1h)
+
+**Time-boxed session, scope cut deliberately to fit.** Two parts:
+
+**Part 1 - repo sync**: 109 files of accumulated, uncommitted work from
+sessions 13-29 (all logged in this file already, but never pushed) were
+committed and pushed in one commit (`37836e8`), respecting `.gitignore`
+(no raw data staged - confirmed via `git status` before committing).
+Streamlit Cloud auto-redeploys from `master` on push; this session has
+no direct dashboard/API access to positively confirm the live URL or
+redeploy status from here - noted as an open item for the user to
+verify, not silently assumed.
+
+**Part 2 - Showcase tab, REPLAY not live recomputation, stated
+explicitly per instruction**: new `render_showcase_tab()` in `app.py`,
+wired as the FIRST tab (Streamlit's default-active tab) - the new
+landing view. Loads session 28/29's already-recorded, already-verified
+per-cycle CSVs (`streaming_dt_{NASA_B0018,MIT_b3c35}.csv`) via a new
+`load_streaming_replay()` cached loader and plays them back on a timer
+(`time.sleep` + `st.empty()` placeholders, the same pattern session 28's
+Streaming Digital Twin tab already used and had verified) - a circular
+Plotly `go.Indicator` SOH gauge with a true-SOH threshold marker, a
+predicted-vs-true trend chart with the real ACI conformal band
+(`half_width` column from session 29), and a toggle between NASA/B0018
+and MIT/b3c35 with a one-line verdict COMPUTED LIVE from the loaded
+CSV's own `raw_abs_err`/`corrected_abs_err`/`covered`/`half_width`
+columns (not hardcoded numbers, so it can't silently drift from the
+data) - b3c35's ACI interval-volatility limitation from session 29
+(max half-width 4.55pp vs. the original mechanism's 1.04pp) is quoted
+as-is, not softened. New dependency: `plotly==7.0.0`, added to
+`requirements.txt`.
+
+**What was cut for time, exactly as pre-authorized**: the scrolling
+terminal log feed and the animated maturity ladder were skipped
+entirely - never started, not a partial/broken attempt.
+
+**Part 3 - polish + verification**: one consistent palette applied to
+the Showcase tab only (`#2166ac` blue / `#d62728` red-threshold /
+green-yellow-red gauge steps), not a full-app theming pass. Verified
+via `streamlit.testing.v1.AppTest` (same method sessions 7/12/28/29
+established): 7 tabs total, zero exceptions on initial load; both
+toggle states clicked programmatically and confirmed to show real
+recorded metrics matching the underlying CSVs EXACTLY (B0018 final
+cycle: frozen 81.5%, twin 79.6%, true 72.8% - matches
+`streaming_dt_NASA_B0018.csv`'s last row to the decimal; b3c35 final
+cycle: frozen 84.0%, twin 82.8%, true 82.7% - same exact match) -
+confirming the tab reads genuinely recorded numbers, not placeholder
+values. All 6 existing tabs' own widgets confirmed present and
+unaffected in the same AppTest run. One cosmetic, non-blocking
+deprecation warning was observed (`use_container_width` vs. the newer
+`width=` Streamlit API) - left as-is, explicitly not worth spending
+time-boxed budget on since it doesn't affect functionality.
+
+New files: none (this session only edits `app.py`/`requirements.txt` -
+no new source files). Changed: `app.py` (new Showcase tab + its render
+function, first-tab wiring, `import plotly.graph_objects as go`,
+docstring updated), `requirements.txt` (+`plotly==7.0.0`).
+
