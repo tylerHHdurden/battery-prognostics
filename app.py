@@ -8,13 +8,20 @@ src/live_inference.py (no lookup tables) - "a full pipeline rerun per
 new upload is fine" per instruction, so this app does not attempt any
 incremental/cached meta-learner updating.
 
-UI is organized into 6 tabs (Prediction / Explainability / Health Report
-/ Streaming Digital Twin / Model Validation / Full Results Archive)
-purely for presentation - no change to any underlying computation,
-model, or data versus the single-page layout this replaced. Functional
-over polished: plain Streamlit widgets, matplotlib plots, no custom
-theming beyond native `st.metric`/colored-markdown/status-container
-idioms.
+UI is organized into 7 tabs (Showcase / Prediction / Explainability /
+Health Report / Streaming Digital Twin / Model Validation / Full
+Results Archive) purely for presentation - no change to any underlying
+computation, model, or data versus the single-page layout this
+replaced. Functional over polished: plain Streamlit widgets, matplotlib
+and Plotly plots, no custom theming beyond native `st.metric`/colored-
+markdown/status-container idioms plus one consistent Plotly palette on
+the Showcase tab only.
+
+Session 30 (time-boxed to 1h) added the "Showcase" tab as the new
+DEFAULT landing view (first tab): a REPLAY of session 28/29's already-
+recorded, already-verified per-cycle results (NOT live recomputation -
+a deliberate scope cut, stated in the tab itself), paced on a timer so
+it visually looks live. Every existing tab is unchanged.
 
 Session 28 added the "Streaming Digital Twin" tab: a genuine, additive
 INCREMENTAL/ONLINE-UPDATE mode (src/digital_twin_streaming.py) that
@@ -35,6 +42,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
@@ -66,6 +74,15 @@ def get_resources():
 def get_mit_subset():
     with open(PROC_DIR / "mit_subset.json") as f:
         return {e["global_id"]: e for e in json.load(f)}
+
+
+@st.cache_data(show_spinner=False)
+def load_streaming_replay(filename: str) -> pd.DataFrame:
+    """Loads a session-28/29 per-cycle streaming record AS-IS - every
+    number in the returned frame was already computed and verified when
+    those sessions ran (DEVELOPMENT_LOG.md). Nothing here recomputes
+    anything."""
+    return pd.read_csv(PRED_DIR / filename)
 
 
 @st.cache_data(show_spinner="Loading battery cycles (CALCE cells take ~1-2 min - xlsx parsing)...")
@@ -456,6 +473,154 @@ def render_full_results_archive_tab():
 
 
 # --------------------------------------------------------------------------
+# Showcase tab (session 30, time-boxed to 1h) - the new DEFAULT landing
+# view (first tab). REPLAY of already-recorded, already-verified session
+# 28/29 per-cycle results, NOT live recomputation - a deliberate scope
+# cut for the time limit, stated plainly in the UI itself below, not
+# glossed over. Every number shown comes straight from
+# `data/processed/predictions/streaming_dt_{NASA_B0018,MIT_b3c35}.csv`
+# (session 28/29's own saved output) - this function only paces the
+# display on a timer so it LOOKS live; it computes nothing new.
+# --------------------------------------------------------------------------
+
+_SHOWCASE_BATTERIES = {
+    "NASA/B0018 — the clean win": ("NASA", "B0018", "streaming_dt_NASA_B0018.csv"),
+    "MIT/b3c35 — the hard case": ("MIT", "b3c35", "streaming_dt_MIT_b3c35.csv"),
+}
+
+
+def _showcase_verdict(dataset: str, df: pd.DataFrame) -> str:
+    """Every figure quoted here is computed live from the loaded CSV
+    (session 28/29's real recorded numbers), not hardcoded - so this
+    verdict can never silently drift from the data it's describing."""
+    raw_mae = df["raw_abs_err"].mean()
+    corr_mae = df["corrected_abs_err"].mean()
+    coverage = df["covered"].mean(skipna=True) * 100
+    final = df.iloc[-1]
+    if dataset == "NASA":
+        return (
+            f"✅ **Clean win**: online correction cut mean absolute error from "
+            f"**{raw_mae:.2f}pp** (frozen pipeline) to **{corr_mae:.2f}pp** (digital twin) "
+            f"over the whole stream. Final-cycle error: {final['raw_abs_err']:.2f}pp (frozen) "
+            f"vs. {final['corrected_abs_err']:.2f}pp (twin). Empirical ACI coverage: "
+            f"{coverage:.1f}% (target 90%). — Session 28/29, DEVELOPMENT_LOG.md."
+        )
+    max_hw, old_max_hw = df["half_width"].max(), df["old_half_width"].max()
+    return (
+        f"⚠️ **Hard case — reported honestly, not softened**: accuracy improved sharply "
+        f"(MAE **{raw_mae:.2f}pp → {corr_mae:.2f}pp**), but the ACI conformal interval "
+        f"itself got **more volatile, not smoother**, than the original sliding-window "
+        f"mechanism it replaced (max half-width **{max_hw:.2f}pp vs. {old_max_hw:.2f}pp**). "
+        f"Empirical coverage: {coverage:.1f}% (target 90%). — Session 29's own documented "
+        f"limitation, unchanged here."
+    )
+
+
+def _showcase_gauge(row: pd.Series, battery_id: str, last_cycle: int) -> go.Figure:
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=float(row["corrected_pred"]),
+        number={"suffix": "%", "valueformat": ".1f"},
+        title={"text": f"{battery_id} — Digital Twin SOH — cycle {int(row['cycle_idx'])} of {last_cycle}"},
+        gauge={
+            "axis": {"range": [0, 105]},
+            "bar": {"color": "#2166ac"},
+            "steps": [
+                {"range": [0, 50], "color": "#f4a6a6"},
+                {"range": [50, 80], "color": "#fde9a8"},
+                {"range": [80, 105], "color": "#b8ddb8"},
+            ],
+            "threshold": {"line": {"color": "#d62728", "width": 4}, "value": float(row["true_soh"])},
+        },
+    ))
+    fig.update_layout(height=280, margin=dict(l=30, r=30, t=60, b=10),
+                       font=dict(color="#1a1a2e"), paper_bgcolor="rgba(0,0,0,0)")
+    return fig
+
+
+def _showcase_trend(seen: pd.DataFrame) -> go.Figure:
+    fig = go.Figure()
+    band_x = pd.concat([seen["cycle_idx"], seen["cycle_idx"][::-1]])
+    band_y = pd.concat([seen["corrected_pred"] + seen["half_width"],
+                         (seen["corrected_pred"] - seen["half_width"])[::-1]])
+    fig.add_trace(go.Scatter(x=band_x, y=band_y, fill="toself", fillcolor="rgba(33,102,172,0.15)",
+                              line=dict(width=0), name="ACI conformal band"))
+    fig.add_trace(go.Scatter(x=seen["cycle_idx"], y=seen["true_soh"], name="true SOH",
+                              line=dict(color="#1a1a2e", dash="dot", width=1.5)))
+    fig.add_trace(go.Scatter(x=seen["cycle_idx"], y=seen["raw_pred"], name="frozen pipeline (raw)",
+                              line=dict(color="#999999", width=1.5)))
+    fig.add_trace(go.Scatter(x=seen["cycle_idx"], y=seen["corrected_pred"], name="digital twin",
+                              line=dict(color="#2166ac", width=2.5)))
+    anomalies = seen[seen["anomaly"].astype(bool)]
+    if len(anomalies):
+        fig.add_trace(go.Scatter(x=anomalies["cycle_idx"], y=anomalies["corrected_pred"], mode="markers",
+                                  marker=dict(color="#d62728", symbol="x", size=9), name="anomaly flagged"))
+    fig.update_layout(height=360, xaxis_title="cycle", yaxis_title="SOH (%)",
+                       margin=dict(l=30, r=20, t=20, b=40),
+                       legend=dict(orientation="h", yanchor="bottom", y=1.02),
+                       paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#f7f7fb")
+    return fig
+
+
+def render_showcase_tab():
+    st.markdown("## 🔋 Digital Twin Showcase")
+    st.warning(
+        "🎬 **This is a REPLAY of already-recorded, already-verified results (sessions "
+        "28-29), not live recomputation.** Every number below is read straight from the "
+        "per-cycle CSVs those sessions produced and independently verified - this view only "
+        "paces the display on a timer so it visually looks live. See DEVELOPMENT_LOG.md "
+        "sessions 28/29 for exactly how the online correction and conformal interval were "
+        "computed, including the honest limitations. For genuinely live inference on any "
+        "cycle you pick, use the 🔮 Prediction or 🌊 Streaming Digital Twin tabs."
+    )
+
+    choice = st.radio("Battery", list(_SHOWCASE_BATTERIES.keys()), horizontal=True, key="showcase_choice")
+    dataset, battery_id, fname = _SHOWCASE_BATTERIES[choice]
+    df = load_streaming_replay(fname)
+    last_cycle = int(df["cycle_idx"].iloc[-1])
+
+    st.info(_showcase_verdict(dataset, df))
+
+    # Stride long streams (b3c35 has 1091 recorded cycles) down to ~150
+    # animation frames for a snappy replay - still exclusively real
+    # recorded rows, just not literally every single one animated frame
+    # by frame; the trend chart still accumulates every strided point.
+    stride = max(1, len(df) // 150)
+    play_df = df.iloc[::stride]
+    if play_df["cycle_idx"].iloc[-1] != last_cycle:
+        play_df = pd.concat([play_df, df.iloc[[-1]]])
+    play_df = play_df.reset_index(drop=True)
+
+    col_speed, col_play = st.columns([3, 1])
+    with col_speed:
+        speed = st.slider("Replay speed (seconds/frame)", 0.01, 0.15, 0.03, step=0.01, key="showcase_speed")
+    with col_play:
+        st.write("")
+        play = st.button("▶ Play replay", key="showcase_play", use_container_width=True)
+
+    gauge_ph = st.empty()
+    numbers_ph = st.empty()
+    chart_ph = st.empty()
+
+    def draw(i: int):
+        row = play_df.iloc[i]
+        seen = play_df.iloc[:i + 1]
+        gauge_ph.plotly_chart(_showcase_gauge(row, battery_id, last_cycle), use_container_width=True)
+        c1, c2, c3 = numbers_ph.columns(3)
+        c1.metric("Frozen pipeline prediction", f"{row['raw_pred']:.1f}%")
+        c2.metric("Digital-Twin prediction", f"{row['corrected_pred']:.1f}%")
+        c3.metric("True SOH", f"{row['true_soh']:.1f}%")
+        chart_ph.plotly_chart(_showcase_trend(seen), use_container_width=True)
+
+    if play:
+        for i in range(len(play_df)):
+            draw(i)
+            time.sleep(speed)
+    else:
+        draw(len(play_df) - 1)
+
+
+# --------------------------------------------------------------------------
 # Streaming Digital Twin tab (session 28) - a NEW mode, additive alongside
 # the one-shot Prediction tab above (which it does not replace or modify).
 # --------------------------------------------------------------------------
@@ -699,10 +864,12 @@ def main():
                     "not a real confidence guarantee, for this battery."
                 )
 
-    tab_prediction, tab_explain, tab_report, tab_stream, tab_validation, tab_archive = st.tabs(
-        ["🔮 Prediction", "🔍 Explainability", "📝 Health Report", "🌊 Streaming Digital Twin",
-         "🧪 Model Validation", "📁 Full Results Archive"]
+    tab_showcase, tab_prediction, tab_explain, tab_report, tab_stream, tab_validation, tab_archive = st.tabs(
+        ["🎬 Showcase", "🔮 Prediction", "🔍 Explainability", "📝 Health Report",
+         "🌊 Streaming Digital Twin", "🧪 Model Validation", "📁 Full Results Archive"]
     )
+    with tab_showcase:
+        render_showcase_tab()
     with tab_prediction:
         if ctx is not None:
             render_prediction_tab(ctx, true_soh, true_rul)
