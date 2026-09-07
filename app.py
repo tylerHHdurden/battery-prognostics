@@ -64,6 +64,59 @@ CALCE_CELLS = ["CS2_35", "CS2_36", "CS2_37"]
 
 st.set_page_config(page_title="Battery Digital Twin", layout="wide")
 
+# --------------------------------------------------------------------------
+# Priority 4 visual pass (session 31, time-boxed): app-wide font pairing +
+# restyled alert boxes + restyled buttons. Deliberately scoped to exactly
+# these 3 changes, per instruction - no hero redesign, no per-chart Plotly
+# theming, no sidebar/tab restyling attempted in this pass.
+# Accent color: #2166ac (the same blue already used in the Showcase tab's
+# gauge/trend chart, session 30) - kept consistent rather than introducing
+# a second, competing accent.
+# --------------------------------------------------------------------------
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', -apple-system, sans-serif;
+}
+h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 600 !important;
+}
+
+/* Restyled alert boxes (st.info/st.warning/st.error/st.success) - one
+   consistent card look instead of the default muddy yellow/olive fills.
+   Streamlit still applies its own per-type background tint underneath;
+   this layers a consistent shape/border/shadow on top of all of them. */
+[data-testid="stAlert"] {
+    border-radius: 10px !important;
+    border-left: 5px solid #2166ac !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12) !important;
+    padding: 0.9rem 1.1rem !important;
+}
+
+/* Restyled buttons - accent color + hover state, replacing the default
+   Streamlit gray button. */
+.stButton > button {
+    background-color: #2166ac !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: background-color 0.15s ease-in-out, transform 0.1s ease-in-out;
+}
+.stButton > button:hover {
+    background-color: #14528a !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+}
+.stButton > button:active {
+    background-color: #0f3f6b !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 @st.cache_resource
 def get_resources():
@@ -517,24 +570,33 @@ def _showcase_verdict(dataset: str, df: pd.DataFrame) -> str:
 
 
 def _showcase_gauge(row: pd.Series, battery_id: str, last_cycle: int) -> go.Figure:
+    # Priority 2 fix (session 31): the SOH number was previously rendered
+    # with no explicit font color against a transparent paper_bgcolor -
+    # it inherited whatever dark text Plotly defaults to, which nearly
+    # vanished against a dark app background. Fixed by giving the card
+    # its OWN fixed opaque background (not transparent, so contrast is
+    # guaranteed regardless of the surrounding Streamlit theme) plus an
+    # explicit bright/white number color.
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=float(row["corrected_pred"]),
-        number={"suffix": "%", "valueformat": ".1f"},
-        title={"text": f"{battery_id} — Digital Twin SOH — cycle {int(row['cycle_idx'])} of {last_cycle}"},
+        number={"suffix": "%", "valueformat": ".1f", "font": {"color": "#ffffff", "size": 48}},
+        title={"text": f"{battery_id} — Digital Twin SOH — cycle {int(row['cycle_idx'])} of {last_cycle}",
+               "font": {"color": "#ffffff", "size": 16}},
         gauge={
-            "axis": {"range": [0, 105]},
-            "bar": {"color": "#2166ac"},
+            "axis": {"range": [0, 105], "tickfont": {"color": "#ffffff"}},
+            "bar": {"color": "#4ea1e8"},
+            "bgcolor": "#1a1a2e",
             "steps": [
-                {"range": [0, 50], "color": "#f4a6a6"},
-                {"range": [50, 80], "color": "#fde9a8"},
-                {"range": [80, 105], "color": "#b8ddb8"},
+                {"range": [0, 50], "color": "#7a2e2e"},
+                {"range": [50, 80], "color": "#7a6a1e"},
+                {"range": [80, 105], "color": "#2e6a3e"},
             ],
-            "threshold": {"line": {"color": "#d62728", "width": 4}, "value": float(row["true_soh"])},
+            "threshold": {"line": {"color": "#ff6b6b", "width": 4}, "value": float(row["true_soh"])},
         },
     ))
     fig.update_layout(height=280, margin=dict(l=30, r=30, t=60, b=10),
-                       font=dict(color="#1a1a2e"), paper_bgcolor="rgba(0,0,0,0)")
+                       font=dict(color="#ffffff"), paper_bgcolor="#1a1a2e")
     return fig
 
 
@@ -664,10 +726,27 @@ def render_streaming_twin_tab(res: dict):
         delay = st.slider("Simulated per-cycle arrival delay (seconds)", 0.0, 0.2, 0.02, step=0.01)
 
     if st.button("▶ Start streaming simulation", key="stream_start"):
+        # Same graceful-degradation pattern as the sidebar's "Browse
+        # existing battery" path (session 12): check availability FIRST
+        # with a clear, specific reason, rather than attempting to load
+        # and surfacing a raw scipy/h5py exception to the user.
+        dataset_available = {"NASA": nasa_data_available, "MIT": mit_data_available}[dataset]()
+        if not dataset_available:
+            st.warning(
+                f"⚠️ {dataset}'s raw data isn't available in this environment - the "
+                f"NASA/CALCE/MIT research datasets aren't bundled with this app (size + "
+                f"third-party redistribution terms), so this replay-free streaming demo only "
+                f"works where they've been downloaded locally (see README). Try the 🎬 "
+                f"Showcase tab instead - it replays session 28/29's already-recorded results "
+                f"for these same batteries and needs no raw data at all."
+            )
+            return
         try:
             cycles = load_battery_cycles(dataset, battery_id)
         except (FileNotFoundError, OSError, KeyError) as e:
-            st.error(f"Could not load {dataset}/{battery_id}: {e}")
+            st.error(f"Could not load {dataset}/{battery_id}'s raw data: {e}. It may be "
+                     f"missing or incomplete locally - try a different battery, or use the "
+                     f"🎬 Showcase tab instead (no raw data needed).")
             return
 
         hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
@@ -870,21 +949,23 @@ def main():
     )
     with tab_showcase:
         render_showcase_tab()
+    # Priority 3 (session 31): the 3 tabs below no longer repeat their own
+    # "select a battery" placeholder - the single shared message at line
+    # ~843 (`if selected_cycle is None: st.info(...)`), which renders
+    # above the tabs regardless of which one is active, already covers
+    # this. Previously each tab additionally showed its own near-
+    # identical copy, stacking 2 duplicate messages on top of each other
+    # for every one of these 3 tabs whenever no battery was selected
+    # (including the "data unavailable" case Priority 1 fixed above).
     with tab_prediction:
         if ctx is not None:
             render_prediction_tab(ctx, true_soh, true_rul)
-        else:
-            st.info("👈 Select a battery (or upload a CSV) in the sidebar to see predictions.")
     with tab_explain:
         if ctx is not None:
             render_explainability_tab(ctx)
-        else:
-            st.info("👈 Select a battery (or upload a CSV) in the sidebar first.")
     with tab_report:
         if ctx is not None:
             render_health_report_tab(ctx, dataset, battery_id)
-        else:
-            st.info("👈 Select a battery (or upload a CSV) in the sidebar first.")
     with tab_stream:
         render_streaming_twin_tab(get_resources())
     with tab_validation:
