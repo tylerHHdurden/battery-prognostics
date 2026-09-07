@@ -1,0 +1,26 @@
+
+[lime] === XGBoost base learner (7 BFA-selected HIs), 5 held-out test instances ===
+[lime] XGBoost-base {'dataset': 'MIT', 'battery_id': 'b1c4', 'cycle_idx': 333}: SHAP_top3=['SCV', 'VIECT', 'TEVI']  LIME_top3=['SCV', 'TEVI', 'VIECT']  overlap=3/3
+[lime] XGBoost-base {'dataset': 'MIT', 'battery_id': 'b3c0', 'cycle_idx': 376}: SHAP_top3=['SCV', 'VIECT', 'TEVI']  LIME_top3=['SCV', 'TEVI', 'VIECT']  overlap=3/3
+[lime] XGBoost-base {'dataset': 'MIT', 'battery_id': 'b3c0', 'cycle_idx': 406}: SHAP_top3=['SCV', 'VIECT', 'TEVI']  LIME_top3=['SCV', 'TEVI', 'VIECT']  overlap=3/3
+[lime] XGBoost-base {'dataset': 'MIT', 'battery_id': 'b3c35', 'cycle_idx': 521}: SHAP_top3=['SCV', 'VIECT', 'TEVI']  LIME_top3=['SCV', 'TEVI', 'VIECT']  overlap=3/3
+[lime] XGBoost-base {'dataset': 'MIT', 'battery_id': 'b4c38', 'cycle_idx': 51}: SHAP_top3=['SCV', 'VIECT', 'TEVI']  LIME_top3=['SCV', 'TEVI', 'VIECT']  overlap=3/3
+[ensemble] train: xgb rows=18845, deep rows=18845, merged (inner) rows=18845
+
+[lime] === Stacking-XGBoost meta-learner (4 base-learner predictions), 5 held-out test instances ===
+[lime] XGBoost-meta {'dataset': 'MIT', 'battery_id': 'b1c4', 'cycle_idx': 333}: SHAP_top3=['pred_XGBoost', 'pred_PiFormer', 'pred_VLSTM']  LIME_top3=['pred_XGBoost', 'pred_CNNLSTM', 'pred_PiFormer']  overlap=2/3
+[lime] XGBoost-meta {'dataset': 'MIT', 'battery_id': 'b3c0', 'cycle_idx': 376}: SHAP_top3=['pred_XGBoost', 'pred_PiFormer', 'pred_VLSTM']  LIME_top3=['pred_XGBoost', 'pred_VLSTM', 'pred_CNNLSTM']  overlap=2/3
+[lime] XGBoost-meta {'dataset': 'MIT', 'battery_id': 'b3c0', 'cycle_idx': 406}: SHAP_top3=['pred_XGBoost', 'pred_PiFormer', 'pred_VLSTM']  LIME_top3=['pred_XGBoost', 'pred_VLSTM', 'pred_PiFormer']  overlap=3/3
+[lime] XGBoost-meta {'dataset': 'MIT', 'battery_id': 'b3c35', 'cycle_idx': 521}: SHAP_top3=['pred_XGBoost', 'pred_PiFormer', 'pred_VLSTM']  LIME_top3=['pred_XGBoost', 'pred_VLSTM', 'pred_PiFormer']  overlap=3/3
+[lime] XGBoost-meta {'dataset': 'MIT', 'battery_id': 'b4c38', 'cycle_idx': 51}: SHAP_top3=['pred_XGBoost', 'pred_PiFormer', 'pred_VLSTM']  LIME_top3=['pred_XGBoost', 'pred_PiFormer', 'pred_VLSTM']  overlap=3/3
+
+[lime] === SHAP vs LIME top-3 agreement summary ===
+                  mean  count
+model                        
+XGBoost-base  1.000000      5
+XGBoost-meta  0.866667      5
+
+[lime] overall mean top-3 overlap fraction: 0.933
+[lime] instances with FULL 3/3 top-3 agreement: 80.0% (8/10)
+[lime] saved per-instance comparison to outputs/lime_shap_comparison.csv
+[lime] DONE

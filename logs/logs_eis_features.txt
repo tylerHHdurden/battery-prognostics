@@ -1,0 +1,15 @@
+[eis] B0005: 168 discharge cycles matched to nearest impedance test (time gap median=0.53h, max=389.50h)
+[eis] B0006: 168 discharge cycles matched to nearest impedance test (time gap median=0.53h, max=389.50h)
+[eis] B0007: 168 discharge cycles matched to nearest impedance test (time gap median=0.53h, max=389.50h)
+[eis] B0018: 132 discharge cycles matched to nearest impedance test (time gap median=4.83h, max=16.22h)
+
+[eis] saved 636 rows (NASA-only - MIT/CALCE have no EIS data at all, see DEVELOPMENT_LOG.md) to data/processed/eis_features_nasa.csv
+           EIS_Re     EIS_Rct  EIS_Zmag_mean
+count  636.000000  636.000000     636.000000
+mean     0.059020    0.083055       0.205669
+std      0.009868    0.010760       0.012008
+min      0.035920    0.060073       0.176878
+25%      0.050534    0.074654       0.196015
+50%      0.061060    0.084107       0.205956
+75%      0.065169    0.090036       0.215165
+max      0.079141    0.106684       0.230812

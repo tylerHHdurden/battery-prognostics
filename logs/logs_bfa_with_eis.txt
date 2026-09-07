@@ -1,0 +1,27 @@
+[bfa-eis] loaded hi_table: (26996, 22)
+[bfa-eis] merged EIS features: 636 of 26996 rows have EIS data (2.4%) - all from NASA (636 NASA rows total, 636 of which got a nearest-impedance match)
+[bfa-eis] MIT rows with EIS data: 0 (expected 0 - MIT has no EIS data at all)
+[bfa-eis] CALCE rows with EIS data: 0 (expected 0 - CALCE has no EIS data at all)
+[bfa-eis] imputed 87909 NaN cells total across 19 candidate features (median-per-column, same convention as run_bfa.py)
+    EIS_Re: 26360/26996 NaN (97.6%), imputed with NASA-only median=0.0611
+    EIS_Rct: 26360/26996 NaN (97.6%), imputed with NASA-only median=0.0841
+    EIS_Zmag_mean: 26360/26996 NaN (97.6%), imputed with NASA-only median=0.2060
+[BFA] baseline RMSE (all 19 features): 9.2533
+[BFA] iter   0: best_fitness=0.6638 best_rmse=3.0981 n_selected=9/19
+[BFA] iter  10: best_fitness=0.6755 best_rmse=2.9932 n_selected=8/19
+[BFA] iter  20: best_fitness=0.6755 best_rmse=2.9932 n_selected=8/19
+[BFA] iter  30: best_fitness=0.6755 best_rmse=2.9932 n_selected=8/19
+[BFA] iter  40: best_fitness=0.6841 best_rmse=2.9133 n_selected=8/19
+[BFA] iter  50: best_fitness=0.6841 best_rmse=2.9133 n_selected=8/19
+[BFA] iter  60: best_fitness=0.6841 best_rmse=2.9133 n_selected=8/19
+[BFA] iter  70: best_fitness=0.6841 best_rmse=2.9133 n_selected=8/19
+[BFA] iter  80: best_fitness=0.6841 best_rmse=2.9133 n_selected=8/19
+[BFA] iter  90: best_fitness=0.6841 best_rmse=2.9133 n_selected=8/19
+[BFA] iter  99: best_fitness=0.6841 best_rmse=2.9133 n_selected=8/19
+[BFA] DONE. Selected 8/19 features: ['ICHV', 'UVP', 'SCV', 'VIECT', 'MATC', 'MATD', 'MATDL', 'TEVD']
+
+[bfa-eis] === RESULT ===
+[bfa-eis] original 7 selected (16-candidate BFA, session 1): ['ICHV', 'MATC', 'MATD', 'SCV', 'TEVI', 'VDEDT', 'VIECT']
+[bfa-eis] new selection (19-candidate BFA, this session): ['ICHV', 'MATC', 'MATD', 'MATDL', 'SCV', 'TEVD', 'UVP', 'VIECT']
+[bfa-eis] EIS features selected: NONE
+[bfa-eis] DONE

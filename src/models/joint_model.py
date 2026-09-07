@@ -96,3 +96,57 @@ class AdaptiveLossWeighting(nn.Module):
         total = (alpha * loss_soh + log_sigma_soh
                  + beta * loss_rul + log_sigma_rul)
         return total, float(alpha.item()), float(beta.item())
+
+
+class SoftmaxAdaptiveLossWeighting(nn.Module):
+    """
+    Softmax-normalized loss-balancing constraint — ADDITIVE alternative to
+    AdaptiveLossWeighting above (that class is untouched; this is a new,
+    separate option), targeting the exact limitation Review 1 flagged:
+    AdaptiveLossWeighting's alpha and beta converged to the SAME value
+    (2.028) instead of an asymmetric trade-off. Root cause: log_sigma_soh
+    and log_sigma_rul are two INDEPENDENT scalars — nothing in that
+    parametrization stops them drifting to the identical value, so it
+    mostly ends up expressing "how confident overall" rather than "how to
+    trade SOH off against RUL" (this was already identified, but not
+    fixed, in the Phase 4 ablation write-up).
+
+    Framing credited to "Dynamic Loss Balancing for Joint SOH and RUL
+    Prediction of Lithium-Ion Batteries via a Rotary SOH-Injected Prior
+    Battery Transformer" (arXiv:2607.18329, Chen et al., July 2026),
+    which frames this same tension as SOH's bounded, low-variance
+    measurement noise fighting RUL's unbounded, nonlinearly-expanding
+    long-horizon uncertainty (confirmed from the paper's own abstract) —
+    matching what this project's AdaptiveLossWeighting docstring already
+    described independently. NOTE, logged for honesty: the paper's
+    abstract states it uses a homoscedastic-uncertainty-based dynamic
+    weighting mechanism, but does not itself spell out a
+    `2*softmax(s_alpha, s_beta)` formula in the abstract, and the full
+    PDF's text layer did not extract cleanly enough here to confirm one
+    directly. The softmax constraint below is this project's own
+    construction, built to the exact spec given for this session — an
+    idea taken from the paper's *framing* of the problem, not a verified
+    reproduction of its equations.
+
+    (alpha, beta) = 2 * softmax(s_alpha, s_beta), s_alpha/s_beta raw
+    learnable nn.Parameters. This FORCES alpha + beta = 2 at every step
+    by construction (not by a regularizer that merely discourages
+    drift, the way log(sigma) does above) — softmax normalization means
+    one weight can only rise at the other's direct expense, which is
+    exactly the asymmetric behavior the homoscedastic version failed to
+    produce. No log(sigma)-style regularizer is needed here: the
+    degenerate alpha=beta=0 collapse that regularizer exists to prevent
+    in AdaptiveLossWeighting is structurally impossible once alpha+beta
+    is pinned to 2 by the softmax itself.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.s_alpha = nn.Parameter(torch.zeros(()))
+        self.s_beta = nn.Parameter(torch.zeros(()))
+
+    def forward(self, loss_soh, loss_rul):
+        weights = 2.0 * torch.softmax(torch.stack([self.s_alpha, self.s_beta]), dim=0)
+        alpha, beta = weights[0], weights[1]
+        total = alpha * loss_soh + beta * loss_rul
+        return total, float(alpha.item()), float(beta.item())

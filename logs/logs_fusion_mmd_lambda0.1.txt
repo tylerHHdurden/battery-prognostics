@@ -1,0 +1,66 @@
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[fusion-mmd] source fit cycles=14872, source val cycles=3973
+[fusion-mmd] === building UNLABELED CALCE tensors for MMD target distribution ===
+[fusion-mmd] CALCE/CS2_35: 932 cycles (unlabeled, features only)
+[fusion-mmd] CALCE/CS2_36: 972 cycles (unlabeled, features only)
+[fusion-mmd] CALCE/CS2_37: 1037 cycles (unlabeled, features only)
+[fusion-mmd] target (CALCE, unlabeled) cycles=2941 (loaded in 162.9s)
+[fusion-mmd] epoch   0 sup_mse=1.0130 mmd=0.72300 val_mse=2.8425
+[fusion-mmd] epoch   1 sup_mse=0.9977 mmd=0.19335 val_mse=2.8536
+[fusion-mmd] epoch   2 sup_mse=0.9644 mmd=0.13446 val_mse=2.8654
+[fusion-mmd] epoch   3 sup_mse=0.8642 mmd=0.11182 val_mse=2.8969
+[fusion-mmd] epoch   4 sup_mse=0.7915 mmd=0.11911 val_mse=2.6833
+[fusion-mmd] epoch   5 sup_mse=0.7113 mmd=0.15111 val_mse=2.3429
+[fusion-mmd] epoch   6 sup_mse=0.6383 mmd=0.12940 val_mse=2.0936
+[fusion-mmd] epoch   7 sup_mse=0.5723 mmd=0.11914 val_mse=1.7449
+[fusion-mmd] epoch   8 sup_mse=0.5201 mmd=0.13484 val_mse=1.5825
+[fusion-mmd] epoch   9 sup_mse=0.4832 mmd=0.12587 val_mse=1.4045
+[fusion-mmd] epoch  10 sup_mse=0.4595 mmd=0.13584 val_mse=1.3574
+[fusion-mmd] epoch  11 sup_mse=0.4416 mmd=0.12570 val_mse=1.3043
+[fusion-mmd] epoch  12 sup_mse=0.4272 mmd=0.14053 val_mse=1.2718
+[fusion-mmd] epoch  13 sup_mse=0.4150 mmd=0.13962 val_mse=1.1848
+[fusion-mmd] epoch  14 sup_mse=0.4047 mmd=0.15650 val_mse=1.2401
+[fusion-mmd] epoch  15 sup_mse=0.3935 mmd=0.14573 val_mse=1.1728
+[fusion-mmd] epoch  16 sup_mse=0.3801 mmd=0.14160 val_mse=1.1297
+[fusion-mmd] epoch  17 sup_mse=0.3743 mmd=0.16116 val_mse=1.1668
+[fusion-mmd] epoch  18 sup_mse=0.3633 mmd=0.16993 val_mse=1.1824
+[fusion-mmd] epoch  19 sup_mse=0.3541 mmd=0.14785 val_mse=1.1383
+[fusion-mmd] epoch  20 sup_mse=0.3418 mmd=0.16585 val_mse=1.1133
+[fusion-mmd] epoch  21 sup_mse=0.3303 mmd=0.14600 val_mse=1.1103
+[fusion-mmd] epoch  22 sup_mse=0.3284 mmd=0.14935 val_mse=1.2003
+[fusion-mmd] epoch  23 sup_mse=0.3223 mmd=0.14751 val_mse=1.1052
+[fusion-mmd] epoch  24 sup_mse=0.3145 mmd=0.13603 val_mse=1.1633
+[fusion-mmd] saved 24053 embeddings (16-dim) to data/processed/fusion_embeddings_mmd.csv
+[fusion-mmd] MMD_LAMBDA=0.1 (single fixed weight, not tuned)
+[fusion-mmd] ALL DONE in 252.5s

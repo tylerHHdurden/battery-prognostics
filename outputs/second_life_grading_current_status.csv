@@ -1,0 +1,7 @@
+dataset,battery_id,cycle_idx,SOH,y_pred_soh_fusion,true_grade,pred_grade
+NASA,B0018,132,72.75687346079181,81.49932861328125,Second-life candidate,Primary EV use
+MIT,b1c4,1225,94.71250747442753,97.4202880859375,Primary EV use,Primary EV use
+MIT,b2c24,523,77.28023392377368,76.93589782714844,Second-life candidate,Second-life candidate
+MIT,b3c0,1007,82.41555225576997,83.31021881103516,Primary EV use,Primary EV use
+MIT,b3c35,1091,82.73407943254998,83.95520782470703,Primary EV use,Primary EV use
+MIT,b4c38,1230,78.34959296966066,79.65462493896484,Second-life candidate,Second-life candidate

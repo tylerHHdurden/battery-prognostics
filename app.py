@@ -8,16 +8,28 @@ src/live_inference.py (no lookup tables) - "a full pipeline rerun per
 new upload is fine" per instruction, so this app does not attempt any
 incremental/cached meta-learner updating.
 
-UI is organized into 5 tabs (Prediction / Explainability / Health Report
-/ Model Validation / Full Results Archive) purely for presentation - no
-change to any underlying computation, model, or data versus the
-single-page layout this replaced. Functional over polished: plain
-Streamlit widgets, one matplotlib plot, no custom theming beyond native
-`st.metric`/colored-markdown/status-container idioms.
+UI is organized into 6 tabs (Prediction / Explainability / Health Report
+/ Streaming Digital Twin / Model Validation / Full Results Archive)
+purely for presentation - no change to any underlying computation,
+model, or data versus the single-page layout this replaced. Functional
+over polished: plain Streamlit widgets, matplotlib plots, no custom
+theming beyond native `st.metric`/colored-markdown/status-container
+idioms.
+
+Session 28 added the "Streaming Digital Twin" tab: a genuine, additive
+INCREMENTAL/ONLINE-UPDATE mode (src/digital_twin_streaming.py) that
+replays an existing NASA/MIT test battery's cycles one at a time to
+simulate live streaming (NOT real hardware) and updates a lightweight
+per-battery correction term as it goes - a real change from the "no
+incremental updating" scope every other tab still deliberately keeps
+(this app's original session-7 write-up in DEVELOPMENT_LOG.md explicitly
+scoped that decision; session 28 revisits it as a new, separate, opt-in
+mode rather than changing the existing one-shot tabs' behavior).
 """
 
 import json
 import sys
+import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -32,6 +44,7 @@ from data_adapters import (
 )
 from live_inference import load_resources, predict_and_explain
 from generate_health_report import build_prompt, call_llm
+from digital_twin_streaming import StreamingDigitalTwin
 
 ROOT = Path(__file__).resolve().parent
 PROC_DIR = ROOT / "data" / "processed"
@@ -442,6 +455,141 @@ def render_full_results_archive_tab():
                 "🧪 **Model Validation** tab - not duplicated here.")
 
 
+# --------------------------------------------------------------------------
+# Streaming Digital Twin tab (session 28) - a NEW mode, additive alongside
+# the one-shot Prediction tab above (which it does not replace or modify).
+# --------------------------------------------------------------------------
+
+_STREAM_TEST_BATTERIES = {
+    "NASA/B0018": ("NASA", "B0018"), "MIT/b1c4": ("MIT", "b1c4"),
+    "MIT/b2c24": ("MIT", "b2c24"), "MIT/b3c0": ("MIT", "b3c0"),
+    "MIT/b3c35": ("MIT", "b3c35"), "MIT/b4c38": ("MIT", "b4c38"),
+}
+
+
+def render_streaming_twin_tab(res: dict):
+    st.caption(
+        "🔬 **Simulation-stage digital twin** - not live hardware. This replays an "
+        "already-recorded NASA/MIT TEST battery's cycles one at a time (from the exact "
+        "same raw data every other tab uses) with a short artificial delay, to emulate "
+        "data streaming in live. Unlike the 🔮 Prediction tab (a fresh, independent "
+        "full-pipeline rerun for whichever single cycle you pick - no memory between "
+        "cycles), this mode keeps a small **online-learning corrector** that updates, "
+        "cycle by cycle, using ONLY cycles already streamed in so far - a genuine "
+        "incremental model, not a lookup table replaying precomputed numbers. "
+        "**What's frozen**: the XGBoost-fusion SOH model, the ICA fusion encoder, the "
+        "RUL model, and the anomaly detector - none of these are retrained here. "
+        "**What updates online**: a lightweight residual-correction term (see "
+        "`src/digital_twin_streaming.py` and DEVELOPMENT_LOG.md session 28 for exactly "
+        "how, and an honest report of whether it actually helps)."
+    )
+
+    choice = st.selectbox(
+        "Battery to stream (restricted to this project's 6 held-out TEST batteries - "
+        "genuinely unseen by every frozen model here, for an honest demo)",
+        list(_STREAM_TEST_BATTERIES.keys()), key="stream_battery_choice",
+    )
+    dataset, battery_id = _STREAM_TEST_BATTERIES[choice]
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        max_cycles = st.slider("Max cycles to stream (after the first 5, which load instantly "
+                                "as already-available warm-start history)", 20, 300, 80, step=10)
+    with col_b:
+        delay = st.slider("Simulated per-cycle arrival delay (seconds)", 0.0, 0.2, 0.02, step=0.01)
+
+    if st.button("▶ Start streaming simulation", key="stream_start"):
+        try:
+            cycles = load_battery_cycles(dataset, battery_id)
+        except (FileNotFoundError, OSError, KeyError) as e:
+            st.error(f"Could not load {dataset}/{battery_id}: {e}")
+            return
+
+        hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
+        soh_lookup = hi_df[(hi_df["dataset"] == dataset) & (hi_df["battery_id"] == battery_id)] \
+            .set_index("cycle_idx")["SOH"].to_dict()
+
+        twin = StreamingDigitalTwin(
+            res["xgb_fusion"], res["encoder"], res["ocsvm"], res["ocsvm_scaler"],
+            res["ocsvm_feature_cols"], res["bfa_selected"], res["train_medians"],
+            res["norm_stats"], res["constants"]["soh_conformal_half_width"],
+        )
+
+        n_stream = min(max_cycles, max(0, len(cycles) - 5))
+        stream_cycles = cycles[:5 + n_stream]
+
+        chart_placeholder = st.empty()
+        status_placeholder = st.empty()
+        rows = []
+        for i, c in enumerate(stream_cycles):
+            true_soh = soh_lookup.get(c["cycle_idx"])
+            result = twin.step(c, true_soh=true_soh)
+            if "error" in result:
+                continue
+            rows.append(result)
+
+            if i >= 5:  # only the genuinely "streamed" portion gets the simulated-arrival delay - the first 5 are already-available warm-start history, shown instantly
+                time.sleep(delay)
+
+            df_so_far = pd.DataFrame(rows)
+            fig, ax = plt.subplots(figsize=(9, 4))
+            ax.plot(df_so_far["cycle_idx"], df_so_far["true_soh"], "k--", linewidth=1, label="true SOH")
+            ax.plot(df_so_far["cycle_idx"], df_so_far["raw_pred"], color="tab:gray", alpha=0.7,
+                    label="frozen pipeline (raw, no correction)")
+            ax.plot(df_so_far["cycle_idx"], df_so_far["corrected_pred"], color="tab:blue",
+                    label="online-corrected twin")
+            ax.fill_between(df_so_far["cycle_idx"],
+                             df_so_far["corrected_pred"] - df_so_far["half_width"],
+                             df_so_far["corrected_pred"] + df_so_far["half_width"],
+                             color="tab:blue", alpha=0.15, label="online conformal band")
+            anomalies = df_so_far[df_so_far["anomaly"]]
+            if len(anomalies):
+                ax.scatter(anomalies["cycle_idx"], anomalies["corrected_pred"], color="red",
+                           marker="x", s=70, zorder=5, label="anomaly flagged")
+            ax.set_xlabel("cycle"); ax.set_ylabel("SOH (%)")
+            ax.set_title(f"{dataset}/{battery_id} — streaming twin "
+                         f"(cycle {c['cycle_idx']} of {stream_cycles[-1]['cycle_idx']})")
+            ax.legend(fontsize=8, loc="lower left")
+            chart_placeholder.pyplot(fig)
+            plt.close(fig)
+
+            last = rows[-1]
+            bits = [f"cycle **{last['cycle_idx']}**", f"raw={last['raw_pred']:.1f}%",
+                    f"corrected={last['corrected_pred']:.1f}%", f"±{last['half_width']:.1f}pp",
+                    f"revealed history: {last['n_revealed_so_far']} cycles"]
+            if last["anomaly"]:
+                bits.append("🚨 **ANOMALY FLAGGED**")
+            status_placeholder.markdown(" | ".join(bits))
+
+        df_final = pd.DataFrame(rows)
+        stream_only = df_final.iloc[5:] if len(df_final) > 5 else df_final
+        stream_only = stream_only.dropna(subset=["true_soh"])
+        raw_mae = (stream_only["raw_pred"] - stream_only["true_soh"]).abs().mean()
+        corrected_mae = (stream_only["corrected_pred"] - stream_only["true_soh"]).abs().mean()
+
+        st.markdown("---")
+        st.subheader("Honest summary: did online updating actually help?")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Frozen-pipeline MAE (whole stream)", f"{raw_mae:.2f} pp")
+        c2.metric("Online-corrected MAE (whole stream)", f"{corrected_mae:.2f} pp",
+                  delta=f"{corrected_mae - raw_mae:+.2f} pp vs. frozen", delta_color="inverse")
+        final_row = df_final.iloc[-1]
+        c3.metric("Final cycle: corrected vs. true",
+                  f"{final_row['corrected_pred']:.1f}% vs {final_row['true_soh']:.1f}%")
+        st.caption(
+            "Compare the final streamed cycle's numbers above against this SAME battery/cycle "
+            "in the 🔮 Prediction tab (the frozen one-shot pipeline, computed independently) to "
+            "see how closely the online-updating twin converges to it. Whether online updating "
+            "helps, and by how much, is reported honestly (both directions, not cherry-picked) "
+            "in DEVELOPMENT_LOG.md session 28 - it is NOT assumed to always improve on the "
+            "frozen pipeline."
+        )
+        st.caption(
+            "⚠️ Reminder: this is a SIMULATION of streaming, replaying already-recorded test "
+            "data with an artificial delay - not a connection to live hardware or a real BMS."
+        )
+
+
 def main():
     st.title("🔋 Battery Digital Twin Dashboard")
     st.caption("Fusion-enabled ensemble (XGBoost+fusion / Stacking-Ridge+fusion) for SOH, "
@@ -551,9 +699,9 @@ def main():
                     "not a real confidence guarantee, for this battery."
                 )
 
-    tab_prediction, tab_explain, tab_report, tab_validation, tab_archive = st.tabs(
-        ["🔮 Prediction", "🔍 Explainability", "📝 Health Report", "🧪 Model Validation",
-         "📁 Full Results Archive"]
+    tab_prediction, tab_explain, tab_report, tab_stream, tab_validation, tab_archive = st.tabs(
+        ["🔮 Prediction", "🔍 Explainability", "📝 Health Report", "🌊 Streaming Digital Twin",
+         "🧪 Model Validation", "📁 Full Results Archive"]
     )
     with tab_prediction:
         if ctx is not None:
@@ -570,6 +718,8 @@ def main():
             render_health_report_tab(ctx, dataset, battery_id)
         else:
             st.info("👈 Select a battery (or upload a CSV) in the sidebar first.")
+    with tab_stream:
+        render_streaming_twin_tab(get_resources())
     with tab_validation:
         render_evaluation_protocol_section()
     with tab_archive:

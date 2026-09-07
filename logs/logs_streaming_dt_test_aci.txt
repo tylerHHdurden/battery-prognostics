@@ -1,0 +1,28 @@
+
+[dt-test] === NASA/B0018 ===
+[dt-test] corrector coefficients: first=[0.01907736 0.00021158] -> last=[ 0.02644611 -0.95255363] (CHANGED - genuinely updating)
+[dt-test] FINAL cycle 132: one-shot/frozen raw_pred=81.50, online-corrected pred=79.65, true_soh=72.76 (raw error=8.74, corrected error=6.89)
+[dt-test] RAW pipeline MAE: first half=3.240, second half=6.043
+[dt-test] ONLINE-CORRECTED MAE: first half=3.258, second half=5.593
+[dt-test] overall MAE: raw=4.641, corrected=4.426 (IMPROVED vs. frozen pipeline alone)
+[dt-test] ACI half-width: first=8.363, last=7.599, mean=7.524, std=1.295, min=3.631, max=9.849
+[dt-test] ACI alpha_t: first=0.0200, last=0.0650 (target alpha=0.10, i.e. 90% coverage)
+[dt-test] EMPIRICAL COVERAGE over the stream: 85.9% (target 90%) over 128 streamed cycles
+[dt-test] SESSION-28-ORIGINAL (fixed alpha=0.10 sliding window), replayed on this SAME residual sequence for a fair full-trajectory comparison:
+    half-width: first=8.159, last=7.567, mean=6.710, std=1.304, min=2.345, max=9.060
+    empirical coverage: 82.0% (target 90%)
+
+[dt-test] === MIT/b3c35 ===
+[dt-test] corrector coefficients: first=[2.30131727e-04 2.31081756e-06] -> last=[ 0.01162105 -0.11023853] (CHANGED - genuinely updating)
+[dt-test] FINAL cycle 1091: one-shot/frozen raw_pred=83.96, online-corrected pred=82.77, true_soh=82.73 (raw error=1.22, corrected error=0.03)
+[dt-test] RAW pipeline MAE: first half=0.267, second half=0.611
+[dt-test] ONLINE-CORRECTED MAE: first half=0.104, second half=0.162
+[dt-test] overall MAE: raw=0.439, corrected=0.133 (IMPROVED vs. frozen pipeline alone)
+[dt-test] ACI half-width: first=0.029, last=0.234, mean=0.308, std=0.420, min=0.029, max=4.547
+[dt-test] ACI alpha_t: first=0.1200, last=0.0300 (target alpha=0.10, i.e. 90% coverage)
+[dt-test] EMPIRICAL COVERAGE over the stream: 87.2% (target 90%) over 1087 streamed cycles
+[dt-test] SESSION-28-ORIGINAL (fixed alpha=0.10 sliding window), replayed on this SAME residual sequence for a fair full-trajectory comparison:
+    half-width: first=0.029, last=0.143, mean=0.231, std=0.154, min=0.029, max=1.040
+    empirical coverage: 84.2% (target 90%)
+
+[dt-test] DONE

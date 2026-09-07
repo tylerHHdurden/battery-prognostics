@@ -1,0 +1,42 @@
+
+[rootcause] === 1. Training representation: NASA vs MIT ===
+[rootcause] training batteries: 3 NASA, 23 MIT (11.5% NASA by battery count)
+[rootcause] training CYCLES: 504 NASA, 18341 MIT (2.7% NASA by cycle count - NASA is far MORE underrepresented by cycle count than by battery count, since NASA batteries are individually much shorter-lived)
+
+[rootcause] === 2. Lifetime/fade-rate characteristics per test battery ===
+[rootcause] NASA/B0018: n_cycles=132, SOH 100.6%->72.8% (27.9pp), fade_rate=0.2112pp/cycle
+[rootcause] MIT/b1c4: n_cycles=1225, SOH 99.9%->94.7% (5.2pp), fade_rate=0.0043pp/cycle
+[rootcause] MIT/b2c24: n_cycles=523, SOH 99.9%->77.3% (22.6pp), fade_rate=0.0432pp/cycle
+[rootcause] MIT/b3c0: n_cycles=1007, SOH 99.9%->82.4% (17.5pp), fade_rate=0.0174pp/cycle
+[rootcause] MIT/b3c35: n_cycles=1091, SOH 100.0%->82.7% (17.2pp), fade_rate=0.0158pp/cycle
+[rootcause] MIT/b4c38: n_cycles=1230, SOH 99.9%->78.3% (21.6pp), fade_rate=0.0175pp/cycle
+[rootcause] B0018 fades 4.9x FASTER per cycle than even the fastest-fading MIT test battery (0.2112 vs 0.0432 pp/cycle) despite having by far the FEWEST total cycles (132) of any test battery - consistent with NASA's standard low-rate cycling protocol vs. MIT's fast-charging-study protocol (well-documented characteristic of these specific published datasets, not independently re-derived here)
+
+[rootcause] === 3. Feature-distribution outlier check (session-19-style domain classifier) ===
+[rootcause] MIT training rows (the reference distribution): 18341
+[rootcause] AUC(MIT-train vs. X) for EVERY test battery, not just B0018 - session 19 already showed held-out battery separability is elevated even IN-domain at this battery count, so B0018 needs to be checked against that baseline, not zero:
+    NASA/B0018: n=132, AUC=1.0000
+    MIT/b1c4: n=1225, AUC=0.9515
+    MIT/b2c24: n=523, AUC=0.9898
+    MIT/b3c0: n=1007, AUC=0.9207
+    MIT/b3c35: n=1091, AUC=0.9870
+    MIT/b4c38: n=1230, AUC=0.9719
+
+[rootcause] per-feature z-score of B0018's MEAN vs. MIT-train distribution (top 5 by |z|, identifying WHICH features drive the separation):
+    ICHV: MIT-train mean=26.546, B0018 mean=10200.213, z=854.7 (100.0th percentile of MIT-train)
+    TEVI: MIT-train mean=12.966, B0018 mean=2565.569, z=419.9 (100.0th percentile of MIT-train)
+    fusion_2: MIT-train mean=0.671, B0018 mean=2.967, z=30.3 (100.0th percentile of MIT-train)
+    fusion_1: MIT-train mean=0.459, B0018 mean=1.731, z=18.6 (100.0th percentile of MIT-train)
+    fusion_11: MIT-train mean=1.138, B0018 mean=2.634, z=18.4 (100.0th percentile of MIT-train)
+
+[rootcause] === 4. Degradation-mode signature - completing session 23's coverage to all 6 ===
+[rootcause] NASA/B0018: delta_V_frac=5.7%, delta_H_frac=-0.618 -> mixed LLI+LAM-leaning signature
+[rootcause] MIT/b1c4: delta_V_frac=3.2%, delta_H_frac=-0.378 -> LAM-leaning signature (peak height collapsed, position relatively stable)
+[rootcause] MIT/b2c24: delta_V_frac=1.8%, delta_H_frac=-0.381 -> LAM-leaning signature (peak height collapsed, position relatively stable)
+[rootcause] MIT/b3c0: delta_V_frac=2.0%, delta_H_frac=-0.405 -> LAM-leaning signature (peak height collapsed, position relatively stable)
+[rootcause] MIT/b3c35: delta_V_frac=3.8%, delta_H_frac=-0.471 -> LAM-leaning signature (peak height collapsed, position relatively stable)
+[rootcause] MIT/b4c38: delta_V_frac=3.5%, delta_H_frac=-0.336 -> LAM-leaning signature (peak height collapsed, position relatively stable)
+
+[rootcause] === SYNTHESIS ===
+[rootcause] See DEVELOPMENT_LOG.md session 27 for the full synthesized explanation.
+[rootcause] DONE

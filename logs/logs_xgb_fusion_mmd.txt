@@ -1,0 +1,7 @@
+[xgb-fusion-mmd] BFA-selected HIs: ['ICHV', 'SCV', 'VDEDT', 'VIECT', 'MATC', 'MATD', 'TEVI']
+[xgb-fusion-mmd] fusion embedding dims: 16
+[xgb-fusion-mmd] hi_table rows=24053, fusion rows=24053, merged (inner) rows=24053
+[xgb-fusion-mmd] train rows=18845, test rows=5208
+[xgb-fusion-mmd] TEST RMSE=1.4438 MAE=0.9952 R2=0.9109
+[xgb-fusion-mmd] (non-MMD XGBoost-fusion was R2=0.917)
+[xgb-fusion-mmd] DONE

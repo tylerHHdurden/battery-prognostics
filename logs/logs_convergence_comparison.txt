@@ -1,0 +1,8 @@
+[plot] saved C:\Users\manoj\OneDrive\Desktop\battery-prognostics\outputs\phase8_convergence_comparison.png
+
+[plot] convergence summary (sorted by epoch of best val_loss, i.e. convergence speed):
+    model  epochs_trained  best_epoch  best_val_loss  final_train_loss
+ PiFormer              21          12       0.483701          0.022175
+CNN-BiGRU              27          18       0.553469          0.038352
+ CNN-LSTM              34          25       0.733054          0.047283
+    VLSTM              40          34       0.269141          0.054248

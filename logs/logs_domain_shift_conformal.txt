@@ -1,0 +1,29 @@
+[domain-conformal] calib batteries: ['B0018', 'b2c24', 'b3c35'], eval batteries: ['b1c4', 'b3c0', 'b4c38']
+[domain-conformal] NASA+MIT calib rows=1746, eval rows=3462
+[domain-conformal] CALCE/CS2_35: 932 cycles
+[domain-conformal] CALCE/CS2_36: 972 cycles
+[domain-conformal] CALCE/CS2_37: 1037 cycles
+[domain-conformal] rebuilt & cached 2941 CALCE fusion embeddings
+[domain-conformal] CALCE rows: hi=2943, fusion=2941, preds=2941, merged=2941
+
+[domain-conformal] === NASA+MIT eval half (in-domain) ===
+[domain-conformal] domain-classifier AUC (calib vs. NASA+MIT eval half (in-domain)): 0.9021 (NEAR-TOTAL separation - near-zero feature overlap)
+[domain-conformal] calibration effective sample size: 136.8 of 1746 (7.8%)
+[domain-conformal] degenerate (infinite-width) intervals: 0.0% of 3462 points
+[domain-conformal] mean interval width (finite only): 1.765
+[domain-conformal] empirical coverage (infinite intervals counted as covered, per their literal definition): 0.436
+
+[domain-conformal] === CALCE (out-of-domain, zero-retrain, MMD-aligned) ===
+[domain-conformal] domain-classifier AUC (calib vs. CALCE (out-of-domain, zero-retrain, MMD-aligned)): 1.0000 (NEAR-TOTAL separation - near-zero feature overlap)
+[domain-conformal] calibration effective sample size: 259.2 of 1746 (14.8%)
+[domain-conformal] degenerate (infinite-width) intervals: 100.0% of 2941 points
+[domain-conformal] mean interval width (finite only): nan
+[domain-conformal] empirical coverage (infinite intervals counted as covered, per their literal definition): 1.000
+
+[domain-conformal] === COMPARISON: original fixed-width vs. domain-shift-aware ===
+[domain-conformal] ORIGINAL (session 13, MMD-recalibrated, fixed-width): in-domain half-width=2.217 coverage=94.6%  |  CALCE half-width=2.217 (IDENTICAL) coverage=4.4%
+[domain-conformal] NEW (domain-shift-aware, this session): in-domain mean half-width=0.882 coverage=43.6%  |  CALCE mean half-width=nan coverage=100.0%
+[domain-conformal] widths now differ between domains: NO (CALCE is nanx wider on average, finite intervals only)
+
+[domain-conformal] saved outputs/domain_shift_conformal_summary.csv and predictions/domain_shift_conformal_per_point.csv
+[domain-conformal] DONE

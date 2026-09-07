@@ -1,0 +1,11 @@
+model,dataset,battery_id,cycle_idx,shap_top3,lime_top3,overlap_count,match_fraction
+XGBoost-base,MIT,b1c4,333,SCV|VIECT|TEVI,SCV|TEVI|VIECT,3,1.0
+XGBoost-base,MIT,b3c0,376,SCV|VIECT|TEVI,SCV|TEVI|VIECT,3,1.0
+XGBoost-base,MIT,b3c0,406,SCV|VIECT|TEVI,SCV|TEVI|VIECT,3,1.0
+XGBoost-base,MIT,b3c35,521,SCV|VIECT|TEVI,SCV|TEVI|VIECT,3,1.0
+XGBoost-base,MIT,b4c38,51,SCV|VIECT|TEVI,SCV|TEVI|VIECT,3,1.0
+XGBoost-meta,MIT,b1c4,333,pred_XGBoost|pred_PiFormer|pred_VLSTM,pred_XGBoost|pred_CNNLSTM|pred_PiFormer,2,0.6666666666666666
+XGBoost-meta,MIT,b3c0,376,pred_XGBoost|pred_PiFormer|pred_VLSTM,pred_XGBoost|pred_VLSTM|pred_CNNLSTM,2,0.6666666666666666
+XGBoost-meta,MIT,b3c0,406,pred_XGBoost|pred_PiFormer|pred_VLSTM,pred_XGBoost|pred_VLSTM|pred_PiFormer,3,1.0
+XGBoost-meta,MIT,b3c35,521,pred_XGBoost|pred_PiFormer|pred_VLSTM,pred_XGBoost|pred_VLSTM|pred_PiFormer,3,1.0
+XGBoost-meta,MIT,b4c38,51,pred_XGBoost|pred_PiFormer|pred_VLSTM,pred_XGBoost|pred_PiFormer|pred_VLSTM,3,1.0

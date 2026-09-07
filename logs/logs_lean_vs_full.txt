@@ -1,0 +1,74 @@
+[lean-vs-full] LEAN (XGBoost-fusion only), freshly recomputed: {'rmse': 1.392057601367466, 'mae': 0.9593311761358876, 'r2': 0.9171543527393436}
+[lean-vs-full] (cross-check vs. originally-saved xgb_fusion_metrics.csv: rmse=1.3921 mae=0.9593 r2=0.9172)
+[ensemble-fusion] train: merged rows=18845
+[drop-branch-5] train: 4-branch merged rows=18845, CNN-BiGRU rows=18845, 5-branch merged (inner) rows=18845
+[ensemble-fusion] test: merged rows=5208
+[drop-branch-5] test: 4-branch merged rows=5208, CNN-BiGRU rows=5208, 5-branch merged (inner) rows=5208
+[lean-vs-full] FULL (5-branch ensemble: XGBoost-fusion + VLSTM + CNNLSTM + PiFormer + CNNBiGRU, Ridge meta-learner): {'rmse': 1.3943296161972907, 'mae': 0.9656950748059908, 'r2': 0.9168837028125185}
+[lean-vs-full] (cross-check vs. session 17's full_5_branch: rmse=1.39433 r2=0.916884)
+[lean-vs-full] persisted models/ridge_meta_fusion_5branch.pkl (previously in-memory-only in session 17)
+[lean-vs-full] LEAN vs FULL delta: delta_rmse=-0.0023, delta_r2=+0.0003
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+
+[lean-vs-full] latency over 300 single-instance predictions (batch_size=1, warm-up excluded):
+[lean-vs-full] LEAN: mean=3.876ms median=3.857ms std=1.440ms
+[lean-vs-full] FULL: mean=201.918ms median=235.574ms std=57.699ms
+[lean-vs-full] LEAN is 52.10x faster than FULL, on average
+
+[lean-vs-full] model size on disk:
+[lean-vs-full] LEAN (2 files): 2855.2 KB
+    xgb_soh_fusion.json: 2845.7 KB
+    ica_encoder.pt: 9.5 KB
+[lean-vs-full] FULL (7 files): 3086.3 KB
+    xgb_soh_fusion.json: 2845.7 KB
+    ica_encoder.pt: 9.5 KB
+    vlstm_soh.pt: 20.6 KB
+    cnn_lstm_soh.pt: 51.7 KB
+    piformer_soh.pt: 86.3 KB
+    cnn_bigru_soh.pt: 71.4 KB
+    ridge_meta_fusion_5branch.pkl: 1.0 KB
+[lean-vs-full] LEAN is 1.1x smaller than FULL
+
+[lean-vs-full] pipeline complexity (model invocations per prediction):
+[lean-vs-full] LEAN: 2 steps: ['ICAEncoder.encode', 'XGBoost-fusion.predict']
+[lean-vs-full] FULL: 7 steps: ['ICAEncoder.encode', 'XGBoost-fusion.predict', 'VLSTM.forward', 'CNN-LSTM.forward', 'PiFormer.forward', 'CNN-BiGRU.forward', 'Ridge-meta.predict']
+
+[lean-vs-full] === FINAL SUMMARY TABLE ===
+              variant     rmse      mae       r2  mean_latency_ms  model_size_kb  n_model_invocations
+  lean_xgboost_fusion 1.392058 0.959331 0.917154         3.875949    2855.239258                    2
+full_5branch_ensemble 1.394330 0.965695 0.916884       201.917899    3086.261719                    7
+
+[lean-vs-full] accuracy delta (lean - full): delta_rmse=-0.0023, delta_r2=+0.0003
+[lean-vs-full] speedup: 52.10x, size reduction: 1.1x, invocation reduction: 7->2
+[lean-vs-full] DONE

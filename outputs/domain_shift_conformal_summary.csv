@@ -1,0 +1,3 @@
+domain,n_points,auc,effective_sample_size,ess_pct,frac_degenerate_interval,mean_width_finite_only,min_width,max_width_finite,empirical_coverage,target_coverage
+NASA+MIT eval half (in-domain),3462,0.9020970934306889,136.84180470916323,7.837445859631343,0.0,1.7645905990542414,0.8741044811893062,0.9186660789557379,0.4358752166377816,0.9
+"CALCE (out-of-domain, zero-retrain, MMD-aligned)",2941,1.0,259.21949925898906,14.846477620789752,1.0,,,,1.0,0.9

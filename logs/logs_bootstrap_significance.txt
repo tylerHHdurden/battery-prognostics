@@ -1,0 +1,64 @@
+[bootstrap] N_BOOTSTRAP=2000, CI=(2.5, 97.5), seed=42
+
+[bootstrap] === 1. Drop-branch ablation (5-branch) - CI on delta R2 per dropped branch ===
+[ensemble-fusion] train: merged rows=18845
+[drop-branch-5] train: 4-branch merged rows=18845, CNN-BiGRU rows=18845, 5-branch merged (inner) rows=18845
+[ensemble-fusion] test: merged rows=5208
+[drop-branch-5] test: 4-branch merged rows=5208, CNN-BiGRU rows=5208, 5-branch merged (inner) rows=5208
+
+[bootstrap]  branch: pred_XGBoost_fusion
+    pred_XGBoost_fusion CYCLE-level (n_cycles=5208): mean_delta=+0.09695  95% CI=[+0.08131, +0.11377]  -> SIGNIFICANT (CI excludes 0)
+    pred_XGBoost_fusion BATTERY-level (n_batteries=6): mean_delta=+0.09374  95% CI=[-0.05401, +0.23916]  -> NOT significant (CI includes 0 - indistinguishable from noise)
+
+[bootstrap]  branch: pred_VLSTM
+    pred_VLSTM CYCLE-level (n_cycles=5208): mean_delta=+0.00017  95% CI=[+0.00009, +0.00024]  -> SIGNIFICANT (CI excludes 0)
+    pred_VLSTM BATTERY-level (n_batteries=6): mean_delta=+0.00016  95% CI=[-0.00036, +0.00078]  -> NOT significant (CI includes 0 - indistinguishable from noise)
+
+[bootstrap]  branch: pred_CNNLSTM
+    pred_CNNLSTM CYCLE-level (n_cycles=5208): mean_delta=+0.00000  95% CI=[-0.00001, +0.00002]  -> NOT significant (CI includes 0 - indistinguishable from noise)
+    pred_CNNLSTM BATTERY-level (n_batteries=6): mean_delta=+0.00000  95% CI=[-0.00011, +0.00009]  -> NOT significant (CI includes 0 - indistinguishable from noise)
+
+[bootstrap]  branch: pred_PiFormer
+    pred_PiFormer CYCLE-level (n_cycles=5208): mean_delta=+0.00003  95% CI=[+0.00001, +0.00004]  -> SIGNIFICANT (CI excludes 0)
+    pred_PiFormer BATTERY-level (n_batteries=6): mean_delta=+0.00003  95% CI=[-0.00002, +0.00007]  -> NOT significant (CI includes 0 - indistinguishable from noise)
+
+[bootstrap]  branch: pred_CNNBiGRU
+    pred_CNNBiGRU CYCLE-level (n_cycles=5208): mean_delta=-0.00006  95% CI=[-0.00014, +0.00002]  -> NOT significant (CI includes 0 - indistinguishable from noise)
+    pred_CNNBiGRU BATTERY-level (n_batteries=6): mean_delta=-0.00006  95% CI=[-0.00055, +0.00059]  -> NOT significant (CI includes 0 - indistinguishable from noise)
+
+[bootstrap] === 2. Base learner comparison - CI on R2 per model, and pairwise delta vs. XGBoost ===
+[bootstrap] shared test rows across all 5 base learners: 5208 (xgb=5208, deep=5208, bigru=5208)
+
+[bootstrap] per-model R2 CI:
+    XGBoost: point R2=0.9066  95% CI (cycle-level)=[0.8978, 0.9148]
+    VLSTM: point R2=0.8059  95% CI (cycle-level)=[0.7912, 0.8194]
+    CNNLSTM: point R2=0.3335  95% CI (cycle-level)=[0.2866, 0.3779]
+    PiFormer: point R2=0.6170  95% CI (cycle-level)=[0.5804, 0.6469]
+    CNNBiGRU: point R2=0.5717  95% CI (cycle-level)=[0.5368, 0.6027]
+
+[bootstrap] pairwise delta R2 vs. XGBoost (does XGBoost's dominance survive resampling?):
+    XGBoost - VLSTM CYCLE-level: mean_delta=+0.10087  95% CI=[+0.08385, +0.11780]  -> SIGNIFICANT (CI excludes 0)
+    XGBoost - VLSTM BATTERY-level: mean_delta=+0.09918  95% CI=[-0.05134, +0.25275]  -> NOT significant (CI includes 0 - indistinguishable from noise)
+    XGBoost - CNNLSTM CYCLE-level: mean_delta=+0.57395  95% CI=[+0.52785, +0.62037]  -> SIGNIFICANT (CI excludes 0)
+    XGBoost - CNNLSTM BATTERY-level: mean_delta=+0.58672  95% CI=[+0.19267, +1.01620]  -> SIGNIFICANT (CI excludes 0)
+    XGBoost - PiFormer CYCLE-level: mean_delta=+0.29037  95% CI=[+0.25780, +0.32661]  -> SIGNIFICANT (CI excludes 0)
+    XGBoost - PiFormer BATTERY-level: mean_delta=+0.28933  95% CI=[+0.06225, +0.51245]  -> SIGNIFICANT (CI excludes 0)
+    XGBoost - CNNBiGRU CYCLE-level: mean_delta=+0.33540  95% CI=[+0.30313, +0.36955]  -> SIGNIFICANT (CI excludes 0)
+    XGBoost - CNNBiGRU BATTERY-level: mean_delta=+0.34417  95% CI=[+0.06194, +0.65668]  -> SIGNIFICANT (CI excludes 0)
+
+[bootstrap] === 3. Lean vs. full - CI on delta RMSE/R2 ===
+[ensemble-fusion] train: merged rows=18845
+[drop-branch-5] train: 4-branch merged rows=18845, CNN-BiGRU rows=18845, 5-branch merged (inner) rows=18845
+[ensemble-fusion] test: merged rows=5208
+[drop-branch-5] test: 4-branch merged rows=5208, CNN-BiGRU rows=5208, 5-branch merged (inner) rows=5208
+[bootstrap] LEAN/FULL test-row key alignment identical: True
+
+[bootstrap] delta RMSE (lean - full; negative = lean is more accurate):
+    delta_RMSE CYCLE-level: mean_delta=-0.00227  95% CI=[-0.00311, -0.00142]  -> SIGNIFICANT (CI excludes 0)
+    delta_RMSE BATTERY-level: mean_delta=-0.00229  95% CI=[-0.01149, +0.00860]  -> NOT significant (CI includes 0 - indistinguishable from noise)
+
+[bootstrap] delta R2 (lean - full; positive = lean is more accurate):
+    delta_R2 CYCLE-level: mean_delta=+0.00027  95% CI=[+0.00017, +0.00038]  -> SIGNIFICANT (CI excludes 0)
+    delta_R2 BATTERY-level: mean_delta=+0.00034  95% CI=[-0.00085, +0.00180]  -> NOT significant (CI includes 0 - indistinguishable from noise)
+
+[bootstrap] DONE - see data/processed/predictions/bootstrap_*_ci.csv

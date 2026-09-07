@@ -1,0 +1,99 @@
+[operational note, logged honestly rather than silently discarded]
+First invocation of `python src/train_cnn_bigru.py 2>&1 | tee logs/logs_cnn_bigru.txt`
+exited with code 4 and wrote ZERO bytes to this file or to the captured
+tool output - no Python traceback, no partial output at all. Given the
+retry below (same script, same seed, run directly without the `tee`
+pipe) completed successfully end-to-end on the very next attempt with
+no code changes, this is most consistent with a transient issue in the
+background-process/pipe-capture plumbing of this session's environment
+(e.g. a `tee`+background-bash interaction on Windows/Git-Bash), not a
+bug in train_cnn_bigru.py or models/cnn_bigru.py. Not investigated
+further since it did not reproduce - noted here rather than hidden,
+per this project's practice of logging real operational hiccups (see
+e.g. the OneDrive-sync-lag trap documented earlier in DEVELOPMENT_LOG.md).
+
+[retry - succeeded, exit code 0]
+Console output was captured via `head -50`, which truncated the print
+stream at epoch 15 of training (the run itself continued to completion
+in the background and all output files were verified written to disk
+afterward - models/cnn_bigru_soh.pt, and
+data/processed/predictions/cnn_bigru_{history,metrics,test_preds,train_preds}.csv).
+Epochs 16-26 and the final summary lines below are reconstructed from
+those saved CSV/metrics files (their authoritative source), not
+re-typed from a terminal capture that doesn't exist past epoch 15 -
+flagged explicitly so this log is clear about its own provenance.
+
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[cnn-bigru] fit batteries: 21, val batteries: 5, test batteries: 6
+[cnn-bigru] fit cycles=14872, val cycles=3973, test cycles=5208
+[deep/CNNBiGRU] epoch   0 train_mse=0.6092 val_mse=1.5395
+[deep/CNNBiGRU] epoch   1 train_mse=0.2582 val_mse=1.7472
+[deep/CNNBiGRU] epoch   2 train_mse=0.1726 val_mse=1.4266
+[deep/CNNBiGRU] epoch   3 train_mse=0.1500 val_mse=1.1336
+[deep/CNNBiGRU] epoch   4 train_mse=0.1225 val_mse=1.0370
+[deep/CNNBiGRU] epoch   5 train_mse=0.1040 val_mse=0.8227
+[deep/CNNBiGRU] epoch   6 train_mse=0.0928 val_mse=0.7615
+[deep/CNNBiGRU] epoch   7 train_mse=0.0898 val_mse=0.6455
+[deep/CNNBiGRU] epoch   8 train_mse=0.0926 val_mse=0.7566
+[deep/CNNBiGRU] epoch   9 train_mse=0.0779 val_mse=0.8530
+[deep/CNNBiGRU] epoch  10 train_mse=0.0768 val_mse=0.8939
+[deep/CNNBiGRU] epoch  11 train_mse=0.0756 val_mse=0.8073
+[deep/CNNBiGRU] epoch  12 train_mse=0.0716 val_mse=0.6922
+[deep/CNNBiGRU] epoch  13 train_mse=0.0637 val_mse=0.9556
+[deep/CNNBiGRU] epoch  14 train_mse=0.0657 val_mse=0.6438
+[deep/CNNBiGRU] epoch  15 train_mse=0.0596 val_mse=0.8853
+[deep/CNNBiGRU] epoch  16 train_mse=0.0555 val_mse=0.9187
+[deep/CNNBiGRU] epoch  17 train_mse=0.0567 val_mse=0.8794
+[deep/CNNBiGRU] epoch  18 train_mse=0.0479 val_mse=0.5535
+[deep/CNNBiGRU] epoch  19 train_mse=0.0513 val_mse=0.6649
+[deep/CNNBiGRU] epoch  20 train_mse=0.0487 val_mse=0.8264
+[deep/CNNBiGRU] epoch  21 train_mse=0.0462 val_mse=0.7530
+[deep/CNNBiGRU] epoch  22 train_mse=0.0435 val_mse=0.8858
+[deep/CNNBiGRU] epoch  23 train_mse=0.0437 val_mse=0.7252
+[deep/CNNBiGRU] epoch  24 train_mse=0.0422 val_mse=0.7951
+[deep/CNNBiGRU] epoch  25 train_mse=0.0418 val_mse=0.7985
+[deep/CNNBiGRU] epoch  26 train_mse=0.0384 val_mse=0.8275
+[cnn-bigru] early stopping at epoch 26 (best val_mse=0.5535 at epoch 18, patience=8)
+[cnn-bigru] TEST RMSE=3.1652 MAE=2.3414 R2=0.5717
+
+[cnn-bigru] === base learner comparison (existing 4 + CNN-BiGRU) ===
+   model     rmse      mae       r2
+   VLSTM 2.130829 1.564114 0.805888
+ CNNLSTM 3.948296 2.926351 0.333539
+PiFormer 2.992997 1.927512 0.617027
+   model     rmse       mae       r2
+ XGBoost 1.478458 0.990344 0.906551
+      CNNBiGRU  rmse=3.1652  mae=2.3414  r2=0.5717
+
+[cnn-bigru] ALL DONE

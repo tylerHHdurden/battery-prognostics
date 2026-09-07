@@ -12,6 +12,14 @@ the two task losses are combined:
                      (see models/joint_model.py docstring for why this is
                      the correct way to make alpha/beta "trained
                      parameters" without them collapsing to zero)
+    adaptive_softmax : ADDITIVE follow-up variant (added in a later
+                     session, does not replace "adaptive"): learnable
+                     (alpha,beta) = 2*softmax(s_alpha,s_beta), which
+                     structurally forces alpha+beta=2 so the two weights
+                     can't just drift to the same value together the way
+                     "adaptive"'s independent log_sigma_soh/log_sigma_rul
+                     did (see models.joint_model.SoftmaxAdaptiveLossWeighting
+                     docstring for the full rationale and citation).
 
 Both SOH and RUL heads are ALWAYS evaluated on the test set for every
 variant, specifically so soh_only/rul_only visibly "collapse" on the task
@@ -41,7 +49,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent / "models"))
 from train_deep_models import load_all_battery_tensors, make_xy
 from sequence_features import apply_channel_norm
-from models.joint_model import JointSOHRULModel, AdaptiveLossWeighting
+from models.joint_model import JointSOHRULModel, AdaptiveLossWeighting, SoftmaxAdaptiveLossWeighting
 
 ROOT = Path(__file__).resolve().parents[1]
 PROC_DIR = ROOT / "data" / "processed"
@@ -66,7 +74,12 @@ def train_variant(mode: str, X_fit, soh_fit, rul_fit, X_val, soh_val, rul_val):
     soh_val_z = (soh_val - soh_mean) / soh_std
     rul_val_z = (rul_val - rul_mean) / rul_std
 
-    adaptive = AdaptiveLossWeighting() if mode == "adaptive" else None
+    if mode == "adaptive":
+        adaptive = AdaptiveLossWeighting()
+    elif mode == "adaptive_softmax":
+        adaptive = SoftmaxAdaptiveLossWeighting()
+    else:
+        adaptive = None
     params = list(model.parameters()) + (list(adaptive.parameters()) if adaptive else [])
     opt = torch.optim.Adam(params, lr=1e-3)
     mse = nn.MSELoss()
@@ -101,6 +114,8 @@ def train_variant(mode: str, X_fit, soh_fit, rul_fit, X_val, soh_val, rul_val):
                 total = 0.0 * l_soh + 1.0 * l_rul
                 a, b = 0.0, 1.0
             elif mode == "adaptive":
+                total, a, b = adaptive(l_soh, l_rul)
+            elif mode == "adaptive_softmax":
                 total, a, b = adaptive(l_soh, l_rul)
             else:
                 raise ValueError(mode)

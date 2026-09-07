@@ -1,0 +1,24 @@
+[ensemble-fusion] train: merged rows=18845
+[drop-branch-5] train: 4-branch merged rows=18845, CNN-BiGRU rows=18845, 5-branch merged (inner) rows=18845
+[ensemble-fusion] test: merged rows=5208
+[drop-branch-5] test: 4-branch merged rows=5208, CNN-BiGRU rows=5208, 5-branch merged (inner) rows=5208
+[drop-branch-5] FULL (all 5 base learners incl. CNN-BiGRU): {'rmse': 1.3943296161972907, 'mae': 0.9656950748059908, 'r2': 0.9168837028125185}
+[drop-branch-5] DROP pred_XGBoost_fusion: {'rmse': 2.050875784572743, 'mae': 1.3031089991571587, 'r2': 0.8201816544327798} (delta RMSE=+0.6565, delta R2=-0.0967)
+[drop-branch-5] DROP pred_VLSTM: {'rmse': 1.3957265003736357, 'mae': 0.9640558592027069, 'r2': 0.9167170822412194} (delta RMSE=+0.0014, delta R2=-0.0002)
+[drop-branch-5] DROP pred_CNNLSTM: {'rmse': 1.394363353051652, 'mae': 0.9653502363583154, 'r2': 0.9168796806411408} (delta RMSE=+0.0000, delta R2=-0.0000)
+[drop-branch-5] DROP pred_PiFormer: {'rmse': 1.3945507299258948, 'mae': 0.9657773421610997, 'r2': 0.9168573394456712} (delta RMSE=+0.0002, delta R2=-0.0000)
+[drop-branch-5] DROP pred_CNNBiGRU: {'rmse': 1.3937962441236589, 'mae': 0.966045261836345, 'r2': 0.9169472795050577} (delta RMSE=-0.0005, delta R2=+0.0001)
+
+[drop-branch-5] ORIGINAL 4-branch full ensemble (from drop_branch_ablation.csv): rmse=1.3938 r2=0.9169
+[drop-branch-5] NEW 5-branch full ensemble (CNN-BiGRU added): rmse=1.3943 r2=0.9169
+[drop-branch-5] delta from adding CNN-BiGRU as a 5th branch: delta_rmse=+0.0005, delta_r2=-0.0001
+
+[drop-branch-5] === FULL TABLE (sorted by RMSE) ===
+                 variant             dropped     rmse      mae       r2  delta_rmse  delta_r2
+      drop_pred_CNNBiGRU       pred_CNNBiGRU 1.393796 0.966045 0.916947   -0.000533  0.000064
+           full_5_branch                none 1.394330 0.965695 0.916884    0.000000  0.000000
+       drop_pred_CNNLSTM        pred_CNNLSTM 1.394363 0.965350 0.916880    0.000034 -0.000004
+      drop_pred_PiFormer       pred_PiFormer 1.394551 0.965777 0.916857    0.000221 -0.000026
+         drop_pred_VLSTM          pred_VLSTM 1.395727 0.964056 0.916717    0.001397 -0.000167
+drop_pred_XGBoost_fusion pred_XGBoost_fusion 2.050876 1.303109 0.820182    0.656546 -0.096702
+[drop-branch-5] DONE

@@ -1,0 +1,7 @@
+dataset,battery_id,n_tracked,n_lost,delta_V_volts,delta_V_frac_of_window,delta_H_frac,signature
+NASA,B0018,131,1,-0.098085522017195,0.0571582259964643,-0.6181256880254212,mixed LLI+LAM-leaning signature
+MIT,b1c4,548,677,0.05080629246231183,0.031902206268127585,-0.3779228726898241,"LAM-leaning signature (peak height collapsed, position relatively stable)"
+MIT,b2c24,364,159,0.028127110552763845,0.017691161569392922,-0.3807612503320302,"LAM-leaning signature (peak height collapsed, position relatively stable)"
+MIT,b3c0,930,77,0.031839483417085646,0.02009132704868802,-0.40513029408926515,"LAM-leaning signature (peak height collapsed, position relatively stable)"
+MIT,b3c35,979,112,-0.06032306984924629,0.037961805174000135,-0.47118818255615963,"LAM-leaning signature (peak height collapsed, position relatively stable)"
+MIT,b4c38,1096,134,-0.05588278894472376,0.03524926282995178,-0.33564915488265334,"LAM-leaning signature (peak height collapsed, position relatively stable)"

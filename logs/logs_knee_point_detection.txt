@@ -1,0 +1,21 @@
+[knee] 6 test batteries, 5208 total cycles, Savitzky-Golay window=15 poly=3 (same convention as ica_dv_dc.py), edge margin=7 cycles excluded each end
+[knee] B0018 (132 cycles): true knee=cycle 48, predicted knee=cycle 49, offset=+1 cycles (0.8% of lifetime)
+[knee] b1c4 (1225 cycles): true knee=cycle 886, predicted knee=cycle 886, offset=+0 cycles (0.0% of lifetime)
+[knee] b2c24 (523 cycles): true knee=cycle 255, predicted knee=cycle 200, offset=-55 cycles (10.5% of lifetime)
+[knee] b3c0 (1007 cycles): true knee=cycle 8, predicted knee=cycle 919, offset=+911 cycles (90.5% of lifetime)
+[knee] b3c35 (1091 cycles): true knee=cycle 359, predicted knee=cycle 363, offset=+4 cycles (0.4% of lifetime)
+[knee] b4c38 (1230 cycles): true knee=cycle 1089, predicted knee=cycle 1089, offset=+0 cycles (0.0% of lifetime)
+
+[knee] === SUMMARY across 6 test batteries ===
+battery_id  n_cycles  true_knee_cycle  pred_knee_cycle  offset_cycles  abs_offset_cycles  offset_pct_of_lifetime
+     B0018       132               48               49              1                  1                0.757576
+      b1c4      1225              886              886              0                  0                0.000000
+     b2c24       523              255              200            -55                 55               10.516252
+      b3c0      1007                8              919            911                911               90.466733
+     b3c35      1091              359              363              4                  4                0.366636
+     b4c38      1230             1089             1089              0                  0                0.000000
+
+[knee] mean absolute cycle-offset error: 161.8 cycles
+[knee] mean offset as % of battery lifetime: 17.0%
+[knee] saved per-battery results to outputs/knee_point_detection.csv
+[knee] DONE

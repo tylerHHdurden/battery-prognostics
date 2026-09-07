@@ -1,0 +1,29 @@
+[noise] loading raw test-battery cycles ONCE (reused across all noise levels)...
+[noise]   NASA/B0018: 132 cycles loaded
+[noise]   MIT/b1c4: 1225 cycles loaded
+[noise]   MIT/b2c24: 523 cycles loaded
+[noise]   MIT/b3c0: 1007 cycles loaded
+[noise]   MIT/b3c35: 1091 cycles loaded
+[noise]   MIT/b4c38: 1230 cycles loaded
+
+[noise] === noise level: clean (baseline) (sigma_V=0.0mV, sigma_I=0.0mA, sigma_T=0.00degC) ===
+[noise] clean (baseline): n=5208 RMSE=1.3921 MAE=0.9593 R2=0.9172
+
+[noise] === noise level: 1x BMS-grade (sigma_V=1.0mV, sigma_I=10.0mA, sigma_T=0.50degC) ===
+[noise] 1x BMS-grade: n=5208 RMSE=1.3714 MAE=0.9224 R2=0.9196
+
+[noise] === noise level: 2x BMS-grade (sigma_V=2.0mV, sigma_I=20.0mA, sigma_T=1.00degC) ===
+[noise] 2x BMS-grade: n=5208 RMSE=1.3814 MAE=0.8966 R2=0.9184
+
+[noise] === noise level: 5x BMS-grade (stress) (sigma_V=5.0mV, sigma_I=50.0mA, sigma_T=2.50degC) ===
+[noise] 5x BMS-grade (stress): n=5208 RMSE=1.3614 MAE=0.8136 R2=0.9208
+
+[noise] === SUMMARY: accuracy degradation vs. noise level ===
+          noise_level  sigma_V_mV  sigma_I_mA  sigma_T_degC    n     rmse      mae       r2  delta_rmse_vs_clean  delta_r2_vs_clean
+     clean (baseline)         0.0         0.0           0.0 5208 1.392058 0.959331 0.917154             0.000000           0.000000
+         1x BMS-grade         1.0        10.0           0.5 5208 1.371381 0.922387 0.919597            -0.020676           0.002443
+         2x BMS-grade         2.0        20.0           1.0 5208 1.381449 0.896590 0.918412            -0.010609           0.001258
+5x BMS-grade (stress)         5.0        50.0           2.5 5208 1.361398 0.813606 0.920763            -0.030659           0.003609
+
+[noise] saved outputs/sensor_noise_robustness_summary.csv and predictions/sensor_noise_robustness_per_cycle.csv
+[noise] DONE

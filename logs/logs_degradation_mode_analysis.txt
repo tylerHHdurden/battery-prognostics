@@ -1,0 +1,26 @@
+
+[degmode] === NASA/B0018 ===
+[degmode] NASA/B0018: tracked 131/132 cycles (1 lost - peak drifted beyond the 0.15V search window)
+[degmode] delta_V=-0.0981V (5.7% of this battery's 1.716V discharge window), delta_H_frac=-0.618
+[degmode] SIGNATURE: mixed LLI+LAM-leaning signature
+[degmode] SOH (true): 100.64% -> 72.76%  (ensemble pred at last test cycle: 81.52%)
+
+[degmode] === MIT/b3c0 ===
+[degmode] MIT/b3c0: tracked 930/1007 cycles (77 lost - peak drifted beyond the 0.15V search window)
+[degmode] delta_V=+0.0318V (2.0% of this battery's 1.585V discharge window), delta_H_frac=-0.405
+[degmode] SIGNATURE: LAM-leaning signature (peak height collapsed, position relatively stable)
+[degmode] SOH (true): 99.92% -> 82.42%  (ensemble pred at last test cycle: 83.29%)
+
+[degmode] === MIT/b1c4 ===
+[degmode] MIT/b1c4: tracked 548/1225 cycles (677 lost - peak drifted beyond the 0.15V search window)
+[degmode] delta_V=+0.0508V (3.2% of this battery's 1.593V discharge window), delta_H_frac=-0.378
+[degmode] SIGNATURE: LAM-leaning signature (peak height collapsed, position relatively stable)
+[degmode] SOH (true): 99.94% -> 94.71%  (ensemble pred at last test cycle: 97.40%)
+
+[degmode] === SUMMARY: degradation-mode signature alongside SOH ===
+dataset battery_id  SOH_first  SOH_last  SOH_pred_last  delta_V_frac_of_window  delta_H_frac                                                                 signature
+   NASA      B0018 100.640680 72.756873      81.516346                0.057158     -0.618126                                           mixed LLI+LAM-leaning signature
+    MIT       b3c0  99.922324 82.415552      83.287708                0.020091     -0.405130 LAM-leaning signature (peak height collapsed, position relatively stable)
+    MIT       b1c4  99.944792 94.712507      97.404680                0.031902     -0.377923 LAM-leaning signature (peak height collapsed, position relatively stable)
+
+[degmode] DONE

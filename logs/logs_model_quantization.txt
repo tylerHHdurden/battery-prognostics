@@ -1,0 +1,57 @@
+[quant] === ICA encoder size by precision (real serialized size, not estimated) ===
+    FP32 (baseline): 9365 bytes (9.15 KB)
+    FP16:            6037 bytes (5.90 KB)  [1.55x smaller]
+    INT8 (weights):  6271 bytes (6.12 KB)  [1.49x smaller]
+
+[quant] XGBoost-fusion (AS-IS, not quantized - tree ensemble, see module docstring): 2914032 bytes (2845.7 KB)
+[quant] ASIDE (not requested, zero precision change - same model, different serialization): XGBoost saved as compact binary (.ubj) instead of verbose JSON: 2028580 bytes (1981.0 KB, 1.44x smaller, bit-identical model)
+
+[quant] TOTAL lean pipeline size: FP32-encoder+JSON-xgb=2854.9KB, INT8-encoder+JSON-xgb=2851.9KB, INT8-encoder+UBJ-xgb=1987.2KB
+[quant] encoder quantization's share of total size saved: 3094 of 888546 bytes possible (0.3%) - XGBoost's OWN format change accounts for the rest
+
+[quant] === Accuracy on NASA+MIT test set, by encoder precision (XGBoost held fixed) ===
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+    FP32 (baseline): RMSE=1.3921 MAE=0.9593 R2=0.9172
+    FP16: RMSE=1.3922 MAE=0.9594 R2=0.9171
+    INT8 (weights): RMSE=1.3895 MAE=0.9577 R2=0.9175
+    FP16 vs FP32: delta_rmse=+0.00016, delta_r2=-0.000019
+    INT8 (weights) vs FP32: delta_rmse=-0.00252, delta_r2=+0.000300
+
+[quant] === Embedded/BMS hardware feasibility (reference figures, not measured) ===
+[quant] Typical Cortex-M0+/M3/M4-class BMS microcontrollers: 32KB-512KB total flash, 4KB-256KB total RAM (whole firmware, not just an ML model)
+[quant] Commonly-cited TinyML deployment targets (e.g. MLPerf Tiny-class benchmarks): roughly tens-of-KB to ~250KB model budget to coexist with the rest of the firmware
+[quant] This project's lean pipeline: 1987KB best case (INT8 encoder + UBJ XGBoost) - 62x-3.9x the FULL flash budget of a typical small BMS MCU, DOMINATED by XGBoost's ~1981KB (500 trees, depth 6) - the tiny ICA encoder (9.5KB->6.1KB after quantization) was never the bottleneck
+
+[quant] saved outputs/model_quantization_summary.csv
+[quant] DONE

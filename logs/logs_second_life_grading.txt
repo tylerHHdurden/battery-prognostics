@@ -1,0 +1,107 @@
+[gradelabel] lean XGBoost-fusion test-set rows: 5208, 6 batteries
+
+[gradelabel] === per-cycle grade distribution across all test cycles ===
+                       true_grade  pred_grade  true_pct  pred_pct
+Recycle only                    0           0       0.0       0.0
+Second-life candidate          94          37       1.8       0.7
+Primary EV use               5114        5171      98.2      99.3
+
+[gradelabel] === grading confusion matrix (rows=true, cols=predicted) ===
+pred_grade             Recycle only  Second-life candidate  Primary EV use
+true_grade                                                                
+Recycle only                      0                      0               0
+Second-life candidate             0                     33              61
+Primary EV use                    0                      4            5110
+
+[gradelabel] grading agreement (predicted grade == true grade): 98.75% of 5208 test cycles
+
+[gradelabel] misgrade breakdown:
+    correct: 5143 (98.75%)
+    risky (predicted too optimistic): 61 (1.17%)
+    conservative (predicted too pessimistic): 4 (0.08%)
+
+[gradelabel] RISKY misgrades detail (predicted more optimistic than true - the safety-relevant direction):
+dataset battery_id  cycle_idx       SOH  y_pred_soh_fusion            true_grade     pred_grade
+   NASA      B0018         77 79.943107          85.137444 Second-life candidate Primary EV use
+   NASA      B0018         78 79.645337          84.133873 Second-life candidate Primary EV use
+   NASA      B0018         79 79.106765          84.905991 Second-life candidate Primary EV use
+   NASA      B0018         80 78.551954          82.619080 Second-life candidate Primary EV use
+   NASA      B0018         82 78.262757          84.562622 Second-life candidate Primary EV use
+   NASA      B0018         83 78.085654          86.227882 Second-life candidate Primary EV use
+   NASA      B0018         84 77.509279          82.474411 Second-life candidate Primary EV use
+   NASA      B0018         85 77.306105          84.494606 Second-life candidate Primary EV use
+   NASA      B0018         87 78.807806          84.501831 Second-life candidate Primary EV use
+   NASA      B0018         88 78.278955          84.123169 Second-life candidate Primary EV use
+   NASA      B0018         89 77.494549          84.410889 Second-life candidate Primary EV use
+   NASA      B0018         90 76.793523          85.021080 Second-life candidate Primary EV use
+   NASA      B0018         92 77.491396          84.141914 Second-life candidate Primary EV use
+   NASA      B0018         93 77.023987          84.244980 Second-life candidate Primary EV use
+   NASA      B0018         94 76.799267          83.780411 Second-life candidate Primary EV use
+   NASA      B0018         95 76.263208          83.005821 Second-life candidate Primary EV use
+   NASA      B0018         97 75.784406          81.013199 Second-life candidate Primary EV use
+   NASA      B0018         98 75.606034          82.980011 Second-life candidate Primary EV use
+   NASA      B0018         99 75.378027          82.703461 Second-life candidate Primary EV use
+   NASA      B0018        100 74.792127          81.696808 Second-life candidate Primary EV use
+   NASA      B0018        102 74.345079          81.378578 Second-life candidate Primary EV use
+   NASA      B0018        103 74.508993          82.653969 Second-life candidate Primary EV use
+   NASA      B0018        105 73.606630          81.917725 Second-life candidate Primary EV use
+   NASA      B0018        107 78.673145          85.290138 Second-life candidate Primary EV use
+   NASA      B0018        108 78.024315          85.717293 Second-life candidate Primary EV use
+   NASA      B0018        109 77.494122          83.396507 Second-life candidate Primary EV use
+   NASA      B0018        110 76.757318          83.260292 Second-life candidate Primary EV use
+   NASA      B0018        112 75.897166          84.758972 Second-life candidate Primary EV use
+   NASA      B0018        113 75.701803          82.642174 Second-life candidate Primary EV use
+   NASA      B0018        114 75.415012          83.443382 Second-life candidate Primary EV use
+   NASA      B0018        115 75.196968          82.419434 Second-life candidate Primary EV use
+   NASA      B0018        117 74.662869          82.440567 Second-life candidate Primary EV use
+   NASA      B0018        118 74.040809          81.490837 Second-life candidate Primary EV use
+   NASA      B0018        119 73.729859          81.119858 Second-life candidate Primary EV use
+   NASA      B0018        120 73.037877          83.816772 Second-life candidate Primary EV use
+   NASA      B0018        122 76.304881          82.105713 Second-life candidate Primary EV use
+   NASA      B0018        123 75.601895          83.665794 Second-life candidate Primary EV use
+   NASA      B0018        124 75.317530          82.747032 Second-life candidate Primary EV use
+   NASA      B0018        125 74.337628          81.286011 Second-life candidate Primary EV use
+   NASA      B0018        127 74.254663          81.492638 Second-life candidate Primary EV use
+   NASA      B0018        128 73.933403          83.164230 Second-life candidate Primary EV use
+   NASA      B0018        129 73.969641          82.579079 Second-life candidate Primary EV use
+   NASA      B0018        130 73.343527          82.811462 Second-life candidate Primary EV use
+   NASA      B0018        132 72.756873          81.499329 Second-life candidate Primary EV use
+    MIT      b4c38       1210 79.994800          82.203369 Second-life candidate Primary EV use
+    MIT      b4c38       1211 79.920670          82.212387 Second-life candidate Primary EV use
+    MIT      b4c38       1212 79.846737          80.951134 Second-life candidate Primary EV use
+    MIT      b4c38       1213 79.766506          81.071182 Second-life candidate Primary EV use
+    MIT      b4c38       1214 79.682784          81.200386 Second-life candidate Primary EV use
+    MIT      b4c38       1215 79.604598          81.137001 Second-life candidate Primary EV use
+    MIT      b4c38       1216 79.523765          80.942978 Second-life candidate Primary EV use
+    MIT      b4c38       1217 79.445822          80.997734 Second-life candidate Primary EV use
+    MIT      b4c38       1218 79.361885          81.185402 Second-life candidate Primary EV use
+    MIT      b4c38       1219 79.280849          81.161613 Second-life candidate Primary EV use
+    MIT      b4c38       1220 79.199306          80.817169 Second-life candidate Primary EV use
+    MIT      b4c38       1221 79.117786          80.915619 Second-life candidate Primary EV use
+    MIT      b4c38       1222 79.033551          80.893822 Second-life candidate Primary EV use
+    MIT      b4c38       1223 78.955365          80.728333 Second-life candidate Primary EV use
+    MIT      b4c38       1224 78.864253          80.837479 Second-life candidate Primary EV use
+    MIT      b4c38       1225 78.779983          80.763840 Second-life candidate Primary EV use
+    MIT      b4c38       1226 78.692854          80.857162 Second-life candidate Primary EV use
+
+[gradelabel] === per-battery CURRENT-STATUS grade (last test cycle per battery) ===
+dataset battery_id  cycle_idx       SOH  y_pred_soh_fusion            true_grade            pred_grade
+   NASA      B0018        132 72.756873          81.499329 Second-life candidate        Primary EV use
+    MIT       b1c4       1225 94.712507          97.420288        Primary EV use        Primary EV use
+    MIT      b2c24        523 77.280234          76.935898 Second-life candidate Second-life candidate
+    MIT       b3c0       1007 82.415552          83.310219        Primary EV use        Primary EV use
+    MIT      b3c35       1091 82.734079          83.955208        Primary EV use        Primary EV use
+    MIT      b4c38       1230 78.349593          79.654625 Second-life candidate Second-life candidate
+
+[gradelabel] === per-battery full-life grade distribution (%, true SOH) ===
+true_grade          Recycle only  Second-life candidate  Primary EV use
+dataset battery_id                                                     
+MIT     b1c4                   0                    0.0           100.0
+        b2c24                  0                    3.1            96.9
+        b3c0                   0                    0.0           100.0
+        b3c35                  0                    0.0           100.0
+        b4c38                  0                    1.8            98.2
+NASA    B0018                  0                   42.4            57.6
+
+[gradelabel] saved per-cycle grades, current-status summary, and per-battery distribution
+[gradelabel] DONE
