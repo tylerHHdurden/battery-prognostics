@@ -3681,3 +3681,77 @@ Changed: `app.py` only (97 insertions, 16 deletions - the 4-tab
 availability-check fix, 3-tab duplicate-placeholder removal, gauge
 contrast fix, and the CSS injection block). No new files.
 
+## Follow-up session 32 — PRESENTATION_SUMMARY.md + Full Results Archive tab expansion (time-sensitive, presenting today)
+
+Two-part session, both read-only against already-computed results - no
+retraining, no new model output.
+
+**Part 1**: built `PRESENTATION_SUMMARY.md` at the repo root - one
+comprehensive markdown file covering every session/phase that produced
+real output (Phase 1-6, the CNN-LSTM root-cause fix, and all 31
+follow-up sessions), with every relevant PNG embedded, every relevant
+CSV rendered as a markdown table, and every honest negative/limitation
+finding included explicitly rather than omitted. Verified before
+writing: all 19 `outputs/*.png` paths resolve to real files: confirmed
+present on disk; every number pulled into the document was copied
+directly from `DEVELOPMENT_LOG.md` (read in full, all 3,683 lines at
+the time) or the source CSV/JSON files (read directly), not paraphrased
+or re-rounded. Final file: 1,200 lines, ~12,200 words, 87,607 bytes,
+41 numbered sections + a full file index.
+
+**Part 2**: extended the existing "Full Results Archive" Streamlit tab
+(`render_full_results_archive_tab()`), which previously only covered
+Phase 1 through session 6-ish (12 expander sections), to match
+`PRESENTATION_SUMMARY.md`'s scope. Added 19 new collapsed
+`st.expander` sections (sessions 9, 11, 13-29) reusing the exact same
+already-verified CSVs/PNGs `PRESENTATION_SUMMARY.md` cites - no new
+computation, purely `pd.read_csv`/`st.image` on files already on disk.
+Also enhanced 5 of the 12 existing sections with negative-result
+narrative that was previously missing from the app (though already in
+this log): CNN-LSTM's original R2=-0.071 root-cause fix, the log_sigma
+adaptive-weighting divergence (session 2), the original 27.1%
+conformal-calibration bug (Phase 6), session 7's negative-RUL-display
+bug (alongside the already-present OC-SVM imbalance bug), and session
+8's Gemini-model-404 finding. Total: 31 expander sections in this tab
+(12 original + 19 new), plus the 1 pre-existing expander in the
+separate Model Validation tab = 32 expanders app-wide. Not literally 41
+(PRESENTATION_SUMMARY's number) by design: sessions 10 (surfacing eval-
+protocol results in the dashboard), 12 (graceful-degradation deploy
+fix), 30 (Showcase tab), and 31 (visual pass) are behavioral/styling
+changes to this app itself or already have their own dedicated tab, not
+standalone result artifacts to re-surface in the archive - stated
+explicitly in a closing note in the tab rather than silently
+undercounted.
+
+**Verified, not assumed**:
+- Every file path referenced by the new sections (64 unique
+  `PRED_DIR`/`OUT_DIR`/`PROC_DIR` references) checked programmatically
+  against disk: **all resolve, zero missing.**
+- `streamlit.testing.v1.AppTest`: **zero exceptions** on initial load,
+  **32 expanders** found (matches 31 archive + 1 validation), 56
+  dataframes rendered.
+- Spot-checked 8 specific numbers across early/middle/late sessions
+  (CNN-LSTM before/after, MMD CALCE R2, lean-vs-full latency, second-
+  life grading B0018 numbers, streaming-twin MAE, bootstrap CI bound,
+  B0018 feature z-score, ACI coverage) directly against the rendered
+  `AppTest` dataframe/alert-box content - **all 8 matched**
+  `PRESENTATION_SUMMARY.md`'s own already-verified figures, confirming
+  nothing drifted in the port from markdown to Streamlit.
+- **Load-time check, done properly rather than eyeballed**: a raw
+  AppTest wall-clock comparison (baseline vs. this session's changes)
+  was too noisy to trust (swung 7.5s-58s run to run, dominated by
+  system contention/model-loading warmup, not by this change - the
+  "baseline" run even measured slower than "current" on one pass).
+  Measured the actual isolated cost instead: reading all 33 new files
+  the 19 new sections load (32 CSVs + 1 txt) takes **229ms** total,
+  cold - negligible against the multi-second `get_resources()` model-
+  loading time that already dominates every page load, with or without
+  this change.
+
+New files: `PRESENTATION_SUMMARY.md`. Changed: `app.py` (adds
+`_section_num` helper + 19 new expander sections + enhancements to 5
+existing sections; no other tab, function, or existing computation
+touched - confirmed by `git diff --stat`: 468 insertions / 14
+deletions, all within `render_full_results_archive_tab` and its two
+already-existing enhanced sections).
+
