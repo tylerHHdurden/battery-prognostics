@@ -32,37 +32,37 @@ This project builds a full lithium-ion battery State-of-Health (SOH) and Remaini
 6. [Phase 6 (original) — Split-conformal prediction, the 27.1% bug](#phase-6-orig)
 7. [CNN-LSTM root-cause fix](#cnnlstm-fix)
 8. [Phase 2/3/4/6 re-run (post-fix)](#post-fix-rerun)
-9. [Follow-up session 2 — log_sigma clamping](#session-2)
-10. [Follow-up session 3 — ICA/DV/DC feature fusion](#session-3)
-11. [Follow-up session 4 — physics-informed monotonicity loss](#session-4)
-12. [Follow-up session 5 — CALCE zero-retrain evaluation](#session-5)
-13. [Follow-up session 6 — plain-English health report generator](#session-6)
-14. [Follow-up session 7 — Streamlit Digital Twin dashboard (v1)](#session-7)
+9. [log_sigma clamping](#session-2)
+10. [ICA/DV/DC feature fusion](#session-3)
+11. [Physics-informed monotonicity loss](#session-4)
+12. [CALCE zero-retrain evaluation](#session-5)
+13. [Plain-English health report generator](#session-6)
+14. [Streamlit Digital Twin dashboard (v1)](#session-7)
 15. [Phase 5 re-run — CNN-LSTM SHAP now meaningful](#phase5-rerun)
-16. [Follow-up session 8 — Gemini LLM switch](#session-8)
-17. [Follow-up session 9 — 3 evaluation-protocol experiments](#session-9)
-18. [Follow-up session 10 — surfaced experiments in dashboard](#session-10)
-19. [Follow-up session 11 — RUL conformal coverage investigation](#session-11)
-20. [Follow-up session 12 — graceful degradation (deploy fix)](#session-12)
-21. [Follow-up session 13 — MMD domain adaptation](#session-13)
-22. [Follow-up session 14 — softmax-normalized adaptive loss weighting](#session-14)
-23. [Follow-up session 15 — LIME cross-validation](#session-15)
-24. [Follow-up session 16 — knee-point detection](#session-16)
-25. [Follow-up session 17 — CNN-BiGRU 5th base learner](#session-17)
-26. [Follow-up session 18 — consolidated convergence comparison](#session-18)
-27. [Follow-up session 19 — domain-shift-aware conformal prediction](#session-19)
-28. [Follow-up session 20 — lean vs. full deployment comparison](#session-20)
-29. [Follow-up session 21 — bootstrap confidence intervals](#session-21)
-30. [Follow-up session 22 — NASA EIS features](#session-22)
-31. [Follow-up session 23 — degradation-mode dV/dQ peak-tracking](#session-23)
-32. [Follow-up session 24 — model quantization / TinyML feasibility](#session-24)
-33. [Follow-up session 25 — second-life grading classifier](#session-25)
-34. [Follow-up session 26 — sensor-noise robustness](#session-26)
-35. [Follow-up session 27 — B0018 root-cause analysis](#session-27)
-36. [Follow-up session 28 — streaming Digital Twin (online learning)](#session-28)
-37. [Follow-up session 29 — Adaptive Conformal Inference (ACI)](#session-29)
-38. [Follow-up session 30 — Digital Twin Showcase tab](#session-30)
-39. [Follow-up session 31 — broken-tabs fix + visual pass](#session-31)
+16. [Gemini LLM switch](#session-8)
+17. [3 evaluation-protocol experiments](#session-9)
+18. [Surfaced experiments in dashboard](#session-10)
+19. [RUL conformal coverage investigation](#session-11)
+20. [Graceful degradation (deploy fix)](#session-12)
+21. [MMD domain adaptation](#session-13)
+22. [Softmax-normalized adaptive loss weighting](#session-14)
+23. [LIME cross-validation](#session-15)
+24. [Knee-point detection](#session-16)
+25. [CNN-BiGRU 5th base learner](#session-17)
+26. [Consolidated convergence comparison](#session-18)
+27. [Domain-shift-aware conformal prediction](#session-19)
+28. [Lean vs. full deployment comparison](#session-20)
+29. [Bootstrap confidence intervals](#session-21)
+30. [NASA EIS features](#session-22)
+31. [Degradation-mode dV/dQ peak-tracking](#session-23)
+32. [Model quantization / TinyML feasibility](#session-24)
+33. [Second-life grading classifier](#session-25)
+34. [Sensor-noise robustness](#session-26)
+35. [B0018 root-cause analysis](#session-27)
+36. [Streaming Digital Twin (online learning)](#session-28)
+37. [Adaptive Conformal Inference (ACI)](#session-29)
+38. [Digital Twin Showcase tab](#session-30)
+39. [Broken-tabs fix + visual pass](#session-31)
 40. [Full file index](#file-index)
 41. [Verification](#verification)
 
@@ -273,7 +273,7 @@ Per instruction, no calibration-method changes were made — this improvement is
 ---
 
 <a id="session-2"></a>
-## 9. Follow-up session 2 — log_sigma clamping fix for adaptive loss weighting
+## 9. log_sigma clamping fix for adaptive loss weighting
 
 **Bound choice, worked from the math, not the naive suggestion**: `alpha = 0.5*exp(-2*log_sigma)` is extremely sensitive; the naive `[-3,3]` bound would still let alpha reach 201.7 and wouldn't have prevented the original divergence (which only reached log_sigma=-1.41). Used **[-0.7, 0.7]** instead (bounds alpha/beta to roughly [0.12, 2.03]), implemented as both an in-forward `torch.clamp` and a post-step `.clamp_()` on the raw parameter.
 
@@ -293,7 +293,7 @@ Per instruction, no calibration-method changes were made — this improvement is
 ---
 
 <a id="session-3"></a>
-## 10. Follow-up session 3 — ICA/DV/DC feature fusion
+## 10. ICA/DV/DC feature fusion
 
 Added a small CNN encoder (`ICAEncoder`: Conv1d(3→16,k=7) → Conv1d(16→16,k=5) → AdaptiveAvgPool1d → 16-dim embedding) that compresses the 3 ICA/DV/DC channels (dQdV/dVdQ/dIdV) into a fixed-size vector per cycle. Concatenated (no attention) with the 7 BFA HIs for XGBoost, and with the 4 base-learner predictions for Ridge. Fully additive — verified by timestamp that no original pipeline file was touched.
 
@@ -313,7 +313,7 @@ Both fusion-enabled models genuinely improved (R² 0.907→0.917, 0.906→0.917)
 ---
 
 <a id="session-4"></a>
-## 11. Follow-up session 4 — physics-informed loss (monotonicity penalty)
+## 11. Physics-informed loss (monotonicity penalty)
 
 Added an empirical exponential capacity-fade curve fit per training battery (`SOH(cycle)=A*exp(-k*cycle)+C`, bounded k≥0), plus a `monotonicity_penalty` loss term: a pairwise within-batch check penalizing `relu(pred_j - pred_i)` for same-battery pairs where cycle_j > cycle_i. Combined loss = `MSE + 0.1*penalty`, lambda fixed not tuned.
 
@@ -332,7 +332,7 @@ Added an empirical exponential capacity-fade curve fit per training battery (`SO
 ---
 
 <a id="session-5"></a>
-## 12. Follow-up session 5 — CALCE zero-retrain evaluation
+## 12. CALCE zero-retrain evaluation
 
 Ran the final fusion-enabled ensemble on all 2,941 usable CALCE cycles with **zero retraining** — pure inference from already-trained weights. CALCE was never in any train/val/fit split for these models.
 
@@ -361,7 +361,7 @@ The interval half-width is **bit-for-bit identical** between domains, by constru
 ---
 
 <a id="session-6"></a>
-## 13. Follow-up session 6 — plain-English health report generator
+## 13. Plain-English health report generator
 
 Built `build_report_context.py` (assembles SOH+conformal interval, RUL+conformal interval, top-3 per-instance SHAP, per-instance voltage-region localization) and `generate_health_report.py` (prompt template + `call_llm()` via the Anthropic Messages API).
 
@@ -380,7 +380,7 @@ Built `build_report_context.py` (assembles SOH+conformal interval, RUL+conformal
 ---
 
 <a id="session-7"></a>
-## 14. Follow-up session 7 — Streamlit Digital Twin dashboard (v1)
+## 14. Streamlit Digital Twin dashboard (v1)
 
 Built `app.py` plus `train_ocsvm.py` (One-Class SVM anomaly detector), `precompute_app_constants.py`, `live_inference.py` — the dashboard's original functional-over-polished form.
 
@@ -410,7 +410,7 @@ CNN-LSTM's voltage-region concentration went from meaningless (0.000, a broken m
 ---
 
 <a id="session-8"></a>
-## 16. Follow-up session 8 — switched health-report LLM to Gemini
+## 16. Switched health-report LLM to Gemini
 
 User provided a `GEMINI_API_KEY`. Key written to `.env` (git-ignored, verified via `git check-ignore -v`).
 
@@ -421,7 +421,7 @@ User provided a `GEMINI_API_KEY`. Key written to `.env` (git-ignored, verified v
 ---
 
 <a id="session-9"></a>
-## 17. Follow-up session 9 — the 3 remaining evaluation-protocol experiments
+## 17. The 3 remaining evaluation-protocol experiments
 
 ### Experiment 1: Early-prediction test (first 20% of each battery's cycles)
 
@@ -478,14 +478,14 @@ Individual-seed R² ranged 0.9035–0.9202 across 5 seeds, but averaging perform
 ---
 
 <a id="session-10"></a>
-## 18. Follow-up session 10 — surfaced the 3 evaluation-protocol experiments in the dashboard
+## 18. Surfaced the 3 evaluation-protocol experiments in the dashboard
 
 Added a collapsed "Evaluation protocol" expander to `app.py` reading and displaying all 4 result tables from session 9 directly (no re-computation), with an in-app warning reiterating the R²-vs-near-zero-variance caveat. Verified via `AppTest`: zero exceptions, 5 dataframes on initial load.
 
 ---
 
 <a id="session-11"></a>
-## 19. Follow-up session 11 — RUL conformal coverage investigation
+## 19. RUL conformal coverage investigation
 
 **Finding 1 — the 88.9% figure was stale, not a live bug.** Re-running `run_conformal.py` unmodified against the documented calib/eval split now gives **93.0% coverage** (avg width 828.7), not 88.9%. Root cause: `joint_adaptive.pt` had been retrained again (session 2's log_sigma clamp) after the 88.9% figure was measured, but conformal calibration was never re-run against the new checkpoint.
 
@@ -507,7 +507,7 @@ Full range across all 20 partitions: **coverage 64.7% to 99.6%**, mean 87.4%, st
 ---
 
 <a id="session-12"></a>
-## 20. Follow-up session 12 — graceful degradation when raw datasets aren't present (deploy fix)
+## 20. Graceful degradation when raw datasets aren't present (deploy fix)
 
 Streamlit Community Cloud deployment crashed: `data/raw/` is gitignored (~11GB, licensing concerns), so a fresh clone had none of it, and "Browse existing battery" hit a raw `FileNotFoundError`/`OSError` with no handling.
 
@@ -520,7 +520,7 @@ Streamlit Community Cloud deployment crashed: `data/raw/` is gitignored (~11GB, 
 ---
 
 <a id="session-13"></a>
-## 21. Follow-up session 13 — MMD domain adaptation, targeting the CALCE finding directly
+## 21. MMD domain adaptation, targeting the CALCE finding directly
 
 Implements Maximum Mean Discrepancy (multi-bandwidth Gaussian-RBF, Gretton et al. 2012) domain adaptation on the fusion embedding, retraining `ICAEncoder` with an additive loss: `sup_MSE(NASA+MIT) + lambda*MMD(embed(NASA+MIT), embed(CALCE))`. Zero-label-leakage preserved: CALCE's raw curves are read for the MMD term, but its SOH/RUL labels are never read anywhere.
 
@@ -547,7 +547,7 @@ A real, reproducible ~11% relative improvement, at the cost of a small (~0.006) 
 ---
 
 <a id="session-14"></a>
-## 22. Follow-up session 14 — softmax-normalized adaptive loss weighting
+## 22. Softmax-normalized adaptive loss weighting
 
 Constrains `(alpha, beta) = 2*softmax(s_alpha, s_beta)`, pinning alpha+beta=2 by construction so one weight can only rise at the other's direct expense.
 
@@ -575,7 +575,7 @@ Constrains `(alpha, beta) = 2*softmax(s_alpha, s_beta)`, pinning alpha+beta=2 by
 ---
 
 <a id="session-15"></a>
-## 23. Follow-up session 15 — LIME as a second, independent explainability method
+## 23. LIME as a second, independent explainability method
 
 Adds LIME alongside TreeSHAP for the two tabular explanation targets: the XGBoost base learner (7 HIs) and the Stacking-XGBoost meta-learner (4 base predictions). 5 instances per model, TreeSHAP and LIME both re-run on identical rows.
 
@@ -606,7 +606,7 @@ Per-instance results:
 ---
 
 <a id="session-16"></a>
-## 24. Follow-up session 16 — knee-point detection
+## 24. Knee-point detection
 
 Method: Savitzky-Golay-estimated 1st/2nd derivatives (`window=15, polyorder=3`), curvature `kappa = |y''| / (1+y'^2)^1.5`, knee = point of maximum curvature — matching the BatteryGPT-reference definition (Nature Communications, 10.1038/s41467-025-66819-0).
 
@@ -628,7 +628,7 @@ Method: Savitzky-Golay-estimated 1st/2nd derivatives (`window=15, polyorder=3`),
 ---
 
 <a id="session-17"></a>
-## 25. Follow-up session 17 — CNN-BiGRU as a 5th base learner
+## 25. CNN-BiGRU as a 5th base learner
 
 Same 4-branch multi-kernel CNN front end as CNN-LSTM, feeding a Bidirectional GRU instead of a unidirectional LSTM. Fully additive.
 
@@ -664,7 +664,7 @@ Adding CNN-BiGRU as a 5th branch makes the ensemble marginally **worse** overall
 ---
 
 <a id="session-18"></a>
-## 26. Follow-up session 18 — consolidated convergence comparison
+## 26. Consolidated convergence comparison
 
 Single new overlay plot comparing training-loss-vs-epoch for all 4 deep models.
 
@@ -693,7 +693,7 @@ Single new overlay plot comparing training-loss-vs-epoch for all 4 deep models.
 ---
 
 <a id="session-19"></a>
-## 27. Follow-up session 19 — domain-shift-aware conformal prediction (weighted split-conformal)
+## 27. Domain-shift-aware conformal prediction (weighted split-conformal)
 
 Implements weighted split-conformal (Tibshirani, Barber, Candes, Ramdas 2019): calibration residuals reweighted by a covariate-shift density ratio estimated via a logistic-regression domain classifier.
 
@@ -714,7 +714,7 @@ Implements weighted split-conformal (Tibshirani, Barber, Candes, Ramdas 2019): c
 ---
 
 <a id="session-20"></a>
-## 28. Follow-up session 20 — "lean" deployment variant vs. the full 5-branch ensemble
+## 28. "Lean" deployment variant vs. the full 5-branch ensemble
 
 **1. Accuracy**:
 
@@ -750,7 +750,7 @@ Only **1.1x smaller** — `xgb_soh_fusion.json` alone is 2845.7 KB, 99.7% of LEA
 ---
 
 <a id="session-21"></a>
-## 29. Follow-up session 21 — bootstrap confidence intervals on the key comparisons
+## 29. Bootstrap confidence intervals on the key comparisons
 
 2,000-resample percentile bootstrap CIs, reported at BOTH cycle-level (literal request, but pseudo-replicated — ~5,208 autocorrelated cycles treated as independent) and battery-level (cluster bootstrap over the 6 test batteries, the honest resampling unit).
 
@@ -797,7 +797,7 @@ Only **1.1x smaller** — `xgb_soh_fusion.json` alone is 2845.7 KB, 99.7% of LEA
 ---
 
 <a id="session-22"></a>
-## 30. Follow-up session 22 — NASA EIS features as new candidate Health Indicators
+## 30. NASA EIS features as new candidate Health Indicators
 
 NASA .mat files carry already-fitted equivalent-circuit parameters (`Re`, `Rct`) plus a complex swept-frequency impedance array — extracted as `EIS_Re`, `EIS_Rct`, `EIS_Zmag_mean` (3 candidates), requiring zero new curve-fitting dependency.
 
@@ -815,7 +815,7 @@ NASA .mat files carry already-fitted equivalent-circuit parameters (`Re`, `Rct`)
 ---
 
 <a id="session-23"></a>
-## 31. Follow-up session 23 — degradation-mode analysis via dV/dQ peak-tracking
+## 31. Degradation-mode analysis via dV/dQ peak-tracking
 
 Explicitly scoped as inspired by DVA degradation-mode literature (Bloom et al. 2005; Dubarry, Truchot & Liaw 2012) — peak position shift ↔ LLI, peak height loss ↔ LAM — but **NOT a validated LLI/LAM decomposition** (no half-cell reference data available in any of the 3 datasets).
 
@@ -834,7 +834,7 @@ Explicitly scoped as inspired by DVA degradation-mode literature (Bloom et al. 2
 ---
 
 <a id="session-24"></a>
-## 32. Follow-up session 24 — quantizing the lean pipeline for embedded/BMS feasibility
+## 32. Quantizing the lean pipeline for embedded/BMS feasibility
 
 FP16 and INT8 (`torch.quantize_per_channel`, per-output-channel symmetric) applied to the 9.15KB `ica_encoder.pt`. XGBoost reported as-is (no standard precision-quantization API for a tree ensemble; out of scope).
 
@@ -865,7 +865,7 @@ Both changes are negligible, consistent with session 21's bootstrap-CI finding t
 ---
 
 <a id="session-25"></a>
-## 33. Follow-up session 25 — second-life grading classifier
+## 33. Second-life grading classifier
 
 Pure post-processing on the lean pipeline's SOH predictions. Grades: SOH≥80% "Primary EV use," 50–80% "Second-life candidate," <50% "Recycle only." Both true AND predicted SOH graded (a threshold-crossing error matters even when RMSE looks fine); misgrades split as **"risky"** (predicted more optimistic than true) vs. **"conservative"** (predicted more pessimistic).
 
@@ -906,7 +906,7 @@ Pure post-processing on the lean pipeline's SOH predictions. Grades: SOH≥80% "
 ---
 
 <a id="session-26"></a>
-## 34. Follow-up session 26 — sensor-noise robustness test
+## 34. Sensor-noise robustness test
 
 Gaussian noise added to every raw V/I/T sample at 3 levels: 1x BMS-grade (σ_V=1mV, σ_I=10mA, σ_T=0.5°C), 2x, and 5x stress. Ground-truth SOH left unperturbed. Sanity check: the "clean" noise level reproduced session 20's exact numbers (RMSE=1.3921, R²=0.9172) via an independent reimplementation.
 
@@ -937,7 +937,7 @@ Gaussian noise added to every raw V/I/T sample at 3 levels: 1x BMS-grade (σ_V=1
 ---
 
 <a id="session-27"></a>
-## 35. Follow-up session 27 — root-causing NASA/B0018 as the pipeline's consistent weak point
+## 35. Root-causing NASA/B0018 as the pipeline's consistent weak point
 
 **1. Training representation**:
 
@@ -995,7 +995,7 @@ Every single one of 18,341 MIT training cycles has a LOWER value than B0018's av
 ---
 
 <a id="session-28"></a>
-## 36. Follow-up session 28 — genuine incremental/online-update Digital Twin mode
+## 36. Genuine incremental/online-update Digital Twin mode
 
 Simulation-stage digital twin (replays already-recorded NASA/MIT test-battery cycles with an artificial per-cycle UI delay — **no real hardware or BMS connection**). **Frozen (pretrained)**: `ica_encoder.pt`, `xgb_soh_fusion.json`, `ocsvm_model.pkl`, `joint_adaptive.pt` (RUL, shown as a frozen one-shot value). **Updates online**: a lightweight `SGDRegressor` (`partial_fit`) learning per-battery residual-bias correction from `[raw_prediction, cycle_idx]`, plus a sliding-window empirical-quantile conformal half-width. Strict no-leakage discipline: predict-then-reveal-then-update.
 
@@ -1017,7 +1017,7 @@ Simulation-stage digital twin (replays already-recorded NASA/MIT test-battery cy
 ---
 
 <a id="session-29"></a>
-## 37. Follow-up session 29 — Adaptive Conformal Inference (ACI) replaces the sliding-window interval
+## 37. Adaptive Conformal Inference (ACI) replaces the sliding-window interval
 
 Replaces session 28's fixed-alpha sliding-window conformal mechanism with ACI (Gibbs & Candès 2021), addressing the broken exchangeability assumption (the SGDRegressor keeps updating online, so calibration is a moving target). `alpha_{t+1} = alpha_t + gamma*(alpha - err_t)`, clipped to [0.01, 0.5] (a stated implementation deviation from the raw unconstrained method). The SGDRegressor corrector itself is completely **unchanged** — confirmed by identical MAE numbers.
 
@@ -1043,7 +1043,7 @@ Replaces session 28's fixed-alpha sliding-window conformal mechanism with ACI (G
 ---
 
 <a id="session-30"></a>
-## 38. Follow-up session 30 — Digital Twin Showcase tab (time-boxed to 1h)
+## 38. Digital Twin Showcase tab (time-boxed to 1h)
 
 **Part 1**: 109 files of accumulated uncommitted work from sessions 13–29 committed and pushed in one commit (`37836e8`), respecting `.gitignore`.
 
@@ -1056,7 +1056,7 @@ Replaces session 28's fixed-alpha sliding-window conformal mechanism with ACI (G
 ---
 
 <a id="session-31"></a>
-## 39. Follow-up session 31 — fix graceful-degradation gaps + visual pass (time-boxed to 1h)
+## 39. Fix graceful-degradation gaps + visual pass (time-boxed to 1h)
 
 **Priority 1, root cause confirmed by reproduction**: hid `data/raw/` locally, reproduced the reported error bit-for-bit: `"Could not load NASA/B0018: Reader needs file name or open file-like object"`. Root cause: the Streaming Digital Twin tab's own `load_battery_cycles()` call lacked the `nasa_data_available()`/`mit_data_available()` check the sidebar already had (session 12). Fix applied the same 2-layer check to that one call site — confirmed genuinely fast wiring, not new debugging (a fraction of the 20-minute budget).
 
