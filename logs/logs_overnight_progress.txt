@@ -450,3 +450,32 @@ expanded split - not a clean "generalizes better on unseen B0018" claim.
 === PHASE 1 TRAINING/EVAL: FULLY COMPLETE at 10:53:32 IST 2026-09-12 ===
 Next: Dataset Completeness Audit restatement, DEVELOPMENT_LOG.md entry,
 commit+push (flagging model-weight changes), then Phase 2 site work.
+
+=== PHASE 1 COMMITTED + PUSHED at 11:02 IST ===
+Commit 4826c17 pushed to origin/master (270 files, 857238 insertions).
+DEVELOPMENT_LOG.md's "Follow-up session 33" entry included (full
+before/after tables, all 6 Step-4 results, CALCE verdict, audit,
+resilience-work summary). app.py deliberately NOT touched/staged - that
+is Phase 2, a separate commit, per instruction.
+Starting Phase 2 (website update) now: reading back DEVELOPMENT_LOG.md's
+new entry + this file to source every number for the site update, per
+instruction ("do not port any number not already verified and logged
+in Phase 1's own output").
+
+[11:15] Phase 2 (site update) DONE: app.py updated with Parts A/B/C/D
+per instruction, verified via AppTest (0 exceptions, pipeline-diagram
+jump mechanism re-confirmed working with the new 32nd section), 7
+numbers spot-checked directly against DEVELOPMENT_LOG.md (all exact
+matches, listed in the commit message). Committed SEPARATELY from
+Phase 1 as instructed: Phase 1 = 4826c17 (model/data weights), Phase 2
+= 1d6d5b0 (site only). Both pushed to origin/master.
+Honest limitation carried over from earlier in this session, restated
+here rather than silently dropped: no real browser is available in
+this environment, so Part D's actual visual rendering (count-up
+animation, JS search filter, pipeline diagram CSS) could not be
+screenshotted - only confirmed via AppTest that the page renders with
+0 exceptions and the underlying Python-side state (session_state,
+expander .proto.expanded) behaves correctly; AppTest does not execute
+JavaScript.
+
+=== BOTH PHASES COMPLETE. Final report to follow in the chat. ===
