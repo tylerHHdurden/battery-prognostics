@@ -1,0 +1,46 @@
+[tree-compress] 23 features, train=18845 rows, test=5208 rows
+
+[tree-compress] === Baseline: existing deployed xgb_soh_fusion.json ===
+[tree-compress] baseline (500 trees, depth 6): RMSE=1.3921 MAE=0.9593 R2=0.9172 | JSON=2845.7KB UBJ=1981.0KB
+
+[tree-compress] === Step 1: hyperparameter-pruning sweep (retrained, cheapest option tried first) ===
+[tree-compress] n= 250 depth=6: RMSE=1.4153 R2=0.9144 | JSON= 1451.7KB UBJ= 1006.8KB
+[tree-compress] n= 250 depth=4: RMSE=1.5134 R2=0.9021 | JSON=  483.8KB UBJ=  407.0KB
+[tree-compress] n= 250 depth=3: RMSE=1.4116 R2=0.9148 | JSON=  285.5KB UBJ=  283.9KB
+[tree-compress] n= 250 depth=2: RMSE=1.5295 R2=0.9000 | JSON=  183.3KB UBJ=  219.6KB
+[tree-compress] n= 100 depth=6: RMSE=1.4608 R2=0.9088 | JSON=  573.4KB UBJ=  397.9KB
+[tree-compress] n= 100 depth=4: RMSE=1.5587 R2=0.8961 | JSON=  201.0KB UBJ=  167.4KB
+[tree-compress] n= 100 depth=3: RMSE=1.4352 R2=0.9119 | JSON=  116.2KB UBJ=  114.9KB
+[tree-compress] n= 100 depth=2: RMSE=1.6768 R2=0.8798 | JSON=   73.7KB UBJ=   88.3KB
+[tree-compress] n=  50 depth=6: RMSE=1.8168 R2=0.8589 | JSON=  266.9KB UBJ=  187.3KB
+[tree-compress] n=  50 depth=4: RMSE=1.9357 R2=0.8398 | JSON=  100.7KB UBJ=   84.1KB
+[tree-compress] n=  50 depth=3: RMSE=1.8707 R2=0.8504 | JSON=   58.4KB UBJ=   57.9KB
+[tree-compress] n=  50 depth=2: RMSE=2.2448 R2=0.7846 | JSON=   37.1KB UBJ=   44.6KB
+[tree-compress] n=  25 depth=6: RMSE=2.7018 R2=0.6879 | JSON=  131.6KB UBJ=   92.8KB
+[tree-compress] n=  25 depth=4: RMSE=2.7584 R2=0.6747 | JSON=   50.4KB UBJ=   42.3KB
+[tree-compress] n=  25 depth=3: RMSE=2.8027 R2=0.6642 | JSON=   29.5KB UBJ=   29.4KB
+[tree-compress] n=  25 depth=2: RMSE=2.9983 R2=0.6157 | JSON=   18.8KB UBJ=   22.7KB
+[tree-compress] n=  15 depth=6: RMSE=3.3839 R2=0.5105 | JSON=   79.3KB UBJ=   56.1KB
+[tree-compress] n=  15 depth=4: RMSE=3.4211 R2=0.4996 | JSON=   30.4KB UBJ=   25.8KB
+[tree-compress] n=  15 depth=3: RMSE=3.4846 R2=0.4809 | JSON=   17.9KB UBJ=   18.0KB
+[tree-compress] n=  15 depth=2: RMSE=3.6178 R2=0.4404 | JSON=   11.5KB UBJ=   14.0KB
+[tree-compress] n=  10 depth=6: RMSE=3.8246 R2=0.3747 | JSON=   52.0KB UBJ=   37.0KB
+[tree-compress] n=  10 depth=4: RMSE=3.8458 R2=0.3677 | JSON=   20.3KB UBJ=   17.4KB
+[tree-compress] n=  10 depth=3: RMSE=3.9178 R2=0.3438 | JSON=   12.1KB UBJ=   12.3KB
+[tree-compress] n=  10 depth=2: RMSE=4.0305 R2=0.3055 | JSON=    7.8KB UBJ=    9.6KB
+[tree-compress] n=   5 depth=6: RMSE=4.3648 R2=0.1855 | JSON=   26.1KB UBJ=   18.9KB
+[tree-compress] n=   5 depth=4: RMSE=4.3781 R2=0.1805 | JSON=   10.5KB UBJ=    9.2KB
+[tree-compress] n=   5 depth=3: RMSE=4.4183 R2=0.1654 | JSON=    6.3KB UBJ=    6.6KB
+[tree-compress] n=   5 depth=2: RMSE=4.4902 R2=0.1380 | JSON=    4.2KB UBJ=    5.2KB
+
+[tree-compress] Best pruned config that fits under the 512KB budget: pruned n=250 depth=3 (UBJ=283.9KB, R2=0.9148, vs. baseline R2=0.1380 above -> baseline is `rmse` var from last loop, see table for the real baseline row).
+
+[tree-compress] === Step 2: knowledge distillation (small model mimics the FULL 500-tree baseline's OUTPUT, not the true SOH label directly) ===
+[tree-compress] XGB-distill n=5 depth=2: vs TRUE SOH -> RMSE=2.1870 MAE=1.5711 R2=0.7955 | size(pickle)=8.35KB | fidelity-to-teacher R2(train)=0.8850
+[tree-compress] XGB-distill n=3 depth=2: vs TRUE SOH -> RMSE=2.7131 MAE=2.0639 R2=0.6853 | size(pickle)=6.60KB | fidelity-to-teacher R2(train)=0.7596
+[tree-compress] single DecisionTree depth=4: vs TRUE SOH -> RMSE=2.3673 MAE=1.2734 R2=0.7604 | size(pickle)=3.14KB | fidelity-to-teacher R2(train)=0.9451
+[tree-compress] single DecisionTree depth=6: vs TRUE SOH -> RMSE=2.1559 MAE=1.0851 R2=0.8013 | size(pickle)=9.33KB | fidelity-to-teacher R2(train)=0.9804
+[tree-compress] single DecisionTree depth=8: vs TRUE SOH -> RMSE=2.2923 MAE=1.1339 R2=0.7754 | size(pickle)=33.24KB | fidelity-to-teacher R2(train)=0.9922
+
+[tree-compress] Saved outputs/tree_compression_pruning_sweep.csv (58 rows) and outputs/tree_compression_distillation.csv (5 rows)
+[tree-compress] DONE

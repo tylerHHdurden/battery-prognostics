@@ -1,0 +1,283 @@
+[outlier-detect] Scanning 34 NASA batteries' first 5 cycles...
+[outlier-detect] NASA/B0005: min(first 5 cycles' capacity)=1.8346Ah (in-pool)
+[outlier-detect] NASA/B0006: min(first 5 cycles' capacity)=2.0005Ah (in-pool)
+[outlier-detect] NASA/B0007: min(first 5 cycles' capacity)=1.8795Ah (in-pool)
+[outlier-detect] NASA/B0018: min(first 5 cycles' capacity)=1.8307Ah (in-pool)
+[outlier-detect] NASA/B0025: min(first 5 cycles' capacity)=1.8370Ah (in-pool)
+[outlier-detect] NASA/B0026: min(first 5 cycles' capacity)=1.8133Ah (in-pool)
+[outlier-detect] NASA/B0027: min(first 5 cycles' capacity)=1.8128Ah (in-pool)
+[outlier-detect] NASA/B0028: min(first 5 cycles' capacity)=1.7919Ah (in-pool)
+[outlier-detect] NASA/B0029: min(first 5 cycles' capacity)=1.8133Ah (in-pool)
+[outlier-detect] NASA/B0030: min(first 5 cycles' capacity)=1.7382Ah (in-pool)
+[outlier-detect] NASA/B0031: min(first 5 cycles' capacity)=1.7716Ah (in-pool)
+[outlier-detect] NASA/B0032: min(first 5 cycles' capacity)=1.8442Ah (in-pool)
+[outlier-detect] NASA/B0033: min(first 5 cycles' capacity)=0.6896Ah (EXCLUDED (data-quality))
+[outlier-detect] NASA/B0034: min(first 5 cycles' capacity)=1.4857Ah (EXCLUDED (data-quality))
+[outlier-detect] NASA/B0036: min(first 5 cycles' capacity)=1.7930Ah (EXCLUDED (data-quality))
+[outlier-detect] NASA/B0038: min(first 5 cycles' capacity)=1.0270Ah (EXCLUDED (data-quality))
+[outlier-detect] NASA/B0039: min(first 5 cycles' capacity)=0.1628Ah (EXCLUDED (data-quality))
+[outlier-detect] NASA/B0040: min(first 5 cycles' capacity)=0.7405Ah (EXCLUDED (data-quality))
+[outlier-detect] NASA/B0041: min(first 5 cycles' capacity)=0.0441Ah (EXCLUDED (data-quality))
+[outlier-detect] NASA/B0042: min(first 5 cycles' capacity)=1.7203Ah (in-pool)
+[outlier-detect] NASA/B0043: min(first 5 cycles' capacity)=1.6694Ah (in-pool)
+[outlier-detect] NASA/B0044: min(first 5 cycles' capacity)=1.6357Ah (in-pool)
+[outlier-detect] NASA/B0045: min(first 5 cycles' capacity)=0.8245Ah (in-pool)
+[outlier-detect] NASA/B0046: min(first 5 cycles' capacity)=1.4590Ah (in-pool)
+[outlier-detect] NASA/B0047: min(first 5 cycles' capacity)=1.4489Ah (in-pool)
+[outlier-detect] NASA/B0048: min(first 5 cycles' capacity)=1.4510Ah (in-pool)
+[outlier-detect] NASA/B0049: min(first 5 cycles' capacity)=1.0605Ah (EXCLUDED (data-quality))
+[outlier-detect] NASA/B0050: min(first 5 cycles' capacity)=0.0326Ah (EXCLUDED (data-quality))
+[outlier-detect] NASA/B0051: min(first 5 cycles' capacity)=1.0093Ah (EXCLUDED (data-quality))
+[outlier-detect] NASA/B0052: min(first 5 cycles' capacity)=1.3516Ah (EXCLUDED (data-quality))
+[outlier-detect] NASA/B0053: min(first 5 cycles' capacity)=1.1136Ah (in-pool)
+[outlier-detect] NASA/B0054: min(first 5 cycles' capacity)=1.0655Ah (in-pool)
+[outlier-detect] NASA/B0055: min(first 5 cycles' capacity)=1.2068Ah (in-pool)
+[outlier-detect] NASA/B0056: min(first 5 cycles' capacity)=1.2589Ah (in-pool)
+
+[outlier-detect] Scanning 185 MIT cells' first 5 cycles (this is the slow part - one h5py open per cell)...
+[outlier-detect] ...40/185 MIT cells scanned
+[outlier-detect] ...80/185 MIT cells scanned
+[outlier-detect] ...120/185 MIT cells scanned
+[outlier-detect] ...160/185 MIT cells scanned
+
+[outlier-detect] 219 batteries scanned successfully.
+
+[outlier-detect] === NASA: z-scoring 23 IN-POOL batteries (leave-one-out mean/std) ===
+battery_id  min_early_cap   z_score
+     B0045       0.824547 -3.003056
+     B0054       1.065549 -1.878363
+     B0053       1.113598 -1.686703
+     B0055       1.206764 -1.334663
+     B0056       1.258950 -1.146510
+     B0047       1.448858 -0.497986
+     B0048       1.450959 -0.491029
+     B0046       1.458955 -0.464581
+     B0044       1.635664  0.113190
+     B0043       1.669417  0.223330
+     B0042       1.720345  0.390276
+     B0030       1.738169  0.449023
+     B0031       1.771565  0.559684
+     B0028       1.791918  0.627570
+     B0027       1.812800  0.697628
+     B0026       1.813250  0.699143
+     B0029       1.813299  0.699307
+     B0018       1.830674  0.757954
+     B0005       1.834646  0.771409
+     B0025       1.837012  0.779435
+     B0032       1.844174  0.803766
+     B0007       1.879451  0.924567
+     B0006       2.000528  1.354678
+[outlier-detect] *** FLAGGED (|z|>3): NASA/B0045 min_early_cap=0.8245Ah z=-3.00 ***
+
+[outlier-detect] Sanity check - NASA ALREADY-EXCLUDED batteries scored against the in-pool distribution (expect these to look at least as extreme, confirming the metric is sensible):
+battery_id  min_early_cap  z_vs_pool
+     B0050       0.032558  -5.000437
+     B0041       0.044092  -4.963664
+     B0039       0.162808  -4.585160
+     B0033       0.689570  -2.905671
+     B0040       0.740502  -2.743283
+     B0051       1.009281  -1.886329
+     B0038       1.026998  -1.829841
+     B0049       1.060536  -1.722911
+     B0052       1.351565  -0.795016
+     B0034       1.485650  -0.367509
+     B0036       1.792997   0.612412
+
+[outlier-detect] === MIT: z-scoring 181 IN-POOL batteries (leave-one-out mean/std) ===
+battery_id  min_early_cap   z_score
+     b2c15       0.969378 -6.704838
+     b2c16       1.009642 -3.578903
+      b2c7       1.022903 -2.673085
+      b2c8       1.026484 -2.434823
+      b2c9       1.031750 -2.088428
+     b4c25       1.033195 -1.994051
+      b4c6       1.036525 -1.777780
+     b4c26       1.036605 -1.772620
+     b4c27       1.036779 -1.761333
+      b4c5       1.037203 -1.733900
+     b4c17       1.039955 -1.556414
+      b4c4       1.040323 -1.532688
+      b4c0       1.040888 -1.496400
+     b4c43       1.041490 -1.457731
+     b2c47       1.042137 -1.416193
+     b4c37       1.043202 -1.347998
+     b4c44       1.044024 -1.295357
+     b4c20       1.044914 -1.238462
+     b4c24       1.045727 -1.186573
+     b3c24       1.046273 -1.151735
+     b3c37       1.046584 -1.131925
+      b4c3       1.047201 -1.092569
+     b3c39       1.047404 -1.079696
+     b2c19       1.048029 -1.039861
+     b4c23       1.048404 -1.016000
+      b4c1       1.048586 -1.004416
+     b4c39       1.048646 -1.000644
+      b4c8       1.049324 -0.957526
+     b4c30       1.049514 -0.945470
+     b4c42       1.049625 -0.938379
+     b4c19       1.050196 -0.902097
+     b4c34       1.050240 -0.899328
+     b3c41       1.050522 -0.881430
+     b4c22       1.050576 -0.878015
+     b4c18       1.050950 -0.854233
+      b3c5       1.051451 -0.822499
+     b4c31       1.051697 -0.806884
+     b3c28       1.051867 -0.796104
+      b4c7       1.052041 -0.785053
+      b4c2       1.052891 -0.731196
+     b1c11       1.053779 -0.674975
+     b4c35       1.053801 -0.673551
+     b4c32       1.054842 -0.607647
+     b4c21       1.055334 -0.576550
+     b3c22       1.056264 -0.517726
+     b4c41       1.056367 -0.511246
+     b4c16       1.056895 -0.477869
+     b4c38       1.057518 -0.438525
+     b3c36       1.057529 -0.437823
+      b4c9       1.058110 -0.401111
+     b4c12       1.058284 -0.390103
+     b4c40       1.058600 -0.370173
+     b4c36       1.059197 -0.332498
+     b3c40       1.059324 -0.324481
+     b4c11       1.059544 -0.310580
+     b3c33       1.060272 -0.264612
+     b3c27       1.060417 -0.255455
+      b3c2       1.060818 -0.230156
+     b4c14       1.060887 -0.225796
+     b3c16       1.061009 -0.218104
+     b1c15       1.061124 -0.210873
+     b3c25       1.061130 -0.210457
+     b3c34       1.061535 -0.184916
+     b3c10       1.061775 -0.169800
+     b4c15       1.061905 -0.161580
+     b4c10       1.062292 -0.137153
+      b3c6       1.062612 -0.116948
+      b3c3       1.062889 -0.099487
+     b3c35       1.063380 -0.068504
+     b2c18       1.063838 -0.039641
+     b4c33       1.064117 -0.022024
+     b4c28       1.064672  0.012963
+      b3c8       1.064736  0.017012
+     b3c20       1.065050  0.036817
+      b3c1       1.065060  0.037454
+     b3c13       1.065558  0.068847
+     b2c17       1.065647  0.074448
+     b2c27       1.065841  0.086698
+     b4c29       1.065934  0.092551
+     b4c13       1.066144  0.105829
+     b3c23       1.066155  0.106530
+     b3c29       1.066369  0.119991
+     b3c17       1.066451  0.125201
+      b2c3       1.066851  0.150403
+     b3c42       1.066920  0.154750
+     b2c25       1.067267  0.176679
+     b2c30       1.067280  0.177487
+      b3c0       1.067455  0.188521
+      b3c7       1.067522  0.192730
+     b3c21       1.067856  0.213835
+     b2c24       1.067968  0.220896
+      b2c5       1.068015  0.223868
+     b3c18       1.068024  0.224398
+     b3c11       1.068068  0.227187
+     b3c31       1.068181  0.234336
+     b2c41       1.068205  0.235832
+     b1c43       1.068239  0.237977
+     b3c15       1.068419  0.249324
+     b2c35       1.068722  0.268446
+      b2c6       1.068739  0.269544
+     b3c30       1.068739  0.269556
+     b2c34       1.068851  0.276600
+     b2c10       1.069052  0.289299
+      b3c9       1.069483  0.316472
+     b3c45       1.069549  0.320633
+     b3c44       1.069720  0.331459
+     b2c38       1.069950  0.345961
+      b2c0       1.070054  0.352553
+     b3c38       1.070147  0.358437
+     b3c43       1.070185  0.360830
+     b2c45       1.070473  0.378978
+     b1c35       1.070746  0.396270
+     b1c14       1.070966  0.410146
+      b2c1       1.071381  0.436335
+     b2c28       1.071550  0.447031
+     b2c11       1.071705  0.456805
+     b3c19       1.071925  0.470712
+     b3c26       1.072019  0.476640
+     b1c17       1.072052  0.478750
+      b3c4       1.072477  0.505579
+     b2c29       1.072504  0.507336
+     b3c32       1.072586  0.512513
+     b2c46       1.072614  0.514258
+     b1c20       1.072630  0.515282
+     b3c14       1.072706  0.520061
+      b2c4       1.072897  0.532180
+     b1c38       1.072951  0.535594
+     b2c31       1.073279  0.556334
+      b2c2       1.073539  0.572764
+     b2c43       1.073565  0.574376
+     b3c12       1.074165  0.612376
+     b2c32       1.074267  0.618804
+     b2c23       1.074521  0.634878
+     b1c24       1.074536  0.635802
+     b2c37       1.074817  0.653593
+     b1c37       1.074819  0.653770
+     b1c25       1.075235  0.680049
+     b1c10       1.075276  0.682658
+      b1c1       1.075301  0.684273
+      b1c6       1.075836  0.718130
+      b1c5       1.076127  0.736553
+     b2c40       1.076552  0.763504
+     b1c34       1.076617  0.767655
+     b2c26       1.076641  0.769157
+     b2c21       1.076880  0.784295
+     b1c12       1.077566  0.827805
+     b1c28       1.077748  0.839319
+     b1c36       1.077832  0.844648
+     b1c32       1.077837  0.844972
+     b2c42       1.078024  0.856857
+     b2c14       1.078068  0.859681
+      b1c4       1.078417  0.881788
+     b2c39       1.078461  0.884620
+     b1c41       1.078961  0.916376
+     b1c27       1.079046  0.921756
+     b2c33       1.079052  0.922131
+     b2c36       1.079204  0.931812
+     b1c23       1.079293  0.937467
+     b1c22       1.079304  0.938134
+     b1c29       1.079454  0.947652
+      b1c3       1.079723  0.964761
+     b2c22       1.079723  0.964768
+     b1c13       1.079789  0.968982
+     b1c30       1.079864  0.973712
+     b1c42       1.079873  0.974271
+      b1c2       1.079922  0.977437
+     b2c13       1.080285  1.000501
+     b1c16       1.081166  1.056585
+     b1c39       1.081777  1.095489
+     b1c21       1.082439  1.137646
+      b1c9       1.082974  1.171792
+     b2c20       1.083104  1.180092
+     b1c40       1.083303  1.192766
+     b1c45       1.083956  1.234453
+     b1c44       1.084768  1.286374
+     b1c19       1.085115  1.308536
+     b1c26       1.087651  1.471120
+      b1c8       1.089975  1.620596
+     b1c33       1.092491  1.783137
+      b1c7       1.093864  1.872198
+     b1c31       1.094639  1.922541
+[outlier-detect] *** FLAGGED (|z|>3): MIT/b2c15 min_early_cap=0.9694Ah z=-6.70 ***
+[outlier-detect] *** FLAGGED (|z|>3): MIT/b2c16 min_early_cap=1.0096Ah z=-3.58 ***
+
+[outlier-detect] Sanity check - MIT ALREADY-EXCLUDED batteries scored against the in-pool distribution (expect these to look at least as extreme, confirming the metric is sensible):
+battery_id  min_early_cap  z_vs_pool
+     b1c18       1.066170   0.107183
+      b1c0       1.070689   0.391409
+     b2c44       1.070887   0.403851
+     b2c12       1.071276   0.428313
+
+[outlier-detect] === RESULT ===
+[outlier-detect] Batteries flagged by a PURELY early-cycle-capacity, pre-SOH check (|z|>3, leave-one-out, per-dataset): ['B0045', 'b2c15', 'b2c16']
+[outlier-detect] B0053 is NOT flagged by this |z|>3 threshold - reported honestly: this specific check does not catch it, meaning B0053's problem is real but more subtle than a gross early-capacity outlier the rest of the pool doesn't also exhibit to some degree.
+[outlier-detect] Saved outputs/early_cycle_outlier_detection.csv (219 rows)
+[outlier-detect] DONE

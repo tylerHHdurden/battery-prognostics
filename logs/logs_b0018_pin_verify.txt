@@ -1,0 +1,18 @@
+[b0018-pin] === Step 1: reproduce the EXISTING (unpinned) split exactly, confirm it matches the on-disk battery_split_expanded.json ===
+[b0018-pin] MATCH CONFIRMED - unpinned reproduction is byte-identical to the on-disk split. split_utils.py's existing behavior is unchanged for every caller that doesn't pass pinned_test_ids (backward-compatible).
+[b0018-pin] B0018 in existing split: TRAIN (confirms the bug this Part fixes)
+[b0018-pin] BEFORE pinning (existing): train=164 (19 NASA, 145 MIT), test=40 (4 NASA, 36 MIT) - NASA test fraction=0.174, MIT test fraction=0.199
+
+[b0018-pin] === Step 2: same split WITH B0018 pinned to test ===
+[b0018-pin] VERIFIED: B0018 is now in the test set.
+[b0018-pin] AFTER pinning: train=163 (18 NASA, 145 MIT), test=41 (5 NASA, 36 MIT) - NASA test fraction=0.217, MIT test fraction=0.199
+
+[b0018-pin] Any OTHER battery whose split membership changed (should be empty): train-side=set(), test-side=set()
+[b0018-pin] VERIFIED: no other battery's split membership changed - this is a single, surgical override (B0018 train->test only), not a re-shuffle.
+[b0018-pin]   (before, restated): train=164 (19 NASA, 145 MIT), test=40 (4 NASA, 36 MIT) - NASA test fraction=0.174, MIT test fraction=0.199
+[b0018-pin]   (after, restated): train=163 (18 NASA, 145 MIT), test=41 (5 NASA, 36 MIT) - NASA test fraction=0.217, MIT test fraction=0.199
+
+[b0018-pin] NASA test-battery count: 4 -> 5 (+1, exactly B0018). MIT test-battery count unchanged: 36 -> 36. Both datasets remain represented in both splits (the original session 2 stratification bug this project already fixed once) - NASA train=18>0, NASA test=5>0, MIT train=145>0, MIT test=36>0.
+
+[b0018-pin] Wrote battery_split_expanded_b0018pinned.json (163 train / 41 test batteries).
+[b0018-pin] DONE

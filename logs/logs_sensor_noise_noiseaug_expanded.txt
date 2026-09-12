@@ -1,0 +1,50 @@
+[noiseaug-eval] === Refitting Ridge for CLEAN-trained deep models (the 'before' reference - this exact full-4-branch-under-noise metric has no prior run to reuse) ===
+[noiseaug-eval] === Refitting Ridge for NOISE-AUGMENTED deep models (the 'after') ===
+[deep-exp] loaded 204 battery tensors from cache (_expanded_battery_tensors_cache.pkl) in 0.4s - skipped the ~17min raw-data reload
+
+[noiseaug-eval] loading raw test-battery cycles ONCE for condition=clean-trained...
+[noiseaug-eval] [clean-trained] clean (baseline): n=5208 RMSE=0.6255 MAE=0.4189 R2=0.9833
+[noiseaug-eval] [clean-trained] 1x BMS-grade: n=5208 RMSE=0.9015 MAE=0.5503 R2=0.9653
+[noiseaug-eval] [clean-trained] 2x BMS-grade: n=5208 RMSE=1.0460 MAE=0.6966 R2=0.9532
+[noiseaug-eval] [clean-trained] 5x BMS-grade (stress): n=5208 RMSE=1.7104 MAE=1.1844 R2=0.8749
+[deep-exp] loaded 204 battery tensors from cache (_expanded_battery_tensors_cache.pkl) in 0.3s - skipped the ~17min raw-data reload
+
+[noiseaug-eval] loading raw test-battery cycles ONCE for condition=noise-augmented...
+[noiseaug-eval] [noise-augmented] clean (baseline): n=5208 RMSE=0.6264 MAE=0.4157 R2=0.9832
+[noiseaug-eval] [noise-augmented] 1x BMS-grade: n=5208 RMSE=0.9091 MAE=0.5473 R2=0.9647
+[noiseaug-eval] [noise-augmented] 2x BMS-grade: n=5208 RMSE=1.0406 MAE=0.6762 R2=0.9537
+[noiseaug-eval] [noise-augmented] 5x BMS-grade (stress): n=5208 RMSE=1.6459 MAE=1.1117 R2=0.8842
+
+[noiseaug-eval] === SUMMARY: clean-trained vs. noise-augmented, full 4-branch ensemble, same 6 test batteries ===
+      condition           noise_level    n     rmse      mae       r2
+  clean-trained      clean (baseline) 5208 0.625467 0.418929 0.983275
+  clean-trained          1x BMS-grade 5208 0.901467 0.550285 0.965258
+  clean-trained          2x BMS-grade 5208 1.046038 0.696628 0.953221
+  clean-trained 5x BMS-grade (stress) 5208 1.710447 1.184387 0.874924
+noise-augmented      clean (baseline) 5208 0.626417 0.415676 0.983224
+noise-augmented          1x BMS-grade 5208 0.909148 0.547317 0.964663
+noise-augmented          2x BMS-grade 5208 1.040624 0.676217 0.953704
+noise-augmented 5x BMS-grade (stress) 5208 1.645931 1.111702 0.884181
+
+[noiseaug-eval] R2 by noise level, clean-trained vs. noise-augmented:
+condition              clean-trained  noise-augmented
+noise_level                                          
+clean (baseline)            0.983275         0.983224
+1x BMS-grade                0.965258         0.964663
+2x BMS-grade                0.953221         0.953704
+5x BMS-grade (stress)       0.874924         0.884181
+
+[noiseaug-eval] Robustness margin (clean R2 - 5x-stress R2): clean-trained=0.1084, noise-augmented=0.0990 - NARROWER (improved) margin with training-time noise injection.
+
+[noiseaug-eval] NASA/B0018 specifically:
+      condition           noise_level dataset battery_id   n     rmse       r2
+  clean-trained      clean (baseline)    NASA      B0018 132 2.043700 0.940398
+  clean-trained          1x BMS-grade    NASA      B0018 132 2.587471 0.904461
+  clean-trained          2x BMS-grade    NASA      B0018 132 2.724871 0.894045
+  clean-trained 5x BMS-grade (stress)    NASA      B0018 132 2.792961 0.888684
+noise-augmented      clean (baseline)    NASA      B0018 132 1.996930 0.943094
+noise-augmented          1x BMS-grade    NASA      B0018 132 2.601230 0.903442
+noise-augmented          2x BMS-grade    NASA      B0018 132 2.822339 0.886330
+noise-augmented 5x BMS-grade (stress)    NASA      B0018 132 2.760438 0.891261
+
+[noiseaug-eval] DONE

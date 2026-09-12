@@ -1,0 +1,16 @@
+[ensemble-huber] train: merged rows=123755
+[ensemble-huber] test: merged rows=29489
+[ensemble-huber] Stacking-Ridge-fusion (PiFormer=Huber) TEST RMSE=1.1835 MAE=0.5170 R2=0.9732
+[ensemble-huber] (existing ensemble, PiFormer=MSE, was RMSE=1.4834 MAE=0.5276 R2=0.9579)
+[ensemble-huber] (original 32-battery ensemble was RMSE=1.394 MAE=0.966 R2=0.917)
+[ensemble-huber] Ridge coefficients: {'pred_XGBoost_fusion': np.float64(0.9307960793032046), 'pred_VLSTM': np.float64(-0.015017707157079419), 'pred_CNNLSTM': np.float64(0.020911392613457862), 'pred_PiFormer': np.float64(0.12040100516861853)}
+
+[ensemble-huber] Per-battery ensemble RMSE, worst 5:
+dataset battery_id   n      rmse
+   NASA      B0053  54 17.086196
+   NASA      B0044 106 10.091757
+   NASA      B0030  39  2.276258
+    MIT      b4c25 567  1.615325
+    MIT      b2c47 744  1.357778
+
+[ensemble-huber] DONE

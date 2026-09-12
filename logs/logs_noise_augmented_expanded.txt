@@ -1,0 +1,93 @@
+[deep-exp] loaded 204 battery tensors from cache (_expanded_battery_tensors_cache.pkl) in 0.5s - skipped the ~17min raw-data reload
+[noiseaug] fit batteries: 132, val batteries: 32, test batteries: 40
+[noiseaug] fit cycles=95572, val cycles=28183, test cycles=29489
+[noiseaug] channel 0 (V_t) train-time noise std (normalized space): 0.00190
+[noiseaug] channel 1 (I_t) train-time noise std (normalized space): 0.00526
+[noiseaug] channel 2 (T_t) train-time noise std (normalized space): 0.18763
+[noiseaug] channel 3 (dQdV) train-time noise std (normalized space): 0.00000
+[noiseaug] channel 4 (dVdQ) train-time noise std (normalized space): 0.00000
+[noiseaug] channel 5 (dIdV) train-time noise std (normalized space): 0.00000
+[noiseaug/VLSTM-noiseaug] epoch   0 train_mse(noisy)=0.6240 val_mse(clean)=0.6786
+[noiseaug/VLSTM-noiseaug] epoch   1 train_mse(noisy)=0.2324 val_mse(clean)=0.4647
+[noiseaug/VLSTM-noiseaug] epoch   2 train_mse(noisy)=0.1662 val_mse(clean)=0.5145
+[noiseaug/VLSTM-noiseaug] epoch   3 train_mse(noisy)=0.1482 val_mse(clean)=0.4403
+[noiseaug/VLSTM-noiseaug] epoch   4 train_mse(noisy)=0.1328 val_mse(clean)=0.8553
+[noiseaug/VLSTM-noiseaug] epoch   5 train_mse(noisy)=0.1092 val_mse(clean)=0.6584
+[noiseaug/VLSTM-noiseaug] epoch   6 train_mse(noisy)=0.0934 val_mse(clean)=0.3986
+[noiseaug/VLSTM-noiseaug] epoch   7 train_mse(noisy)=0.1977 val_mse(clean)=0.3057
+[noiseaug/VLSTM-noiseaug] epoch   8 train_mse(noisy)=0.0960 val_mse(clean)=0.2899
+[noiseaug/VLSTM-noiseaug] epoch   9 train_mse(noisy)=0.0847 val_mse(clean)=0.2938
+[noiseaug/VLSTM-noiseaug] epoch  10 train_mse(noisy)=0.0740 val_mse(clean)=0.2949
+[noiseaug/VLSTM-noiseaug] epoch  11 train_mse(noisy)=0.0722 val_mse(clean)=0.3716
+[noiseaug/VLSTM-noiseaug] epoch  12 train_mse(noisy)=0.0718 val_mse(clean)=0.3210
+[noiseaug/VLSTM-noiseaug] epoch  13 train_mse(noisy)=0.0710 val_mse(clean)=0.2299
+[noiseaug/VLSTM-noiseaug] epoch  14 train_mse(noisy)=0.0684 val_mse(clean)=0.2459
+[noiseaug/VLSTM-noiseaug] epoch  15 train_mse(noisy)=0.0669 val_mse(clean)=0.2614
+[noiseaug/VLSTM-noiseaug] epoch  16 train_mse(noisy)=0.0653 val_mse(clean)=0.2141
+[noiseaug/VLSTM-noiseaug] epoch  17 train_mse(noisy)=0.0627 val_mse(clean)=0.2537
+[noiseaug/VLSTM-noiseaug] epoch  18 train_mse(noisy)=0.0626 val_mse(clean)=0.2876
+[noiseaug/VLSTM-noiseaug] epoch  19 train_mse(noisy)=0.0610 val_mse(clean)=0.2127
+[noiseaug/VLSTM-noiseaug] epoch  20 train_mse(noisy)=0.0592 val_mse(clean)=0.2383
+[noiseaug/VLSTM-noiseaug] epoch  21 train_mse(noisy)=0.0582 val_mse(clean)=0.4145
+[noiseaug/VLSTM-noiseaug] epoch  22 train_mse(noisy)=0.0582 val_mse(clean)=0.2351
+[noiseaug/VLSTM-noiseaug] epoch  23 train_mse(noisy)=0.0560 val_mse(clean)=0.2236
+[noiseaug/VLSTM-noiseaug] epoch  24 train_mse(noisy)=0.0551 val_mse(clean)=0.2754
+[noiseaug/VLSTM-noiseaug] epoch  25 train_mse(noisy)=0.0539 val_mse(clean)=0.1960
+[noiseaug/VLSTM-noiseaug] epoch  26 train_mse(noisy)=0.0516 val_mse(clean)=0.2021
+[noiseaug/VLSTM-noiseaug] epoch  27 train_mse(noisy)=0.0504 val_mse(clean)=0.1760
+[noiseaug/VLSTM-noiseaug] epoch  28 train_mse(noisy)=0.0496 val_mse(clean)=0.1876
+[noiseaug/VLSTM-noiseaug] epoch  29 train_mse(noisy)=0.0466 val_mse(clean)=0.2504
+[noiseaug/VLSTM-noiseaug] epoch  30 train_mse(noisy)=0.0464 val_mse(clean)=0.1915
+[noiseaug/VLSTM-noiseaug] epoch  31 train_mse(noisy)=0.0451 val_mse(clean)=0.2657
+[noiseaug/VLSTM-noiseaug] epoch  32 train_mse(noisy)=0.0440 val_mse(clean)=0.2131
+[noiseaug/VLSTM-noiseaug] epoch  33 train_mse(noisy)=0.0418 val_mse(clean)=0.2065
+[noiseaug/VLSTM-noiseaug] epoch  34 train_mse(noisy)=0.0540 val_mse(clean)=0.2203
+[noiseaug/VLSTM-noiseaug] epoch  35 train_mse(noisy)=0.0404 val_mse(clean)=0.2279
+[noiseaug/VLSTM-noiseaug] early stopping at epoch 35
+[noiseaug] VLSTM-noiseaug trained in 12392.4s
+[noiseaug/CNNLSTM-noiseaug] epoch   0 train_mse(noisy)=0.4328 val_mse(clean)=0.5463
+[noiseaug/CNNLSTM-noiseaug] epoch   1 train_mse(noisy)=0.1924 val_mse(clean)=0.2357
+[noiseaug/CNNLSTM-noiseaug] epoch   2 train_mse(noisy)=0.1079 val_mse(clean)=0.3192
+[noiseaug/CNNLSTM-noiseaug] epoch   3 train_mse(noisy)=0.0933 val_mse(clean)=0.1273
+[noiseaug/CNNLSTM-noiseaug] epoch   4 train_mse(noisy)=0.0887 val_mse(clean)=0.1672
+[noiseaug/CNNLSTM-noiseaug] epoch   5 train_mse(noisy)=0.0991 val_mse(clean)=0.1648
+[noiseaug/CNNLSTM-noiseaug] epoch   6 train_mse(noisy)=0.0743 val_mse(clean)=0.1565
+[noiseaug/CNNLSTM-noiseaug] epoch   7 train_mse(noisy)=0.0667 val_mse(clean)=0.1562
+[noiseaug/CNNLSTM-noiseaug] epoch   8 train_mse(noisy)=0.0835 val_mse(clean)=0.1369
+[noiseaug/CNNLSTM-noiseaug] epoch   9 train_mse(noisy)=0.0575 val_mse(clean)=0.1966
+[noiseaug/CNNLSTM-noiseaug] epoch  10 train_mse(noisy)=0.0523 val_mse(clean)=0.1891
+[noiseaug/CNNLSTM-noiseaug] epoch  11 train_mse(noisy)=0.0585 val_mse(clean)=0.2616
+[noiseaug/CNNLSTM-noiseaug] early stopping at epoch 11
+[noiseaug] CNNLSTM-noiseaug trained in 497.9s
+[noiseaug/PiFormer-noiseaug] epoch   0 train_mse(noisy)=0.2246 val_mse(clean)=0.3257
+[noiseaug/PiFormer-noiseaug] epoch   1 train_mse(noisy)=0.0878 val_mse(clean)=0.2341
+[noiseaug/PiFormer-noiseaug] epoch   2 train_mse(noisy)=0.0678 val_mse(clean)=0.2059
+[noiseaug/PiFormer-noiseaug] epoch   3 train_mse(noisy)=0.0571 val_mse(clean)=0.1838
+[noiseaug/PiFormer-noiseaug] epoch   4 train_mse(noisy)=0.0380 val_mse(clean)=0.1707
+[noiseaug/PiFormer-noiseaug] epoch   5 train_mse(noisy)=0.0374 val_mse(clean)=0.1389
+[noiseaug/PiFormer-noiseaug] epoch   6 train_mse(noisy)=0.0384 val_mse(clean)=0.1426
+[noiseaug/PiFormer-noiseaug] epoch   7 train_mse(noisy)=0.0399 val_mse(clean)=0.1396
+[noiseaug/PiFormer-noiseaug] epoch   8 train_mse(noisy)=0.0330 val_mse(clean)=0.1237
+[noiseaug/PiFormer-noiseaug] epoch   9 train_mse(noisy)=0.0350 val_mse(clean)=0.2175
+[noiseaug/PiFormer-noiseaug] epoch  10 train_mse(noisy)=0.0355 val_mse(clean)=0.1329
+[noiseaug/PiFormer-noiseaug] epoch  11 train_mse(noisy)=0.0302 val_mse(clean)=0.1413
+[noiseaug/PiFormer-noiseaug] epoch  12 train_mse(noisy)=0.0217 val_mse(clean)=0.1297
+[noiseaug/PiFormer-noiseaug] epoch  13 train_mse(noisy)=0.0202 val_mse(clean)=0.1251
+[noiseaug/PiFormer-noiseaug] epoch  14 train_mse(noisy)=0.0192 val_mse(clean)=0.1233
+[noiseaug/PiFormer-noiseaug] epoch  15 train_mse(noisy)=0.0277 val_mse(clean)=0.1265
+[noiseaug/PiFormer-noiseaug] epoch  16 train_mse(noisy)=0.0180 val_mse(clean)=0.1018
+[noiseaug/PiFormer-noiseaug] epoch  17 train_mse(noisy)=0.0169 val_mse(clean)=0.1266
+[noiseaug/PiFormer-noiseaug] epoch  18 train_mse(noisy)=0.0257 val_mse(clean)=0.1430
+[noiseaug/PiFormer-noiseaug] epoch  19 train_mse(noisy)=0.0227 val_mse(clean)=0.1288
+[noiseaug/PiFormer-noiseaug] epoch  20 train_mse(noisy)=0.0203 val_mse(clean)=0.1256
+[noiseaug/PiFormer-noiseaug] epoch  21 train_mse(noisy)=0.0171 val_mse(clean)=0.1573
+[noiseaug/PiFormer-noiseaug] epoch  22 train_mse(noisy)=0.0145 val_mse(clean)=0.1368
+[noiseaug/PiFormer-noiseaug] epoch  23 train_mse(noisy)=0.0176 val_mse(clean)=0.1040
+[noiseaug/PiFormer-noiseaug] epoch  24 train_mse(noisy)=0.0145 val_mse(clean)=0.1189
+[noiseaug/PiFormer-noiseaug] early stopping at epoch 24
+[noiseaug] PiFormer-noiseaug trained in 11034.2s
+[noiseaug] VLSTM (noise-augmented) TEST RMSE=1.5390 MAE=0.8330 R2=0.9532
+[noiseaug] CNNLSTM (noise-augmented) TEST RMSE=1.5079 MAE=0.9184 R2=0.9551
+[noiseaug] PiFormer (noise-augmented) TEST RMSE=1.9904 MAE=0.6842 R2=0.9217
+
+[noiseaug] ALL DONE in 24158.7s (402.6 min)

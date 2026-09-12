@@ -1,0 +1,2 @@
+model,rmse,mae,r2
+Stacking-Ridge-fusion-expanded-PiFormerHuber,1.1835272147084446,0.516990224851716,0.9731961874006017

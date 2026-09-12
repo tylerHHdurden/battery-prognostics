@@ -1,0 +1,40 @@
+[norm-conformal] BFA-selected features used for sigma(x)/CQR: ['CDECT', 'ICHV', 'VDEDT', 'VIECT', 'LVP', 'MET', 'TCCC', 'TCVC']
+
+[norm-conformal] === Building TRAIN-set ensemble predictions (for fitting sigma(x)/CQR, disjoint from calib/eval/CALCE) ===
+[ensemble-fusion-exp] train: merged rows=123755
+[norm-conformal] train rows=123755, mean|residual|=0.3897, NaN BFA values imputed with train medians (same convention as every other script in this pipeline)
+
+[norm-conformal] === Fitting sigma(x): GBR on log1p(|residual|) ===
+[norm-conformal] sigma(x) on TRAIN: predicted range [0.150, 4.901], mean=0.356 (actual mean|residual|=0.390) - sigma(x) should track this roughly, not exactly (it's a smoothed model of a noisy target)
+
+[norm-conformal] === Fitting CQR quantile models (alpha/2=0.050, 1-alpha/2=0.950) ===
+[norm-conformal] CQR raw quantile predictions on TRAIN: mean width=3.839, 0/123755 rows have crossed quantiles (lo>hi, a known GBR quantile-regression failure mode - CQR's calibration step corrects the final coverage regardless, but this is worth flagging as-is, not silently clipped)
+
+[norm-conformal] === Loading NASA/MIT test-set data (same calib/eval battery split as the existing CALCE zero-retrain script) ===
+[norm-conformal] calib batteries=20 (14420 rows), eval batteries=20 (15069 rows)
+
+[norm-conformal] === Loading CALCE zero-retrain data (reusing calce_zero_retrain_expanded_preds.csv, unchanged point predictions) ===
+[norm-conformal] CALCE rows=2941 (3 cells) - small-sample-noise caveat applies to everything reported below for this domain.
+
+[norm-conformal] === Method 0: baseline fixed-width split-conformal (reference) ===
+[norm-conformal] BASELINE fixed-width split-conformal, in-domain (eval): coverage=0.912 width=2.309 (constant, by construction)
+[norm-conformal] BASELINE fixed-width split-conformal, CALCE: coverage=0.074 width=2.309 (constant, by construction)
+
+[norm-conformal] === Method 1: Normalized (locally-weighted) conformal prediction ===
+[norm-conformal] normalized calibration quantile q=2.9538 (interval half-width for a point x is q * sigma(x) - genuinely varies per point, unlike the baseline's constant q)
+[norm-conformal] Normalized CP, in-domain (eval): coverage=0.9401 mean_width=2.131 width_std=1.104 width_range=[0.886,10.160] n=15069
+[norm-conformal] Normalized CP, CALCE (out-of-domain, zero-retrain): coverage=0.1928 mean_width=6.545 width_std=2.655 width_range=[4.869,18.414] n=2941
+
+[norm-conformal] === Method 2: Conformalized Quantile Regression (CQR) ===
+[norm-conformal] CQR calibration correction Q=0.0769 (final interval = [q_lo(x)-Q, q_hi(x)+Q])
+[norm-conformal] CQR, in-domain (eval): coverage=0.9263 mean_width=3.594 width_std=3.480 width_range=[1.026,37.942] n=15069
+[norm-conformal] CQR, CALCE (out-of-domain, zero-retrain): coverage=0.2125 mean_width=18.267 width_std=17.836 width_range=[9.223,64.891] n=2941
+
+[norm-conformal] === VERDICT (reporting the real outcome, not assuming success) ===
+[norm-conformal] BASELINE fixed-width split-conformal, in-domain (eval): coverage=0.912 width=2.309 (constant, by construction)
+[norm-conformal] BASELINE fixed-width split-conformal, CALCE: coverage=0.074 width=2.309 (constant, by construction)
+[norm-conformal] Normalized CP: CALCE coverage 19.3% (baseline was 7.4%) | width std=2.655 (baseline=0, constant) -> OUTCOME: (a) width varies AND CALCE coverage measurably improved
+[norm-conformal] CQR: CALCE coverage 21.3% (baseline was 7.4%) | width std=17.836 (baseline=0, constant) -> OUTCOME: (a) width varies AND CALCE coverage measurably improved
+
+[norm-conformal] Saved outputs/normalized_conformal_expanded_results.csv (4 rows)
+[norm-conformal] DONE

@@ -479,3 +479,315 @@ expander .proto.expanded) behaves correctly; AppTest does not execute
 JavaScript.
 
 === BOTH PHASES COMPLETE. Final report to follow in the chat. ===
+
+=== Targeted Improvement Pass (session 35) STARTED ===
+
+[Part 2 DONE] B0018 pinned-split logic: added pinned_test_ids param to
+split_utils.py (backward-compatible - unpinned reproduction byte-
+identical to on-disk battery_split_expanded.json, verified). Pinning
+B0018: NASA test batteries 4->5 (+1, exactly B0018), MIT unchanged (36),
+no other battery's membership changed (verified via symmetric-difference
+check). New file battery_split_expanded_b0018pinned.json written, ready
+for the next full expanded-pool retrain. NOT retroactively applied to
+the currently-deployed *_expanded models this session (would require
+redoing the entire ~9h Dataset Expansion chain) - scope decision stated
+explicitly in verify_b0018_pinned_split.py's docstring.
+
+[Part 5 DONE] Tree-ensemble compression of the DEPLOYED lean XGBoost-
+fusion model (xgb_soh_fusion.json, 500 trees/depth 6, baseline
+RMSE=1.3921 MAE=0.9593 R2=0.9172, JSON=2845.7KB/UBJ=1981.0KB).
+Pruning sweep (28 configs, n_estimators in [250,100,50,25,15,10,5] x
+max_depth in [6,4,3,2], retrained not post-hoc-pruned - XGBoost has no
+post-hoc pruning API):
+  n=250 depth=3: UBJ=283.9KB R2=0.9148 (essentially free - 7.0x smaller, ~0.3% R2 cost)
+  n=100 depth=3: UBJ=114.9KB R2=0.9119 (17.2x smaller, ~0.6% R2 cost)
+  n=50  depth=3: UBJ=57.9KB  R2=0.8504 (34.2x smaller, ~7.3% R2 cost)
+  n=25  depth=3: UBJ=29.4KB  R2=0.6642 (67.4x smaller, fits even the
+                 32KB LOWER end of session 24's typical-BMS budget -
+                 real accuracy cost, honestly reported: R2 drops by a
+                 third)
+REAL, POSITIVE FINDING (reverses session 24's "not feasible even after
+quantization" verdict): genuine embedded feasibility IS achievable via
+tree pruning, not just theoretically closer to it - n=100/depth=3 at
+114.9KB comfortably clears the WHOLE 32-512KB budget range with under
+1% accuracy cost. This is what session 24 correctly flagged as
+"explicitly out of scope for quantization" and it turns out to be the
+actual lever that matters (XGBoost's tree count/depth, not neural
+weight precision).
+Distillation (small model mimics the 500-tree baseline's OUTPUT, scored
+against TRUE SOH, not teacher fidelity): a single distilled
+DecisionTree (depth=6, 9.33KB) gets R2=0.8013 - notably BETTER than a
+size-matched pruned XGBoost ensemble (n=10/depth=3, 12.3KB, R2=0.3438)
+at the very smallest sizes, an interesting crossover (10 rounds of
+boosting with only depth-3 trees each doesn't converge; one deeper
+single tree captures more real structure at that parameter count).
+HONEST CONCLUSION: pruning is the better general recommendation
+(simpler, no separate distillation step, better accuracy at any given
+size EXCEPT the very smallest/most extreme compression levels) -
+n=100/depth=3 (114.9KB, <1% accuracy cost) is the practical sweet spot
+for typical BMS budgets; distillation only wins at sub-15KB extremes.
+Full Pareto frontier: outputs/tree_compression_{pruning_sweep,
+distillation}.csv.
+
+[Part 4 DONE - THE MAIN EVENT] Normalized conformal prediction + CQR,
+both built on top of the EXISTING (unchanged) Stacking-Ridge-fusion-
+expanded point predictions, sigma(x)/quantile models fit ONLY on TRAIN
+rows (genuinely disjoint from calib/eval/CALCE). Ran faster than
+expected (a few minutes, GradientBoostingRegressor not XGBoost - single
+call, no retraining needed for the point predictor itself).
+
+BASELINE (fixed-width, reference): in-domain coverage=91.2% width=2.309
+(constant); CALCE coverage=7.4% width=2.309 (IDENTICAL width - the
+mechanism being targeted).
+
+METHOD 1 - Normalized CP: in-domain coverage=94.0% mean_width=2.131
+(width_std=1.104, range [0.89,10.16]) - genuinely narrower AND better-
+covered than baseline in-domain, a real efficiency win. CALCE:
+coverage=19.3% (up from 7.4%, +11.9pts, more than 2.5x) mean_width=6.545
+(width_std=2.655, range [4.87,18.41], ~7.3% of CALCE's full ~89-point
+SOH span - still a reasonably informative interval, not vacuous).
+
+METHOD 2 - CQR: in-domain coverage=92.6% mean_width=3.594 (WIDER than
+baseline 2.309 - a real in-domain efficiency cost). CALCE:
+coverage=21.3% (up from 7.4%, +13.9pts) mean_width=18.267 (width_std=
+17.836, range [9.22,64.89] - mean width is ~20.5% of CALCE's full SOH
+span, max width is ~73% of it - genuinely approaching the documented
+"adaptive in form but inflated/uninformative" literature failure mode
+(outcome c), even though the raw coverage number looks similar to
+Normalized CP's). Root cause of the inflation: GBR quantile regression
+extrapolating to CALCE's out-of-training-distribution BFA feature
+values (TCCC/TCVC/LVP/MET/CDECT) is poorly behaved at the extremes -
+0/123755 TRAIN rows had crossed quantiles (well-behaved in-distribution),
+but nothing constrains extrapolation behavior out-of-distribution.
+
+HONEST, NOT-ROUNDED-UP VERDICT: neither method comes close to solving
+CALCE's coverage collapse against the 90% target (19-21% vs 90%, still
+a massive shortfall) - this is NOT "problem solved." Both are outcome
+(a)-and-(b) blended: width genuinely varies by input AND CALCE coverage
+measurably improves (roughly 2.5-3x), but coverage remains far below
+target either way. Of the two, NORMALIZED CP is the better, more
+genuinely useful method - real efficiency gains in-domain (narrower
+AND better coverage), a real if partial gain out-of-domain, with
+interval widths that stay informative. CQR's coverage gain is largely
+achieved by inflating intervals toward the edge of uninformativeness on
+CALCE specifically (up to 65 points wide on a ~89-point scale) - closer
+to the documented CQR-under-extrapolation failure mode than to a clean
+win, a caveat NOT to bury just because its raw coverage number looks
+similar to Normalized CP's.
+SMALL-SAMPLE CAVEAT (explicitly flagged per instruction): CALCE is only
+3 cells (2,941 cycles are heavily within-cell correlated, not 2,941
+independent data points) - the same effective-sample-size concern this
+project already hit once in session 19's domain classifier. The
+coverage percentages above (19.3%/21.3%) should be read as "roughly
+1-in-5 vs roughly 1-in-14" at CALCE's real degrees of freedom, not
+as precise-to-the-decimal statistics.
+BOTTOM LINE: input-adaptive conformal prediction is a genuine, partial
+improvement over fixed-width split-conformal for the CALCE domain-shift
+coverage problem - it narrows the gap meaningfully but does not close
+it. This is reported as exactly that: real progress, not a fix.
+Full results: outputs/normalized_conformal_expanded_results.csv.
+New file: src/run_normalized_conformal_expanded.py.
+
+[Part 1, item 1 DONE - outlier-detection check, and a CORRECTION to the
+Dataset Expansion report's earlier claim] Built a cheap, pre-SOH,
+early-cycle-capacity outlier check (min of first 5 cycles' raw
+discharge capacity, per-dataset leave-one-out z-score, |z|>3 flag) and
+ran it on all 219 candidate batteries (204 in-pool + the 14 already
+data-quality-excluded, as a sanity check).
+RESULT: this check flags NASA/B0045 (z=-3.00, min_early_cap=0.82Ah) and
+MIT/b2c15 (z=-6.70), MIT/b2c16 (z=-3.58) - three batteries not
+previously excluded. It does NOT flag B0053 (z=-1.69, min_early_cap=
+1.11Ah - well within normal range).
+IMPORTANT CORRECTION, found by checking B0053's raw capacity trace
+directly rather than trusting the earlier summary: B0053's capacity
+does NOT "start at 0.000Ah" as the Dataset Expansion report's PiFormer
+section stated - that was an imprecise reading of nasa_validation.txt's
+"cap 0.000-1.154Ah" range summary. The actual trace: cycle 1=1.154Ah,
+declining smoothly and mildly (only ~12% fade) to cycle 54=1.010Ah,
+then a SINGLE anomalous final reading of 0.000Ah at cycle 55 - almost
+certainly a truncated/end-of-test logging artifact (a one-cycle cliff,
+not a fade), not a real physical measurement. Confirmed this cycle 55
+is NOT EVEN IN the test set PiFormer was evaluated on (only cycles
+1-54 appear in deep_models_expanded_test_preds.csv for B0053) - so this
+artifact cannot be what's driving PiFormer's erratic predictions across
+the 54 cycles that WERE evaluated, all of which have ordinary, healthy-
+looking capacity values.
+HONEST CONCLUSION (per instruction, stated explicitly rather than
+excluding and moving on): B0053 is NOT a data-quality artifact battery.
+It is a genuine PiFormer-specific architectural vulnerability - the
+model produces wildly erratic predictions on an otherwise statistically
+unremarkable battery, for reasons this session's evidence cannot fully
+explain (plausibly connected to its short length, 54 cycles, one of the
+shorter batteries in the pool, or some other subtler distributional
+property PiFormer's attention mechanism is sensitive to that a simple
+early-cycle capacity check does not capture). Since nothing is actually
+wrong with B0053's data, EXCLUDING it from training would not be a
+principled data-quality decision (unlike the 14 batteries excluded in
+the Dataset Expansion session, which had a genuine, provable capacity-
+baseline defect) - this directly supports trying Huber loss FIRST
+(robust to the residual, doesn't touch data) rather than exclusion, per
+the instructed priority order.
+Full per-battery scan: outputs/early_cycle_outlier_detection.csv (219
+rows). New file: src/detect_early_cycle_outliers.py.
+Moving to Part 1, item 2: retraining PiFormer with Huber loss.
+
+[Part 1, items 2-3 DONE - PiFormer Huber-loss retrain] Same architecture/
+data/split as the Dataset Expansion PiFormer (unpinned
+battery_split_expanded.json, B0018 in train, for direct comparability),
+only nn.HuberLoss(delta=1.0) instead of MSE. Trained in 11696.7s
+(194.9min = 3.25h), early-stopped at epoch 26/40 (best val at epoch 18).
+RESULT (dramatic, clean success on the pooled metric):
+  MSE-trained (Dataset Expansion): RMSE=3.3405 MAE=0.7143 R2=0.7795
+  Huber-trained (this session):    RMSE=1.1649 MAE=0.5827 R2=0.9732
+  RMSE improved 65.1%, R2 improved from 0.780 to 0.973 - NO DATA WAS
+  TOUCHED, only the loss function.
+PER-BATTERY CHECK (not just trusting the pooled average): NASA/B0053's
+own RMSE dropped from 74.7 (MSE) to 9.74 (Huber) - an 87% reduction on
+the exact outlier battery this fix targets. HONEST, NOT ROUNDED UP:
+B0053 is NOT fully "fixed" to an unremarkable level (9.74 is still the
+2nd-worst battery in the pool) - Huber loss capped, not eliminated, the
+damage. A real side effect also surfaced: NASA/B0044 (originally
+RMSE=7.77 under MSE) got WORSE under Huber (RMSE=10.60, now the single
+worst battery) - Huber loss changes the gradient landscape for every
+battery, not just B0053, and this one genuinely regressed. Reported
+plainly, not hidden because it complicates the "clean win" narrative.
+NET VERDICT: the pooled/aggregate result is unambiguously and
+substantially better (RMSE -65%, R2 +0.19), achieved via the LESS
+invasive Huber-loss route (no data excluded), exactly as instructed to
+try first - but it is not a total fix for B0053 specifically, and it
+introduced a smaller new regression on a different battery (B0044).
+Moving to item 3: does this also fix the 4-branch ensemble's inherited
+RMSE regression?
+
+[Part 1, item 3 DONE - ensemble rebuild with Huber-PiFormer]
+Refit the 4-branch Ridge meta-learner with PiFormer's predictions
+swapped MSE->Huber (XGBoost-fusion/VLSTM/CNN-LSTM unchanged):
+  Ensemble, PiFormer=MSE (existing):   RMSE=1.4834 MAE=0.5276 R2=0.9579
+  Ensemble, PiFormer=Huber (this fix): RMSE=1.1835 MAE=0.5170 R2=0.9732
+  RMSE improved 20.2%, R2 improved 0.9579->0.9732 - now genuinely
+  BETTER than even the original 32-battery ensemble's R2=0.917.
+YES - the Huber-loss fix DOES propagate to a real, substantial
+improvement in the ensemble, answering item 3's question plainly.
+DEEPER FINDING while checking per-battery (not stopping at the pooled
+win): B0053 is STILL the ensemble's single worst battery (RMSE=17.09),
+even worse in absolute terms than Huber-PiFormer's OWN standalone
+B0053 RMSE (9.74). Investigated why rather than assuming a bug: checked
+XGBoost-fusion's OWN standalone error on B0053 directly -
+RMSE=17.41, matching the ensemble's B0053 error almost exactly (Ridge's
+XGBoost-fusion weight is 0.93, dominant, vs. PiFormer's weight of only
+0.12). CORRECTED UNDERSTANDING: B0053 was never a PURELY PiFormer-
+specific problem - XGBoost-fusion (a completely different architecture,
+tree-based not attention-based) ALSO struggles on this battery
+(RMSE=17.4, elevated though nowhere near MSE-PiFormer's catastrophic
+74.7). This means B0053 has some genuine, harder-to-characterize
+distributional property that affects multiple model families to
+varying degrees, not a narrow PiFormer-attention-specific quirk as
+Part 1 item 1's investigation first suggested - MSE-trained PiFormer's
+failure was simply so much larger (74.7) that it obscured this shared,
+milder weakness in the pooled numbers until now.
+Full result: data/processed/predictions/
+ensemble_fusion_piformerhuber_expanded_{metrics,test_preds}.csv. New
+files: src/train_piformer_huber_expanded.py,
+src/rebuild_ensemble_piformer_huber_expanded.py.
+
+=== Part 1 FULLY COMPLETE. Starting Part 3 (noise-augmented training) -
+the last remaining long-running stage. ===
+
+[Part 3 - VLSTM-noiseaug DONE] Trained 12392.4s (206.5min = 3.44h), early-
+stopped epoch 35/40 (best val at epoch 27, val_mse=0.1760 clean-eval).
+Vs. original clean-trained VLSTM: 10154.2s (169.2min=2.82h), stopped
+epoch 26. Real slowdown confirmed: +22% wall time despite similar
+per-epoch pace variance (this noise-augmented run took MORE epochs
+to converge, 36 vs 27, partially offsetting the ~61% per-epoch
+slowdown observed early on - net effect smaller than that early
+estimate suggested). Moving to CNN-LSTM-noiseaug next (automatic,
+same script, sequential).
+
+[Part 3 - CNNLSTM-noiseaug DONE] Trained 497.9s (8.3min), early-stopped
+epoch 11/40 (best val at epoch 3, val_mse=0.1273 clean-eval). Vs.
+original clean-trained CNN-LSTM: 1683.1s (28min), stopped epoch 24.
+INTERESTING ASYMMETRY vs. VLSTM: CNN-LSTM's noise-augmented run
+finished MUCH FASTER (8.3min vs 28min, -70%) and stopped far earlier
+(epoch 11 vs 24) - the opposite direction from VLSTM's slowdown (+22%,
+more epochs to converge). Plausible read: noise injection acts as a
+stronger, faster-acting regularizer for CNN-LSTM specifically (it's
+the one model with BatchNorm, whose running statistics may reach a
+stable point faster under noisy input than VLSTM's simpler recurrent
+cell) - offered as a hypothesis, not confirmed further this session.
+Net effect on Part 3's total timeline: this stage finished well under
+its original budget, partially offsetting VLSTM's overrun. Moving to
+the last, longest stage: PiFormer-noiseaug.
+
+[Part 3 - PiFormer-noiseaug DONE] Trained 11034.2s (183.9min=3.06h),
+early-stopped epoch 24/40 (best val at epoch 16, val_mse=0.1018
+clean-eval). Vs. original clean-trained PiFormer: 8290.7s (138.2min=
+2.30h), stopped epoch 21. +33% slower - a real, moderate slowdown,
+between VLSTM's +22% and worse than CNN-LSTM's dramatic -70% underrun.
+ALL 3 noise-augmented models now trained. Computing pooled test
+metrics next (automatic).
+
+[Part 3 - all 3 noise-augmented models: CLEAN test-set metrics]
+(evaluated on the standard, un-noised test set - this is about whether
+noise-augmented training helped/hurt normal accuracy, not yet the
+robustness-under-noise question):
+  VLSTM:    RMSE=1.5390 MAE=0.8330 R2=0.9532 (clean-trained was 1.6345/0.9164/0.9472 - IMPROVED)
+  CNNLSTM:  RMSE=1.5079 MAE=0.9184 R2=0.9551 (clean-trained was 1.3003/0.7450/0.9666 - slightly WORSE)
+  PiFormer: RMSE=1.9904 MAE=0.6842 R2=0.9217 (MSE clean-trained was 3.3405/0.7143/0.7795 - SUBSTANTIALLY IMPROVED)
+CROSS-PART FINDING, genuinely interesting: noise-augmented training
+(plain MSE loss, no Huber) ALSO substantially reduced PiFormer's
+B0053-driven RMSE regression (3.3405->1.9904, -40%), independent of
+Part 1's Huber-loss fix. Not as strong as Huber's fix (1.1649/0.9732)
+but a real, unprompted confirmation that PiFormer's outlier sensitivity
+responds to more than one kind of regularization - general noise
+robustness, not just heavy-tail-robust loss. Worth stating honestly in
+the final report as a second line of evidence, not just Huber's.
+Moving to: rebuild the 4-branch ensemble with noise-augmented deep
+models, then the new full-ensemble noise-robustness eval (clean vs.
+noise-augmented, under 1x/2x/5x injected noise).
+
+[Part 3 - training FULLY COMPLETE] Total 24158.7s (402.6min=6.71h) for
+all 3 models combined (VLSTM 206.5min + CNNLSTM 8.3min + PiFormer
+183.9min + tensor-cache-load/predict overhead). Vs. original
+un-augmented combined: ~335.5min (5.59h). Net overrun: +20% total,
+driven mainly by VLSTM/PiFormer's slowdowns, partially offset by
+CNN-LSTM's dramatic underrun. Real number, not the earlier worst-case
+9-10h estimate - reported as the actual outcome.
+Running run_sensor_noise_robustness_noiseaug_expanded.py next (rebuilds
+both clean and noise-augmented 4-branch ensembles, evaluates both under
+1x/2x/5x injected noise on the same 6 test batteries).
+
+[Part 3 - FULL RESULT: does noise-augmented training close the
+robustness-margin gap?]
+Full 4-branch ensemble (XGBoost-fusion unchanged + noise-augmented
+VLSTM/CNNLSTM/PiFormer, refit Ridge), same 6 test batteries, same 3
+noise levels as the existing sensor-noise-robustness script:
+  R2 by level:           clean-trained -> noise-augmented
+    clean (baseline):    0.9833 -> 0.9832  (unchanged, no clean-accuracy cost)
+    1x BMS-grade:         0.9653 -> 0.9647  (essentially unchanged)
+    2x BMS-grade:         0.9532 -> 0.9537  (tiny improvement)
+    5x BMS-grade (stress):0.8749 -> 0.8842  (+0.0093, REAL improvement)
+  Robustness margin (clean R2 - 5x R2): 0.1084 -> 0.0990 (NARROWER by
+  0.0094, ~8.7% relative reduction) - training-time noise injection
+  DID measurably narrow the robustness gap, at ZERO cost to clean-
+  condition accuracy.
+NASA/B0018 specifically: margin more than halved (clean-trained 0.0517
+-> noise-augmented 0.0198) - a bigger relative improvement than the
+pooled number. HONEST CAVEAT: B0018's noise-augmented degradation is
+NOT strictly monotonic (2x R2=0.8863 dips lower than 5x R2=0.8913) -
+a real, slightly odd artifact, not smoothed over.
+DIRECT ANSWER to Part 3's question: does this close the gap to the
+ORIGINAL 32-battery model's flat/near-zero margin (clean R2=0.917, 5x
+R2=0.921, margin=-0.004)? NO - not close. Noise-augmented training
+narrows the expanded-pool model's margin modestly (0.108->0.099) but
+stays far from the original's near-flat response. As already noted in
+the Dataset Expansion report, the original's flatness is best read as
+an artifact of it being less accurate/already-noisier to begin with,
+not genuine superior robustness - so full parity with it was never
+really the right bar. The honest, real result: noise-augmented training
+gives a modest, genuine robustness improvement on top of the expanded
+pool's already-better clean accuracy, with no clean-accuracy trade-off.
+Full results: outputs/sensor_noise_robustness_noiseaug_expanded_{summary,
+per_battery}.csv. New file: src/run_sensor_noise_robustness_noiseaug_expanded.py.
+
+=== PART 3 FULLY COMPLETE. ALL 5 PARTS OF THE TARGETED IMPROVEMENT PASS
+NOW DONE. Proceeding to finalize DEVELOPMENT_LOG.md entry and commit/push. ===

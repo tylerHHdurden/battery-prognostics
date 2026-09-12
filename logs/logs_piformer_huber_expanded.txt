@@ -1,0 +1,44 @@
+[deep-exp] loaded 204 battery tensors from cache (_expanded_battery_tensors_cache.pkl) in 0.6s - skipped the ~17min raw-data reload
+[piformer-huber] fit batteries: 132, val batteries: 32, test batteries: 40
+[piformer-huber] fit cycles=95572, val cycles=28183, test cycles=29489
+[piformer-huber] epoch   0 train_huber=0.0666 val_huber=0.0983
+[piformer-huber] epoch   1 train_huber=0.0413 val_huber=0.0897
+[piformer-huber] epoch   2 train_huber=0.0328 val_huber=0.0714
+[piformer-huber] epoch   3 train_huber=0.0198 val_huber=0.0568
+[piformer-huber] epoch   4 train_huber=0.0160 val_huber=0.0687
+[piformer-huber] epoch   5 train_huber=0.0146 val_huber=0.0425
+[piformer-huber] epoch   6 train_huber=0.0136 val_huber=0.0443
+[piformer-huber] epoch   7 train_huber=0.0124 val_huber=0.0489
+[piformer-huber] epoch   8 train_huber=0.0123 val_huber=0.0375
+[piformer-huber] epoch   9 train_huber=0.0115 val_huber=0.0450
+[piformer-huber] epoch  10 train_huber=0.0111 val_huber=0.0449
+[piformer-huber] epoch  11 train_huber=0.0106 val_huber=0.0402
+[piformer-huber] epoch  12 train_huber=0.0102 val_huber=0.0406
+[piformer-huber] epoch  13 train_huber=0.0100 val_huber=0.0439
+[piformer-huber] epoch  14 train_huber=0.0099 val_huber=0.0360
+[piformer-huber] epoch  15 train_huber=0.0095 val_huber=0.0366
+[piformer-huber] epoch  16 train_huber=0.0091 val_huber=0.0395
+[piformer-huber] epoch  17 train_huber=0.0089 val_huber=0.0373
+[piformer-huber] epoch  18 train_huber=0.0087 val_huber=0.0318
+[piformer-huber] epoch  19 train_huber=0.0088 val_huber=0.0379
+[piformer-huber] epoch  20 train_huber=0.0084 val_huber=0.0456
+[piformer-huber] epoch  21 train_huber=0.0083 val_huber=0.0405
+[piformer-huber] epoch  22 train_huber=0.0084 val_huber=0.0524
+[piformer-huber] epoch  23 train_huber=0.0079 val_huber=0.0437
+[piformer-huber] epoch  24 train_huber=0.0079 val_huber=0.0367
+[piformer-huber] epoch  25 train_huber=0.0076 val_huber=0.0405
+[piformer-huber] epoch  26 train_huber=0.0076 val_huber=0.0327
+[piformer-huber] early stopping at epoch 26
+[piformer-huber] TEST RMSE=1.1649 MAE=0.5827 R2=0.9732
+[piformer-huber] (MSE-trained PiFormer-expanded was RMSE=3.3405 MAE=0.7143 R2=0.7795)
+[piformer-huber] (original 32-battery PiFormer was RMSE=2.993 MAE=1.928 R2=0.617)
+
+[piformer-huber] Per-battery RMSE, worst 5 (was NASA/B0053=74.7 under MSE):
+dataset battery_id   n      rmse
+   NASA      B0044 106 10.596962
+   NASA      B0053  54  9.740663
+   NASA      B0030  39  3.180957
+   NASA      B0025  28  2.068733
+    MIT      b2c47 744  2.047568
+
+[piformer-huber] ALL DONE in 11696.7s (194.9 min)
