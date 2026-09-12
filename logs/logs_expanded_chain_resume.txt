@@ -1,0 +1,176 @@
+=== [resume] Fri Sep 11 20:20:23 IST 2026 starting train_deep_models_expanded.py (restart from epoch 0 - previous run was killed at VLSTM epoch 23/40 with no checkpoint) ===
+[deep-exp] loaded NASA/B0005: (168, 200, 6)
+[deep-exp] loaded NASA/B0006: (168, 200, 6)
+[deep-exp] loaded NASA/B0007: (168, 200, 6)
+[deep-exp] loaded NASA/B0018: (132, 200, 6)
+[deep-exp] loaded NASA/B0025: (28, 200, 6)
+[deep-exp] loaded NASA/B0026: (28, 200, 6)
+[deep-exp] loaded NASA/B0027: (28, 200, 6)
+[deep-exp] loaded NASA/B0028: (28, 200, 6)
+[deep-exp] loaded NASA/B0029: (39, 200, 6)
+[deep-exp] loaded NASA/B0030: (39, 200, 6)
+[deep-exp] loaded NASA/B0031: (39, 200, 6)
+[deep-exp] loaded NASA/B0032: (39, 200, 6)
+[deep-exp] loaded NASA/B0042: (106, 200, 6)
+[deep-exp] loaded NASA/B0043: (106, 200, 6)
+[deep-exp] loaded NASA/B0044: (106, 200, 6)
+[deep-exp] loaded NASA/B0045: (71, 200, 6)
+[deep-exp] loaded NASA/B0046: (71, 200, 6)
+[deep-exp] loaded NASA/B0047: (71, 200, 6)
+[deep-exp] loaded NASA/B0048: (71, 200, 6)
+[deep-exp] loaded NASA/B0053: (54, 200, 6)
+[deep-exp] loaded NASA/B0054: (101, 200, 6)
+[deep-exp] loaded NASA/B0055: (101, 200, 6)
+[deep-exp] loaded NASA/B0056: (101, 200, 6)
+[deep-exp] MIT cells: 185 total, 181 after excluding 4 with degenerate SOH baselines (see expanded_pool_exclusions.py)
+[deep-exp] loaded 20/181 MIT tensors (166s elapsed)
+[deep-exp] loaded 40/181 MIT tensors (249s elapsed)
+[deep-exp] loaded 60/181 MIT tensors (314s elapsed)
+[deep-exp] loaded 80/181 MIT tensors (365s elapsed)
+[deep-exp] loaded 100/181 MIT tensors (452s elapsed)
+[deep-exp] loaded 120/181 MIT tensors (604s elapsed)
+[deep-exp] loaded 140/181 MIT tensors (764s elapsed)
+[deep-exp] loaded 160/181 MIT tensors (939s elapsed)
+[deep-exp] loaded 180/181 MIT tensors (1080s elapsed)
+[deep-exp] tensor loading done in 1084.4s, 204 batteries
+[deep-exp] loaded 204 batteries in 1084.4s
+[deep-exp] fit batteries: 132, val batteries: 32, test batteries: 40
+[deep-exp] fit cycles=95572, val cycles=28183, test cycles=29489
+[deep-exp] channel 0 (V_t) norm: clip=[2,3.58] mean=2.94 std=0.527
+[deep-exp] channel 1 (I_t) norm: clip=[-4,1.99] mean=-2.24 std=1.9
+[deep-exp] channel 2 (T_t) norm: clip=[28.1,41] mean=34.2 std=2.66
+[deep-exp] channel 3 (dQdV) norm: clip=[-0.167,0.000939] mean=-0.0114 std=0.0246
+[deep-exp] channel 4 (dVdQ) norm: clip=[-5.36e+04,5.3e+03] mean=-2.49e+03 std=7.76e+03
+[deep-exp] channel 5 (dIdV) norm: clip=[-45.7,41.2] mean=1.83 std=10.7
+[deep/VLSTM] epoch   0 train_mse=0.6164 val_mse=0.5505
+[deep/VLSTM] epoch   1 train_mse=0.2210 val_mse=0.3206
+[deep/VLSTM] epoch   2 train_mse=0.1470 val_mse=0.3394
+[deep/VLSTM] epoch   3 train_mse=0.1193 val_mse=0.2919
+[deep/VLSTM] epoch   4 train_mse=0.0915 val_mse=0.3187
+[deep/VLSTM] epoch   5 train_mse=0.0837 val_mse=0.2690
+[deep/VLSTM] epoch   6 train_mse=0.0786 val_mse=0.2608
+[deep/VLSTM] epoch   7 train_mse=0.0723 val_mse=0.3475
+[deep/VLSTM] epoch   8 train_mse=0.0687 val_mse=0.2841
+[deep/VLSTM] epoch   9 train_mse=0.0746 val_mse=0.2206
+[deep/VLSTM] epoch  10 train_mse=0.0646 val_mse=0.2445
+[deep/VLSTM] epoch  11 train_mse=0.0617 val_mse=0.2070
+[deep/VLSTM] epoch  12 train_mse=0.0699 val_mse=0.2215
+[deep/VLSTM] epoch  13 train_mse=0.0589 val_mse=0.2200
+[deep/VLSTM] epoch  14 train_mse=0.0565 val_mse=0.2277
+[deep/VLSTM] epoch  15 train_mse=0.0557 val_mse=0.2299
+[deep/VLSTM] epoch  16 train_mse=0.0525 val_mse=0.2006
+[deep/VLSTM] epoch  17 train_mse=0.0486 val_mse=0.2357
+[deep/VLSTM] epoch  18 train_mse=0.0479 val_mse=0.1893
+[deep/VLSTM] epoch  19 train_mse=0.0465 val_mse=0.2537
+[deep/VLSTM] epoch  20 train_mse=0.0449 val_mse=0.2271
+[deep/VLSTM] epoch  21 train_mse=0.0442 val_mse=0.2582
+[deep/VLSTM] epoch  22 train_mse=0.0421 val_mse=0.2207
+[deep/VLSTM] epoch  23 train_mse=0.0419 val_mse=0.2488
+[deep/VLSTM] epoch  24 train_mse=0.0391 val_mse=0.2591
+[deep/VLSTM] epoch  25 train_mse=0.0387 val_mse=0.2360
+[deep/VLSTM] epoch  26 train_mse=0.0376 val_mse=0.2629
+[deep/VLSTM] early stopping at epoch 26
+[deep-exp] VLSTM trained in 10154.2s
+[deep/CNNLSTM] epoch   0 train_mse=0.4064 val_mse=0.5190
+[deep/CNNLSTM] epoch   1 train_mse=0.2301 val_mse=0.3055
+[deep/CNNLSTM] epoch   2 train_mse=0.1692 val_mse=0.2419
+[deep/CNNLSTM] epoch   3 train_mse=0.1195 val_mse=0.1961
+[deep/CNNLSTM] epoch   4 train_mse=0.1127 val_mse=0.1254
+[deep/CNNLSTM] epoch   5 train_mse=0.0934 val_mse=0.1795
+[deep/CNNLSTM] epoch   6 train_mse=0.0820 val_mse=0.1288
+[deep/CNNLSTM] epoch   7 train_mse=0.0750 val_mse=0.2277
+[deep/CNNLSTM] epoch   8 train_mse=0.0724 val_mse=0.1657
+[deep/CNNLSTM] epoch   9 train_mse=0.1205 val_mse=0.1236
+[deep/CNNLSTM] epoch  10 train_mse=0.0700 val_mse=0.1409
+[deep/CNNLSTM] epoch  11 train_mse=0.0635 val_mse=0.1833
+[deep/CNNLSTM] epoch  12 train_mse=0.0541 val_mse=0.1774
+[deep/CNNLSTM] epoch  13 train_mse=0.0557 val_mse=0.6215
+[deep/CNNLSTM] epoch  14 train_mse=0.0564 val_mse=0.1809
+[deep/CNNLSTM] epoch  15 train_mse=0.0451 val_mse=0.1326
+[deep/CNNLSTM] epoch  16 train_mse=0.0417 val_mse=0.1053
+[deep/CNNLSTM] epoch  17 train_mse=0.0409 val_mse=0.2770
+[deep/CNNLSTM] epoch  18 train_mse=0.0529 val_mse=0.2852
+[deep/CNNLSTM] epoch  19 train_mse=0.0410 val_mse=0.1137
+[deep/CNNLSTM] epoch  20 train_mse=0.0516 val_mse=0.2269
+[deep/CNNLSTM] epoch  21 train_mse=0.0308 val_mse=0.1900
+[deep/CNNLSTM] epoch  22 train_mse=0.0355 val_mse=0.1813
+[deep/CNNLSTM] epoch  23 train_mse=0.0297 val_mse=0.1507
+[deep/CNNLSTM] epoch  24 train_mse=0.0278 val_mse=0.1240
+[deep/CNNLSTM] early stopping at epoch 24
+[deep-exp] CNNLSTM trained in 1683.1s
+[deep/PiFormer] epoch   0 train_mse=0.2585 val_mse=0.3275
+[deep/PiFormer] epoch   1 train_mse=0.0968 val_mse=0.3134
+[deep/PiFormer] epoch   2 train_mse=0.0821 val_mse=0.2366
+[deep/PiFormer] epoch   3 train_mse=0.0589 val_mse=0.3013
+[deep/PiFormer] epoch   4 train_mse=0.0500 val_mse=0.1918
+[deep/PiFormer] epoch   5 train_mse=0.0451 val_mse=0.1619
+[deep/PiFormer] epoch   6 train_mse=0.0352 val_mse=0.1307
+[deep/PiFormer] epoch   7 train_mse=0.0347 val_mse=0.1341
+[deep/PiFormer] epoch   8 train_mse=0.0301 val_mse=0.1470
+[deep/PiFormer] epoch   9 train_mse=0.0262 val_mse=0.1073
+[deep/PiFormer] epoch  10 train_mse=0.0240 val_mse=0.1030
+[deep/PiFormer] epoch  11 train_mse=0.0217 val_mse=0.1884
+[deep/PiFormer] epoch  12 train_mse=0.0192 val_mse=0.1185
+[deep/PiFormer] epoch  13 train_mse=0.0256 val_mse=0.0930
+[deep/PiFormer] epoch  14 train_mse=0.0161 val_mse=0.1131
+[deep/PiFormer] epoch  15 train_mse=0.0163 val_mse=0.1280
+[deep/PiFormer] epoch  16 train_mse=0.0172 val_mse=0.1208
+[deep/PiFormer] epoch  17 train_mse=0.0144 val_mse=0.1266
+[deep/PiFormer] epoch  18 train_mse=0.0142 val_mse=0.1063
+[deep/PiFormer] epoch  19 train_mse=0.0135 val_mse=0.1643
+[deep/PiFormer] epoch  20 train_mse=0.0216 val_mse=0.1120
+[deep/PiFormer] epoch  21 train_mse=0.0134 val_mse=0.1145
+[deep/PiFormer] early stopping at epoch 21
+[deep-exp] PiFormer trained in 8290.7s
+[deep-exp] VLSTM TEST RMSE=1.6345 MAE=0.9164 R2=0.9472
+[deep-exp] CNNLSTM TEST RMSE=1.3003 MAE=0.7450 R2=0.9666
+[deep-exp] PiFormer TEST RMSE=3.3405 MAE=0.7143 R2=0.7795
+Traceback (most recent call last):
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\train_deep_models_expanded.py", line 193, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\train_deep_models_expanded.py", line 181, in main
+    tr_pred_p = predict(piformer, Xtr)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\train_deep_models_expanded.py", line 98, in predict
+    raw = model(torch.tensor(X)).squeeze(-1).numpy()
+          ~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\torch\nn\modules\module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\torch\nn\modules\module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\models\piformer.py", line 96, in forward
+    q_embed = block(q_embed, kv_embed)
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\torch\nn\modules\module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\torch\nn\modules\module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\models\piformer.py", line 64, in forward
+    attn_out = self.attn(self.norm_q(q_embed), self.norm_kv(kv_embed))
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\torch\nn\modules\module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\torch\nn\modules\module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\models\piformer.py", line 50, in forward
+    out, _ = self.mha(query, kv, kv)
+             ~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\torch\nn\modules\module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\torch\nn\modules\module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\torch\nn\modules\activation.py", line 1494, in forward
+    attn_output, attn_output_weights = F.multi_head_attention_forward(
+                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        query,
+        ^^^^^^
+    ...<17 lines>...
+        is_causal=is_causal,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\torch\nn\functional.py", line 7035, in multi_head_attention_forward
+    attn_output_weights = torch.bmm(q_scaled, k.transpose(-2, -1))
+RuntimeError: [enforce fail at alloc_cpu.cpp:117] data. DefaultCPUAllocator: not enough memory: you tried to allocate 79203200000 bytes.

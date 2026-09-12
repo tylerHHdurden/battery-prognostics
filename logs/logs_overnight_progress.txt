@@ -1,0 +1,452 @@
+=== Overnight autonomous run — Dataset Expansion Phase 1 + Site Phase 2 ===
+Started: 2026-09-12 02:46 IST (user stepping away, full autonomy authorized)
+
+[02:46] RESUMING Phase 1 deep-model chain after a real bug + fix (logged
+in the conversation, repeating here for the file record):
+  BUG: train_deep_models_expanded.py's predict() ran PiFormer's forward
+  pass on the full 123,755-row train+val set in one unbatched call.
+  PiFormer's multi-head attention materializes a (batch,heads,seq,seq)
+  score tensor - fine at the 29,489-row test-set scale (succeeded) but
+  at 123,755 rows tried to allocate ~79GB and crashed with
+  RuntimeError: not enough memory: you tried to allocate 79203200000 bytes.
+  FIX: chunked inference (4096 rows/chunk) in both
+  train_deep_models_expanded.py (where it crashed) and
+  train_cnn_bigru_expanded.py (same unbatched pattern, fixed
+  defensively even though CNN-BiGRU's GRU likely wouldn't hit this
+  specific failure mode - no O(batch x seq^2) attention matrix).
+  Also added load_or_train() resume logic so VLSTM/CNN-LSTM/PiFormer's
+  already-completed training (10154.2s + 1683.1s + 8290.7s = ~5.6h
+  combined) is loaded from checkpoint, NOT redone from scratch.
+
+Already-confirmed results going into this resume (unchanged, safe on disk):
+  XGBoost-expanded:  RMSE=1.2121 MAE=0.5666 R2=0.9721 (orig R2=0.907)
+  VLSTM-expanded:    RMSE=1.6345 MAE=0.9164 R2=0.9472 (orig R2=0.806)
+  CNNLSTM-expanded:  RMSE=1.3003 MAE=0.7450 R2=0.9666 (orig R2=0.334)
+  PiFormer-expanded: RMSE=3.3405 MAE=0.7143 R2=0.7795 (orig R2=0.617,
+                      RMSE got WORSE 2.993->3.340 despite R2/MAE improving -
+                      genuine mixed result, will investigate which test
+                      batteries drive this when writing the final log)
+
+[02:46] Relaunched run_expanded_pipeline_resume.sh (background,
+logs/logs_expanded_chain_resume2.txt). Currently re-loading MIT tensors
+(unavoidable, ~18min, not cached to disk) before the resume logic
+kicks in and skips straight to fixed train-predictions + CNN-BiGRU onward.
+
+[02:43] train_deep_models_expanded.py resume finished (1183.8s = 19.7min,
+confirming VLSTM/CNNLSTM/PiFormer all loaded from checkpoint rather than
+retraining - retraining any one of them alone would have taken longer
+than this total). Chain moved on to train_fusion_encoder_expanded.py.
+
+[~02:44] BUG #3 FOUND, ROOT-CAUSED, FIXED: CNN-LSTM's resumed TEST
+metrics did NOT match the pre-crash run (RMSE 1.3003->2.4256, MAE
+0.7450->1.0309, R2 0.9666->0.8837) while VLSTM and PiFormer matched
+EXACTLY. Root cause, confirmed by checking each model's normalization
+layers (grep for BatchNorm/LayerNorm in src/models/*.py): CNN-LSTM is
+the ONLY one of the 3 using nn.BatchNorm1d (VLSTM has no norm layer,
+PiFormer uses LayerNorm which is train/eval-mode-independent). My new
+load_or_train() resume path loaded the checkpoint's WEIGHTS correctly
+(confirmed via unchanged file mtime, 23:56:13, across the crash) but
+never called model.eval() - a freshly-constructed nn.Module defaults
+to .train() mode, so CNN-LSTM's BatchNorm silently used live batch
+statistics from the test chunks instead of the stored running_mean/
+running_var. VLSTM/PiFormer are architecturally immune to this exact
+failure mode, which is exactly why only CNN-LSTM's numbers looked wrong
+- the same architecture-specific signature as this project's very
+first CNN-LSTM investigation, different root cause this time (that one
+was the ~9.5M-unnormalized-dVdQ bug; this one is a missing eval() call).
+FIX: added model.eval() in load_or_train() (train_deep_models_expanded.py)
+and defensively inside predict() itself (belt-and-suspenders), plus the
+same defensive (currently-inert, no active bug there) eval() call in
+train_cnn_bigru_expanded.py's predict() for consistency.
+CORRECTIVE ACTION: wrote fix_cnn_lstm_expanded_preds.py to patch the
+already-written deep_models_expanded_{test,train}_preds.csv and
+deep_models_expanded_metrics.csv with CNN-LSTM's CORRECT predictions
+(recomputed from the untouched, correct checkpoint, eval() applied) -
+running now, concurrently with train_fusion_encoder_expanded.py (no
+file overlap, safe). VLSTM/PiFormer columns in those files were never
+wrong and are re-verified via a sanity re-check inside the fix script.
+This was caught BEFORE the ensemble stage (which reads these exact
+files) ran on corrupted data - the crash's silver lining is it forced
+a fresh CNN-LSTM eval this run, which is what surfaced the mismatch
+against the pre-crash reference numbers still visible in this log.
+
+[02:53] train_fusion_encoder_expanded.py: tensor loading done in 617.4s
+(vs ~1084-1102s on prior runs - OS/OneDrive disk cache now warm from
+repeated reads, genuinely faster, not a fluke worth chasing). Now
+training the ICAEncoder (25-epoch budget, patience=6).
+
+[~02:53] DATASET COMPLETENESS AUDIT - completed while training runs in
+background (doesn't depend on final model numbers, safe to finalize now):
+  NASA: 34/34 downloaded .mat files accounted for.
+    - 23 used in the final training/test pool.
+    - 10 excluded (degenerate SOH baseline, values up to 2177%):
+      B0033, B0034, B0036, B0038, B0039, B0040, B0041, B0049, B0050, B0051.
+    - 1 excluded (too_few_cycles, only 3 usable cycles even after the
+      empty-Capacity fix): B0052.
+  MIT: 185/185 total cells (across all 4 MATR_batch_*.mat files) accounted for.
+    - 181 used in the final training/test pool.
+    - 4 excluded (degenerate SOH baseline): b1c0, b1c18, b2c12, b2c44.
+  TOTAL EXPANDED POOL: 23 NASA + 181 MIT = 204 batteries (vs. original 32,
+    vs. 219 theoretical ceiling - the 15-battery gap is fully accounted
+    for above, nothing silently dropped).
+  CALCE: confirmed 3/3 locally-available cells (CS2_35/36/37, matching
+    the 3 CS2_*.zip files on disk - no more CALCE data was ever
+    downloaded) used ONLY in the zero-retrain domain-shift evaluation.
+    Verified directly against hi_table_expanded.parquet: 2943 CALCE
+    rows, all tagged dataset=="CALCE", zero overlap with the NASA/MIT
+    training pool. This is a deliberate design choice (CALCE is the
+    held-out domain-shift target the whole project evaluates against),
+    not a gap - stated explicitly per instruction.
+  ITEM 4 (anything found but unused for a non-data-quality reason,
+    e.g. skipped for time): NONE. Checked directly: all 34 NASA .mat
+    files present and accounted for; all 4 MIT MATR_batch_*.mat files
+    present and all 185 cells enumerated via data_adapters.mit_cell_ids()
+    and accounted for; the one other file under data/raw/mit/
+    (Severson-et-al/2017-05-12_6C-50per_3_6C_CH36.csv) is a pre-existing,
+    already-documented single-cell CSV quickstart sample referenced only
+    by src/load_mit.py (an exploratory script, not the main pipeline) -
+    not new data this task found, and very likely the same cell already
+    present in MATR_batch_20170512.mat in a redundant format, not a
+    separate additional battery. No time-based scope cuts were taken
+    anywhere in Phase 1's data usage.
+
+[02:53-02:58] train_fusion_encoder_expanded.py: 895.7s total (14.9min).
+train_xgboost_fusion_expanded.py: TEST RMSE=1.2115 MAE=0.5461 R2=0.9719
+(fast, unaffected by the CNN-LSTM bug - doesn't use deep-model
+predictions at all, only BFA-HIs + fusion embedding).
+
+[02:58] CAUGHT A SEQUENCING PROBLEM: train_ensemble_fusion_expanded.py
+ran (TEST RMSE=1.4612 MAE=0.5266 R2=0.9591, Ridge coefs incl.
+pred_CNNLSTM=0.00345) BEFORE fix_cnn_lstm_expanded_preds.py finished
+correcting deep_models_expanded_{test,train}_preds.csv - meaning the
+ensemble was fit/scored on the WRONG (train-mode-BatchNorm-corrupted)
+CNN-LSTM column. Chain then moved on to train_cnn_bigru_expanded.py
+(a long stage, ~30-50min expected), which buys time to fix this
+properly rather than let it propagate further:
+  PLAN: once fix_cnn_lstm_expanded_preds.py finishes writing the
+  corrected CSVs, MANUALLY re-run train_ensemble_fusion_expanded.py
+  (fast, a Ridge fit) before run_drop_branch_ablation_5branch_expanded.py
+  (which also depends on these same corrected predictions) executes.
+  Note the corrupted run's pred_CNNLSTM Ridge weight was already tiny
+  (0.00345), so the corruption's impact on the ENSEMBLE's headline
+  RMSE/R2 is very plausibly small in practice (consistent with every
+  prior session's finding that CNN-LSTM barely gets weighted once
+  XGBoost-fusion is present) - but "plausibly small" is not the same as
+  correct, so this gets properly redone, not hand-waved as fine.
+fix_cnn_lstm_expanded_preds.py's tensor-loading progress genuinely
+slowed once CNN-BiGRU training started concurrently (100/181 MIT
+tensors reached at 341s, then no further progress logged for several
+minutes) - most likely CPU/memory-bandwidth contention between the two
+concurrent Python processes, not a stall (CPU time confirmed still
+accumulating via Get-Process, ruling out a deadlock). Monitoring.
+
+[03:06] fix_cnn_lstm_expanded_preds.py: tensor loading done (933.6s),
+CNN-LSTM's corrected TEST metrics confirmed EXACT match to the
+pre-crash reference: RMSE=1.3003 MAE=0.7450 R2=0.9666 (vs. the buggy
+in-between value RMSE=2.4256 MAE=1.0309 R2=0.8837). The fix is
+confirmed correct. Now computing corrected train-set predictions
+(needed to redo the ensemble) - slower than expected due to CPU
+contention with CNN-BiGRU training running concurrently in the main
+chain, but confirmed still actively progressing (CPU time climbing via
+Get-Process), not stalled.
+
+[~03:07] SITE (Phase 2) WORK, done in parallel while Phase 1 trains -
+Part D additions to app.py so far, each syntax-checked and AppTest-
+verified (0 exceptions) after every change:
+  #14 last-updated badge (git log-based, degrades gracefully if not a
+      git checkout)
+  #13 shareable URL state (st.query_params for dataset/battery/mode/cycle)
+  #11 count-up animation for 4 headline numbers on the Showcase tab
+      (vanilla JS, no library - honest limitation logged in-code: no
+      real browser available here to visually confirm the animation,
+      only that the script tag renders and the page has 0 exceptions)
+  #12 glossary tooltips (SOH, RUL, BFA, MMD, ACI, SHAP, LIME) - a real
+      bug caught and fixed here: st.metric()'s label does NOT render
+      HTML (confirmed by testing - an early version literally showed
+      raw <span> tags as visible text), fixed by using st.metric's
+      native `help` tooltip parameter there instead of the custom
+      glossary_term() HTML span, which stays correct everywhere else
+      (all other uses are inside st.markdown(unsafe_allow_html=True))
+  #8  search/filter bar for the Full Results Archive's 31 sections
+      (client-side JS filtering by section header text - not a
+      per-section Python conditional, to avoid touching all 31
+      existing expander blocks)
+  #9  interactive pipeline diagram (16 HIs->BFA->5 base learners->
+      fusion->ensemble->SHAP/conformal) - implemented as buttons (not
+      Plotly click-selection, for API-version robustness), REAL
+      verified behavior via AppTest: clicking "Fusion" set
+      st.session_state and the Feature Fusion expander's
+      proto.expanded flipped False->True - genuine same-tab
+      navigation, not cosmetic
+  #10 side-by-side battery comparison mode (Model Validation tab) -
+      reuses the real live_inference.predict_and_explain pipeline for
+      2 independently-chosen batteries/cycles, confirmed via AppTest
+      showing 2 real, distinct sets of SOH/RUL/SHAP output
+  #15 session-history browser - parses DEVELOPMENT_LOG.md's 54 `## `
+      sections (cached) into a scrubbable slider, confirmed present
+      via AppTest
+Not yet done: Part A/B (real number updates - blocked on Phase 1
+finishing, per instruction "do not port any number that isn't already
+verified and logged in Phase 1's own output"), Part C's headline
+decision, screenshots, final verification pass.
+
+[03:09] IMPORTANT STRUCTURAL FINDING while prepping Part A/B edits
+(checked battery_split_expanded.json directly, not assumed): B0018
+moved from the TEST set to the TRAIN set in the expanded pool's
+stratified split (test NASA batteries are now B0025/B0030/B0044/B0053
+instead of B0018) - a direct, genuine consequence of adding 19 more
+NASA batteries to a deterministic "every-5th-battery" per-dataset
+split. This means "B0018 root-cause" and "second-life grading"
+comparisons between the original and expanded runs are not
+apples-to-apples in the usual sense: B0018 is now literally IN the
+training data (the model has seen its cycles), not just "trained on
+more NASA data elsewhere." run_second_life_grading_expanded.py already
+has a graceful fallback for this (reports "not in test set" rather than
+silently comparing against the wrong row) - the DEVELOPMENT_LOG entry
+and final report both need to state this structural change explicitly,
+not quietly reconcile the two B0018 numbers as if directly comparable.
+sensor_noise_robustness_expanded.py evaluates B0018 by direct inference
+regardless of split membership, so it still runs, but any improvement
+there is now confounded with "the model was trained on this exact
+battery" - will need to be stated as an honest caveat, not presented as
+a clean "more NASA data generalizes better" result for B0018 specifically.
+
+[03:11] fix_cnn_lstm_expanded_preds.py: DONE in 1223.9s (~20.4min).
+Sanity re-checks CONFIRMED VLSTM TEST R2=0.9472 and PiFormer TEST
+R2=0.7795, both EXACT matches to their known-correct values - proves
+those two were never affected by the bug, only CNN-LSTM was.
+IMMEDIATELY re-ran train_ensemble_fusion_expanded.py with the now-
+corrected deep_models_expanded_{test,train}_preds.csv:
+  CORRECTED: RMSE=1.4834 MAE=0.5276 R2=0.9579
+  (the WRONG, bug-corrupted run had reported: RMSE=1.4612 MAE=0.5266 R2=0.9591)
+Genuinely interesting, honest methodological finding: the CORRECTED
+ensemble is very slightly WORSE than the buggy one, not better. Plausible
+explanation, worth stating in the final report: CNN-LSTM's train-mode
+BatchNorm bug used LIVE batch statistics computed FROM the test chunks
+themselves at inference time - a subtle form of test-set leakage (the
+model's normalization silently "peeked" at the composition of whatever
+batch it was scoring), which can coincidentally flatter a model's
+test-time numbers in ways that don't reflect genuine generalization.
+The properly-fixed (eval-mode, fixed running-statistics) version is the
+honest, correct one to report, even though it is not the more flattering
+number. Ridge meta-learner's CNNLSTM coefficient flipped sign
+(+0.00345 buggy -> -0.01594 corrected) but stayed tiny either way,
+confirming the earlier hypothesis that the bug's impact on the
+ensemble's overall accuracy was small (though, per the RMSE/R2 shift
+above, not exactly zero) - consistent with every prior session's
+finding that CNN-LSTM barely gets weighted once XGBoost-fusion is present.
+CORRECTED, FINAL numbers to use everywhere downstream (DEVELOPMENT_LOG,
+site Part A, final report):
+  Stacking-Ridge-fusion-expanded: RMSE=1.4834 MAE=0.5276 R2=0.9579
+  CNNLSTM-expanded (standalone):  RMSE=1.3003 MAE=0.7450 R2=0.9666
+Chain now proceeding correctly on CNN-BiGRU (unaffected by this bug -
+different script, no BatchNorm, no load_or_train resume path) -
+run_drop_branch_ablation_5branch_expanded.py (next after CNN-BiGRU)
+will now read the CORRECTED ensemble/deep-model files automatically,
+no further intervention needed for that stage.
+
+[03:12] SITE: caught and fixed a real bug in the Part D #8 search bar
+before it shipped - the filter script only ran `if search.strip()`,
+so clearing the search box left previously-hidden sections hidden
+forever (nothing ever ran to restore them, and a Streamlit rerun isn't
+guaranteed to reset an externally-set inline style.display). Fixed by
+always injecting the script and explicitly restoring visibility when
+the query is empty.
+
+[09:13-09:17] SESSION INTERRUPTED AGAIN (external teardown, not a code
+bug - same as before): CNN-BiGRU killed at epoch 12/40, zero progress
+saved (train_cnn_bigru_expanded.py had no resume logic). This is the
+THIRD time an external process teardown has cost real progress this
+session (VLSTM/CNNLSTM/PiFormer's first attempt; then this). Rather
+than just restart again, fixed the underlying resilience gap properly:
+
+1. TENSOR-LOAD CACHING: load_all_battery_tensors_expanded() now caches
+   its ~800MB-ish result to data/processed/_expanded_battery_tensors_
+   cache.pkl. This exact ~17-18min raw-data reload had already been
+   paid 3 separate times this session (once per interruption) purely
+   because training progress was lost each time anyway. Write failures
+   are non-fatal (logged, not raised) - this is a resilience nice-to-
+   have, not something that should be able to break a run if disk
+   space is tight.
+
+2. PER-EPOCH CHECKPOINTING for CNN-BiGRU (the one remaining slow
+   training stage without it): train_one_model_resumable() in
+   train_cnn_bigru_expanded.py, saving model/optimizer/torch-RNG state
+   after every epoch. NOT applied to train_deep_models.py's shared
+   train_one_model() (used by every non-expanded script too) - copied
+   into this file instead, zero risk to anything else.
+
+   VERIFIED BEFORE TRUSTING (not assumed correct): wrote a synthetic
+   smoke test - trained a real CNNBiGRU on random (64,200,6)-shaped
+   data for 3 epochs successfully (checkpoint correctly cleaned up on
+   natural completion), then simulated a mid-training crash (patched
+   torch.save to raise an exception right after epoch 2's checkpoint
+   write), confirmed the checkpoint file existed after the "crash",
+   then resumed via a FRESH model instance + fresh torch.manual_seed(42)
+   (mimicking a real process restart) and ran to completion. Compared
+   the resumed run's epoch 0-5 train/val losses against a fully
+   uninterrupted reference run with the same seed/data: **MATCHED
+   BIT-FOR-BIT to 6 decimal places on every epoch** - confirms the
+   torch RNG state save/restore genuinely makes a resumed run
+   indistinguishable from an uninterrupted one, not just "close enough."
+
+Relaunched via a new, minimal run_expanded_pipeline_final.sh (just the
+2 remaining stage groups: CNN-BiGRU, then the 6 Step-4 scripts - the
+already-completed/corrected earlier stages are not re-run).
+
+[10:50] CNN-BiGRU (5th base learner, final stage of Step 3) COMPLETE after
+a 3rd attempt (1st: lost at epoch 12/40 with zero progress saved, no
+resume logic yet; 2nd: this same run killed again by a 3rd external
+session teardown; 3rd: succeeded, using the newly-built per-epoch
+checkpoint/resume logic, verified bit-for-bit reproducible beforehand
+via a synthetic crash test). Early-stopped at epoch 19/40 (best val_loss
+at epoch 11 = 0.1469). Tensor loading skipped entirely this run thanks
+to the new disk cache (0.4s vs ~17min raw reload).
+RESULT: TEST RMSE=1.4791 MAE=0.8265 R2=0.9568 (original 32-battery
+CNNBiGRU: RMSE=3.165 MAE=2.341 R2=0.572).
+This is a CLEAN, large improvement across all 3 metrics - unlike
+PiFormer's mixed result, CNN-BiGRU improved on every axis with more
+data, no caveats needed.
+All 5 base learners + fusion + ensemble now fully retrained on the
+expanded pool. Moving to the 6 Step-4 hypothesis-test scripts next
+(drop-branch ablation, CALCE zero-retrain [the key result], bootstrap
+significance, domain-classifier sanity check, second-life grading,
+sensor-noise robustness) - none have run yet.
+
+[10:50] Step-4 script 1/6, run_drop_branch_ablation_5branch_expanded.py:
+DONE. IMPORTANT NUANCE caught while logging this, not glossed over: this
+script's "full 5-branch" ensemble (RMSE=1.5051 MAE=0.5285 R2=0.9567,
+which DOES include pred_CNNBiGRU as a 5th stacked branch) is a
+DIFFERENT, separate meta-model from train_ensemble_fusion_expanded.py's
+4-branch Ridge stack (RMSE=1.4834 MAE=0.5276 R2=0.9579, XGBoost-fusion+
+VLSTM+CNNLSTM+PiFormer only, no CNNBiGRU) reported earlier tonight -
+confirmed by the "drop_pred_CNNBiGRU" row here matching the 4-branch
+number EXACTLY (1.483414/0.957892). So: adding CNN-BiGRU into a 5-branch
+stack makes the ensemble very slightly WORSE, not better (consistent
+with every prior session's finding that CNN-BiGRU is the weakest base
+learner and barely earns its place in a stack).
+Full ablation table (branch dropped -> resulting RMSE/R2, sorted best to
+worst RMSE):
+  drop PiFormer:      RMSE=1.1821 R2=0.9733  (BIGGEST individual improvement from dropping - PiFormer is net-negative for this ensemble at this scale)
+  drop CNNBiGRU:      RMSE=1.4834 R2=0.9579  (= the reported 4-branch ensemble number)
+  drop VLSTM:         RMSE=1.4939 R2=0.9573
+  drop CNNLSTM:       RMSE=1.5042 R2=0.9567
+  FULL (all 5):       RMSE=1.5051 R2=0.9567
+  drop XGBoost-fusion: RMSE=3.1483 R2=0.8103  (catastrophic - confirms XGBoost-fusion is still the dominant learner)
+HONEST TAKEAWAY: at the expanded scale, PiFormer is now actively hurting
+the full ensemble (not just "mixed" as its standalone number suggested -
+it measurably drags the STACK down too), while XGBoost-fusion remains
+by far the most important single component. This matches the pattern
+from every earlier session in this project, just more pronounced here.
+Moving to Step-4 script 2/6 (THE key result): run_calce_zero_retrain_eval_expanded.py.
+
+[10:52] Step-4 script 2/6, run_calce_zero_retrain_eval_expanded.py -
+*** THE KEY HYPOTHESIS-TEST RESULT ***
+R2 (point-prediction accuracy under domain shift):
+  XGBoost-fusion:    0.304 (orig) -> 0.5556 (expanded)
+  Stacking-Ridge:    0.314 (orig) -> 0.6690 (expanded)
+  RMSE also improved substantially (orig ~17.8-18.0 -> 14.36/12.39).
+  In-domain-vs-CALCE R2 gap roughly HALVED: 0.603 -> 0.289.
+Conformal coverage (target 90%):
+  In-domain:  95.6% (orig) -> 91.2% (expanded)
+  CALCE:       6.1% (orig) ->  7.4% (expanded)  <- ESSENTIALLY UNCHANGED
+  Interval half-width is IDENTICAL in-domain vs CALCE in BOTH runs
+  (orig 2.367/2.367, expanded 1.154/1.154) - calibrated only on
+  in-domain residuals, never adapts to CALCE's actual error spread.
+VERDICT (honest, not smoothed over): the "more battery count fixes the
+CALCE domain-shift problem" hypothesis is ONLY PARTIALLY CONFIRMED.
+Point-prediction accuracy (R2/RMSE) improved substantially and
+genuinely - this part of the hypothesis holds. But the conformal
+coverage collapse, which is arguably the more practically important
+failure mode (can you trust the uncertainty interval, not just the
+point estimate), did NOT improve at all with 6x more training data.
+This strongly suggests the coverage collapse is a DIFFERENT problem
+than raw model capacity/data volume - most likely that CALCE's
+residual distribution is still structurally different enough from
+NASA/MIT's that a split-conformal interval calibrated purely in-domain
+can't cover it, regardless of how well the underlying point predictions
+generalize. Battery count is NOT the whole story for this specific
+failure mode, contrary to what sessions 19/21/27 hypothesized. This is
+the single most important, and most honestly nuanced, finding of the
+whole expansion - reporting it exactly as measured, not rounding it up
+to "hypothesis confirmed."
+
+[10:52] Step-4 script 3/6, run_bootstrap_significance_expanded.py - DONE
+(40 test batteries vs. original 6). Directly answers the specific
+question posed in the task ("does XGBoost-vs-VLSTM or lean-vs-full
+become significant"):
+  XGBoost vs VLSTM, BATTERY-level: original NOT significant
+    (CI [-0.0513,+0.2528]) -> expanded NOW SIGNIFICANT (CI [+0.0091,
+    +0.0766]). This DID flip - with more batteries we can now formally
+    confirm XGBoost's edge over VLSTM is real, not just a large noisy
+    point estimate.
+  Drop-XGBoost-fusion ablation, BATTERY-level: original NOT significant
+    (CI [-0.054,+0.2392]) -> expanded NOW SIGNIFICANT (CI [+0.00503,
+    +0.51075]). Same story - XGBoost-fusion's dominance in the stack is
+    now formally confirmed, not just practically large.
+  Lean vs full, BATTERY-level: original NOT significant (delta RMSE CI
+    [-0.0115,+0.0086], delta R2 CI [-0.00085,+0.0018]) -> expanded
+    STILL NOT significant (delta RMSE CI [-0.731,+0.070], delta R2 CI
+    [-0.0031,+0.0697]). This one did NOT flip - lean and full remain
+    statistically indistinguishable even at 6x the battery count,
+    reinforcing (not undermining) the original "ship lean" conclusion.
+  All 4 deep models (VLSTM/CNNLSTM/PiFormer/CNNBiGRU) individually:
+    cycle-level significant but battery-level NOT significant in the
+    ablation - same qualitative pattern as the original run.
+
+[10:52] Step-4 script 4/6, run_domain_classifier_sanity_check_expanded.py
+- DONE (40 test batteries vs. original 6). In-domain AUC (should be
+~0.5 for genuinely indistinguishable data): 0.9021 (original) ->
+0.6936 (expanded, full feature space). |AUC-0.5| more than halved:
+0.4021 -> 0.1936. Genuinely moved closer to 0.5, supporting the
+hypothesis that the original near-1.0 CALCE-vs-calib AUC readings were
+partly a small-sample artifact - though 0.69 is still clearly above
+0.5, so this is "meaningfully improved," not "solved."
+
+[10:52] Step-4 script 5/6, run_second_life_grading_expanded.py - DONE.
+Grading agreement: 99.50% of 29,489 test cycles (40 batteries) vs.
+original 98.75% of 5,208 cycles (6 batteries) - improved. IMPORTANT
+CAVEAT stated plainly, not hidden: B0018 is NOT in the expanded test
+set (moved to train by the deterministic split with more NASA
+batteries added - confirmed via battery_split_expanded.json) so the
+original B0018-specific second-life mis-grade (72.76% true vs 81.50%
+predicted, wrongly graded "Primary EV use") has NO direct expanded-pool
+counterpart to compare against this session - reported as a genuine
+gap, not silently glossed over. Two near-miss grade mismatches visible
+in the current-status table: NASA/B0053 (true Primary EV use, graded
+Second-life candidate) and MIT/b4c3 (true Recycle only, graded
+Second-life candidate) - both one-bracket-off errors near a grade
+boundary, not wild misses.
+Moving to Step-4 script 6/6: run_sensor_noise_robustness_expanded.py.
+
+[10:53] Step-4 script 6/6, run_sensor_noise_robustness_expanded.py -
+DONE. *** ALL STAGES COMPLETE (10:53:32) - Phase 1 training/eval is
+FULLY FINISHED. ***
+Pooled result on the SAME 6 original test batteries (deliberate scope
+choice, stated in the script's own docstring, for apples-to-apples
+comparison), clean baseline vs 5x BMS-grade sensor-noise stress:
+  ORIGINAL:  clean R2=0.9172 -> 5x R2=0.9208 (essentially FLAT/immune
+             to injected sensor noise - noise was negligible relative
+             to the model's own error, R2 barely moved either direction)
+  EXPANDED:  clean R2=0.9827 -> 5x R2=0.8704 (a REAL ~11% relative
+             degradation under stress noise)
+HONEST NUANCE, not glossed over: the expanded model's clean-condition
+accuracy is much better (0.9827 vs 0.9172), but it is measurably MORE
+sensitive to sensor noise than the original was - the original's
+apparent "noise robustness" was arguably an artifact of it already
+being noisy/imprecise enough that a bit more sensor noise didn't move
+the needle, not genuine robustness. At the worst stress level tested
+(5x), the expanded model's R2 (0.8704) is actually slightly BELOW the
+original's clean-condition R2 (0.9172) - so "more data" bought a better
+baseline but not a strictly-dominant result once noise is stacked on
+top.
+NASA/B0018 specifically (per-noise-level R2): original 0.576->0.565->
+0.525->0.513 (monotonic degradation); expanded 0.9347->0.8951->0.8739->
+0.8735 (also monotonic degradation, same qualitative pattern). B0018's
+absolute accuracy improved hugely, but per the earlier caveat this is
+CONFOUNDED by B0018 now being in the training set (not test) in the
+expanded split - not a clean "generalizes better on unseen B0018" claim.
+
+=== PHASE 1 TRAINING/EVAL: FULLY COMPLETE at 10:53:32 IST 2026-09-12 ===
+Next: Dataset Completeness Audit restatement, DEVELOPMENT_LOG.md entry,
+commit+push (flagging model-weight changes), then Phase 2 site work.

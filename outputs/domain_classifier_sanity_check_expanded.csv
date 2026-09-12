@@ -1,0 +1,3 @@
+feature_space,n_calib_batteries,n_eval_batteries,n_calib_cycles,n_eval_cycles,auc,original_6battery_auc
+full_7HI_16fusion,20,20,14420,15069,0.6936175745983638,0.9021
+fusion_only_16dim,20,20,14420,15069,0.6747882440726427,

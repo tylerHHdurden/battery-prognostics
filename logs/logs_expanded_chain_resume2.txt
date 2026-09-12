@@ -1,0 +1,180 @@
+=== [resume] Sat Sep 12 02:23:03 IST 2026 starting train_deep_models_expanded.py (restart from epoch 0 - previous run was killed at VLSTM epoch 23/40 with no checkpoint) ===
+[deep-exp] loaded NASA/B0005: (168, 200, 6)
+[deep-exp] loaded NASA/B0006: (168, 200, 6)
+[deep-exp] loaded NASA/B0007: (168, 200, 6)
+[deep-exp] loaded NASA/B0018: (132, 200, 6)
+[deep-exp] loaded NASA/B0025: (28, 200, 6)
+[deep-exp] loaded NASA/B0026: (28, 200, 6)
+[deep-exp] loaded NASA/B0027: (28, 200, 6)
+[deep-exp] loaded NASA/B0028: (28, 200, 6)
+[deep-exp] loaded NASA/B0029: (39, 200, 6)
+[deep-exp] loaded NASA/B0030: (39, 200, 6)
+[deep-exp] loaded NASA/B0031: (39, 200, 6)
+[deep-exp] loaded NASA/B0032: (39, 200, 6)
+[deep-exp] loaded NASA/B0042: (106, 200, 6)
+[deep-exp] loaded NASA/B0043: (106, 200, 6)
+[deep-exp] loaded NASA/B0044: (106, 200, 6)
+[deep-exp] loaded NASA/B0045: (71, 200, 6)
+[deep-exp] loaded NASA/B0046: (71, 200, 6)
+[deep-exp] loaded NASA/B0047: (71, 200, 6)
+[deep-exp] loaded NASA/B0048: (71, 200, 6)
+[deep-exp] loaded NASA/B0053: (54, 200, 6)
+[deep-exp] loaded NASA/B0054: (101, 200, 6)
+[deep-exp] loaded NASA/B0055: (101, 200, 6)
+[deep-exp] loaded NASA/B0056: (101, 200, 6)
+[deep-exp] MIT cells: 185 total, 181 after excluding 4 with degenerate SOH baselines (see expanded_pool_exclusions.py)
+[deep-exp] loaded 20/181 MIT tensors (77s elapsed)
+[deep-exp] loaded 40/181 MIT tensors (126s elapsed)
+[deep-exp] loaded 60/181 MIT tensors (156s elapsed)
+[deep-exp] loaded 80/181 MIT tensors (210s elapsed)
+[deep-exp] loaded 100/181 MIT tensors (284s elapsed)
+[deep-exp] loaded 120/181 MIT tensors (379s elapsed)
+[deep-exp] loaded 140/181 MIT tensors (543s elapsed)
+[deep-exp] loaded 160/181 MIT tensors (664s elapsed)
+[deep-exp] loaded 180/181 MIT tensors (775s elapsed)
+[deep-exp] tensor loading done in 782.1s, 204 batteries
+[deep-exp] loaded 204 batteries in 782.1s
+[deep-exp] fit batteries: 132, val batteries: 32, test batteries: 40
+[deep-exp] fit cycles=95572, val cycles=28183, test cycles=29489
+[deep-exp] reusing existing channel_norm_stats_expanded.json (already computed this run)
+[deep-exp] channel 0 (V_t) norm: clip=[2,3.58] mean=2.94 std=0.527
+[deep-exp] channel 1 (I_t) norm: clip=[-4,1.99] mean=-2.24 std=1.9
+[deep-exp] channel 2 (T_t) norm: clip=[28.1,41] mean=34.2 std=2.66
+[deep-exp] channel 3 (dQdV) norm: clip=[-0.167,0.000939] mean=-0.0114 std=0.0246
+[deep-exp] channel 4 (dVdQ) norm: clip=[-5.36e+04,5.3e+03] mean=-2.49e+03 std=7.76e+03
+[deep-exp] channel 5 (dIdV) norm: clip=[-45.7,41.2] mean=1.83 std=10.7
+[deep-exp] VLSTM: loaded existing checkpoint vlstm_soh_expanded.pt, skipping retraining
+[deep-exp] CNNLSTM: loaded existing checkpoint cnn_lstm_soh_expanded.pt, skipping retraining
+[deep-exp] PiFormer: loaded existing checkpoint piformer_soh_expanded.pt, skipping retraining
+[deep-exp] VLSTM TEST RMSE=1.6345 MAE=0.9164 R2=0.9472
+[deep-exp] CNNLSTM TEST RMSE=2.4256 MAE=1.0309 R2=0.8837
+[deep-exp] PiFormer TEST RMSE=3.3405 MAE=0.7143 R2=0.7795
+[deep-exp] ALL DONE in 1183.8s (19.7 min)
+=== [resume] Sat Sep 12 02:42:57 IST 2026 starting train_fusion_encoder_expanded.py ===
+[deep-exp] loaded NASA/B0005: (168, 200, 6)
+[deep-exp] loaded NASA/B0006: (168, 200, 6)
+[deep-exp] loaded NASA/B0007: (168, 200, 6)
+[deep-exp] loaded NASA/B0018: (132, 200, 6)
+[deep-exp] loaded NASA/B0025: (28, 200, 6)
+[deep-exp] loaded NASA/B0026: (28, 200, 6)
+[deep-exp] loaded NASA/B0027: (28, 200, 6)
+[deep-exp] loaded NASA/B0028: (28, 200, 6)
+[deep-exp] loaded NASA/B0029: (39, 200, 6)
+[deep-exp] loaded NASA/B0030: (39, 200, 6)
+[deep-exp] loaded NASA/B0031: (39, 200, 6)
+[deep-exp] loaded NASA/B0032: (39, 200, 6)
+[deep-exp] loaded NASA/B0042: (106, 200, 6)
+[deep-exp] loaded NASA/B0043: (106, 200, 6)
+[deep-exp] loaded NASA/B0044: (106, 200, 6)
+[deep-exp] loaded NASA/B0045: (71, 200, 6)
+[deep-exp] loaded NASA/B0046: (71, 200, 6)
+[deep-exp] loaded NASA/B0047: (71, 200, 6)
+[deep-exp] loaded NASA/B0048: (71, 200, 6)
+[deep-exp] loaded NASA/B0053: (54, 200, 6)
+[deep-exp] loaded NASA/B0054: (101, 200, 6)
+[deep-exp] loaded NASA/B0055: (101, 200, 6)
+[deep-exp] loaded NASA/B0056: (101, 200, 6)
+[deep-exp] MIT cells: 185 total, 181 after excluding 4 with degenerate SOH baselines (see expanded_pool_exclusions.py)
+[deep-exp] loaded 20/181 MIT tensors (129s elapsed)
+[deep-exp] loaded 40/181 MIT tensors (179s elapsed)
+[deep-exp] loaded 60/181 MIT tensors (209s elapsed)
+[deep-exp] loaded 80/181 MIT tensors (237s elapsed)
+[deep-exp] loaded 100/181 MIT tensors (283s elapsed)
+[deep-exp] loaded 120/181 MIT tensors (357s elapsed)
+[deep-exp] loaded 140/181 MIT tensors (447s elapsed)
+[deep-exp] loaded 160/181 MIT tensors (502s elapsed)
+[deep-exp] loaded 180/181 MIT tensors (608s elapsed)
+[deep-exp] tensor loading done in 617.4s, 204 batteries
+[fusion-exp] fit cycles=95572, val cycles=28183 (loaded in 620.3s)
+[deep/ICAEncoder-exp] epoch   0 train_mse=0.7863 val_mse=1.8790
+[deep/ICAEncoder-exp] epoch   1 train_mse=0.5956 val_mse=1.5513
+[deep/ICAEncoder-exp] epoch   2 train_mse=0.5455 val_mse=1.4981
+[deep/ICAEncoder-exp] epoch   3 train_mse=0.5121 val_mse=1.4517
+[deep/ICAEncoder-exp] epoch   4 train_mse=0.4870 val_mse=1.3926
+[deep/ICAEncoder-exp] epoch   5 train_mse=0.4603 val_mse=1.2870
+[deep/ICAEncoder-exp] epoch   6 train_mse=0.4371 val_mse=1.2163
+[deep/ICAEncoder-exp] epoch   7 train_mse=0.4124 val_mse=1.1952
+[deep/ICAEncoder-exp] epoch   8 train_mse=0.3886 val_mse=1.0496
+[deep/ICAEncoder-exp] epoch   9 train_mse=0.3646 val_mse=1.0207
+[deep/ICAEncoder-exp] epoch  10 train_mse=0.3443 val_mse=0.8920
+[deep/ICAEncoder-exp] epoch  11 train_mse=0.3203 val_mse=0.8153
+[deep/ICAEncoder-exp] epoch  12 train_mse=0.2944 val_mse=0.7680
+[deep/ICAEncoder-exp] epoch  13 train_mse=0.2717 val_mse=0.6853
+[deep/ICAEncoder-exp] epoch  14 train_mse=0.2520 val_mse=0.6264
+[deep/ICAEncoder-exp] epoch  15 train_mse=0.2397 val_mse=0.5528
+[deep/ICAEncoder-exp] epoch  16 train_mse=0.2281 val_mse=0.5508
+[deep/ICAEncoder-exp] epoch  17 train_mse=0.2211 val_mse=0.5090
+[deep/ICAEncoder-exp] epoch  18 train_mse=0.2094 val_mse=0.4621
+[deep/ICAEncoder-exp] epoch  19 train_mse=0.2021 val_mse=0.4365
+[deep/ICAEncoder-exp] epoch  20 train_mse=0.1967 val_mse=0.3862
+[deep/ICAEncoder-exp] epoch  21 train_mse=0.1872 val_mse=0.3723
+[deep/ICAEncoder-exp] epoch  22 train_mse=0.1822 val_mse=0.3330
+[deep/ICAEncoder-exp] epoch  23 train_mse=0.1803 val_mse=0.3512
+[deep/ICAEncoder-exp] epoch  24 train_mse=0.1748 val_mse=0.3046
+[fusion-exp] saved 153244 embeddings (16-dim)
+[fusion-exp] ALL DONE in 895.7s (14.9 min)
+=== [resume] Sat Sep 12 02:58:03 IST 2026 starting train_xgboost_fusion_expanded.py ===
+[xgb-fusion-exp] expanded-BFA-selected HIs: ['CDECT', 'ICHV', 'VDEDT', 'VIECT', 'LVP', 'MET', 'TCCC', 'TCVC']
+[xgb-fusion-exp] hi_table rows=153264, fusion rows=153244, merged rows=153244
+[xgb-fusion-exp] train rows=123755, test rows=29489
+[xgb-fusion-exp] TEST RMSE=1.2115 MAE=0.5461 R2=0.9719
+[xgb-fusion-exp] (original 32-battery XGBoost-fusion was RMSE=1.392 MAE=0.959 R2=0.917)
+[xgb-fusion-exp] DONE
+=== [resume] Sat Sep 12 02:58:13 IST 2026 starting train_ensemble_fusion_expanded.py ===
+[ensemble-fusion-exp] train: merged rows=123755
+[ensemble-fusion-exp] test: merged rows=29489
+[ensemble-fusion-exp] meta-learner input dims: 20
+[ensemble-fusion-exp] Stacking-Ridge-fusion-expanded TEST RMSE=1.4612 MAE=0.5266 R2=0.9591
+[ensemble-fusion-exp] (original 32-battery Stacking-Ridge-fusion was RMSE=1.394 MAE=0.966 R2=0.917)
+[ensemble-fusion-exp] Ridge coefficients: {'pred_XGBoost_fusion': np.float64(0.9072026613922499), 'pred_VLSTM': np.float64(-0.029133427216603055), 'pred_CNNLSTM': np.float64(0.0034504135107453478), 'pred_PiFormer': np.float64(0.1642489798951477)}
+[ensemble-fusion-exp] DONE
+=== [resume] Sat Sep 12 02:58:17 IST 2026 starting train_cnn_bigru_expanded.py ===
+[deep-exp] loaded NASA/B0005: (168, 200, 6)
+[deep-exp] loaded NASA/B0006: (168, 200, 6)
+[deep-exp] loaded NASA/B0007: (168, 200, 6)
+[deep-exp] loaded NASA/B0018: (132, 200, 6)
+[deep-exp] loaded NASA/B0025: (28, 200, 6)
+[deep-exp] loaded NASA/B0026: (28, 200, 6)
+[deep-exp] loaded NASA/B0027: (28, 200, 6)
+[deep-exp] loaded NASA/B0028: (28, 200, 6)
+[deep-exp] loaded NASA/B0029: (39, 200, 6)
+[deep-exp] loaded NASA/B0030: (39, 200, 6)
+[deep-exp] loaded NASA/B0031: (39, 200, 6)
+[deep-exp] loaded NASA/B0032: (39, 200, 6)
+[deep-exp] loaded NASA/B0042: (106, 200, 6)
+[deep-exp] loaded NASA/B0043: (106, 200, 6)
+[deep-exp] loaded NASA/B0044: (106, 200, 6)
+[deep-exp] loaded NASA/B0045: (71, 200, 6)
+[deep-exp] loaded NASA/B0046: (71, 200, 6)
+[deep-exp] loaded NASA/B0047: (71, 200, 6)
+[deep-exp] loaded NASA/B0048: (71, 200, 6)
+[deep-exp] loaded NASA/B0053: (54, 200, 6)
+[deep-exp] loaded NASA/B0054: (101, 200, 6)
+[deep-exp] loaded NASA/B0055: (101, 200, 6)
+[deep-exp] loaded NASA/B0056: (101, 200, 6)
+[deep-exp] MIT cells: 185 total, 181 after excluding 4 with degenerate SOH baselines (see expanded_pool_exclusions.py)
+[deep-exp] loaded 20/181 MIT tensors (140s elapsed)
+[deep-exp] loaded 40/181 MIT tensors (262s elapsed)
+[deep-exp] loaded 60/181 MIT tensors (324s elapsed)
+[deep-exp] loaded 80/181 MIT tensors (377s elapsed)
+[deep-exp] loaded 100/181 MIT tensors (488s elapsed)
+[deep-exp] loaded 120/181 MIT tensors (732s elapsed)
+[deep-exp] loaded 140/181 MIT tensors (842s elapsed)
+[deep-exp] loaded 160/181 MIT tensors (921s elapsed)
+[deep-exp] loaded 180/181 MIT tensors (1000s elapsed)
+[deep-exp] tensor loading done in 1004.3s, 204 batteries
+[cnn-bigru-exp] fit batteries: 132, val batteries: 32, test batteries: 40
+[cnn-bigru-exp] fit cycles=95572, val cycles=28183, test cycles=29489
+[deep/CNNBiGRU-exp] epoch   0 train_mse=0.3935 val_mse=0.4493
+[deep/CNNBiGRU-exp] epoch   1 train_mse=0.1982 val_mse=0.3636
+[deep/CNNBiGRU-exp] epoch   2 train_mse=0.1153 val_mse=0.2832
+[deep/CNNBiGRU-exp] epoch   3 train_mse=0.0937 val_mse=0.2659
+[deep/CNNBiGRU-exp] epoch   4 train_mse=0.0784 val_mse=0.2636
+[deep/CNNBiGRU-exp] epoch   5 train_mse=0.0819 val_mse=0.1885
+[deep/CNNBiGRU-exp] epoch   6 train_mse=0.0728 val_mse=0.1987
+[deep/CNNBiGRU-exp] epoch   7 train_mse=0.0509 val_mse=0.1525
+[deep/CNNBiGRU-exp] epoch   8 train_mse=0.0532 val_mse=0.1604
+[deep/CNNBiGRU-exp] epoch   9 train_mse=0.0511 val_mse=0.2557
+[deep/CNNBiGRU-exp] epoch  10 train_mse=0.0438 val_mse=0.1493
+[deep/CNNBiGRU-exp] epoch  11 train_mse=0.0583 val_mse=0.1469
+[deep/CNNBiGRU-exp] epoch  12 train_mse=0.0388 val_mse=0.1695

@@ -1,0 +1,2 @@
+model,rmse,mae,r2,n_train_cycles,n_test_cycles,n_train_batteries,n_test_batteries
+XGBoost-expanded,1.2121313600484929,0.5665892463170485,0.9720844540481925,123768,29496,164,40

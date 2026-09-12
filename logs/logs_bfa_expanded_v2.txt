@@ -1,0 +1,19 @@
+[bfa-exp] loaded hi_table_expanded: (156207, 22), 207 unique batteries
+[bfa-exp] 1 inf value(s) found (e.g. VDEDT dV/dt division-by-zero on a duplicate-timestamp cycle) - treated as missing, median-imputed below
+[bfa-exp] imputed 8836 NaN cells (median-per-column, mostly CALCE MATC/MATD/MATDL)
+[BFA] baseline RMSE (all 16 features): 8.7949
+[BFA] iter   0: best_fitness=0.4053 best_rmse=5.2336 n_selected=9/16
+[BFA] iter  10: best_fitness=0.4057 best_rmse=5.2242 n_selected=10/16
+[BFA] iter  20: best_fitness=0.4089 best_rmse=5.2065 n_selected=8/16
+[BFA] iter  30: best_fitness=0.4089 best_rmse=5.2065 n_selected=8/16
+[BFA] iter  40: best_fitness=0.4089 best_rmse=5.2065 n_selected=8/16
+[BFA] iter  50: best_fitness=0.4089 best_rmse=5.2065 n_selected=8/16
+[BFA] iter  60: best_fitness=0.4089 best_rmse=5.2065 n_selected=8/16
+[BFA] iter  70: best_fitness=0.4089 best_rmse=5.2065 n_selected=8/16
+[BFA] iter  80: best_fitness=0.4089 best_rmse=5.2065 n_selected=8/16
+[BFA] iter  90: best_fitness=0.4089 best_rmse=5.2065 n_selected=8/16
+[BFA] iter  99: best_fitness=0.4089 best_rmse=5.2065 n_selected=8/16
+[BFA] DONE. Selected 8/16 features: ['CDECT', 'ICHV', 'VDEDT', 'VIECT', 'LVP', 'MET', 'TCCC', 'TCVC']
+[bfa-exp] DONE. Selected (8): ['CDECT', 'ICHV', 'VDEDT', 'VIECT', 'LVP', 'MET', 'TCCC', 'TCVC']
+[bfa-exp] Original 32-battery selection (7): ['ICHV', 'SCV', 'VDEDT', 'VIECT', 'MATC', 'MATD', 'TEVI']
+[bfa-exp] IDENTICAL to original selection: False

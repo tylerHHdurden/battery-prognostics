@@ -1,0 +1,2 @@
+dataset,battery_id,stage,error
+NASA,B0052,too_few_cycles,only 3 cycles

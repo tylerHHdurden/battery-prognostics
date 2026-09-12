@@ -1,0 +1,13 @@
+Starting validation of 157 MIT cells at 21:37:12
+[20/157] elapsed=29.9s avg=1.49s/cell
+[40/157] elapsed=59.9s avg=1.50s/cell
+[60/157] elapsed=84.0s avg=1.40s/cell
+[80/157] elapsed=109.2s avg=1.37s/cell
+[100/157] elapsed=176.2s avg=1.76s/cell
+SLOW: b3c23 took 11.4s (2188 cycles)
+SLOW: b3c32 took 12.9s (2236 cycles)
+[120/157] elapsed=270.4s avg=2.25s/cell
+[140/157] elapsed=339.3s avg=2.42s/cell
+[157/157] elapsed=390.9s avg=2.49s/cell
+
+DONE: 157 OK, 0 FAIL, total 390.9s (6.5 min)

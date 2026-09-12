@@ -1,0 +1,7 @@
+[ensemble-fusion-exp] train: merged rows=123755
+[ensemble-fusion-exp] test: merged rows=29489
+[ensemble-fusion-exp] meta-learner input dims: 20
+[ensemble-fusion-exp] Stacking-Ridge-fusion-expanded TEST RMSE=1.4834 MAE=0.5276 R2=0.9579
+[ensemble-fusion-exp] (original 32-battery Stacking-Ridge-fusion was RMSE=1.394 MAE=0.966 R2=0.917)
+[ensemble-fusion-exp] Ridge coefficients: {'pred_XGBoost_fusion': np.float64(0.9100841638761678), 'pred_VLSTM': np.float64(-0.026217192402864013), 'pred_CNNLSTM': np.float64(-0.015938587502016297), 'pred_PiFormer': np.float64(0.17478066410612333)}
+[ensemble-fusion-exp] DONE

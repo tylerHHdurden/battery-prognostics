@@ -1,0 +1,2 @@
+model,rmse,mae,r2,n_features
+XGBoost-fusion-expanded,1.2114500189659079,0.5460958264385319,0.9719165100108899,24

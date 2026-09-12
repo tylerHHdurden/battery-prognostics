@@ -1,0 +1,3 @@
+domain,half_width,empirical_coverage,target_coverage
+"NASA+MIT (in-domain, expanded pool)",1.154424762740092,0.9120047780211029,0.9
+"CALCE (out-of-domain, zero-retrain, expanded pool)",1.154424762740092,0.07446446786807208,0.9

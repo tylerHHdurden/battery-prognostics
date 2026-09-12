@@ -1,0 +1,3 @@
+model,rmse,mae,r2,n
+"XGBoost-fusion-expanded (CALCE, zero-retrain)",14.355088937312376,10.571559271862906,0.5555943461467049,2941
+"Stacking-Ridge-fusion-expanded (CALCE, zero-retrain)",12.38792154826733,9.535170603572116,0.6690482414108629,2941

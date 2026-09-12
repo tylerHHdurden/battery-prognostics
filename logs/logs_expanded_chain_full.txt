@@ -1,0 +1,75 @@
+=== [chain] Thu Sep 10 22:15:20 IST 2026 starting train_xgboost_expanded.py ===
+[xgb-exp] 153264 rows, 204 batteries (23 NASA, 181 MIT)
+[xgb-exp] using expanded-BFA-selected features: ['CDECT', 'ICHV', 'VDEDT', 'VIECT', 'LVP', 'MET', 'TCCC', 'TCVC']
+[xgb-exp] train batteries (164): 19 NASA, 145 MIT
+[xgb-exp] test batteries (40): 4 NASA, 36 MIT
+[xgb-exp] TEST RMSE=1.2121 MAE=0.5666 R2=0.9721 (n_test_cycles=29496, n_train_cycles=123768)
+[xgb-exp] DONE.
+=== [chain] Thu Sep 10 22:15:26 IST 2026 starting train_deep_models_expanded.py (the long one) ===
+[deep-exp] loaded NASA/B0005: (168, 200, 6)
+[deep-exp] loaded NASA/B0006: (168, 200, 6)
+[deep-exp] loaded NASA/B0007: (168, 200, 6)
+[deep-exp] loaded NASA/B0018: (132, 200, 6)
+[deep-exp] loaded NASA/B0025: (28, 200, 6)
+[deep-exp] loaded NASA/B0026: (28, 200, 6)
+[deep-exp] loaded NASA/B0027: (28, 200, 6)
+[deep-exp] loaded NASA/B0028: (28, 200, 6)
+[deep-exp] loaded NASA/B0029: (39, 200, 6)
+[deep-exp] loaded NASA/B0030: (39, 200, 6)
+[deep-exp] loaded NASA/B0031: (39, 200, 6)
+[deep-exp] loaded NASA/B0032: (39, 200, 6)
+[deep-exp] loaded NASA/B0042: (106, 200, 6)
+[deep-exp] loaded NASA/B0043: (106, 200, 6)
+[deep-exp] loaded NASA/B0044: (106, 200, 6)
+[deep-exp] loaded NASA/B0045: (71, 200, 6)
+[deep-exp] loaded NASA/B0046: (71, 200, 6)
+[deep-exp] loaded NASA/B0047: (71, 200, 6)
+[deep-exp] loaded NASA/B0048: (71, 200, 6)
+[deep-exp] loaded NASA/B0053: (54, 200, 6)
+[deep-exp] loaded NASA/B0054: (101, 200, 6)
+[deep-exp] loaded NASA/B0055: (101, 200, 6)
+[deep-exp] loaded NASA/B0056: (101, 200, 6)
+[deep-exp] MIT cells: 185 total, 181 after excluding 4 with degenerate SOH baselines (see expanded_pool_exclusions.py)
+[deep-exp] loaded 20/181 MIT tensors (75s elapsed)
+[deep-exp] loaded 40/181 MIT tensors (145s elapsed)
+[deep-exp] loaded 60/181 MIT tensors (176s elapsed)
+[deep-exp] loaded 80/181 MIT tensors (206s elapsed)
+[deep-exp] loaded 100/181 MIT tensors (252s elapsed)
+[deep-exp] loaded 120/181 MIT tensors (417s elapsed)
+[deep-exp] loaded 140/181 MIT tensors (697s elapsed)
+[deep-exp] loaded 160/181 MIT tensors (905s elapsed)
+[deep-exp] loaded 180/181 MIT tensors (1098s elapsed)
+[deep-exp] tensor loading done in 1102.1s, 204 batteries
+[deep-exp] loaded 204 batteries in 1102.1s
+[deep-exp] fit batteries: 132, val batteries: 32, test batteries: 40
+[deep-exp] fit cycles=95572, val cycles=28183, test cycles=29489
+[deep-exp] channel 0 (V_t) norm: clip=[2,3.58] mean=2.94 std=0.527
+[deep-exp] channel 1 (I_t) norm: clip=[-4,1.99] mean=-2.24 std=1.9
+[deep-exp] channel 2 (T_t) norm: clip=[28.1,41] mean=34.2 std=2.66
+[deep-exp] channel 3 (dQdV) norm: clip=[-0.167,0.000939] mean=-0.0114 std=0.0246
+[deep-exp] channel 4 (dVdQ) norm: clip=[-5.36e+04,5.3e+03] mean=-2.49e+03 std=7.76e+03
+[deep-exp] channel 5 (dIdV) norm: clip=[-45.7,41.2] mean=1.83 std=10.7
+[deep/VLSTM] epoch   0 train_mse=0.6164 val_mse=0.5505
+[deep/VLSTM] epoch   1 train_mse=0.2210 val_mse=0.3206
+[deep/VLSTM] epoch   2 train_mse=0.1470 val_mse=0.3394
+[deep/VLSTM] epoch   3 train_mse=0.1193 val_mse=0.2919
+[deep/VLSTM] epoch   4 train_mse=0.0915 val_mse=0.3187
+[deep/VLSTM] epoch   5 train_mse=0.0837 val_mse=0.2690
+[deep/VLSTM] epoch   6 train_mse=0.0786 val_mse=0.2608
+[deep/VLSTM] epoch   7 train_mse=0.0723 val_mse=0.3475
+[deep/VLSTM] epoch   8 train_mse=0.0687 val_mse=0.2841
+[deep/VLSTM] epoch   9 train_mse=0.0746 val_mse=0.2206
+[deep/VLSTM] epoch  10 train_mse=0.0646 val_mse=0.2445
+[deep/VLSTM] epoch  11 train_mse=0.0617 val_mse=0.2070
+[deep/VLSTM] epoch  12 train_mse=0.0699 val_mse=0.2215
+[deep/VLSTM] epoch  13 train_mse=0.0589 val_mse=0.2200
+[deep/VLSTM] epoch  14 train_mse=0.0565 val_mse=0.2277
+[deep/VLSTM] epoch  15 train_mse=0.0557 val_mse=0.2299
+[deep/VLSTM] epoch  16 train_mse=0.0525 val_mse=0.2006
+[deep/VLSTM] epoch  17 train_mse=0.0486 val_mse=0.2357
+[deep/VLSTM] epoch  18 train_mse=0.0479 val_mse=0.1893
+[deep/VLSTM] epoch  19 train_mse=0.0465 val_mse=0.2537
+[deep/VLSTM] epoch  20 train_mse=0.0449 val_mse=0.2271
+[deep/VLSTM] epoch  21 train_mse=0.0442 val_mse=0.2582
+[deep/VLSTM] epoch  22 train_mse=0.0421 val_mse=0.2207
+[deep/VLSTM] epoch  23 train_mse=0.0419 val_mse=0.2488

@@ -82,7 +82,18 @@ def iterate_nasa_cycles(cell_id: str):
                 "I": -np.atleast_1d(d["Current_measured"]).astype(float),
                 "T": np.atleast_1d(d["Temperature_measured"]).astype(float),
             }
-            cap = float(np.atleast_1d(d["Capacity"])[0]) if "Capacity" in d else np.nan
+            # Dataset-expansion session (Phase 1): "Capacity" in d" alone
+            # isn't sufficient - B0050/B0052 (2 of the 30 newly-extracted
+            # NASA batteries) have discharge entries where the field is
+            # PRESENT but an EMPTY array (size 0), which raised
+            # `IndexError: index 0 is out of bounds for axis 0 with size 0`
+            # on the un-guarded `[0]` below. Confirmed a genuine NASA data
+            # quirk (4/25 and 21/25 discharge cycles respectively), not an
+            # extraction artifact - the other 32/34 batteries (incl. all 4
+            # originally-used B0005/6/7/18, verified to have zero
+            # empty-Capacity cycles) are completely unaffected by this fix.
+            cap_field = np.atleast_1d(d["Capacity"]) if "Capacity" in d else np.array([])
+            cap = float(cap_field[0]) if cap_field.size else np.nan
             if pending_charge is not None and not np.isnan(cap):
                 cycle_idx += 1
                 yield {

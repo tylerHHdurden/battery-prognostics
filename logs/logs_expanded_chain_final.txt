@@ -1,0 +1,283 @@
+=== [final] Sat Sep 12 09:17:53 IST 2026 starting train_cnn_bigru_expanded.py (now checkpoint-resumable per-epoch) ===
+[deep-exp] loaded NASA/B0005: (168, 200, 6)
+[deep-exp] loaded NASA/B0006: (168, 200, 6)
+[deep-exp] loaded NASA/B0007: (168, 200, 6)
+[deep-exp] loaded NASA/B0018: (132, 200, 6)
+[deep-exp] loaded NASA/B0025: (28, 200, 6)
+[deep-exp] loaded NASA/B0026: (28, 200, 6)
+[deep-exp] loaded NASA/B0027: (28, 200, 6)
+[deep-exp] loaded NASA/B0028: (28, 200, 6)
+[deep-exp] loaded NASA/B0029: (39, 200, 6)
+[deep-exp] loaded NASA/B0030: (39, 200, 6)
+[deep-exp] loaded NASA/B0031: (39, 200, 6)
+[deep-exp] loaded NASA/B0032: (39, 200, 6)
+[deep-exp] loaded NASA/B0042: (106, 200, 6)
+[deep-exp] loaded NASA/B0043: (106, 200, 6)
+[deep-exp] loaded NASA/B0044: (106, 200, 6)
+[deep-exp] loaded NASA/B0045: (71, 200, 6)
+[deep-exp] loaded NASA/B0046: (71, 200, 6)
+[deep-exp] loaded NASA/B0047: (71, 200, 6)
+[deep-exp] loaded NASA/B0048: (71, 200, 6)
+[deep-exp] loaded NASA/B0053: (54, 200, 6)
+[deep-exp] loaded NASA/B0054: (101, 200, 6)
+[deep-exp] loaded NASA/B0055: (101, 200, 6)
+[deep-exp] loaded NASA/B0056: (101, 200, 6)
+[deep-exp] MIT cells: 185 total, 181 after excluding 4 with degenerate SOH baselines (see expanded_pool_exclusions.py)
+[deep-exp] loaded 20/181 MIT tensors (54s elapsed)
+[deep-exp] loaded 40/181 MIT tensors (101s elapsed)
+[deep-exp] loaded 60/181 MIT tensors (131s elapsed)
+[deep-exp] loaded 80/181 MIT tensors (159s elapsed)
+[deep-exp] loaded 100/181 MIT tensors (205s elapsed)
+[deep-exp] loaded 120/181 MIT tensors (264s elapsed)
+[deep-exp] loaded 140/181 MIT tensors (330s elapsed)
+[deep-exp] loaded 160/181 MIT tensors (377s elapsed)
+[deep-exp] loaded 180/181 MIT tensors (424s elapsed)
+[deep-exp] tensor loading done in 426.7s, 204 batteries
+[deep-exp] cached battery tensors to _expanded_battery_tensors_cache.pkl (0.4s) - future runs skip the raw-data reload
+[cnn-bigru-exp] fit batteries: 132, val batteries: 32, test batteries: 40
+[cnn-bigru-exp] fit cycles=95572, val cycles=28183, test cycles=29489
+[deep-exp/CNNBiGRU-exp] epoch   0 train_mse=0.3935 val_mse=0.4493
+[deep-exp/CNNBiGRU-exp] epoch   1 train_mse=0.1982 val_mse=0.3636
+[deep-exp/CNNBiGRU-exp] epoch   2 train_mse=0.1153 val_mse=0.2832
+[deep-exp/CNNBiGRU-exp] epoch   3 train_mse=0.0937 val_mse=0.2659
+[deep-exp/CNNBiGRU-exp] epoch   4 train_mse=0.0784 val_mse=0.2636
+[deep-exp/CNNBiGRU-exp] epoch   5 train_mse=0.0819 val_mse=0.1885
+[deep-exp/CNNBiGRU-exp] epoch   6 train_mse=0.0728 val_mse=0.1987
+[deep-exp/CNNBiGRU-exp] epoch   7 train_mse=0.0509 val_mse=0.1525
+[deep-exp/CNNBiGRU-exp] epoch   8 train_mse=0.0532 val_mse=0.1604
+[deep-exp/CNNBiGRU-exp] epoch   9 train_mse=0.0511 val_mse=0.2557
+[deep-exp/CNNBiGRU-exp] epoch  10 train_mse=0.0438 val_mse=0.1493
+[deep-exp/CNNBiGRU-exp] epoch  11 train_mse=0.0583 val_mse=0.1469
+[deep-exp/CNNBiGRU-exp] epoch  12 train_mse=0.0388 val_mse=0.1695
+[deep-exp/CNNBiGRU-exp] epoch  13 train_mse=0.0310 val_mse=0.1833
+[deep-exp/CNNBiGRU-exp] epoch  14 train_mse=0.0299 val_mse=0.1608
+[deep-exp/CNNBiGRU-exp] epoch  15 train_mse=0.0539 val_mse=0.1823
+[deep-exp/CNNBiGRU-exp] epoch  16 train_mse=0.0287 val_mse=0.1607
+[deep-exp/CNNBiGRU-exp] epoch  17 train_mse=0.0272 val_mse=0.1906
+[deep-exp/CNNBiGRU-exp] epoch  18 train_mse=0.0263 val_mse=0.1875
+[deep-exp/CNNBiGRU-exp] epoch  19 train_mse=0.0317 val_mse=0.2113
+[deep-exp/CNNBiGRU-exp] early stopping at epoch 19
+[cnn-bigru-exp] TEST RMSE=1.4791 MAE=0.8265 R2=0.9568
+[cnn-bigru-exp] (original 32-battery CNNBiGRU was RMSE=3.165 MAE=2.341 R2=0.572)
+[cnn-bigru-exp] ALL DONE in 5574.2s (92.9 min)
+=== [final] Sat Sep 12 10:50:52 IST 2026 starting run_drop_branch_ablation_5branch_expanded.py ===
+[ensemble-fusion-exp] train: merged rows=123755
+[drop-branch-5-exp] train: 4-branch merged rows=123755, CNN-BiGRU rows=123755, 5-branch merged rows=123755
+[ensemble-fusion-exp] test: merged rows=29489
+[drop-branch-5-exp] test: 4-branch merged rows=29489, CNN-BiGRU rows=29489, 5-branch merged rows=29489
+[drop-branch-5-exp] FULL (all 5 base learners): {'rmse': 1.50506467171305, 'mae': 0.5285258363065947, 'r2': 0.9566538630607898}
+[drop-branch-5-exp] DROP pred_XGBoost_fusion: {'rmse': 3.148306945734692, 'mae': 0.7332515249604366, 'r2': 0.8103319364171674} (delta RMSE=+1.6432, delta R2=-0.1463)
+[drop-branch-5-exp] DROP pred_VLSTM: {'rmse': 1.4939035770741045, 'mae': 0.5274748220147214, 'r2': 0.9572943624703258} (delta RMSE=-0.0112, delta R2=+0.0006)
+[drop-branch-5-exp] DROP pred_CNNLSTM: {'rmse': 1.5042404983321238, 'mae': 0.5284994267298214, 'r2': 0.9567013227500261} (delta RMSE=-0.0008, delta R2=+0.0000)
+[drop-branch-5-exp] DROP pred_PiFormer: {'rmse': 1.1820967635897692, 'mae': 0.5346395305148407, 'r2': 0.9732609402390603} (delta RMSE=-0.3230, delta R2=+0.0166)
+[drop-branch-5-exp] DROP pred_CNNBiGRU: {'rmse': 1.4834139936527315, 'mae': 0.5276421081781785, 'r2': 0.9578919802048832} (delta RMSE=-0.0217, delta R2=+0.0012)
+
+[drop-branch-5-exp] === FULL TABLE (sorted by RMSE) ===
+                 variant             dropped     rmse      mae       r2  delta_rmse  delta_r2
+      drop_pred_PiFormer       pred_PiFormer 1.182097 0.534640 0.973261   -0.322968  0.016607
+      drop_pred_CNNBiGRU       pred_CNNBiGRU 1.483414 0.527642 0.957892   -0.021651  0.001238
+         drop_pred_VLSTM          pred_VLSTM 1.493904 0.527475 0.957294   -0.011161  0.000640
+       drop_pred_CNNLSTM        pred_CNNLSTM 1.504240 0.528499 0.956701   -0.000824  0.000047
+           full_5_branch                none 1.505065 0.528526 0.956654    0.000000  0.000000
+drop_pred_XGBoost_fusion pred_XGBoost_fusion 3.148307 0.733252 0.810332    1.643242 -0.146322
+[drop-branch-5-exp] DONE
+=== [final] Sat Sep 12 10:50:57 IST 2026 starting run_calce_zero_retrain_eval_expanded.py ===
+[calce-exp] === building CALCE sequence tensors (zero-retrain, expanded-pool norm stats) ===
+[calce-exp] CS2_35: 932 cycles usable for sequence models
+[calce-exp] CS2_36: 972 cycles usable for sequence models
+[calce-exp] CS2_37: 1037 cycles usable for sequence models
+[calce-exp] total usable sequence-model cycles: 2941
+[deep-exp] loaded 204 battery tensors from cache (_expanded_battery_tensors_cache.pkl) in 0.4s - skipped the ~17min raw-data reload
+[calce-exp] de-standardization constants (expanded fit split): y_mean=96.078 y_std=5.939
+[calce-exp] deep model predictions done (expanded-pool weights)
+[calce-exp] fusion embeddings extracted: (2941, 16)
+[calce-exp] hi_table CALCE rows=2943, sequence-model rows=2941, merged rows=2941
+
+[calce-exp] === ZERO-RETRAIN RESULTS (expanded-pool model, out-of-domain CALCE) ===
+[calce-exp] XGBoost-fusion-expanded (CALCE, zero-retrain): RMSE=14.3551 MAE=10.5716 R2=0.5556
+[calce-exp] Stacking-Ridge-fusion-expanded (CALCE, zero-retrain): RMSE=12.3879 MAE=9.5352 R2=0.6690
+
+[calce-exp] ORIGINAL 32-battery reference: XGBoost-fusion R2=0.304, Stacking-Ridge-fusion R2=0.314 (both RMSE ~17.8-18.0) - THIS is the number being directly tested for improvement.
+
+[calce-exp] === Conformal interval check on the expanded-pool model ===
+[calce-exp] conformal calib battery count=20, eval battery count=20 (original 32-battery run had 3 calib / 3 eval)
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[conformal] SOH in-domain (NASA+MIT eval, expanded fusion ensemble): method=MAPIE.SplitConformalRegressor target_coverage=90% empirical_coverage=0.912 avg_interval_width=2.309 n_test=15069
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[conformal] SOH out-of-domain (CALCE, zero-retrain, expanded-pool model, SAME calibration): method=MAPIE.SplitConformalRegressor target_coverage=90% empirical_coverage=0.074 avg_interval_width=2.309 n_test=2941
+
+[calce-exp] in-domain (NASA+MIT eval) half-width=1.154, coverage=0.912
+[calce-exp] out-of-domain (CALCE) half-width=1.154, coverage=0.074
+[calce-exp] ORIGINAL 32-battery reference: in-domain half-width=2.367 coverage=0.956; CALCE half-width=2.367 (IDENTICAL) coverage=0.061
+
+[calce-exp] DONE
+=== [final] Sat Sep 12 10:52:08 IST 2026 starting run_bootstrap_significance_expanded.py ===
+[bootstrap-exp] N_BOOTSTRAP=2000, CI=(2.5, 97.5), seed=42
+
+[bootstrap-exp] === 1. Drop-branch ablation (5-branch, expanded pool) ===
+[ensemble-fusion-exp] train: merged rows=123755
+[drop-branch-5-exp] train: 4-branch merged rows=123755, CNN-BiGRU rows=123755, 5-branch merged rows=123755
+[ensemble-fusion-exp] test: merged rows=29489
+[drop-branch-5-exp] test: 4-branch merged rows=29489, CNN-BiGRU rows=29489, 5-branch merged rows=29489
+[bootstrap-exp] test set: 29489 cycles, 40 batteries (original run had 6 test batteries)
+
+[bootstrap-exp]  branch: pred_XGBoost_fusion
+    pred_XGBoost_fusion CYCLE-level (n_cycles=29489): mean_delta=+0.14652  95% CI=[+0.10717, +0.19068]  -> SIGNIFICANT (CI excludes 0)
+    pred_XGBoost_fusion BATTERY-level (n_batteries=40): mean_delta=+0.15575  95% CI=[+0.00503, +0.51075]  -> SIGNIFICANT (CI excludes 0)
+
+[bootstrap-exp]  branch: pred_VLSTM
+    pred_VLSTM CYCLE-level (n_cycles=29489): mean_delta=-0.00064  95% CI=[-0.00087, -0.00043]  -> SIGNIFICANT (CI excludes 0)
+    pred_VLSTM BATTERY-level (n_batteries=40): mean_delta=-0.00071  95% CI=[-0.00273, +0.00004]  -> NOT significant (CI includes 0)
+
+[bootstrap-exp]  branch: pred_CNNLSTM
+    pred_CNNLSTM CYCLE-level (n_cycles=29489): mean_delta=-0.00005  95% CI=[-0.00006, -0.00003]  -> SIGNIFICANT (CI excludes 0)
+    pred_CNNLSTM BATTERY-level (n_batteries=40): mean_delta=-0.00005  95% CI=[-0.00020, +0.00000]  -> NOT significant (CI includes 0)
+
+[bootstrap-exp]  branch: pred_PiFormer
+    pred_PiFormer CYCLE-level (n_cycles=29489): mean_delta=-0.01667  95% CI=[-0.02249, -0.01153]  -> SIGNIFICANT (CI excludes 0)
+    pred_PiFormer BATTERY-level (n_batteries=40): mean_delta=-0.01826  95% CI=[-0.07201, +0.00196]  -> NOT significant (CI includes 0)
+
+[bootstrap-exp]  branch: pred_CNNBiGRU
+    pred_CNNBiGRU CYCLE-level (n_cycles=29489): mean_delta=-0.00124  95% CI=[-0.00162, -0.00089]  -> SIGNIFICANT (CI excludes 0)
+    pred_CNNBiGRU BATTERY-level (n_batteries=40): mean_delta=-0.00134  95% CI=[-0.00485, +0.00012]  -> NOT significant (CI includes 0)
+
+[bootstrap-exp] === 2. Base learner comparison (expanded pool) ===
+[bootstrap-exp] shared test rows across all 5 base learners: 29489
+
+[bootstrap-exp] per-model R2 CI:
+    XGBoost: point R2=0.9720  95% CI (cycle-level)=[0.9676, 0.9761]
+    VLSTM: point R2=0.9263  95% CI (cycle-level)=[0.9069, 0.9430]
+    CNNLSTM: point R2=0.9441  95% CI (cycle-level)=[0.9243, 0.9612]
+    PiFormer: point R2=0.7631  95% CI (cycle-level)=[0.6979, 0.8219]
+    CNNBiGRU: point R2=0.9348  95% CI (cycle-level)=[0.9151, 0.9519]
+
+[bootstrap-exp] pairwise delta R2 vs. XGBoost:
+    XGBoost - VLSTM CYCLE-level: mean_delta=+0.04545  95% CI=[+0.02880, +0.06607]  -> SIGNIFICANT (CI excludes 0)
+    XGBoost - VLSTM BATTERY-level: mean_delta=+0.04361  95% CI=[+0.00908, +0.07655]  -> SIGNIFICANT (CI excludes 0)
+    XGBoost - CNNLSTM CYCLE-level: mean_delta=+0.02758  95% CI=[+0.01033, +0.04835]  -> SIGNIFICANT (CI excludes 0)
+    XGBoost - CNNLSTM BATTERY-level: mean_delta=+0.02466  95% CI=[-0.01637, +0.06010]  -> NOT significant (CI includes 0)
+    XGBoost - PiFormer CYCLE-level: mean_delta=+0.20923  95% CI=[+0.15341, +0.27110]  -> SIGNIFICANT (CI excludes 0)
+    XGBoost - PiFormer BATTERY-level: mean_delta=+0.22398  95% CI=[-0.00036, +0.76932]  -> NOT significant (CI includes 0)
+    XGBoost - CNNBiGRU CYCLE-level: mean_delta=+0.03699  95% CI=[+0.01996, +0.05746]  -> SIGNIFICANT (CI excludes 0)
+    XGBoost - CNNBiGRU BATTERY-level: mean_delta=+0.03569  95% CI=[+0.01450, +0.05952]  -> SIGNIFICANT (CI excludes 0)
+
+[bootstrap-exp] === 3. Lean vs. full (expanded pool) ===
+[ensemble-fusion-exp] train: merged rows=123755
+[drop-branch-5-exp] train: 4-branch merged rows=123755, CNN-BiGRU rows=123755, 5-branch merged rows=123755
+[ensemble-fusion-exp] test: merged rows=29489
+[drop-branch-5-exp] test: 4-branch merged rows=29489, CNN-BiGRU rows=29489, 5-branch merged rows=29489
+[bootstrap-exp] LEAN/FULL test-row key alignment identical: True
+
+[bootstrap-exp] delta RMSE (lean - full):
+    delta_RMSE CYCLE-level: mean_delta=-0.29552  95% CI=[-0.39503, -0.19052]  -> SIGNIFICANT (CI excludes 0)
+    delta_RMSE BATTERY-level: mean_delta=-0.24082  95% CI=[-0.73108, +0.07023]  -> NOT significant (CI includes 0)
+
+[bootstrap-exp] delta R2 (lean - full):
+    delta_R2 CYCLE-level: mean_delta=+0.01533  95% CI=[+0.00981, +0.02139]  -> SIGNIFICANT (CI excludes 0)
+    delta_R2 BATTERY-level: mean_delta=+0.01687  95% CI=[-0.00309, +0.06973]  -> NOT significant (CI includes 0)
+
+[bootstrap-exp] DONE. n_test_batteries=40 (original run had 6) - see data/processed/predictions/bootstrap_*_expanded_ci.csv
+=== [final] Sat Sep 12 10:52:44 IST 2026 starting run_domain_classifier_sanity_check_expanded.py ===
+[domain-sanity-exp] expanded test set: 40 batteries (original session 19 run had only 6)
+[domain-sanity-exp] calib batteries: 20, eval batteries: 20
+[domain-sanity-exp] calib cycles: 14420, eval cycles: 15069
+
+[domain-sanity-exp] IN-DOMAIN AUC (calib-half vs. eval-half, should be ~0.5 for a genuinely in-domain split):
+    full feature space (7 HI + 16 fusion): AUC=0.6936
+    fusion-only (16-dim):                  AUC=0.6748
+
+[domain-sanity-exp] ORIGINAL 6-battery-test-set reference: AUC=0.9021 (full feature space)
+[domain-sanity-exp] Moved closer to 0.5 with more test batteries? YES, moved closer to 0.5 (|AUC-0.5| original=0.4021, expanded=0.1936)
+
+[domain-sanity-exp] DONE
+=== [final] Sat Sep 12 10:52:49 IST 2026 starting run_second_life_grading_expanded.py ===
+[gradelabel-exp] expanded lean XGBoost-fusion test-set rows: 29489, 40 batteries
+[gradelabel-exp] grading agreement: 99.50% of 29489 test cycles (original 32-battery run: 98.75% of 5,208 cycles)
+
+[gradelabel-exp] === per-battery CURRENT-STATUS grade (last test cycle) ===
+dataset battery_id  cycle_idx       SOH  y_pred_soh_fusion            true_grade            pred_grade
+   NASA      B0025         28 95.705613          97.863518        Primary EV use        Primary EV use
+   NASA      B0030         39 88.695102          90.492340        Primary EV use        Primary EV use
+   NASA      B0044        106 78.720609          79.818367 Second-life candidate Second-life candidate
+   NASA      B0053         54 87.838262          73.529709        Primary EV use Second-life candidate
+    MIT      b1c13        895 85.392013          85.638618        Primary EV use        Primary EV use
+    MIT      b1c19        786 81.095272          80.330002        Primary EV use        Primary EV use
+    MIT      b1c23       1012 81.501348          81.701004        Primary EV use        Primary EV use
+    MIT      b1c28        858 81.606030          81.591743        Primary EV use        Primary EV use
+    MIT      b1c32        729 81.634908          82.239182        Primary EV use        Primary EV use
+    MIT      b1c37        646 82.092144          82.511917        Primary EV use        Primary EV use
+    MIT      b1c41       1049 81.558324          82.465874        Primary EV use        Primary EV use
+    MIT       b1c5       1072 81.784584          81.602234        Primary EV use        Primary EV use
+    MIT       b2c0        325 77.104578          77.257790 Second-life candidate Second-life candidate
+    MIT      b2c14        508 76.533457          76.449509 Second-life candidate Second-life candidate
+    MIT      b2c19        488 78.792358          77.543793 Second-life candidate Second-life candidate
+    MIT      b2c23        561 76.726754          78.266441 Second-life candidate Second-life candidate
+    MIT      b2c28        540 77.033905          77.944412 Second-life candidate Second-life candidate
+    MIT      b2c32        543 76.931383          76.940689 Second-life candidate Second-life candidate
+    MIT      b2c37        501 76.813217          77.454300 Second-life candidate Second-life candidate
+    MIT      b2c41        451 77.213974          79.208572 Second-life candidate Second-life candidate
+    MIT      b2c47        744 79.153269          78.682739 Second-life candidate Second-life candidate
+    MIT       b2c9       1059 85.281546          85.144592        Primary EV use        Primary EV use
+    MIT      b3c12        930 81.945031          82.555847        Primary EV use        Primary EV use
+    MIT      b3c17       1313 82.503469          83.395844        Primary EV use        Primary EV use
+    MIT      b3c21        770 82.413889          82.643288        Primary EV use        Primary EV use
+    MIT      b3c26       1026 82.067412          83.627991        Primary EV use        Primary EV use
+    MIT      b3c30        933 82.294464          83.146439        Primary EV use        Primary EV use
+    MIT      b3c35       1091 82.734079          82.556145        Primary EV use        Primary EV use
+    MIT       b3c4       1046 82.011028          81.524368        Primary EV use        Primary EV use
+    MIT      b3c44        938 82.260788          83.006615        Primary EV use        Primary EV use
+    MIT       b3c8        826 82.669475          83.097710        Primary EV use        Primary EV use
+    MIT      b4c11        930 73.478529          75.681328 Second-life candidate Second-life candidate
+    MIT      b4c16        983 70.920141          72.264923 Second-life candidate Second-life candidate
+    MIT      b4c20        804 75.438563          76.719009 Second-life candidate Second-life candidate
+    MIT      b4c25        567 51.286254          50.777256 Second-life candidate Second-life candidate
+    MIT       b4c3        911 49.294620          50.629726          Recycle only Second-life candidate
+    MIT      b4c34        997 68.460419          72.040321 Second-life candidate Second-life candidate
+    MIT      b4c39        761 79.186196          78.617752 Second-life candidate Second-life candidate
+    MIT      b4c43        951 43.545163          39.040668          Recycle only          Recycle only
+    MIT       b4c8        718 75.832393          76.070862 Second-life candidate Second-life candidate
+
+[gradelabel-exp] NOTE: B0018 is not in the expanded test set (battery_level_split may have placed it in train this time - reported, not hidden)
+
+[gradelabel-exp] DONE
+=== [final] Sat Sep 12 10:52:49 IST 2026 starting run_sensor_noise_robustness_expanded.py ===
+[noise-exp] loading raw test-battery cycles ONCE...
+[noise-exp]   NASA/B0018: 132 cycles loaded
+[noise-exp]   MIT/b1c4: 1225 cycles loaded
+[noise-exp]   MIT/b2c24: 523 cycles loaded
+[noise-exp]   MIT/b3c0: 1007 cycles loaded
+[noise-exp]   MIT/b3c35: 1091 cycles loaded
+[noise-exp]   MIT/b4c38: 1230 cycles loaded
+
+[noise-exp] === noise level: clean (baseline) ===
+[noise-exp] clean (baseline): n=5208 RMSE=0.6365 MAE=0.4164 R2=0.9827
+
+[noise-exp] === noise level: 1x BMS-grade ===
+[noise-exp] 1x BMS-grade: n=5208 RMSE=0.9450 MAE=0.5563 R2=0.9618
+
+[noise-exp] === noise level: 2x BMS-grade ===
+[noise-exp] 2x BMS-grade: n=5208 RMSE=1.0870 MAE=0.6820 R2=0.9495
+
+[noise-exp] === noise level: 5x BMS-grade (stress) ===
+[noise-exp] 5x BMS-grade (stress): n=5208 RMSE=1.7412 MAE=1.0561 R2=0.8704
+
+[noise-exp] === SUMMARY (pooled) ===
+          noise_level  sigma_V_mV  sigma_I_mA  sigma_T_degC    n     rmse      mae       r2  delta_rmse_vs_clean  delta_r2_vs_clean
+     clean (baseline)         0.0         0.0           0.0 5208 0.636468 0.416445 0.982682             0.000000           0.000000
+         1x BMS-grade         1.0        10.0           0.5 5208 0.945026 0.556258 0.961819             0.308558          -0.020862
+         2x BMS-grade         2.0        20.0           1.0 5208 1.087021 0.681986 0.949484             0.450553          -0.033198
+5x BMS-grade (stress)         5.0        50.0           2.5 5208 1.741234 1.056070 0.870381             1.104766          -0.112301
+
+[noise-exp] === NASA/B0018 specifically (per noise level) ===
+          noise_level dataset battery_id   n     rmse       r2
+     clean (baseline)    NASA      B0018 132 2.138447 0.934743
+         1x BMS-grade    NASA      B0018 132 2.711127 0.895111
+         2x BMS-grade    NASA      B0018 132 2.972964 0.873873
+5x BMS-grade (stress)    NASA      B0018 132 2.977658 0.873474
+[noise-exp] ORIGINAL 32-battery reference for B0018: clean R2=0.576, 1x=0.565, 2x=0.525, 5x=0.513 (monotonic degradation)
+[noise-exp] B0018 still degrades monotonically with noise: True
+
+[noise-exp] DONE
+=== [final] Sat Sep 12 10:53:32 IST 2026 ALL STAGES COMPLETE ===

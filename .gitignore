@@ -24,6 +24,12 @@ Thumbs.db
 # Claude Code harness internals - not project content
 .claude/
 
+# Local performance cache only (Dataset Expansion Phase 1) - raw battery
+# tensors cached to skip an ~18min reload after a process restart. ~700MB,
+# regenerable from data/raw/ + data_adapters.py, not a model or a result -
+# never meant for git.
+data/processed/_expanded_battery_tensors_cache.pkl
+
 # Catch-all safety net: nothing over 50MB should ever be committed.
 # (data/processed/ and models/ are all well under this - largest tracked
 # file is ~9MB - so this line should never actually match anything, but

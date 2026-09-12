@@ -1,0 +1,3 @@
+metric,cycle_label,cycle_mean_delta,cycle_ci_lo,cycle_ci_hi,cycle_significant,battery_label,battery_mean_delta,battery_ci_lo,battery_ci_hi,battery_significant
+delta_rmse,delta_RMSE CYCLE-level,-0.29552004503816065,-0.3950299256390472,-0.19051934220399633,True,delta_RMSE BATTERY-level,-0.2408219398242554,-0.7310848585006933,0.07023101794195497,False
+delta_r2,delta_R2 CYCLE-level,0.015331481222764336,0.009813202596015605,0.021394216948190155,True,delta_R2 BATTERY-level,0.01687402822256358,-0.0030863892095258556,0.06973423577848542,False

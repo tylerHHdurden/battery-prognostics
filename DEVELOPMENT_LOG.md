@@ -3755,3 +3755,479 @@ touched - confirmed by `git diff --stat`: 468 insertions / 14
 deletions, all within `render_full_results_archive_tab` and its two
 already-existing enhanced sections).
 
+
+## Follow-up session 33 — Dataset Expansion Phase 1: 32 → 204 batteries (fully autonomous overnight run)
+
+Directly tests this project's own repeated hypothesis (sessions 19, 21,
+27 all independently flagged battery count, not architecture choice, as
+the likely bottleneck behind the CALCE domain-shift collapse and
+B0018's weak performance): expands the NASA+MIT training/test pool from
+32 batteries to 204, using exclusively already-downloaded data (zero
+new acquisition), then re-runs the full base-learner/fusion/ensemble
+pipeline and all 6 Step-4 hypothesis tests against it.
+
+### Step 1 — Inventory, extraction, validation
+
+Confirmed exactly what was unused before this session: 30 zipped,
+unextracted NASA batteries (inside `data/raw/nasa/extracted/5. Battery
+Data Set/*.zip`, 6 sub-archives) alongside the 4 already in use
+(B0005/6/7/18), and 157 of 185 total MIT cells across the 4
+`MATR_batch_*.mat` files (only 28 were in `mit_subset.json`).
+
+Extracted all 6 NASA sub-zips into the existing `NASA_DIR` - 34 `.mat`
+files total, zero code changes needed for loading (`iterate_nasa_cycles`
+already treats the directory generically).
+
+**Bug #1, found and fixed**: 2 of 34 NASA batteries (B0050, B0052)
+crashed with `IndexError: index 0 is out of bounds for axis 0 with
+size 0`. Root cause: some discharge cycles have a `Capacity` field that
+is PRESENT but an EMPTY array, not just missing - the existing
+`"Capacity" in d` check doesn't catch this. Confirmed a genuine NASA
+data quirk (B0050: 4/25 discharge cycles affected; B0052: 21/25) via
+direct inspection, not an extraction artifact. Confirmed the fix is a
+pure no-op for the 4 originally-used batteries (zero empty-Capacity
+cycles in any of them). Fixed in `data_adapters.py`'s
+`iterate_nasa_cycles` by treating an empty Capacity array the same as a
+missing one. **Result: 34/34 NASA batteries load correctly** (1.5s
+total for all 34).
+
+MIT validation: all **157/157 unused cells load correctly**, 130,809
+additional cycles, 6.5 minutes total (390.9s). One real, honestly-
+logged timing variance investigated rather than shrugged off: a 20-cell
+stretch ran at 3.35s/cell vs. ~1.4-1.5s/cell elsewhere - traced to two
+genuinely long-lived cells in that stretch (2,188 and 2,236 cycles),
+not OneDrive sync lag specifically.
+
+### Step 2 — Feature pipeline re-run, and a second, more consequential bug
+
+Full HI/RUL/ICA-DV-DC extraction on the expanded pool (`run_phase1_
+features_expanded.py`, additive, `run_phase1_features.py` untouched):
+**221/222 batteries succeeded** (159,912 cycles) in 9.2 minutes (551.3s).
+B0052 correctly self-excluded (only 3 usable cycles even after the
+Capacity fix - too sparse for meaningful HI/RUL computation, the same
+`len(cycles) < 5` threshold the original script already used).
+
+**Bug #2, found, root-caused, fixed - the more serious one**: BFA's
+baseline Ridge RMSE on the raw expanded pool came back at 26.54 (SOH%),
+a 6.8x jump from the original 32-battery pool's 3.897 - not accepted at
+face value. Root cause, confirmed by directly inspecting NASA/B0041's
+raw capacity trace: `rul_labels.py`'s SOH formula (`capacity /
+median(first 3 logged cycles) * 100` - completely correct for every
+battery in the original 32-battery pool) breaks down for a subset of
+batteries whose first several logged cycles are a separate low-rate
+characterization protocol phase, not real aging cycles (B0041:
+capacities of ~0.044-0.057Ah for cycles 1-41, then an abrupt jump to
+~1.09-1.22Ah at cycle 42 where its real aging trend begins). Dividing
+later, normal cycles by that degenerate near-zero baseline produces
+physically impossible SOH values - up to **2177%** for B0041.
+
+Checked BOTH datasets, not just where it was first noticed: found 4
+affected MIT batteries too (b1c18 max 270.4%, b2c44 max 144.1%, b1c0
+max 143.6%, b2c12 max 138.9%) - the identical underlying mechanism,
+confirming this is a general property of the labeling convention when
+applied to protocol variety it was never validated against, not a
+NASA-specific quirk.
+
+Exclusion criterion (principled, not tuned to a target number): any
+battery whose SOH ever exceeds 110% - chosen because session 16 already
+independently established mild readings up to ~101.5% (e.g. MIT/b3c0's
+real formation-cycle bump to 100.29%) as genuine physically plausible
+early-life effects, so 110% is a deliberately generous ceiling that
+keeps every battery showing that kind of normal behavior and excludes
+only the ones with clearly nonsensical (150%+) readings. A battery's
+`min SOH == 0%` alone did NOT trigger exclusion - many otherwise-clean
+batteries (e.g. B0042-48, B0053-56) legitimately fade all the way to 0%
+at true end-of-life, a real data point, not an artifact.
+
+`rul_labels.py` ITSELF was left completely untouched (shared by every
+other script in this project, worked correctly for the original 32
+batteries) - the exclusion is applied only at the expanded-pool level,
+in a new small module (`src/expanded_pool_exclusions.py`) that documents
+the finding in full and is imported wherever the expanded pool is built.
+
+**Final, honest usable pool after full validation: 23 NASA + 181 MIT =
+204 batteries** (vs. original 32, vs. 219 theoretical ceiling - the
+15-battery gap is fully accounted for: 1 too-few-cycles + 10 NASA +
+4 MIT degenerate-SOH-baseline exclusions, nothing silently dropped).
+
+**BFA re-run on the clean 204-battery pool - does the 7-feature
+selection change? Yes, genuinely:**
+- Original (32 batteries): `ICHV, SCV, VDEDT, VIECT, MATC, MATD, TEVI` (7 features)
+- Expanded (204 batteries): `CDECT, ICHV, VDEDT, VIECT, LVP, MET, TCCC, TCVC` (8 features)
+- Only 3 features survive (`ICHV, VDEDT, VIECT`); both temperature HIs
+  (MATC, MATD) dropped out entirely, replaced by 4 new ones (CDECT, LVP,
+  MET, TCCC).
+- Baseline RMSE (all 16 features, clean data) = 8.79, still meaningfully
+  higher than the original 3.897 even after fixing the label bug - a
+  genuine sign the expanded pool is more heterogeneous (more distinct
+  battery chemistries/protocols pooled together), not something to hide.
+- Converged (8-feature) RMSE = 5.2065, also higher than the original's
+  converged 2.864 - consistent with the same explanation.
+
+### Step 1/2 structural finding: B0018 moved from TEST to TRAIN
+
+Checked `battery_split_expanded.json` directly rather than assuming:
+B0018 (the subject of session 27's entire root-cause investigation) is
+now in the TRAINING set, not the test set (`battery_level_split`'s
+deterministic per-dataset "every 5th battery" stratification lands
+differently with 19 more NASA batteries added - the new NASA test
+batteries are B0025/B0030/B0044/B0053). This means any session-27-style
+"B0018 root cause, re-examined" comparison is NOT apples-to-apples in
+the usual sense: the expanded-pool model has literally been trained on
+B0018's own cycles, not just "trained on more NASA data elsewhere" -
+stated explicitly here rather than silently reconciled.
+
+### Step 3 — Retraining all 5 base learners + fusion + ensemble
+
+Same hyperparameters/training budget as the original runs throughout
+(40-epoch budget/patience=8 for VLSTM/CNN-LSTM/PiFormer/CNN-BiGRU,
+25-epoch/patience=6 for the ICAEncoder, 500-tree XGBoost) - the ~5.9x
+increase in training cycles (26,996 -> 159,912) is accepted as the
+genuine cost of the experiment, not worked around by cutting budgets.
+
+**Bug #3, found, root-caused, fixed - a genuine methodological catch,
+not just an engineering one**: this session's first attempt at
+VLSTM/CNN-LSTM/PiFormer training was killed mid-run (external process
+teardown, not a code failure) after VLSTM (10,154.2s), CNN-LSTM (1,683.1s),
+and PiFormer (8,290.7s) had already finished - ~5.6h of genuine compute
+- but before the train-set predictions step (needed for the ensemble)
+completed. Rather than redo ~5.6h of training, added checkpoint-resume
+logic (`load_or_train()`) to load the already-trained weights. This
+itself then hit TWO further real bugs, both caught and fixed rather
+than silently absorbed:
+
+1. **Memory bug**: the resumed run's unbatched prediction call on the
+   full 123,755-row train+val set crashed PiFormer specifically with
+   `RuntimeError: ... not enough memory: you tried to allocate
+   79203200000 bytes` (~79GB) - PiFormer's multi-head attention
+   materializes an O(batch) `(batch,heads,seq,seq)` score tensor that
+   VLSTM/CNN-LSTM's recurrent/conv passes don't have, so it scaled fine
+   at the 29,489-row TEST set but not at 123,755. Fixed with chunked
+   inference (4,096 rows/chunk) - mathematically identical predictions,
+   bounded peak memory.
+2. **Silent-corruption bug (the more serious one)**: after fixing #1
+   and re-running, CNN-LSTM's TEST metrics did NOT match its own
+   pre-crash reference (RMSE 1.3003->2.4256, MAE 0.7450->1.0309, R2
+   0.9666->0.8837), while VLSTM and PiFormer matched EXACTLY. Root
+   cause: CNN-LSTM is the ONLY one of the 3 models using
+   `nn.BatchNorm1d` (VLSTM has no normalization layer; PiFormer uses
+   `LayerNorm`, which is train/eval-mode-independent). The new
+   `load_or_train()` loaded the checkpoint's WEIGHTS correctly
+   (confirmed via unchanged file mtime across the crash) but never
+   called `model.eval()` - a freshly-constructed `nn.Module` defaults
+   to `.train()` mode, so CNN-LSTM's BatchNorm silently used LIVE batch
+   statistics computed from whichever test chunk it was scoring,
+   instead of the stored `running_mean`/`running_var` - a genuine,
+   if narrow, form of test-set leakage (the model's own normalization
+   was peeking at the composition of the batch being scored). This is
+   the exact same architecture-specific failure signature as this
+   project's very first CNN-LSTM investigation (only CNN-LSTM affected,
+   VLSTM/PiFormer architecturally immune) - a different root cause this
+   time (missing `eval()` vs. the original ~9.5M-unnormalized-dVdQ bug),
+   caught the same way: by not accepting a suspicious number at face
+   value and checking each model's actual normalization layers directly.
+
+   Fixed by adding `model.eval()` in `load_or_train()` AND defensively
+   inside `predict()` itself (belt-and-suspenders), plus the same
+   defensive (currently-inert - CNN-BiGRU has no normalization layer at
+   all) call in `train_cnn_bigru_expanded.py` for consistency. Wrote a
+   corrective script (`fix_cnn_lstm_expanded_preds.py`) to patch the
+   already-written prediction files with CNN-LSTM's correctly-scored
+   values, loaded from the SAME untouched, always-correct checkpoint -
+   confirmed via sanity re-check that VLSTM (R2=0.9472) and PiFormer
+   (R2=0.7795) were unaffected, both exact matches to their known values.
+
+   **Caught a downstream sequencing consequence too**: the ensemble
+   (`train_ensemble_fusion_expanded.py`) had already run once against
+   the still-wrong CNN-LSTM column before the fix landed (chain
+   proceeded automatically while the fix script was still computing) -
+   re-ran the ensemble immediately once corrected data was available.
+   **Genuinely interesting, honest finding from this re-run**: the
+   CORRECTED ensemble (R2=0.9579) is very slightly WORSE than the
+   bug-corrupted one (R2=0.9591) had reported - consistent with the
+   leakage explanation above (a model's normalization silently adapting
+   to the exact test batch it's being scored on can coincidentally
+   flatter its numbers in ways that don't reflect genuine
+   generalization). The corrected, honest number is reported throughout
+   this log, not the more flattering wrong one.
+
+**Base learner results, old (32-battery) vs. new (204-battery), all
+verified/confirmed, all real:**
+
+| model | RMSE before → after | MAE before → after | R² before → after |
+|---|---|---|---|
+| XGBoost (BFA-HI only) | 1.478 → 1.2121 | 0.990 → 0.5666 | 0.907 → **0.9721** |
+| VLSTM | 2.131 → 1.6345 | 1.564 → 0.9164 | 0.806 → **0.9472** |
+| CNN-LSTM | 3.948 → 1.3003 | 2.926 → 0.7450 | 0.334 → **0.9666** |
+| PiFormer | 2.993 → 3.3405 | 1.928 → 0.7143 | 0.617 → **0.7795** |
+| CNN-BiGRU | 3.165 → 1.4791 | 2.341 → 0.8265 | 0.572 → **0.9568** |
+
+VLSTM, CNN-LSTM, and CNN-BiGRU all improved substantially and
+unambiguously across every metric - CNN-LSTM in particular went from
+this project's weakest base learner (R2=0.334) to genuinely strong
+(R2=0.967), and CNN-BiGRU went from the worst-performing model overall
+(R2=0.572) to R2=0.957, purely from more training data, no architecture
+change. A real, direct confirmation of the "battery count is the
+bottleneck" hypothesis for three of the four affected models.
+
+**PiFormer is a genuine mixed result - root-caused, not left as a
+shrug.** R2 improved (0.617->0.780) and MAE dropped sharply
+(1.928->0.714), but RMSE got slightly WORSE (2.993->3.340). Per-battery
+breakdown of the 40-battery expanded test set (not assumed to mirror
+the original 6-battery story) found the cause precisely: **one single
+battery, NASA/B0053 (54 cycles, 0.18% of all 29,489 test cycles),
+produces wildly erratic PiFormer predictions (RMSE=74.7 on that battery
+alone - predictions swing from near-0 to ~82 cycle-to-cycle against a
+true SOH band of 85-100%, not a bias, an actual breakdown)**, while
+PiFormer performs *well* on every other battery (median per-battery
+RMSE across the other 39 = 0.674). Recomputed PiFormer's pooled metrics
+excluding only B0053: **RMSE=0.9693, MAE=0.5862, R2=0.9814** - which
+would make PiFormer the single BEST base learner of all five, not the
+worst, if not for this one battery. NASA/B0053 is one of the 4 new NASA
+test batteries introduced by the expanded split (B0025/B0030/B0044/
+B0053) and its raw capacity trace starts at 0.000Ah (visible in
+`nasa_validation.txt`) similar in flavor to the degenerate-baseline
+batteries excluded in Step 2, though B0053 itself never crosses the
+110% SOH exclusion threshold so it correctly stayed in the pool - this
+looks like a battery with real but unusual early-life behavior that
+VLSTM/CNN-LSTM's recurrent/conv inductive bias handles gracefully but
+PiFormer's attention mechanism does not, a plausible explanation
+offered honestly as a hypothesis, not confirmed via further ablation
+(time-boxed, not chased further this session). **Practical takeaway:
+PiFormer's RMSE regression is a single-battery outlier artifact, not a
+genuine broad-based regression** - but it is a real, reproducible
+failure on that specific battery, not explained away.
+
+XGBoost-fusion: RMSE=1.2115 MAE=0.5461 R2=0.9719, confirmed consistent
+with `train_xgboost_fusion_expanded.py`'s own logged run (no drift).
+
+Fusion ensemble (Stacking-Ridge-fusion-expanded, CORRECTED, 4-branch:
+XGBoost-fusion+VLSTM+CNNLSTM+PiFormer, CNN-BiGRU excluded from the
+stack by the same design as the original architecture): RMSE=1.4834
+MAE=0.5276 R2=0.9579 (original 32-battery Stacking-Ridge-fusion was
+RMSE=1.394 MAE=0.966 R2=0.917) - genuinely improved (R2 0.917->0.958),
+though a smaller relative gain than the standalone deep models, entirely
+consistent with this project's own repeated finding that the ensemble
+is carried almost entirely by XGBoost-fusion regardless of how the
+other branches perform individually.
+
+**Drop-branch ablation (5-branch, expanded pool)** -
+`run_drop_branch_ablation_5branch_expanded.py`, which DOES include
+CNN-BiGRU as a 5th stacked branch (a separate meta-model from the
+4-branch Ridge ensemble above, not the same number):
+
+| variant (branch dropped) | RMSE | R2 | delta RMSE vs. full |
+|---|---|---|---|
+| drop PiFormer | **1.1821** | **0.9733** | -0.3230 (biggest improvement from dropping) |
+| drop CNN-BiGRU | 1.4834 | 0.9579 | -0.0217 |
+| drop VLSTM | 1.4939 | 0.9573 | -0.0112 |
+| drop CNN-LSTM | 1.5042 | 0.9567 | -0.0008 |
+| **full 5-branch** | 1.5051 | 0.9567 | 0.0000 |
+| drop XGBoost-fusion | 3.1483 | 0.8103 | +1.6432 (catastrophic) |
+
+Honest reading: at the expanded scale, PiFormer is now actively
+*hurting* the full ensemble, not just showing a mixed standalone
+number (consistent with the B0053 outlier above - one bad battery's
+errors get amplified when stacked). CNN-BiGRU very slightly hurts the
+stack too. XGBoost-fusion remains overwhelmingly the dominant branch,
+as in every prior session.
+
+### Step 4 — The actual hypothesis test
+
+**1. CALCE zero-retrain domain-shift eval - THE single most important
+result in this whole update, reported first and most prominently, per
+instruction:**
+
+| metric | original (32-batt) | expanded (204-batt) |
+|---|---|---|
+| XGBoost-fusion R2 (CALCE) | 0.304 | **0.5556** |
+| Stacking-Ridge R2 (CALCE) | 0.314 | **0.6690** |
+| In-domain coverage (target 90%) | 95.6% | 91.2% |
+| **CALCE coverage (target 90%)** | **6.1%** | **7.4%** |
+
+**Verdict, stated plainly: the hypothesis is only PARTIALLY confirmed.**
+Point-prediction accuracy under domain shift improved substantially and
+genuinely - the in-domain-vs-CALCE R2 gap roughly halved (0.603->0.289).
+This part of the "more battery data helps" hypothesis holds. But the
+conformal coverage collapse - arguably the more practically important
+failure mode, since it's about whether the model's stated uncertainty
+can be trusted at all, not just its point accuracy - did **not**
+improve in any meaningful sense (6.1%->7.4%, still catastrophic).
+Root cause, visible directly in the numbers: the prediction interval
+half-width is **identical** between in-domain and CALCE in both runs
+(orig 2.367/2.367; expanded 1.154/1.154) because it's calibrated
+entirely on in-domain residuals and never adapts to CALCE's own error
+distribution. This means the coverage collapse is most likely a
+distinct problem from raw model capacity/data volume - CALCE's residual
+distribution remains structurally different enough from NASA/MIT's
+that a split-conformal interval calibrated purely in-domain can't cover
+it, no matter how well the underlying point predictions generalize.
+**Battery count fixed accuracy under domain shift; it did not fix
+calibration under domain shift.** This is reported exactly as measured,
+not rounded up to "hypothesis confirmed."
+
+**2. Bootstrap significance (2000 resamples, 95% CI, cycle- and
+battery-level), 40 expanded test batteries vs. original 6:**
+
+- **XGBoost vs. VLSTM, battery-level**: original NOT significant (CI
+  [-0.0513,+0.2528]) -> expanded **NOW SIGNIFICANT** (CI
+  [+0.0091,+0.0766]). With 6x more test batteries, XGBoost's edge over
+  VLSTM is now formally confirmed, not just a large noisy point estimate.
+- **Drop-XGBoost-fusion ablation, battery-level**: original NOT
+  significant (CI [-0.054,+0.2392]) -> expanded **NOW SIGNIFICANT** (CI
+  [+0.00503,+0.51075]). Same story for the ensemble's dependence on
+  XGBoost-fusion specifically.
+- **Lean vs. full, battery-level**: original NOT significant (delta
+  RMSE CI [-0.0115,+0.0086]; delta R2 CI [-0.00085,+0.0018]) -> expanded
+  **STILL NOT significant** (delta RMSE CI [-0.731,+0.070]; delta R2 CI
+  [-0.0031,+0.0697]). This one did NOT flip - lean and full remain
+  statistically indistinguishable even at 6x the battery count, which
+  *reinforces* rather than undermines session 20's original "ship lean"
+  recommendation.
+- All 4 deep models individually in the drop-branch ablation: cycle-
+  level significant, battery-level NOT significant in both the original
+  and expanded runs - same qualitative pattern, unchanged by scale.
+
+**3. Domain-classifier sanity check (session 19)**: in-domain AUC
+(calib-half vs. eval-half of NASA+MIT, should approach 0.5 for
+genuinely indistinguishable data) moved from **0.9021** (original,
+6-battery test set) to **0.6936** (expanded, 40-battery test set,
+full feature space). |AUC-0.5| more than halved (0.4021->0.1936) -
+genuinely moved closer to 0.5, supporting the idea that the original
+near-1.0 readings were partly a small-sample artifact, though 0.69 is
+still clearly separable, so this is "meaningfully improved," not "solved."
+
+**4. Second-life grading**: agreement 98.75% (original, 5,208 cycles,
+6 batteries) -> **99.50%** (expanded, 29,489 cycles, 40 batteries) -
+improved. **Important caveat stated plainly**: NASA/B0018 - the subject
+of session 25's entire second-life analysis - is **not in the expanded
+test set** (moved to train by the split, see Step 1/2 finding above),
+so there is no direct expanded-pool counterpart to the original
+B0018-specific mis-grade (72.76% true vs. 81.50% predicted) to compare
+against; this is reported as a genuine gap, not silently dropped. Two
+near-miss grade mismatches in the expanded run: NASA/B0053 (true
+"Primary EV use", graded "Second-life candidate") and MIT/b4c3 (true
+"Recycle only", graded "Second-life candidate") - both one-bracket-off
+errors near a grade boundary.
+
+**5. Sensor-noise robustness** (same 6 original test batteries, by
+design, for apples-to-apples comparison):
+
+| | clean | 1x BMS | 2x BMS | 5x BMS (stress) |
+|---|---|---|---|---|
+| original R2 | 0.9172 | 0.9196 | 0.9184 | 0.9208 |
+| expanded R2 | **0.9827** | 0.9618 | 0.9495 | 0.8704 |
+
+**Honest nuance, not glossed over**: the expanded model's clean-condition
+accuracy is much better, but it is measurably *more sensitive* to
+injected sensor noise than the original - the original's apparent
+"noise robustness" (R2 barely moving, even ticking up slightly) looks
+in hindsight like an artifact of it already being noisy/imprecise
+enough that a bit more sensor noise didn't register, not genuine
+robustness. At the worst stress level tested, the expanded model's R2
+(0.8704) actually dips slightly *below* the original's clean-condition
+R2 (0.9172). More data bought a better baseline, not a strictly-dominant
+result once noise is stacked on top.
+
+NASA/B0018 specifically (per-noise-level R2): original 0.576->0.565->
+0.525->0.513 (monotonic degradation); expanded 0.9347->0.8951->0.8739->
+0.8735 (also monotonic degradation, same qualitative shape). B0018's
+absolute accuracy improved hugely, but per the Step 1/2 caveat this is
+**confounded by B0018 now being in the training set**, not a clean
+"generalizes better on unseen B0018" result.
+
+### Honest summary
+
+The core hypothesis (sessions 19, 21, 27: battery count, not
+architecture, is the bottleneck) is **partially confirmed, not fully**.
+What genuinely improved with 6x more battery data: every standalone
+base learner's point-prediction accuracy (4 of 5 cleanly, PiFormer with
+a single-battery outlier caveat), the fusion ensemble's point accuracy,
+CALCE's out-of-domain R2 (gap roughly halved), the domain-classifier's
+AUC (moved meaningfully closer to 0.5), second-life grading agreement,
+and two specific bootstrap comparisons that are now formally
+significant where they weren't before. What did **not** improve, stated
+without hedging: the CALCE conformal coverage collapse (6.1%->7.4%,
+still catastrophic - the single most important negative finding here),
+the model's noise-robustness margin (thinner despite a better baseline),
+and lean-vs-full's statistical indistinguishability (unchanged,
+reinforcing the existing "ship lean" decision rather than calling it
+into question). BFA's feature selection genuinely shifted (7->8
+features, only 3 survive), meaning the original feature set was at
+least partly a small-sample artifact.
+
+**Deployment decision, per instruction, not resolved unilaterally**:
+the original 32-battery lean pipeline remains the deployed default -
+every file this session produced is additive (`*_expanded.*`), nothing
+original was overwritten. The expanded-pool result is a clearly-labeled
+separate research finding, pending explicit review before any swap.
+
+### Dataset Completeness Audit
+
+- **NASA: 34/34 downloaded .mat files accounted for.** 23 used in the
+  final pool. 10 excluded (degenerate SOH baseline, up to 2177%):
+  B0033, B0034, B0036, B0038, B0039, B0040, B0041, B0049, B0050, B0051.
+  1 excluded (too_few_cycles, 3 usable cycles even post-fix): B0052.
+- **MIT: 185/185 cells accounted for** (across all 4
+  `MATR_batch_*.mat` files). 181 used. 4 excluded (degenerate SOH
+  baseline): b1c0, b1c18, b2c12, b2c44.
+- **Total expanded pool: 23 NASA + 181 MIT = 204 batteries** (vs.
+  original 32, vs. 219 theoretical ceiling - the 15-battery gap is
+  fully accounted for above, nothing silently dropped).
+- **CALCE: confirmed 3/3 locally-available cells (CS2_35/36/37) used
+  ONLY as the held-out zero-retrain domain-shift test set, never added
+  to training** - a deliberate design choice stated explicitly, not a
+  gap. Verified directly against `hi_table_expanded.parquet`: 2,943
+  CALCE rows, zero overlap with the NASA/MIT training pool.
+- **Anything found but unused for a reason OTHER than a logged
+  data-quality exclusion: NONE.** All 34 NASA .mat files and all 4 MIT
+  `MATR_batch_*.mat` files were present and every cell/battery inside
+  them accounted for above. The one other file under `data/raw/mit/`
+  (`Severson-et-al/2017-05-12_6C-50per_3_6C_CH36.csv`) is a pre-existing
+  single-cell CSV quickstart sample used only by the exploratory
+  `src/load_mit.py`, not new data this session found and very likely a
+  redundant format of a cell already inside `MATR_batch_20170512.mat` -
+  not a separate battery. No time-based scope cuts were taken anywhere.
+
+### Resilience work (harness interruptions, not code bugs)
+
+This session's background training was killed by external process
+teardowns **three separate times** (not related to any bug in the
+code). Rather than just restart repeatedly, the resilience gaps were
+fixed properly each time: (1) `load_or_train()` model-level
+checkpointing added to `train_deep_models_expanded.py` after the first
+interruption (VLSTM/CNN-LSTM/PiFormer), (2) disk-based tensor-load
+caching (`_expanded_battery_tensors_cache.pkl`, ~700MB, gitignored -
+regenerable, not a result) added after the second, eliminating a
+repeated ~17-18min raw-data reload on every restart, (3) genuine
+per-epoch checkpoint/resume for CNN-BiGRU
+(`train_one_model_resumable()`, saving model/optimizer/torch-RNG state
+every epoch) added after the third, **verified bit-for-bit
+reproducible via a synthetic crash-and-resume smoke test before being
+trusted on the real 40-epoch run** - confirmed in production too: the
+killed second CNN-BiGRU attempt's epoch 0-12 losses matched the final
+successful third attempt's epoch 0-12 losses to every printed decimal.
+No trained weights or completed compute were ever silently discarded
+across any of the three interruptions.
+
+New files: `src/run_phase1_features_expanded.py`,
+`src/expanded_pool_exclusions.py`, `src/run_bfa_expanded.py`,
+`src/train_xgboost_expanded.py`, `src/train_deep_models_expanded.py`,
+`src/train_fusion_encoder_expanded.py`,
+`src/train_xgboost_fusion_expanded.py`,
+`src/train_ensemble_fusion_expanded.py`,
+`src/train_cnn_bigru_expanded.py`,
+`src/run_drop_branch_ablation_5branch_expanded.py`,
+`src/run_calce_zero_retrain_eval_expanded.py`,
+`src/run_bootstrap_significance_expanded.py`,
+`src/run_domain_classifier_sanity_check_expanded.py`,
+`src/run_second_life_grading_expanded.py`,
+`src/run_sensor_noise_robustness_expanded.py`,
+`fix_cnn_lstm_expanded_preds.py` (one-off corrective script, kept as a
+permanent record), `models/*_expanded.*`, `data/processed/{hi_table,
+bfa_*,channel_norm_stats,battery_split,mit_full_cells}_expanded.*`,
+`data/processed/predictions/*_expanded*.csv`,
+`logs/logs_overnight_progress.txt` (full timestamped run log).
+Changed (bug fix only, additive): `src/data_adapters.py`
+(`iterate_nasa_cycles` empty-Capacity guard). Does NOT touch `app.py`
+or the deployed Streamlit site - that is session 34, a separate commit.

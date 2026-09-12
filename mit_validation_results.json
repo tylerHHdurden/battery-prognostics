@@ -1,0 +1,1262 @@
+{
+  "total_seconds": 390.86034870147705,
+  "n_cells": 157,
+  "results": [
+    {
+      "global_id": "b1c0",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 0,
+      "status": "OK",
+      "n_cycles": 1188,
+      "seconds": 1.08
+    },
+    {
+      "global_id": "b1c1",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 1,
+      "status": "OK",
+      "n_cycles": 1177,
+      "seconds": 1.16
+    },
+    {
+      "global_id": "b1c2",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 2,
+      "status": "OK",
+      "n_cycles": 1175,
+      "seconds": 1.02
+    },
+    {
+      "global_id": "b1c3",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 3,
+      "status": "OK",
+      "n_cycles": 1224,
+      "seconds": 1.07
+    },
+    {
+      "global_id": "b1c5",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 5,
+      "status": "OK",
+      "n_cycles": 1072,
+      "seconds": 0.91
+    },
+    {
+      "global_id": "b1c6",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 6,
+      "status": "OK",
+      "n_cycles": 634,
+      "seconds": 1.14
+    },
+    {
+      "global_id": "b1c7",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 7,
+      "status": "OK",
+      "n_cycles": 868,
+      "seconds": 1.75
+    },
+    {
+      "global_id": "b1c8",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 8,
+      "status": "OK",
+      "n_cycles": 877,
+      "seconds": 1.76
+    },
+    {
+      "global_id": "b1c9",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 9,
+      "status": "OK",
+      "n_cycles": 1052,
+      "seconds": 2.02
+    },
+    {
+      "global_id": "b1c10",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 10,
+      "status": "OK",
+      "n_cycles": 904,
+      "seconds": 1.79
+    },
+    {
+      "global_id": "b1c11",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 11,
+      "status": "OK",
+      "n_cycles": 786,
+      "seconds": 1.53
+    },
+    {
+      "global_id": "b1c12",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 12,
+      "status": "OK",
+      "n_cycles": 900,
+      "seconds": 1.88
+    },
+    {
+      "global_id": "b1c13",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 13,
+      "status": "OK",
+      "n_cycles": 895,
+      "seconds": 1.72
+    },
+    {
+      "global_id": "b1c14",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 14,
+      "status": "OK",
+      "n_cycles": 878,
+      "seconds": 1.82
+    },
+    {
+      "global_id": "b1c15",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 15,
+      "status": "OK",
+      "n_cycles": 717,
+      "seconds": 1.43
+    },
+    {
+      "global_id": "b1c16",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 16,
+      "status": "OK",
+      "n_cycles": 860,
+      "seconds": 1.71
+    },
+    {
+      "global_id": "b1c18",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 18,
+      "status": "OK",
+      "n_cycles": 689,
+      "seconds": 1.34
+    },
+    {
+      "global_id": "b1c19",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 19,
+      "status": "OK",
+      "n_cycles": 786,
+      "seconds": 1.54
+    },
+    {
+      "global_id": "b1c21",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 21,
+      "status": "OK",
+      "n_cycles": 557,
+      "seconds": 1.08
+    },
+    {
+      "global_id": "b1c23",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 23,
+      "status": "OK",
+      "n_cycles": 1012,
+      "seconds": 2.12
+    },
+    {
+      "global_id": "b1c24",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 24,
+      "status": "OK",
+      "n_cycles": 1015,
+      "seconds": 2.11
+    },
+    {
+      "global_id": "b1c25",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 25,
+      "status": "OK",
+      "n_cycles": 852,
+      "seconds": 1.7
+    },
+    {
+      "global_id": "b1c26",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 26,
+      "status": "OK",
+      "n_cycles": 868,
+      "seconds": 1.71
+    },
+    {
+      "global_id": "b1c27",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 27,
+      "status": "OK",
+      "n_cycles": 840,
+      "seconds": 1.6
+    },
+    {
+      "global_id": "b1c28",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 28,
+      "status": "OK",
+      "n_cycles": 858,
+      "seconds": 1.91
+    },
+    {
+      "global_id": "b1c29",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 29,
+      "status": "OK",
+      "n_cycles": 915,
+      "seconds": 1.79
+    },
+    {
+      "global_id": "b1c30",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 30,
+      "status": "OK",
+      "n_cycles": 707,
+      "seconds": 1.46
+    },
+    {
+      "global_id": "b1c31",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 31,
+      "status": "OK",
+      "n_cycles": 874,
+      "seconds": 1.82
+    },
+    {
+      "global_id": "b1c33",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 33,
+      "status": "OK",
+      "n_cycles": 755,
+      "seconds": 1.43
+    },
+    {
+      "global_id": "b1c34",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 34,
+      "status": "OK",
+      "n_cycles": 740,
+      "seconds": 1.51
+    },
+    {
+      "global_id": "b1c35",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 35,
+      "status": "OK",
+      "n_cycles": 701,
+      "seconds": 1.46
+    },
+    {
+      "global_id": "b1c36",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 36,
+      "status": "OK",
+      "n_cycles": 702,
+      "seconds": 1.39
+    },
+    {
+      "global_id": "b1c37",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 37,
+      "status": "OK",
+      "n_cycles": 646,
+      "seconds": 1.29
+    },
+    {
+      "global_id": "b1c38",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 38,
+      "status": "OK",
+      "n_cycles": 615,
+      "seconds": 1.14
+    },
+    {
+      "global_id": "b1c39",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 39,
+      "status": "OK",
+      "n_cycles": 623,
+      "seconds": 1.17
+    },
+    {
+      "global_id": "b1c40",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 40,
+      "status": "OK",
+      "n_cycles": 964,
+      "seconds": 2.12
+    },
+    {
+      "global_id": "b1c42",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 42,
+      "status": "OK",
+      "n_cycles": 700,
+      "seconds": 1.52
+    },
+    {
+      "global_id": "b1c44",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 44,
+      "status": "OK",
+      "n_cycles": 614,
+      "seconds": 1.11
+    },
+    {
+      "global_id": "b1c45",
+      "batch_file": "MATR_batch_20170512.mat",
+      "cell_index": 45,
+      "status": "OK",
+      "n_cycles": 597,
+      "seconds": 1.34
+    },
+    {
+      "global_id": "b2c0",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 0,
+      "status": "OK",
+      "n_cycles": 325,
+      "seconds": 0.47
+    },
+    {
+      "global_id": "b2c2",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 2,
+      "status": "OK",
+      "n_cycles": 463,
+      "seconds": 0.78
+    },
+    {
+      "global_id": "b2c3",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 3,
+      "status": "OK",
+      "n_cycles": 360,
+      "seconds": 0.58
+    },
+    {
+      "global_id": "b2c4",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 4,
+      "status": "OK",
+      "n_cycles": 470,
+      "seconds": 0.76
+    },
+    {
+      "global_id": "b2c5",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 5,
+      "status": "OK",
+      "n_cycles": 506,
+      "seconds": 0.98
+    },
+    {
+      "global_id": "b2c6",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 6,
+      "status": "OK",
+      "n_cycles": 544,
+      "seconds": 1.06
+    },
+    {
+      "global_id": "b2c7",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 7,
+      "status": "OK",
+      "n_cycles": 661,
+      "seconds": 1.88
+    },
+    {
+      "global_id": "b2c8",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 8,
+      "status": "OK",
+      "n_cycles": 980,
+      "seconds": 3.05
+    },
+    {
+      "global_id": "b2c10",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 10,
+      "status": "OK",
+      "n_cycles": 595,
+      "seconds": 1.18
+    },
+    {
+      "global_id": "b2c11",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 11,
+      "status": "OK",
+      "n_cycles": 504,
+      "seconds": 1.5
+    },
+    {
+      "global_id": "b2c12",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 12,
+      "status": "OK",
+      "n_cycles": 490,
+      "seconds": 0.92
+    },
+    {
+      "global_id": "b2c14",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 14,
+      "status": "OK",
+      "n_cycles": 508,
+      "seconds": 1.16
+    },
+    {
+      "global_id": "b2c15",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 15,
+      "status": "OK",
+      "n_cycles": 207,
+      "seconds": 0.58
+    },
+    {
+      "global_id": "b2c16",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 16,
+      "status": "OK",
+      "n_cycles": 481,
+      "seconds": 1.67
+    },
+    {
+      "global_id": "b2c17",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 17,
+      "status": "OK",
+      "n_cycles": 524,
+      "seconds": 1.44
+    },
+    {
+      "global_id": "b2c18",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 18,
+      "status": "OK",
+      "n_cycles": 522,
+      "seconds": 0.93
+    },
+    {
+      "global_id": "b2c19",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 19,
+      "status": "OK",
+      "n_cycles": 488,
+      "seconds": 1.02
+    },
+    {
+      "global_id": "b2c20",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 20,
+      "status": "OK",
+      "n_cycles": 530,
+      "seconds": 1.43
+    },
+    {
+      "global_id": "b2c21",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 21,
+      "status": "OK",
+      "n_cycles": 519,
+      "seconds": 1.17
+    },
+    {
+      "global_id": "b2c22",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 22,
+      "status": "OK",
+      "n_cycles": 539,
+      "seconds": 1.09
+    },
+    {
+      "global_id": "b2c23",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 23,
+      "status": "OK",
+      "n_cycles": 561,
+      "seconds": 0.93
+    },
+    {
+      "global_id": "b2c25",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 25,
+      "status": "OK",
+      "n_cycles": 486,
+      "seconds": 1.12
+    },
+    {
+      "global_id": "b2c26",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 26,
+      "status": "OK",
+      "n_cycles": 497,
+      "seconds": 0.9
+    },
+    {
+      "global_id": "b2c27",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 27,
+      "status": "OK",
+      "n_cycles": 494,
+      "seconds": 1.0
+    },
+    {
+      "global_id": "b2c28",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 28,
+      "status": "OK",
+      "n_cycles": 540,
+      "seconds": 1.13
+    },
+    {
+      "global_id": "b2c29",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 29,
+      "status": "OK",
+      "n_cycles": 521,
+      "seconds": 1.57
+    },
+    {
+      "global_id": "b2c30",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 30,
+      "status": "OK",
+      "n_cycles": 506,
+      "seconds": 1.3
+    },
+    {
+      "global_id": "b2c31",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 31,
+      "status": "OK",
+      "n_cycles": 518,
+      "seconds": 1.61
+    },
+    {
+      "global_id": "b2c33",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 33,
+      "status": "OK",
+      "n_cycles": 545,
+      "seconds": 1.18
+    },
+    {
+      "global_id": "b2c34",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 34,
+      "status": "OK",
+      "n_cycles": 525,
+      "seconds": 1.25
+    },
+    {
+      "global_id": "b2c35",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 35,
+      "status": "OK",
+      "n_cycles": 485,
+      "seconds": 1.11
+    },
+    {
+      "global_id": "b2c36",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 36,
+      "status": "OK",
+      "n_cycles": 559,
+      "seconds": 1.19
+    },
+    {
+      "global_id": "b2c37",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 37,
+      "status": "OK",
+      "n_cycles": 501,
+      "seconds": 1.41
+    },
+    {
+      "global_id": "b2c38",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 38,
+      "status": "OK",
+      "n_cycles": 486,
+      "seconds": 1.42
+    },
+    {
+      "global_id": "b2c39",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 39,
+      "status": "OK",
+      "n_cycles": 479,
+      "seconds": 1.31
+    },
+    {
+      "global_id": "b2c40",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 40,
+      "status": "OK",
+      "n_cycles": 529,
+      "seconds": 1.56
+    },
+    {
+      "global_id": "b2c41",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 41,
+      "status": "OK",
+      "n_cycles": 451,
+      "seconds": 1.01
+    },
+    {
+      "global_id": "b2c43",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 43,
+      "status": "OK",
+      "n_cycles": 486,
+      "seconds": 1.2
+    },
+    {
+      "global_id": "b2c45",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 45,
+      "status": "OK",
+      "n_cycles": 513,
+      "seconds": 1.24
+    },
+    {
+      "global_id": "b2c46",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 46,
+      "status": "OK",
+      "n_cycles": 448,
+      "seconds": 0.82
+    },
+    {
+      "global_id": "b2c47",
+      "batch_file": "MATR_batch_20170630.mat",
+      "cell_index": 47,
+      "status": "OK",
+      "n_cycles": 744,
+      "seconds": 1.87
+    },
+    {
+      "global_id": "b3c1",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 1,
+      "status": "OK",
+      "n_cycles": 1061,
+      "seconds": 2.5
+    },
+    {
+      "global_id": "b3c2",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 2,
+      "status": "OK",
+      "n_cycles": 1265,
+      "seconds": 3.89
+    },
+    {
+      "global_id": "b3c3",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 3,
+      "status": "OK",
+      "n_cycles": 1113,
+      "seconds": 2.26
+    },
+    {
+      "global_id": "b3c4",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 4,
+      "status": "OK",
+      "n_cycles": 1046,
+      "seconds": 3.36
+    },
+    {
+      "global_id": "b3c5",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 5,
+      "status": "OK",
+      "n_cycles": 826,
+      "seconds": 3.3
+    },
+    {
+      "global_id": "b3c6",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 6,
+      "status": "OK",
+      "n_cycles": 665,
+      "seconds": 1.9
+    },
+    {
+      "global_id": "b3c7",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 7,
+      "status": "OK",
+      "n_cycles": 1834,
+      "seconds": 5.29
+    },
+    {
+      "global_id": "b3c8",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 8,
+      "status": "OK",
+      "n_cycles": 826,
+      "seconds": 1.93
+    },
+    {
+      "global_id": "b3c9",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 9,
+      "status": "OK",
+      "n_cycles": 1037,
+      "seconds": 2.9
+    },
+    {
+      "global_id": "b3c10",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 10,
+      "status": "OK",
+      "n_cycles": 1076,
+      "seconds": 2.75
+    },
+    {
+      "global_id": "b3c11",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 11,
+      "status": "OK",
+      "n_cycles": 815,
+      "seconds": 2.19
+    },
+    {
+      "global_id": "b3c12",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 12,
+      "status": "OK",
+      "n_cycles": 930,
+      "seconds": 2.09
+    },
+    {
+      "global_id": "b3c15",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 15,
+      "status": "OK",
+      "n_cycles": 874,
+      "seconds": 2.22
+    },
+    {
+      "global_id": "b3c16",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 16,
+      "status": "OK",
+      "n_cycles": 1636,
+      "seconds": 4.48
+    },
+    {
+      "global_id": "b3c17",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 17,
+      "status": "OK",
+      "n_cycles": 1313,
+      "seconds": 4.87
+    },
+    {
+      "global_id": "b3c18",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 18,
+      "status": "OK",
+      "n_cycles": 1144,
+      "seconds": 3.39
+    },
+    {
+      "global_id": "b3c19",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 19,
+      "status": "OK",
+      "n_cycles": 1153,
+      "seconds": 4.91
+    },
+    {
+      "global_id": "b3c20",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 20,
+      "status": "OK",
+      "n_cycles": 811,
+      "seconds": 3.8
+    },
+    {
+      "global_id": "b3c21",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 21,
+      "status": "OK",
+      "n_cycles": 770,
+      "seconds": 4.3
+    },
+    {
+      "global_id": "b3c22",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 22,
+      "status": "OK",
+      "n_cycles": 1000,
+      "seconds": 4.68
+    },
+    {
+      "global_id": "b3c23",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 23,
+      "status": "OK",
+      "n_cycles": 2188,
+      "seconds": 11.41
+    },
+    {
+      "global_id": "b3c24",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 24,
+      "status": "OK",
+      "n_cycles": 823,
+      "seconds": 2.43
+    },
+    {
+      "global_id": "b3c25",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 25,
+      "status": "OK",
+      "n_cycles": 987,
+      "seconds": 4.13
+    },
+    {
+      "global_id": "b3c26",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 26,
+      "status": "OK",
+      "n_cycles": 1026,
+      "seconds": 3.89
+    },
+    {
+      "global_id": "b3c27",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 27,
+      "status": "OK",
+      "n_cycles": 848,
+      "seconds": 2.62
+    },
+    {
+      "global_id": "b3c29",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 29,
+      "status": "OK",
+      "n_cycles": 856,
+      "seconds": 2.77
+    },
+    {
+      "global_id": "b3c30",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 30,
+      "status": "OK",
+      "n_cycles": 933,
+      "seconds": 3.22
+    },
+    {
+      "global_id": "b3c31",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 31,
+      "status": "OK",
+      "n_cycles": 729,
+      "seconds": 2.16
+    },
+    {
+      "global_id": "b3c32",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 32,
+      "status": "OK",
+      "n_cycles": 2236,
+      "seconds": 12.85
+    },
+    {
+      "global_id": "b3c34",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 34,
+      "status": "OK",
+      "n_cycles": 1156,
+      "seconds": 5.05
+    },
+    {
+      "global_id": "b3c36",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 36,
+      "status": "OK",
+      "n_cycles": 921,
+      "seconds": 3.89
+    },
+    {
+      "global_id": "b3c37",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 37,
+      "status": "OK",
+      "n_cycles": 1388,
+      "seconds": 5.12
+    },
+    {
+      "global_id": "b3c39",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 39,
+      "status": "OK",
+      "n_cycles": 1154,
+      "seconds": 4.81
+    },
+    {
+      "global_id": "b3c40",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 40,
+      "status": "OK",
+      "n_cycles": 794,
+      "seconds": 3.01
+    },
+    {
+      "global_id": "b3c41",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 41,
+      "status": "OK",
+      "n_cycles": 784,
+      "seconds": 2.74
+    },
+    {
+      "global_id": "b3c42",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 42,
+      "status": "OK",
+      "n_cycles": 1640,
+      "seconds": 5.97
+    },
+    {
+      "global_id": "b3c43",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 43,
+      "status": "OK",
+      "n_cycles": 1044,
+      "seconds": 3.41
+    },
+    {
+      "global_id": "b3c44",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 44,
+      "status": "OK",
+      "n_cycles": 938,
+      "seconds": 3.75
+    },
+    {
+      "global_id": "b3c45",
+      "batch_file": "MATR_batch_20180412.mat",
+      "cell_index": 45,
+      "status": "OK",
+      "n_cycles": 1799,
+      "seconds": 7.7
+    },
+    {
+      "global_id": "b4c1",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 1,
+      "status": "OK",
+      "n_cycles": 861,
+      "seconds": 3.29
+    },
+    {
+      "global_id": "b4c2",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 2,
+      "status": "OK",
+      "n_cycles": 784,
+      "seconds": 3.23
+    },
+    {
+      "global_id": "b4c3",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 3,
+      "status": "OK",
+      "n_cycles": 911,
+      "seconds": 3.96
+    },
+    {
+      "global_id": "b4c4",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 4,
+      "status": "OK",
+      "n_cycles": 912,
+      "seconds": 3.77
+    },
+    {
+      "global_id": "b4c6",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 6,
+      "status": "OK",
+      "n_cycles": 777,
+      "seconds": 3.17
+    },
+    {
+      "global_id": "b4c7",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 7,
+      "status": "OK",
+      "n_cycles": 562,
+      "seconds": 2.21
+    },
+    {
+      "global_id": "b4c8",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 8,
+      "status": "OK",
+      "n_cycles": 718,
+      "seconds": 3.14
+    },
+    {
+      "global_id": "b4c10",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 10,
+      "status": "OK",
+      "n_cycles": 1082,
+      "seconds": 4.6
+    },
+    {
+      "global_id": "b4c11",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 11,
+      "status": "OK",
+      "n_cycles": 930,
+      "seconds": 3.91
+    },
+    {
+      "global_id": "b4c12",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 12,
+      "status": "OK",
+      "n_cycles": 898,
+      "seconds": 3.34
+    },
+    {
+      "global_id": "b4c13",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 13,
+      "status": "OK",
+      "n_cycles": 869,
+      "seconds": 3.0
+    },
+    {
+      "global_id": "b4c14",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 14,
+      "status": "OK",
+      "n_cycles": 767,
+      "seconds": 2.58
+    },
+    {
+      "global_id": "b4c15",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 15,
+      "status": "OK",
+      "n_cycles": 871,
+      "seconds": 2.92
+    },
+    {
+      "global_id": "b4c16",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 16,
+      "status": "OK",
+      "n_cycles": 983,
+      "seconds": 3.85
+    },
+    {
+      "global_id": "b4c17",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 17,
+      "status": "OK",
+      "n_cycles": 930,
+      "seconds": 3.14
+    },
+    {
+      "global_id": "b4c18",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 18,
+      "status": "OK",
+      "n_cycles": 1057,
+      "seconds": 3.86
+    },
+    {
+      "global_id": "b4c19",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 19,
+      "status": "OK",
+      "n_cycles": 1111,
+      "seconds": 3.89
+    },
+    {
+      "global_id": "b4c20",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 20,
+      "status": "OK",
+      "n_cycles": 804,
+      "seconds": 3.08
+    },
+    {
+      "global_id": "b4c22",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 22,
+      "status": "OK",
+      "n_cycles": 745,
+      "seconds": 2.97
+    },
+    {
+      "global_id": "b4c23",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 23,
+      "status": "OK",
+      "n_cycles": 1094,
+      "seconds": 4.32
+    },
+    {
+      "global_id": "b4c24",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 24,
+      "status": "OK",
+      "n_cycles": 1115,
+      "seconds": 3.96
+    },
+    {
+      "global_id": "b4c25",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 25,
+      "status": "OK",
+      "n_cycles": 567,
+      "seconds": 1.75
+    },
+    {
+      "global_id": "b4c26",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 26,
+      "status": "OK",
+      "n_cycles": 579,
+      "seconds": 1.92
+    },
+    {
+      "global_id": "b4c27",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 27,
+      "status": "OK",
+      "n_cycles": 563,
+      "seconds": 1.83
+    },
+    {
+      "global_id": "b4c28",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 28,
+      "status": "OK",
+      "n_cycles": 882,
+      "seconds": 3.18
+    },
+    {
+      "global_id": "b4c29",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 29,
+      "status": "OK",
+      "n_cycles": 956,
+      "seconds": 3.04
+    },
+    {
+      "global_id": "b4c30",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 30,
+      "status": "OK",
+      "n_cycles": 719,
+      "seconds": 2.75
+    },
+    {
+      "global_id": "b4c31",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 31,
+      "status": "OK",
+      "n_cycles": 832,
+      "seconds": 2.56
+    },
+    {
+      "global_id": "b4c32",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 32,
+      "status": "OK",
+      "n_cycles": 839,
+      "seconds": 3.09
+    },
+    {
+      "global_id": "b4c33",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 33,
+      "status": "OK",
+      "n_cycles": 530,
+      "seconds": 1.89
+    },
+    {
+      "global_id": "b4c34",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 34,
+      "status": "OK",
+      "n_cycles": 997,
+      "seconds": 4.18
+    },
+    {
+      "global_id": "b4c35",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 35,
+      "status": "OK",
+      "n_cycles": 1131,
+      "seconds": 4.81
+    },
+    {
+      "global_id": "b4c37",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 37,
+      "status": "OK",
+      "n_cycles": 1005,
+      "seconds": 4.45
+    },
+    {
+      "global_id": "b4c40",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 40,
+      "status": "OK",
+      "n_cycles": 1122,
+      "seconds": 4.94
+    },
+    {
+      "global_id": "b4c41",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 41,
+      "status": "OK",
+      "n_cycles": 997,
+      "seconds": 4.0
+    },
+    {
+      "global_id": "b4c42",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 42,
+      "status": "OK",
+      "n_cycles": 915,
+      "seconds": 1.99
+    },
+    {
+      "global_id": "b4c43",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 43,
+      "status": "OK",
+      "n_cycles": 951,
+      "seconds": 2.46
+    },
+    {
+      "global_id": "b4c44",
+      "batch_file": "MATR_batch_20190124.mat",
+      "cell_index": 44,
+      "status": "OK",
+      "n_cycles": 1077,
+      "seconds": 2.66
+    }
+  ]
+}
