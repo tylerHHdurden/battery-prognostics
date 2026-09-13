@@ -5649,3 +5649,118 @@ New file: `src/run_stage1_followup_B_jackknife_baseline.py`. Output:
 No retraining of any deep model; does not touch the deployed Streamlit
 app. Per instruction: not proceeding to Stage 2 - reporting back and
 awaiting further direction.
+
+## Follow-up session 40 — three Stage 1 closeout checks: noise anomaly, feature/constraint overlap, Jackknife+ driver
+
+Three small, cheap checks before Stage 2 - no retraining of any deep
+model, no changes to the deployed app. Standard practice: report
+plainly regardless of outcome.
+
+### Check 1 — the 1.4 noise-robustness anomaly: NOT session 26's pattern
+
+Re-ran item 1.4's robustness-margin evaluation for the MSE-baseline
+PiFormer, broken out per battery (all 40 expanded-pool test batteries,
+clean vs. 5x-BMS-grade stress). Sanity-checked first: both conditions'
+pooled numbers reproduced exactly (R2=0.7795 clean, R2=0.8752 stress)
+before trusting the breakdown.
+
+**Result: 38 of 40 batteries (95%) genuinely DEGRADE under noise**
+(delta R2 < -0.01), exactly as physically expected - MIT mean delta
+R2 = -0.092, 0 of 36 MIT batteries improve. **Only ONE battery
+"improves" - NASA/B0053 - and by an enormous, distorting margin**
+(delta R2 = +311.4, from R2=-442.5 clean to R2=-131.1 at 5x-stress).
+B0053's predictions are already catastrophically wrong under clean
+conditions (R2 deeply negative, i.e. worse than predicting the mean) -
+under stress noise they become somewhat LESS catastrophically wrong,
+and this single battery's swing (from 55 of 29,489 total test cycles,
+0.19% of the data) is large enough in squared-error terms to flip the
+entire pooled R2 from 0.7795 to 0.8752.
+
+**This does NOT match session 26's pattern** (a genuine majority-mild-
+improve/minority-genuinely-degrades split, with NASA/B0018 as the
+consistent degrader). Here the pattern is closer to the opposite: an
+overwhelming majority (39 of 40, everything except B0053) shows
+legitimate degradation or flat behavior, and the pooled "improvement"
+is a pure artifact of one extreme, already-broken outlier dominating a
+cycle-weighted average. **The pooled "R2 improved under noise" number
+is an artifact, not a real aggregate effect** - confirmed directly,
+not assumed, exactly as session 26 established this distinction
+matters. B0025 and B0030 (the other 2 fast-fading NASA batteries) also
+degrade under noise, consistent with the majority pattern - B0053 is
+the sole outlier driving the pooled anomaly.
+
+New file: `src/run_stage1_followup_check1_noise_perbattery.py`.
+Outputs: `outputs/stage1_followup_check1_perbattery_{r2,rmse}.csv`.
+
+### Check 2 — does 1.5's gain overlap with 1.1's features? Yes, they interact
+
+Correlation between cycle_idx and 1.1's reformulated duration features
+(training set): ICHV_rel r=-0.213, TEVD_rel r=-0.225, TEVI_rel
+r=-0.103 - weak-to-moderate, not strongly overlapping on a first pass.
+
+Re-ran 1.5's evaluation (monotone_constraints on cycle_idx) WITH and
+WITHOUT 1.1's reformulated features (raw duration features in the
+"without" case):
+
+| | CALCE R2 | 1.5's gain |
+|---|---|---|
+| baseline -> 1.5-alone (raw features) | 0.3507 -> 0.3823 | **+0.0316** |
+| 1.1-alone -> 1.1+1.5 (reformulated features) | 0.5530 -> 0.5672 | **+0.0142** |
+
+**OUTCOME: (b) - SUBSTANTIALLY DIFFERENT (roughly half the gain with
+1.1's features present vs. without).** The two are not independent,
+additive contributions despite the weak raw correlation suggested by
+step 1 - 1.5's contribution should be described as layered on 1.1
+specifically (still a real, positive contribution either way - just
+not separable into two independently-additive findings for a paper).
+
+### Check 3 — which factor drives the Jackknife+ jump? Primarily 1.1
+
+Reused the identical Jackknife+ code path (K=3 leave-one-battery-out,
+same calibration pool, same MAPIE settings) against 1.1-alone and
+1.5-alone (reusing Check 2's exact same two configurations), alongside
+the already-known baseline and 1.1+1.5-combined numbers:
+
+| config | split-conformal | Jackknife+ | jump |
+|---|---|---|---|
+| baseline | 16.6% | 21.3% | +4.7pp |
+| **1.1-alone** | 9.5% | **34.4%** | **+24.9pp** |
+| 1.5-alone | 24.3% | 32.8% | +8.5pp |
+| 1.1+1.5 combined | 6.7% | 37.1% | +30.3pp |
+
+**OUTCOME: 1.1 (the reformulated duration features) is the primary
+driver** - its standalone jump (+24.9pp) is ~82% of the full combined
+jump (+30.3pp), far larger than 1.5's standalone contribution
+(+8.5pp, ~28% of the combined jump). The two are mostly additive from
+the baseline (24.9+8.5-4.7=28.7pp expected if purely additive, vs.
+30.3pp actual - a small, ~1.6pp residual synergy, not a large
+interaction effect). **Practical implication**: any Stage 3 work
+building on the Jackknife+ lead should prioritize investigating WHY
+1.1's reformulated features specifically make Jackknife+ this
+effective (not 1.5, and not the combination as a novel mechanism) -
+this narrows the follow-up work meaningfully.
+
+New file: `src/run_stage1_followup_check2_3_overlap.py` (Checks 2 and
+3 share the same 4 model configurations, run together to avoid
+redundant retraining). Output:
+`outputs/stage1_followup_check2_3_comparison.csv`.
+
+**One real bug found and fixed while building this check, logged per
+this project's own standard**: `stage1_common.py`'s `build_calce_merged()`
+caches its result DataFrame at module level across calls - correct for
+every existing single-config script, but wrong here, since this script
+calls it with two different `hi_df` arguments (raw vs. reformulated) in
+the same process; the second call silently returned the first call's
+stale result, causing a `KeyError` on the reformulated columns. Fixed
+locally (a `build_calce_merged_fresh()` helper in the new script that
+reuses the correctly hi_df-independent CALCE tensor/embedding cache but
+does the final hi_df merge fresh every call) rather than touching the
+shared `stage1_common.py`, and verified explicitly (an assertion that
+the two resulting CALCE frames are genuinely distinct) before trusting
+any downstream number.
+
+---
+
+No retraining of any deep model; does not touch the deployed Streamlit
+app. Per instruction: not proceeding to Stage 2 - reporting back and
+awaiting further direction.

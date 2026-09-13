@@ -1,0 +1,44 @@
+[check2-3] === Check 2, point 1: correlation between cycle_idx and 1.1's reformulated features ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[check2-3] corr(cycle_idx, ICHV_rel) across training set: -0.2133
+[check2-3] corr(cycle_idx, TEVD_rel) across training set: -0.2254
+[check2-3] corr(cycle_idx, TEVI_rel) across training set: -0.1033
+
+[check2-3] === Building 4 configurations (baseline / 1.1-alone / 1.5-alone / 1.1+1.5) ===
+[check2-3] verified: raw vs. reformulated CALCE frames are now genuinely distinct (cache bug fixed)
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[check2-3] [baseline] in-domain R2=0.9173 | CALCE R2=0.3507 | split-conformal coverage=0.1663 (width=4.920) | Jackknife+ coverage=0.2132 (width=11.699)
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[check2-3] [1.1_alone] in-domain R2=0.9774 | CALCE R2=0.5530 | split-conformal coverage=0.0945 (width=2.146) | Jackknife+ coverage=0.3438 (width=11.352)
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[check2-3] [1.5_alone] in-domain R2=0.9484 | CALCE R2=0.3823 | split-conformal coverage=0.2431 (width=5.560) | Jackknife+ coverage=0.3278 (width=11.943)
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[check2-3] [1.1_plus_1.5] in-domain R2=0.9750 | CALCE R2=0.5672 | split-conformal coverage=0.0673 (width=2.332) | Jackknife+ coverage=0.3706 (width=11.890)
+
+[check2-3] === FULL 4-ROW COMPARISON TABLE ===
+      config  indomain_r2  calce_r2  split_conformal_coverage  split_conformal_width  jackknife_coverage  jackknife_width
+    baseline     0.917332  0.350703                  0.166270               4.919843            0.213193        11.699040
+   1.1_alone     0.977385  0.552974                  0.094526               2.145527            0.343761        11.352285
+   1.5_alone     0.948444  0.382287                  0.243115               5.560296            0.327780        11.943343
+1.1_plus_1.5     0.974963  0.567170                  0.067324               2.331527            0.370622        11.890040
+
+[check2-3] === CHECK 2: does 1.5's gain depend on 1.1's features? ===
+[check2-3] 1.5's CALCE R2 gain WITHOUT 1.1 (raw features): +0.0316 (0.3507 -> 0.3823)
+[check2-3] 1.5's CALCE R2 gain WITH 1.1 (reformulated features, i.e. layered on top): +0.0142 (0.5530 -> 0.5672)
+[check2-3] CHECK 2 OUTCOME: (b) SUBSTANTIALLY DIFFERENT depending on whether 1.1's features are present - the two interact, and 1.5's contribution should be described as layered on 1.1 specifically, not as an independent finding.
+
+[check2-3] === CHECK 3: which factor drives the Jackknife+ jump? ===
+[check2-3] baseline jump:     0.1663 -> 0.2132 (+0.0469)
+[check2-3] 1.1-alone jump:    0.0945 -> 0.3438 (+0.2492)
+[check2-3] 1.5-alone jump:    0.2431 -> 0.3278 (+0.0847)
+[check2-3] 1.1+1.5 jump:      0.0673 -> 0.3706 (+0.3033)
+[check2-3] CHECK 3 OUTCOME: 1.1 (reformulated features) is the primary driver of the large Jackknife+ jump.
+
+[check2-3] saved outputs/stage1_followup_check2_3_comparison.csv
+[check2-3] DONE
