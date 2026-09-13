@@ -6835,3 +6835,125 @@ summary}.csv`, `logs/logs_b0045_rootcause.txt`.
 No retraining; does not touch the deployed Streamlit app. Per
 instruction: not proceeding to Stage 3 - reporting back and awaiting
 further direction.
+
+## Follow-up session 47 — verification pass: items 1-2 from the 8-item closeout, confirmed never executed and now completed
+
+Confirmed via direct search of `DEVELOPMENT_LOG.md` and the `outputs/`/
+`src/` directories: items 1 (PiFormer attention on B0053) and 2
+(CNN-LSTM noise-training speedup mechanism) from the earlier 8-item
+closeout were listed but never actually run - no devlog entry, no
+output file, no script existed for either. Both are executed here.
+Pure analysis, no retraining, no deployed-app changes.
+
+### 1 — PiFormer's B0053 attention hypothesis: refuted as originally framed; real cause found one level deeper
+
+**The original hypothesis doesn't even apply as stated, checked
+directly before doing anything else**: B0053's flagged anomalous
+cycle (cycle 55, the near-zero-capacity reading) produces `None` from
+`get_cycle_tensor()` - it is structurally EXCLUDED from PiFormer's
+input entirely, never reaching the model. "Does attention handle this
+specific cycle gracefully" is not a testable question as originally
+framed.
+
+**A more important, unprompted finding surfaced immediately on
+checking the actual per-cycle predictions**: this is not a
+one-bad-cycle problem at all. Pulled the MSE-trained PiFormer-
+expanded's predictions for all 54 of B0053's actually-evaluated
+cycles - **every single one is catastrophically wrong** (true SOH
+stays in an 85-100% band throughout; predicted SOH bounces chaotically
+between ~0.1 and ~82, with no coherent relationship to the true curve
+or to cycle progression). This is a battery-wide failure, not a
+localized one.
+
+**Pursued the obvious follow-on question this raises (attention on
+B0053 vs. a normal battery, B0030), since it's cheap and directly
+answers "where does the error actually come from"**:
+- **Attention entropy and concentration are unremarkable** - B0053's
+  layer-0 attention entropy (3.73-4.04, out of a max possible 5.30)
+  and max per-position weight (0.19-0.24) sit in the same range as
+  B0030's (3.78-4.01 entropy, 0.12-0.21 max weight). No evidence of
+  attention collapsing onto or ignoring anything unusual.
+- **The real cause: B0053's normalized INPUT is severely out-of-
+  distribution**, and the model's raw output is wildly extrapolated
+  as a result. Mean normalized input value: B0053=-0.99 vs.
+  B0030=+0.13. Raw model output (z-scored target space, where ~0
+  is typical): B0053 sits at **-14 to -16**, vs. B0030's normal
+  -0.20 to -0.27.
+- **Pinned to a specific channel**: per-channel breakdown shows the
+  **temperature channel (T_t) is fully saturated at the clip floor for
+  B0053's ENTIRE trace** (normalized T_t = -2.297, std=0.000 - pinned
+  to the identical value at all 200 timesteps of every cycle), vs.
+  B0030 pinned at the opposite extreme (+2.538, also std=0.000).
+  B0053 was evidently cycled at a substantially colder temperature
+  than the pool the normalization stats were fit on - a real,
+  structural distribution-shift on one input channel, not a
+  localized "weird cycle" problem and not an attention-mechanism
+  failure.
+
+**Verdict, stated plainly**: attention looks unremarkable; the error
+originates from B0053's input data sitting far outside the
+distribution the model's channel-normalization stats (and by
+extension its trained weights) were calibrated for - most visibly on
+the temperature channel. Session 33's original attention-specific
+hypothesis is not supported by direct inspection.
+
+### 2 — CNN-LSTM noise-training speedup: a real, but nuanced, training-dynamics effect - not a spurious early-stopping artifact, but also not a clean win
+
+**Epoch-count vs. per-epoch wall time, both checked directly against
+the original saved histories/logs**:
+
+| | total time | epochs (0-indexed) | avg. time/epoch |
+|---|---|---|---|
+| clean | 1683.1s (28.05 min) | 25 (stopped at 24) | 67.3s |
+| noise-augmented | 497.9s (8.3 min) | 12 (stopped at 11) | 41.5s |
+
+Both the epoch COUNT and the average per-epoch time are lower for the
+noise-augmented run. The per-epoch time difference cannot be
+attributed to a specific mechanism from existing artifacts alone (no
+per-epoch wall-clock timestamps were logged, only per-run totals) -
+reported honestly as unresolved at that level of granularity, not
+guessed at.
+
+**The epoch-count difference, however, IS precisely explained, using
+the saved val_loss histories directly**: both runs early-stop under
+the identical patience=8 rule. Clean's best val_loss (0.1053) occurs
+at epoch 16, and training correctly stops exactly 8 epochs later, at
+epoch 24 (16+8=24, exact). Noise-augmented's best val_loss (0.1273)
+occurs at epoch 3, and correctly stops exactly 8 epochs later, at
+epoch 11 (3+8=11, exact). **In both cases, patience=8 fired exactly
+as designed - this is NOT a noisy/spurious early-stopping artifact.**
+
+**Critically, validation loss itself is computed on CLEAN data for
+BOTH runs** (confirmed directly from `train_one_model_noise_augmented`'s
+own code: noise is injected on the training batch only, `val_pred =
+model(Xv)` uses the untouched clean validation tensor) - so this is
+not "early stopping firing sooner on a noisier validation signal," the
+second hypothesis raised in session 35. Both hypotheses from session
+35 are addressed: **not the noisy-validation-signal explanation (val
+is clean for both); the BatchNorm-stabilizes-faster hypothesis cannot
+be directly confirmed or refuted from existing artifacts (no saved
+per-epoch running-statistic trajectory, and retraining with added
+instrumentation is out of this pass's scope) - stated as genuinely
+open, not answered by proxy.**
+
+**What IS confirmed**: noise-augmented training reaches ITS OWN best
+validation performance dramatically earlier in training (epoch 3 vs.
+epoch 16) - a genuine training-dynamics effect, not an artifact of the
+stopping rule itself. **One honest caveat, not smoothed over**:
+noise-augmented training's best achieved validation loss (0.1273) is
+itself WORSE than clean training's best (0.1053) - it converges to a
+regularized optimum faster, but that optimum is a genuinely weaker
+one on this metric. **Implication for relying on this elsewhere,
+stated directly**: the speedup is real and reproducible from the
+saved data, not a fluke - but it should not be read as "noise-
+augmented training is strictly better and faster" - it is faster to
+its OWN (slightly worse) plateau, a real trade-off worth carrying into
+any future decision to use this technique elsewhere, not just a free
+speed win.
+
+---
+
+Both items are now genuinely closed out. No retraining performed; does
+not touch the deployed Streamlit app. Per instruction: not proceeding
+to Stage 3 - reporting back and awaiting confirmation that everything
+preceding it is complete.
