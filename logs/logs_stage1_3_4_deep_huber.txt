@@ -1,0 +1,152 @@
+[deep-exp] loaded 204 battery tensors from cache (_expanded_battery_tensors_cache.pkl) in 0.4s - skipped the ~17min raw-data reload
+[stage1.3-4] fit batteries: 132, val: 32, test: 40
+[stage1.3-4] B0053 in test set: True
+[stage1.3-4] fit cycles=95572, val cycles=28183, test cycles=29489
+[stage1.3-4/VLSTM-huber] epoch   0 train_huber=0.2009 val_huber=0.2801
+[stage1.3-4/VLSTM-huber] epoch   1 train_huber=0.0814 val_huber=0.1960
+[stage1.3-4/VLSTM-huber] epoch   2 train_huber=0.0558 val_huber=0.1491
+[stage1.3-4/VLSTM-huber] epoch   3 train_huber=0.0454 val_huber=0.1118
+[stage1.3-4/VLSTM-huber] epoch   4 train_huber=0.1167 val_huber=0.3422
+[stage1.3-4/VLSTM-huber] epoch   5 train_huber=0.1525 val_huber=0.2661
+[stage1.3-4/VLSTM-huber] epoch   6 train_huber=0.0887 val_huber=0.2360
+[stage1.3-4/VLSTM-huber] epoch   7 train_huber=0.0766 val_huber=0.2014
+[stage1.3-4/VLSTM-huber] epoch   8 train_huber=0.0724 val_huber=0.2122
+[stage1.3-4/VLSTM-huber] epoch   9 train_huber=0.0687 val_huber=0.1911
+[stage1.3-4/VLSTM-huber] epoch  10 train_huber=0.0641 val_huber=0.1710
+[stage1.3-4/VLSTM-huber] epoch  11 train_huber=0.0581 val_huber=0.1563
+[stage1.3-4/VLSTM-huber] early stopping at epoch 11
+[stage1.3-4] VLSTM-huber trained in 2587.1s (43.1 min)
+[stage1.3-4] VLSTM-huber TEST RMSE=3.1007 MAE=1.2321 R2=0.8100 (elapsed_min=43.1)
+[stage1.3-4] VLSTM-huber vs. MSE baseline: RMSE 1.6345->3.1007 (+89.7%), R2 0.9472->0.8100
+[stage1.3-4] VLSTM-huber worst 5 batteries:
+battery_id
+B0044    40.049587
+B0053    16.709553
+B0030    14.034025
+b2c9      3.627861
+b2c47     2.962154
+[stage1.3-4] VLSTM-huber B0053 RMSE: 16.7096
+[stage1.3-4/CNNLSTM-huber] epoch   0 train_huber=0.1602 val_huber=0.2613
+[stage1.3-4/CNNLSTM-huber] epoch   1 train_huber=0.0655 val_huber=0.1518
+[stage1.3-4/CNNLSTM-huber] epoch   2 train_huber=0.0482 val_huber=0.1000
+[stage1.3-4/CNNLSTM-huber] epoch   3 train_huber=0.0385 val_huber=0.0693
+[stage1.3-4/CNNLSTM-huber] epoch   4 train_huber=0.0346 val_huber=0.0728
+[stage1.3-4/CNNLSTM-huber] epoch   5 train_huber=0.0272 val_huber=0.0550
+[stage1.3-4/CNNLSTM-huber] epoch   6 train_huber=0.0256 val_huber=0.0839
+[stage1.3-4/CNNLSTM-huber] epoch   7 train_huber=0.0230 val_huber=0.0440
+[stage1.3-4/CNNLSTM-huber] epoch   8 train_huber=0.0207 val_huber=0.0434
+[stage1.3-4/CNNLSTM-huber] epoch   9 train_huber=0.0197 val_huber=0.0732
+[stage1.3-4/CNNLSTM-huber] epoch  10 train_huber=0.0188 val_huber=0.0512
+[stage1.3-4/CNNLSTM-huber] epoch  11 train_huber=0.0173 val_huber=0.0537
+[stage1.3-4/CNNLSTM-huber] epoch  12 train_huber=0.0173 val_huber=0.0582
+[stage1.3-4/CNNLSTM-huber] epoch  13 train_huber=0.0163 val_huber=0.0445
+[stage1.3-4/CNNLSTM-huber] epoch  14 train_huber=0.0155 val_huber=0.0635
+[stage1.3-4/CNNLSTM-huber] epoch  15 train_huber=0.0159 val_huber=0.0602
+[stage1.3-4/CNNLSTM-huber] epoch  16 train_huber=0.0155 val_huber=0.0388
+[stage1.3-4/CNNLSTM-huber] epoch  17 train_huber=0.0152 val_huber=0.0482
+[stage1.3-4/CNNLSTM-huber] epoch  18 train_huber=0.0140 val_huber=0.0561
+[stage1.3-4/CNNLSTM-huber] epoch  19 train_huber=0.0146 val_huber=0.0479
+[stage1.3-4/CNNLSTM-huber] epoch  20 train_huber=0.0145 val_huber=0.0565
+[stage1.3-4/CNNLSTM-huber] epoch  21 train_huber=0.0137 val_huber=0.0468
+[stage1.3-4/CNNLSTM-huber] epoch  22 train_huber=0.0125 val_huber=0.0544
+[stage1.3-4/CNNLSTM-huber] epoch  23 train_huber=0.0121 val_huber=0.0598
+[stage1.3-4/CNNLSTM-huber] epoch  24 train_huber=0.0127 val_huber=0.0460
+[stage1.3-4/CNNLSTM-huber] early stopping at epoch 24
+[stage1.3-4] CNNLSTM-huber trained in 1024.8s (17.1 min)
+[stage1.3-4] CNNLSTM-huber TEST RMSE=1.3531 MAE=0.8171 R2=0.9638 (elapsed_min=17.1)
+[stage1.3-4] CNNLSTM-huber vs. MSE baseline: RMSE 1.3003->1.3531 (+4.1%), R2 0.9666->0.9638
+[stage1.3-4] CNNLSTM-huber worst 5 batteries:
+battery_id
+B0030    12.266146
+B0044     7.873045
+B0053     4.907423
+b3c26     2.104693
+b4c25     1.972501
+[stage1.3-4] CNNLSTM-huber B0053 RMSE: 4.9074
+[stage1.3-4/CNNBiGRU-huber] epoch   0 train_huber=0.1368 val_huber=0.2132
+[stage1.3-4/CNNBiGRU-huber] epoch   1 train_huber=0.0509 val_huber=0.1336
+[stage1.3-4/CNNBiGRU-huber] epoch   2 train_huber=0.0353 val_huber=0.0984
+[stage1.3-4/CNNBiGRU-huber] epoch   3 train_huber=0.0268 val_huber=0.0915
+[stage1.3-4/CNNBiGRU-huber] epoch   4 train_huber=0.0222 val_huber=0.0717
+[stage1.3-4/CNNBiGRU-huber] epoch   5 train_huber=0.0194 val_huber=0.1109
+[stage1.3-4/CNNBiGRU-huber] epoch   6 train_huber=0.0184 val_huber=0.0716
+[stage1.3-4/CNNBiGRU-huber] epoch   7 train_huber=0.0173 val_huber=0.1010
+[stage1.3-4/CNNBiGRU-huber] epoch   8 train_huber=0.0160 val_huber=0.0693
+[stage1.3-4/CNNBiGRU-huber] epoch   9 train_huber=0.0157 val_huber=0.0773
+[stage1.3-4/CNNBiGRU-huber] epoch  10 train_huber=0.0148 val_huber=0.0721
+[stage1.3-4/CNNBiGRU-huber] epoch  11 train_huber=0.0141 val_huber=0.0757
+[stage1.3-4/CNNBiGRU-huber] epoch  12 train_huber=0.0133 val_huber=0.0729
+[stage1.3-4/CNNBiGRU-huber] epoch  13 train_huber=0.0131 val_huber=0.0810
+[stage1.3-4/CNNBiGRU-huber] epoch  14 train_huber=0.0126 val_huber=0.0759
+[stage1.3-4/CNNBiGRU-huber] epoch  15 train_huber=0.0123 val_huber=0.0806
+[stage1.3-4/CNNBiGRU-huber] epoch  16 train_huber=0.0119 val_huber=0.0691
+[stage1.3-4/CNNBiGRU-huber] epoch  17 train_huber=0.0114 val_huber=0.0760
+[stage1.3-4/CNNBiGRU-huber] epoch  18 train_huber=0.0111 val_huber=0.0861
+[stage1.3-4/CNNBiGRU-huber] epoch  19 train_huber=0.0111 val_huber=0.0753
+[stage1.3-4/CNNBiGRU-huber] epoch  20 train_huber=0.0107 val_huber=0.0792
+[stage1.3-4/CNNBiGRU-huber] epoch  21 train_huber=0.0097 val_huber=0.0784
+[stage1.3-4/CNNBiGRU-huber] epoch  22 train_huber=0.0103 val_huber=0.0679
+[stage1.3-4/CNNBiGRU-huber] epoch  23 train_huber=0.0096 val_huber=0.0757
+[stage1.3-4/CNNBiGRU-huber] epoch  24 train_huber=0.0097 val_huber=0.0671
+[stage1.3-4/CNNBiGRU-huber] epoch  25 train_huber=0.0101 val_huber=0.0840
+[stage1.3-4/CNNBiGRU-huber] epoch  26 train_huber=0.0085 val_huber=0.0651
+[stage1.3-4/CNNBiGRU-huber] epoch  27 train_huber=0.0098 val_huber=0.0640
+[stage1.3-4/CNNBiGRU-huber] epoch  28 train_huber=0.0087 val_huber=0.1008
+[stage1.3-4/CNNBiGRU-huber] epoch  29 train_huber=0.0077 val_huber=0.0689
+[stage1.3-4/CNNBiGRU-huber] epoch  30 train_huber=0.0080 val_huber=0.0713
+[stage1.3-4/CNNBiGRU-huber] epoch  31 train_huber=0.0077 val_huber=0.0719
+[stage1.3-4/CNNBiGRU-huber] epoch  32 train_huber=0.0076 val_huber=0.0892
+[stage1.3-4/CNNBiGRU-huber] epoch  33 train_huber=0.0081 val_huber=0.0706
+[stage1.3-4/CNNBiGRU-huber] epoch  34 train_huber=0.0070 val_huber=0.0720
+[stage1.3-4/CNNBiGRU-huber] epoch  35 train_huber=0.0076 val_huber=0.0680
+[stage1.3-4/CNNBiGRU-huber] early stopping at epoch 35
+[stage1.3-4] CNNBiGRU-huber trained in 8295.1s (138.3 min)
+[stage1.3-4] CNNBiGRU-huber TEST RMSE=1.2759 MAE=0.6535 R2=0.9678 (elapsed_min=138.3)
+[stage1.3-4] CNNBiGRU-huber vs. MSE baseline: RMSE 1.4791->1.2759 (-13.7%), R2 0.9568->0.9678
+[stage1.3-4] CNNBiGRU-huber worst 5 batteries:
+battery_id
+B0044    9.697146
+B0053    9.295699
+B0030    4.056585
+b4c25    2.924558
+b4c16    1.835731
+[stage1.3-4] CNNBiGRU-huber B0053 RMSE: 9.2957
+[stage1.3-4/PiFormer-huber-noise] epoch   0 train_huber=0.0659 val_huber=0.1095
+[stage1.3-4/PiFormer-huber-noise] epoch   1 train_huber=0.0370 val_huber=0.0977
+[stage1.3-4/PiFormer-huber-noise] epoch   2 train_huber=0.0268 val_huber=0.0652
+[stage1.3-4/PiFormer-huber-noise] epoch   3 train_huber=0.0191 val_huber=0.0635
+[stage1.3-4/PiFormer-huber-noise] epoch   4 train_huber=0.0155 val_huber=0.0813
+[stage1.3-4/PiFormer-huber-noise] epoch   5 train_huber=0.0140 val_huber=0.0565
+[stage1.3-4/PiFormer-huber-noise] epoch   6 train_huber=0.0132 val_huber=0.0589
+[stage1.3-4/PiFormer-huber-noise] epoch   7 train_huber=0.0125 val_huber=0.0617
+[stage1.3-4/PiFormer-huber-noise] epoch   8 train_huber=0.0116 val_huber=0.0450
+[stage1.3-4/PiFormer-huber-noise] epoch   9 train_huber=0.0113 val_huber=0.0623
+[stage1.3-4/PiFormer-huber-noise] epoch  10 train_huber=0.0105 val_huber=0.0621
+[stage1.3-4/PiFormer-huber-noise] epoch  11 train_huber=0.0100 val_huber=0.0485
+[stage1.3-4/PiFormer-huber-noise] epoch  12 train_huber=0.0089 val_huber=0.0516
+[stage1.3-4/PiFormer-huber-noise] epoch  13 train_huber=0.0086 val_huber=0.0521
+[stage1.3-4/PiFormer-huber-noise] epoch  14 train_huber=0.0085 val_huber=0.0597
+[stage1.3-4/PiFormer-huber-noise] epoch  15 train_huber=0.0081 val_huber=0.0686
+[stage1.3-4/PiFormer-huber-noise] epoch  16 train_huber=0.0076 val_huber=0.0595
+[stage1.3-4/PiFormer-huber-noise] early stopping at epoch 16
+[stage1.3-4] PiFormer-huber-noise trained in 8008.1s (133.5 min)
+[stage1.3-4] PiFormer-huber-noise TEST RMSE=1.4900 MAE=0.7510 R2=0.9561 (elapsed_min=133.5)
+[stage1.3-4] PiFormer-huber-noise vs. MSE baseline: RMSE 3.3405->1.4900 (-55.4%), R2 0.7795->0.9561
+[stage1.3-4] PiFormer-huber-noise worst 5 batteries:
+battery_id
+B0053    19.025740
+B0044    11.604024
+B0030     3.257995
+b4c25     2.612895
+b2c9      1.799148
+[stage1.3-4] PiFormer-huber-noise B0053 RMSE: 19.0257
+
+[stage1.3-4] === FINAL SUMMARY (1.3 + 1.4) ===
+[stage1.3-4] VLSTM-huber: RMSE=3.1007 MAE=1.2321 R2=0.8100
+[stage1.3-4] CNNLSTM-huber: RMSE=1.3531 MAE=0.8171 R2=0.9638
+[stage1.3-4] CNNBiGRU-huber: RMSE=1.2759 MAE=0.6535 R2=0.9678
+[stage1.3-4] PiFormer-huber-noise: RMSE=1.4900 MAE=0.7510 R2=0.9561
+
+[stage1.3-4] PiFormer-huber-noise (1.4) vs. (a) MSE baseline RMSE=3.3405 R2=0.7795; (b) Huber-only (session 35 Part 1) RMSE=1.1649 R2=0.9732; (c) noise-only (session 35 Part 3) RMSE=1.9904 R2=0.9217
+
+[stage1.3-4] ALL DONE in 20005.3s (333.4 min)

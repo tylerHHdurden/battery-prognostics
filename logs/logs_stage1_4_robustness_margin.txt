@@ -1,0 +1,13 @@
+[robustness-margin] expanded-pool test batteries: 40
+[robustness-margin] 4 NASA + 36 MIT test batteries
+[deep-exp] loaded 204 battery tensors from cache (_expanded_battery_tensors_cache.pkl) in 0.4s - skipped the ~17min raw-data reload
+[robustness-margin] fit-only y stats (matches training exactly): mean=96.0782 std=5.9390
+[robustness-margin] condition=clean: 29489 test cycles built (180s elapsed)
+[robustness-margin] [clean] MSE-baseline: R2=0.7795 RMSE=3.3405 | Huber+noise: R2=0.9561 RMSE=1.4900
+[robustness-margin] condition=5x BMS-grade (stress): 29489 test cycles built (510s elapsed)
+[robustness-margin] [5x BMS-grade (stress)] MSE-baseline: R2=0.8752 RMSE=2.5131 | Huber+noise: R2=0.9382 RMSE=1.7687
+
+[robustness-margin] Robustness margin (clean R2 - 5x-stress R2): MSE-baseline=-0.0957, Huber+noise(1.4)=0.0179 - WIDER (1.4 is LESS robust)
+
+[robustness-margin] saved outputs/stage1_4_robustness_margin.csv
+[robustness-margin] DONE in 644.7s (10.7 min)

@@ -1,0 +1,2 @@
+target,new_split_coverage,new_split_width,coverage_range_min,coverage_range_max,coverage_range_spread,n_calib_candidates
+RUL,0.9986559139784946,1792.5714111328125,0.995583717357911,0.9990399385560675,0.003456221198156584,5

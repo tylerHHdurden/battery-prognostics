@@ -1,0 +1,3 @@
+label,rmse,mae,r2
+"MSE (canonical features, expanded pool)",0.9756254029187035,0.5723144865329696,0.9817859604693457
+"pseudohuber (canonical features, expanded pool)",2.333083647731446,0.7589230150138622,0.8958400662900314
