@@ -1,0 +1,64 @@
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\lib\_nanfunctions_impl.py:1845: RuntimeWarning: invalid value encountered in subtract
+  np.subtract(arr, avg, out=arr, casting='unsafe', where=where)
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\run_b0044_root_cause_analysis.py:152: RuntimeWarning: invalid value encountered in subtract
+  Xp = np.nan_to_num((Xp - mean) / std, nan=0.0)
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pandas\core\nanops.py:1016: RuntimeWarning: invalid value encountered in subtract
+  sqr = _ensure_numeric((avg - values) ** 2)
+[b0044-rootcause] B0044 in expanded test_ids: True
+
+[b0044-rootcause] === 1. Training representation: NASA vs MIT (expanded pool) ===
+[b0044-rootcause] training batteries: 19 NASA, 145 MIT (11.6% NASA by battery count)
+[b0044-rootcause] training CYCLES: 1649 NASA, 122119 MIT (1.3% NASA by cycle count)
+[b0044-rootcause] for reference, session 27's ORIGINAL 32-battery pool finding was 11.5% NASA by battery, 2.7% by cycle - the expanded pool's underrepresentation is WORSE by cycle count (1.3% vs. 2.7%)
+
+[b0044-rootcause] === 2. Lifetime/fade-rate: B0044 vs. the full 40-battery expanded test set ===
+[b0044-rootcause] B0044: n_cycles=112, SOH 101.4%->75.1% (26.3pp), fade_rate=0.2352pp/cycle
+[b0044-rootcause] B0044 ranks #3 of 40 FASTEST-fading test batteries, #4 of 40 SHORTEST-lived test batteries
+[b0044-rootcause] test-set median: n_cycles=795, fade_rate=0.0281pp/cycle
+[b0044-rootcause] B0044 is 8.4x the median fade rate, and only 14% of the median lifetime
+
+[b0044-rootcause] ALL 4 NASA test batteries (for context):
+dataset battery_id  n_cycles  SOH_first  SOH_last  SOH_drop_pp  fade_rate_pp_per_cycle
+   NASA      B0053        55 100.340846  0.000000   100.340846                1.824379
+   NASA      B0030        39 101.111577 88.695102    12.416475                0.318371
+   NASA      B0044       112 101.447547 75.107068    26.340479                0.235183
+   NASA      B0025        28  99.994585 95.705613     4.288972                0.153178
+[b0044-rootcause] ALL 4 NASA test batteries rank in the top 4 of 40 fastest-fading batteries - B0044 is not an isolated case, it fits the same pattern as every other NASA test battery in the expanded pool
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+
+[b0044-rootcause] === 3. Feature-distribution outlier check (session-19/27-style domain classifier) ===
+[b0044-rootcause] NOTE: uses the CURRENT Stage 1 canonical REFORMULATED 8-feature set (ICHV_rel/SCV/VDEDT/VIECT/MATD/MET/TEVD_rel/TEVI_rel) + 16-dim fusion embedding - a general representativeness diagnostic on the BFA HI feature space. Stated explicitly: this is NOT literally what Huber-loss-trained deep models see (those train on raw 6-channel V/I/T/dQdV/dVdQ/dIdV sequence tensors, never on BFA HI features) - section 6 checks the raw trace directly for that reason.
+[b0044-rootcause] MIT training rows (reference distribution): 122119
+[b0044-rootcause] AUC(MIT-train vs. B0044): 1.0000 (NEAR-TOTAL separation)
+[b0044-rootcause] for reference, session 27's B0018 AUC (original 7-feature leaked set, 32-battery pool) - see outputs/b0018_rootcause_domain_auc.csv for the exact number
+
+[b0044-rootcause] per-feature z-score of B0044's MEAN vs. MIT-train distribution (top 8 by |z|):
+    MET: MIT-train mean=0.052, B0044 mean=3.284, z=141.7 (100.0th percentile of MIT-train)
+    fusion_8: MIT-train mean=4.013, B0044 mean=1.170, z=-18.1 (0.0th percentile of MIT-train)
+    fusion_4: MIT-train mean=4.546, B0044 mean=1.572, z=-16.3 (0.0th percentile of MIT-train)
+    fusion_15: MIT-train mean=4.422, B0044 mean=1.468, z=-15.4 (0.0th percentile of MIT-train)
+    fusion_0: MIT-train mean=4.450, B0044 mean=1.529, z=-15.2 (0.0th percentile of MIT-train)
+    fusion_6: MIT-train mean=3.899, B0044 mean=1.766, z=-13.3 (0.0th percentile of MIT-train)
+    VIECT: MIT-train mean=3.458, B0044 mean=4.079, z=10.0 (100.0th percentile of MIT-train)
+    fusion_11: MIT-train mean=7.892, B0044 mean=3.264, z=-9.8 (0.0th percentile of MIT-train)
+
+[b0044-rootcause] === 4. Degradation-mode signature (session 23's peak-tracking method) ===
+[b0044-rootcause] NASA/B0044: delta_V_frac=10.4%, delta_H_frac=-0.896 -> mixed LLI+LAM-leaning signature
+[b0044-rootcause] NASA/B0025: delta_V_frac=12.7%, delta_H_frac=+55.978 -> LLI-leaning signature (peak position shifted, height relatively preserved)
+[b0044-rootcause] NASA/B0030: delta_V_frac=0.2%, delta_H_frac=+0.217 -> minimal peak-shape change over the observed test-set window
+[b0044-rootcause] NASA/B0053: delta_V_frac=0.5%, delta_H_frac=+0.284 -> minimal peak-shape change over the observed test-set window
+[b0044-rootcause] MIT/b4c25: delta_V_frac=1.4%, delta_H_frac=+0.145 -> minimal peak-shape change over the observed test-set window
+[b0044-rootcause] MIT/b3c17: delta_V_frac=3.4%, delta_H_frac=-0.333 -> LAM-leaning signature (peak height collapsed, position relatively stable)
+[b0044-rootcause] MIT/b2c9: delta_V_frac=2.5%, delta_H_frac=+0.146 -> minimal peak-shape change over the observed test-set window
+
+[b0044-rootcause] === 5. Raw capacity-trace inspection for B0044 - artifact or genuine curve? ===
+[b0044-rootcause] B0044 SOH trace: 112 cycles, first 5=[101.45, 100.0, 99.46, 98.96, 98.39], last 5=[77.63, 76.71, 76.31, 75.59, 75.11]
+[b0044-rootcause] largest single-cycle SOH drop: -98.39pp (cycle 5->6, SOH 98.39->0.00)
+[b0044-rootcause] final-cycle SOH near-zero (B0053-style artifact check): False (final SOH=75.11%)
+[b0044-rootcause] fraction of cycles where SOH INCREASED vs. previous cycle (noise/non-monotonicity indicator): 36.9%
+
+[b0044-rootcause] === SYNTHESIS ===
+[b0044-rootcause] See DEVELOPMENT_LOG.md follow-up entry for the full synthesized explanation.
+[b0044-rootcause] DONE

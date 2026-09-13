@@ -5414,3 +5414,178 @@ touch it).
 
 Per instruction: no further stage of work follows this one without new
 direction.
+
+## Follow-up session 38 — Two targeted closeouts: conformal calibration on the final Stage 1 model, and B0044 root-cause analysis
+
+Two small, targeted follow-ups closing out Stage 1 before Stage 2 -
+neither involved retraining any deep model. Same standard as always:
+root-cause before concluding, report plainly regardless of outcome.
+
+### Part A — Refit conformal calibration against the final Stage 1 state
+
+**Step 1 answer, confirmed by reading the code directly**: 1.1's own
+reported CALCE coverage (9.5%) was computed against **1.1 ALONE** -
+`run_stage1_1_duration_features.py` trains with the reformulated
+duration features only, no `cycle_idx`, no `monotone_constraints`. It
+was NOT the final 1.1+1.5 combined state.
+
+However, checking `run_stage1_5_monotone_constraints.py` directly shows
+it ALREADY trains and evaluates the true final combined configuration
+(1.1's reformulated features + 1.5's `cycle_idx`/`monotone_constraints`
+layered on top) - its own reported 6.7% coverage number already IS the
+final state's number, just not framed that way. This follow-up
+independently retrained that exact configuration from scratch as a
+dedicated, clearly-labeled check: **the result reproduced bit-for-bit**
+(0.06732403944236655 both times, to 14 decimal places) - confirming
+1.5's number was genuinely the final state's calibration, not a
+coincidence or a stale artifact. (Also confirms directly, by reading
+`stage1_common.calce_coverage()`: every Stage 1 coverage number was
+already freshly refit against whichever model had just been trained -
+there was no "stale calibration" bug in the code to begin with.)
+
+**Comparison, all numbers on record:**
+
+| | CALCE coverage |
+|---|---|
+| session 5 (32-battery, original leaked 7-feature set, FULL 4-branch ensemble) | 6.1% |
+| session 33 (204-battery expanded, FULL 4-branch ensemble) | 7.4% |
+| **Stage 1's own canonical-raw XGBoost-fusion-only baseline (apples-to-apples "before")** | **16.6%** |
+| 1.1 alone | 9.5% |
+| **1.1+1.5 final adopted config (this follow-up, freshly refit)** | **6.7%** |
+
+Caveat stated plainly: the session 5/33 numbers use a structurally
+different model (the full 4-branch stacking ensemble, not XGBoost-
+fusion alone) and, for session 5, the old leaked feature set - included
+because explicitly requested, but not a clean apples-to-apples
+reference. The clean "before" is Stage 1's own 16.6% XGBoost-fusion
+baseline.
+
+**OUTCOME: (b) — coverage is STILL WORSE than baseline even after a
+verified-clean refit.** This is a REAL, separate calibration cost of
+Stage 1's accuracy gains, NOT a sequencing/staleness artifact - the
+"stale calibration" hypothesis is REJECTED by direct evidence.
+Coverage gets progressively worse as more Stage 1 changes are layered
+on, moving in the SAME direction as the accuracy improvement, not
+opposite it: 16.6% (baseline) -> 9.5% (1.1 alone) -> 6.7% (1.1+1.5
+combined). A more accurate point predictor produces tighter in-domain
+residuals, which produces a narrower calibration interval, which
+covers a smaller fraction of CALCE's still-large absolute errors - the
+same mechanism flagged (but not root-caused) when 1.1 was first
+reported.
+
+**Optional secondary check - Jackknife+/CV+ as a drop-in replacement on
+this same final model**: since XGBoost refits are cheap (unlike the
+deep models in item 1.6), genuine leave-one-battery-out Jackknife+
+(K=3, over the 3-battery NASA+MIT calibration pool) was run via MAPIE's
+`CrossConformalRegressor` directly on the final 1.1+1.5 model.
+
+| method | CALCE coverage | avg width |
+|---|---|---|
+| plain split-conformal (final model) | 6.7% | 2.33 |
+| **Jackknife+ (K=3, same final model)** | **37.1%** | 11.89 |
+
+**A genuinely important secondary finding**: switching to Jackknife+
+on this exact model recovers coverage to nearly 6x the plain split-
+conformal number, and well above even the pre-Stage-1 baseline (37.1%
+vs. 16.6%) - at the cost of much wider intervals (2.33 -> 11.89), as
+expected for a small (3-battery) calibration pool. This suggests the
+calibration MECHANISM, not just the point predictor, has real
+untapped headroom on CALCE - worth carrying into Stage 2's own
+priorities, though not acted on further in this follow-up per its
+narrow scope.
+
+New file: `src/run_stage1_followup_A_conformal_refit.py`. Output:
+`outputs/stage1_followup_A_conformal_comparison.csv`.
+
+### Part B — B0044 root-cause analysis
+
+NASA/B0044 regressed under Huber loss in 3 of 4 architectures tested
+in Stage 1.3 (VLSTM +251% RMSE, CNN-BiGRU +81% RMSE; CNN-LSTM was the
+one exception, -10%) - discovered by accident, not targeted
+investigation, and given the same systematic treatment session 27 gave
+B0018. Mirrors session 27's 4-angle methodology exactly, on the
+expanded 204-battery pool (confirmed B0044 exists only there, not in
+the original 32-battery pool's 4 hardcoded NASA IDs).
+
+**1. Training representation**: NASA is 11.6% of training batteries but
+only **1.3%** of training cycles in the expanded pool - WORSE
+underrepresentation by cycle count than session 27's original 32-
+battery finding (2.7%). Same root-cause class, more extreme.
+
+**2. Lifetime/protocol**: B0044 ranks **#3 of 40** fastest-fading test
+batteries and **#4 of 40** shortest-lived (112 cycles vs. a 795-cycle
+test-set median) - **8.4x the median fade rate, 14% of the median
+lifetime**. Critically, **all 4 of the expanded pool's NASA test
+batteries (B0053, B0030, B0044, B0025) occupy the top 4 fastest-fading
+slots of the entire 40-battery test set** - B0044 is not an isolated
+case, it fits the exact same pattern as every other NASA test battery.
+
+**3. Feature distribution** (domain classifier + z-scores, run on the
+CURRENT Stage 1 canonical REFORMULATED 8-feature set - stated
+explicitly: this is a general representativeness diagnostic on the BFA
+HI feature space, NOT literally what Huber-loss-trained deep models
+see, since those train on raw 6-channel V/I/T/dQdV/dVdQ/dIdV sequence
+tensors, never on BFA HI features at all): **AUC(MIT-train vs. B0044) =
+1.0000 - exact same NEAR-TOTAL separation as B0018's own AUC (also
+1.0000)**, and clearly higher than any MIT test battery's own AUC in
+session 27's comparison set (0.92-0.99). Top z-score outliers: MET
+z=+141.7 (100th percentile), several fusion-embedding dims at z=-13 to
+-18 (0th percentile), VIECT z=+10.0.
+
+**4. Degradation-mode signature** (session 23's peak-tracking method):
+B0044 -> **"mixed LLI+LAM-leaning signature" - the EXACT SAME label
+session 27 found for B0018**, and distinct from a comparison sample of
+MIT test batteries (2 of 3 "minimal peak-shape change", 1 "LAM-
+leaning" - none "mixed").
+
+**5. Raw capacity-trace inspection**: B0044's overall trajectory is a
+genuine, gradual decline (101.4%->75.1% over 112 cycles, monotonic in
+the expected direction 63% of the time) - NOT an end-of-trace
+truncation artifact like B0053's. **However, a real, distinct partial
+artifact was found**: cycle 6 shows an isolated SOH reading of exactly
+0.00% (surrounded by 98.39% at cycle 5 and 99.x-98.x-range values
+immediately after) - a single corrupted/dropped-reading cycle, similar
+in KIND to B0053's known logging artifact (session 35 Part 1) but
+different in POSITION (early mid-trace, not the final cycle) and
+IMPACT (does not terminate or dominate the trace - the battery
+continues cycling normally for 106 more cycles afterward).
+
+**6. SYNTHESIS**: **B0044 is confirmed as a SECOND, INDEPENDENT
+instance of the SAME training-representation root cause session 27
+established for B0018** - not a coincidence, and not force-fit: the
+evidence lines up on every axis session 27 checked (worse-than-B0018
+cycle-count underrepresentation, top-of-pool fade rate/shortest
+lifetime, IDENTICAL AUC=1.0000 domain separability, and the IDENTICAL
+"mixed LLI+LAM-leaning" degradation-mode label - not just "similar,"
+literally the same classification). Per the task's own framing, this
+is a genuinely different discovery path (loss-function sensitivity
+under Huber surfaced B0044, vs. B0018's original discovery via
+early-prediction/second-life/noise-robustness testing) converging on
+the same underlying explanation - this measurably STRENGTHENS the
+training-representation finding as a general property of this
+project's NASA-vs-MIT pool imbalance, not a one-battery quirk.
+
+**One honest, additional, partially-independent factor**: the cycle-6
+data artifact is real and distinct from the training-representation
+story - it likely inflates B0044's ABSOLUTE error for every model
+tested (MSE and Huber alike, since it is a fixed evaluation-data
+artifact, not something a training-time loss function choice can
+correct), which plausibly explains part of why B0044 is so
+consistently near the top of every "worst battery" list regardless of
+architecture or loss function - but does NOT by itself explain the
+DIRECTIONAL finding (why Huber specifically made B0044 worse, not
+just why B0044 is hard for everyone). The training-representation/
+domain-shift explanation remains the primary driver of the Huber-
+specific regression; the cycle-6 artifact is a genuine, separate,
+contributing factor to B0044's overall difficulty, reported honestly
+alongside rather than folded into one single story.
+
+New file: `src/run_b0044_root_cause_analysis.py`. Outputs:
+`outputs/b0044_rootcause_{lifetime,feature_zscores,degradation_mode,
+summary}.csv`, `logs/logs_b0044_rootcause.txt`.
+
+---
+
+Neither Part A nor Part B involved retraining any deep model or
+touching the deployed Streamlit app. Per instruction: not proceeding
+to Stage 2 - reporting back and awaiting further direction.

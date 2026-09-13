@@ -1,0 +1,7 @@
+method,coverage,note
+session5_ensemble_32batt_ORIGINAL,0.061,"different model architecture (full ensemble), reported for reference only"
+session33_ensemble_204batt,0.074,"different model architecture (full ensemble), reported for reference only"
+stage1_canonical_raw_baseline_xgbfusion,0.166,apples-to-apples XGBoost-fusion-only pre-Stage-1 baseline
+1.1_alone,0.095,"reformulated features only, no monotone_constraints"
+1.1+1.5_final_split_conformal,0.06732403944236655,"final adopted Stage 1 config, this run"
+1.1+1.5_final_jackknife_plus,0.37062223733424005,"optional CV+/Jackknife+ drop-in, same final model"

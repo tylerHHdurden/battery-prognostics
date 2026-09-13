@@ -1,0 +1,2 @@
+auc_vs_mit_train,n_cycles,soh_first,soh_last,largest_single_drop_pp,final_near_zero,frac_cycles_increasing
+1.0,112,101.44754716103242,75.10706786086998,-98.38813684127925,False,0.36936936936936937

@@ -1,0 +1,8 @@
+dataset,battery_id,n_tracked,n_lost,delta_V_volts,delta_V_frac_of_window,delta_H_frac,signature
+NASA,B0044,105,1,-0.15438636373998893,0.10355628125015642,-0.8955525176848188,mixed LLI+LAM-leaning signature
+NASA,B0025,27,1,-0.2890101538006258,0.12683132500947633,55.97757251130443,"LLI-leaning signature (peak position shifted, height relatively preserved)"
+NASA,B0030,39,0,-0.004546674641778381,0.002216305678752649,0.2166365517284071,minimal peak-shape change over the observed test-set window
+NASA,B0053,53,1,0.011980596745480021,0.005433124223598083,0.2841232979044215,minimal peak-shape change over the observed test-set window
+MIT,b4c25,467,100,-0.021696505527638354,0.013682019226042019,0.14530381408663554,minimal peak-shape change over the observed test-set window
+MIT,b3c17,1177,136,0.05350438944723601,0.03374584791233209,-0.3333381852279792,"LAM-leaning signature (peak height collapsed, position relatively stable)"
+MIT,b2c9,333,726,0.039972915075376925,0.025136999912135034,0.14604962478959443,minimal peak-shape change over the observed test-set window
