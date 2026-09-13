@@ -6556,3 +6556,170 @@ only); 2.3 trains 5 fresh XGBoost-fusion folds (cheap, ~17s total) but
 does not change any deployed or canonical model file. Does not touch
 the deployed Streamlit app. Per instruction: not proceeding to Stage 3
 - reporting back and awaiting further direction.
+
+## Follow-up session 45 — final closeout: fold 3 root cause, B0036 recovery, EOL convention formalized, +2 offset mechanism verified
+
+Final closeout pass, items 5-8 (item 0, CNN-LSTM channel-normalization
+verification, was resolved inline in chat and needs no devlog entry -
+confirmed every CNN-LSTM-touching training script correctly applies
+`apply_channel_norm` before feeding data to the model; raw dVdQ does
+reach ~9.5M as documented, but no script bypasses the fix - no
+regression found, prior CNN-LSTM results are not suspect). Same
+standard throughout: root-cause before concluding, report plainly
+regardless of outcome.
+
+### 5 — Stage 2.3's fold 3 weakness: root-caused precisely, driven by B0045 alone
+
+Continuing from the partial result (fold 3 has 5 of 23 NASA batteries,
+slightly above average) - confirmed this alone doesn't explain a
+2.4-3x RMSE jump. Checked directly which of the known-difficult cases
+are actually present: **B0018 - not in fold 3 (fold 0). B0044 - not in
+fold 3. B0053 - not evaluated by XGBoost-fusion here. B0045 - IS in
+fold 3.**
+
+Refit fold 3 exactly and broke out per-battery RMSE within it:
+
+| battery | n cycles | RMSE |
+|---|---|---|
+| **B0045** | 71 | **32.88** |
+| B0005 | 168 | 6.01 |
+| B0055 | 101 | 3.77 |
+| b2c1 | 169 | 3.22 |
+| b2c15 | 207 | 2.76 |
+| (35 more, all < 1.2) | | |
+
+**Root cause confirmed precisely**: B0045's RMSE (32.88) is 5.5x the
+next-worst battery in the fold and single-handedly drags the fold's
+aggregate RMSE from the ~0.6-0.7 range (typical of other folds) to
+1.72. This is exactly the same NASA/B0045 flagged in session 41 Part
+A.1 as a real, unresolved data-quality concern (an isolated cycle-19
+artifact AND a whole-battery capacity anomaly, ~half its own cohort's
+capacity) - B0045 was correctly recommended for exclusion consideration
+there but was NOT among the 9 batteries actually recovered in Stage
+2.1, so its still-corrupted data landed in this GroupKFold's test set
+and explains the fold's weakness completely. **Not "5 NASA batteries"
+generically - one specific, already-flagged, still-uncorrected
+battery.**
+
+### 6 — B0036's near-miss: recovered with a case-specific (not global) threshold relaxation
+
+Session 43 left B0036 at exactly 110.0% max SOH after removing its one
+clear spike (cycle 113). Investigated the residual: a SECOND, milder
+isolated spike at cycle 45 (value 1.9855Ah, neighbors 1.7632/1.7654 -
+both essentially identical to the local median) sits at only ~13.2%
+above its local median - below the original SPIKE_FRAC=1.30 (130%)
+threshold, but a genuine, clean, isolated single-cycle artifact by
+every other criterion (both neighbors tightly clustered, nothing
+resembling a real trend).
+
+Swept SPIKE_FRAC down from 1.30: cycle 45 first gets caught at
+**SPIKE_FRAC=1.12**. With both cycles removed (45 and 113), **B0036's
+max SOH drops to exactly 100.0%** - fully recovered.
+
+**False-positive check, done before accepting this** (per instruction
+- do not force a recovery that isn't well-motivated): applied
+SPIKE_FRAC=1.12 to every other already-processed battery. Result:
+**zero new flags** on 4 normal NASA batteries (B0005/6/7/18) and 11
+sampled normal MIT batteries, and zero new flags on 7 of the 8
+already-recovered Group-2 batteries. **But B0033 picked up 4 new
+flags and B0034 picked up 2 new flags** - both are the batteries
+already correctly diagnosed as showing a genuine GRADUAL early-life
+capacity ramp (not a discrete artifact) - the relaxed threshold
+starts mistaking parts of a real trend for isolated spikes.
+
+**Verdict: B0036 IS recovered (10th of 14) via this specific,
+individually-verified correction - but SPIKE_FRAC=1.12 is NOT adopted
+as a new global default**, since the same relaxation would risk
+corrupting B0033/B0034's already-correct "not recovered" status. This
+is reported as a battery-specific, manually-verified fix, not a
+detector-wide parameter change.
+
+### 7 — EOL convention formalized: Severson's cycle_life is now the default for MIT batch-1/3
+
+Per session 43's own recommendation (accepted here, not a new
+judgment call): `rul_labels.py` gained an ADDITIVE
+`compute_eol_and_rul_severson_aware()` function - `compute_eol_and_rul`
+itself is completely UNCHANGED, so every existing caller not updated
+below behaves identically to before.
+
+The new function: for any `global_id` starting "b1c" or "b3c" with a
+resolvable published Severson cycle_life (looked up directly from the
+raw MIT HDF5 files, lazily cached), EOL = published_cycle_life - 2
+(the verified offset - see item 8 below), censored=False. Every other
+battery (NASA, CALCE, MIT batches 2/4, or a b1c/b3c cell with no
+resolvable cycle_life) falls through unchanged to the original
+`compute_eol_and_rul`.
+
+**The two hi_table-generation scripts were updated to use it as the
+default**: `src/run_phase1_features.py` and
+`src/run_phase1_features_expanded.py` now call
+`compute_eol_and_rul_severson_aware(cycles, global_id=battery_id)`
+instead of the old function - so the next time either script is
+actually run, the corrected labels are picked up automatically.
+
+**Verified directly, not just by code inspection** (smoke test, no
+retraining, no `hi_table.parquet` regeneration):
+
+| battery | severson-aware | unchanged `compute_eol_and_rul` |
+|---|---|---|
+| MIT/b1c20 (batch1) | eol=532, **censored=False** | eol=533, censored=True |
+| NASA/B0005 | eol=102, censored=False | eol=102, censored=False (**identical**) |
+| MIT/b2c1 (batch2) | eol=157, censored=False | eol=157, censored=False (**identical**) |
+
+Confirms the override fires correctly for MIT batch-1/3 and leaves
+every other battery, including MIT batches 2/4, byte-for-byte
+unchanged. **Per instruction, `hi_table.parquet`/`hi_table_expanded.parquet`
+were NOT regenerated in this pass and no model was retrained** - this
+is a code-only change; the next actual feature-generation run will
+pick it up automatically.
+
+### 8 — The +2 cycle offset: exact mechanism verified, original hypothesis refuted
+
+Session 43's original hypothesis: "skipped diagnostic cycle 0 + one
+further truncated/invalid final cycle." **Checked directly and this
+is WRONG** - the actual last few raw-stored cycles for the verified
+cells are ordinary, fully valid discharge cycles (sensible charge/
+discharge point counts, sensible capacity), not truncated or invalid.
+
+**Actual, verified mechanism**, traced directly against the raw HDF5
+structure for 3 independently-checked cells across 2 different batch
+files:
+
+| cell | published cycle_life | raw cycles physically stored (`cycles["I"].shape[0]`) | published minus raw |
+|---|---|---|---|
+| b1c20 | 534 | 533 | **+1** |
+| b1c4 (batch1, cell 4) | 1227 | 1226 | **+1** |
+| batch3/cell10 | 1078 | 1077 | **+1** |
+
+**Severson's own published `cycle_life` is exactly 1 more than the
+number of cycles physically present in her own released data** for
+every cell checked - her own release stops recording one cycle short
+of the point she labels "cycle_life" (consistent with cycle_life being
+computed/interpolated rather than corresponding to an actually-stored
+final cycle). Combined with this project's own loader separately
+subtracting 1 more (from skipping the raw array's index-0 low-rate
+diagnostic cycle, confirmed unchanged and still exactly one skip, no
+other drops for these cells), the two effects compound into the
+observed +2 offset deterministically - not data-dependent, which is
+exactly why it showed zero variance across all 90 matched cells in
+session 43's original check. This is now a precisely-verified,
+citable mechanism, not a restated hypothesis.
+
+---
+
+### Overall synthesis
+
+Every item in this pass converged on a definitive, verified answer -
+no open questions carried forward. Item 5's fold-3 weakness has a
+single, precise, already-known cause (B0045). Item 6 recovered one
+more battery (10 of 14 now) through a properly-verified, narrowly-
+scoped fix, explicitly NOT generalized where the evidence showed that
+would be unsafe. Item 7 turns session 43's recommendation into working
+default code, verified correct on 3 direct test cases before being
+called done. Item 8 replaces a plausible-but-wrong hypothesis with a
+precisely-traced, citable mechanism.
+
+No model retrained; `hi_table.parquet`/`hi_table_expanded.parquet` not
+regenerated; does not touch the deployed Streamlit app. **This closes
+out Stage 2 and everything preceding it completely - nothing owed from
+earlier work carries into Stage 3.**

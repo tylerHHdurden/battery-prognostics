@@ -52,7 +52,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from data_adapters import iterate_nasa_cycles, iterate_calce_cycles, iterate_mit_cycles, mit_cell_ids
 from health_indicators import compute_health_indicators, HI_NAMES
-from rul_labels import compute_eol_and_rul, soh_per_cycle
+from rul_labels import compute_eol_and_rul_severson_aware, soh_per_cycle
 from ica_dv_dc import build_differential_tensor
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -86,7 +86,7 @@ def process_battery(dataset: str, battery_id: str, cycle_iter):
                              "stage": "too_few_cycles", "error": f"only {len(cycles)} cycles"}
 
     try:
-        eol_cycle, censored, rul_map = compute_eol_and_rul(cycles)
+        eol_cycle, censored, rul_map = compute_eol_and_rul_severson_aware(cycles, global_id=battery_id)
         soh_map = soh_per_cycle(cycles)
 
         rows = []
