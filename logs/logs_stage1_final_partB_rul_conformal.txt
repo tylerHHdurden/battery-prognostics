@@ -1,0 +1,58 @@
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[rul-conformal] fit=21 calib(val)=5 test=6 batteries
+[rul-conformal] calibration batteries: ['b4c21', 'b4c36', 'b4c39', 'b4c5', 'b4c9']
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[rul-conformal] sanity check - test RUL R2 with this inference path: 0.6657 (session 41 Part B's own reported test R2: 0.6657)
+
+[rul-conformal] === split-conformal (3-way split) on JointSOHRULModelFusion ===
+[rul-conformal] method=MAPIE.SplitConformalRegressor coverage=0.9779 avg_width=944.092 (n_test=5208, n_calib=3973)
+
+[rul-conformal] === COMPARISON vs. most recent prior number on record ===
+[rul-conformal] Stage 1.6 (OLD joint-adaptive model, 3-way split): coverage=99.6%-99.9% (across seeds)
+[rul-conformal] session 11 corrected: 93.0%  |  session 6 original: 83.3%
+[rul-conformal] JointSOHRULModelFusion (this run, new model): coverage=97.8% avg_width=944.1 cycles
+
+[rul-conformal] OUTCOME: (a) coverage remains AT or ABOVE the 90% target despite the large accuracy gain.
+
+[rul-conformal] === OPTIONAL: Jackknife+/CV+ via a cheap Ridge recalibration layer ===
+[rul-conformal] NOTE: no established precedent for this exists for RUL in this project (Stage 1.6 scoped RUL down to plain split-conformal only, citing deep-model retrain cost) - this is a NEW construction for this pass, analogous to SOH's own Ridge-over-fixed-predictions trick, stated explicitly rather than presented as reusing prior established practice.
+[rul-conformal] Jackknife+ (K=5, leave-one-battery-out): coverage=0.6131 avg_width=620.496
+[rul-conformal] vs. plain split-conformal: coverage=0.9779 avg_width=944.092
+
+[rul-conformal] saved outputs/stage1_final_partB_rul_conformal.csv
+[rul-conformal] DONE

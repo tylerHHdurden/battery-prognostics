@@ -6029,3 +6029,236 @@ poor baseline accuracy under the old, less accurate models.
 No retraining of the deployed lean pipeline itself; does not touch the
 deployed Streamlit app. Per instruction: not proceeding to Stage 2 -
 reporting back and awaiting further direction.
+
+## Follow-up session 42 — final Stage 1 closeout: artifact sweep, RUL conformal recalibration, isolating session 41's confound
+
+A final closeout pass before Stage 2: a project-wide artifact sweep,
+RUL conformal recalibration against session 41's new best model, and
+isolating session 41 Part B's confound. All analysis/calibration work,
+one real retrain-adjacent step (the control run). No deployed-app
+changes. Same standard throughout: root-cause before concluding,
+report plainly regardless of outcome.
+
+### Part A — project-wide single-cycle artifact sweep: genuinely widespread, not close to the known extent
+
+Three unrelated investigations independently found the same signature
+by accident - one isolated cycle collapsing to near-zero SOH while
+both neighbors are ordinary (B0053 cycle 55, B0044 cycle 6, B0045
+cycle 19). Built a single detector (local-median-relative drop >80%,
+both immediate neighbors within 30% of the local median - i.e.
+genuinely isolated, not a real multi-cycle collapse or end-of-life),
+tuned against these 3 known cases before trusting it further.
+
+**A real bug found and fixed during tuning, not glossed over**: the
+first version of the detector required BOTH neighbors to exist,
+structurally unable to flag a cycle at the very start or end of a
+battery's trace - and MISSED B0053's own known case entirely, because
+cycle 55 (its artifact) is B0053's LAST cycle (n=55 total), with no
+"after" neighbor to check. Fixed by adding explicit first-cycle/
+last-cycle handling (checking only the one neighbor that exists) -
+verified the fix catches all 3 known cases before running the full
+sweep.
+
+**Full sweep result: genuinely widespread, NOT close to the known
+extent.** 19 isolated-drop cycles flagged across **11 batteries** in
+the expanded pool - **8 newly-discovered batteries beyond the 3
+already known** (nearly 4x the previously-known extent):
+
+| battery | flagged cycle(s) | value | classification |
+|---|---|---|---|
+| B0042 | 6 | 0.000000 | (a) real artifact - same signature as B0044's cycle 6 |
+| B0043 | 6 | 0.000000 | (a) real artifact |
+| B0046 | 19, 53, 65 | 0.000000 (all 3) | (a) real artifact - 3 separate incidents in one battery |
+| B0047 | 19, 53, 65 | 0.000000 (all 3) | (a) real artifact |
+| B0048 | 19, 53, 65 | 0.000000 (all 3) | (a) real artifact |
+| B0054 | 102 (last cycle) | 0.000000 | (a) real artifact - same end-of-trace pattern as B0053 |
+| CS2_36 (CALCE) | 97, 255 | 8.82, 12.86 (vs. ~91-93 local median) | (a) real artifact - 2 separate incidents |
+| CS2_37 (CALCE) | 98 | 4.89 (vs. 91.15 local median) | (a) real artifact |
+
+Every single new case classifies as (a) - a real, isolated data-quality
+artifact - not a single false positive among the 8 (unlike session
+41's B2c15/b2c16, which were genuine false positives). All the new
+NASA values are EXACTLY 0.000000, not merely low - a hard sensor/
+logging dropout, not natural variation; the CALCE cases are large
+(85-95%) but not exact-zero drops, still unambiguous anomalies against
+their own local context.
+
+**The single most important sub-finding, not assumed - checked
+directly**: the SAME cycle numbers repeat EXACTLY across multiple,
+different NASA batteries - cycle 6 in B0042/B0043/B0044 (3 batteries),
+cycle 19 in B0045/B0046/B0047/B0048 (4 batteries), cycle 65 in the same
+4 batteries, cycle 53 in B0046/B0047/B0048 (3 batteries). This is
+overwhelmingly unlikely to be independent per-battery noise - it
+points to a SYSTEMATIC data-collection/logging artifact shared across
+this NASA sub-batch (all in the B0042-B0048 ID range), recurring at
+consistent checkpoints in their shared test protocol, not a
+battery-specific quirk. A genuinely new, previously-invisible
+structural finding about this project's NASA data source.
+
+**Why this was invisible until now, checked directly, not assumed**:
+of the 9 total NASA-artifact batteries (3 previously known + 6 newly
+found), **7 sit in TRAINING data** (B0042, B0043, B0045, B0046, B0047,
+B0048, B0054) and only 2 in TEST (B0053, B0044) - exactly the 2 that
+were already known, because artifacts in a TEST battery cause visible
+prediction errors during evaluation, while artifacts in TRAIN batteries
+are invisible to standard eval metrics (one corrupted label diluted
+among thousands of good training rows). This explains precisely why
+the pattern went unnoticed for 7 of 9 cases until a dedicated sweep
+was run.
+
+**Original 32-battery pool**: only the 2 CALCE cases (CS2_36, CS2_37)
+appear - none of the NASA extended-batch artifacts exist there at all
+(B0042 etc. are exclusive to the 204-battery expanded pool's additional
+NASA batteries). The original, deployed lean pipeline was never exposed
+to this artifact class; every expanded-pool session since session 33
+(including all of Stage 1's expanded-pool Huber/PiFormer work) was.
+
+**Per instruction, nothing excluded in this pass** - this is detection
+and reporting only, feeding a future retrain's exclusion-criteria
+discussion, exactly as session 41 Part A.1 scoped B0045.
+
+New file: `src/run_project_wide_artifact_sweep.py`. Outputs:
+`outputs/artifact_sweep_{expanded,original}.csv`.
+
+### Part B — RUL conformal recalibration against session 41's new model
+
+Session 41 Part B's `JointSOHRULModelFusion` (RUL R2 0.432->0.666) has
+never had conformal calibration refit against it - every RUL coverage
+number on record (session 6's 83.3%, session 11's corrected 93.0%,
+Stage 1.6's 99.6-99.9%) reflects the OLD, much weaker joint model.
+Reused Stage 1.6's own 3-way battery-level split (this project's most
+recent established RUL-specific convention - the joint model's own
+5-battery early-stopping validation set, never gradient-updated, as
+the calibration group). Sanity-checked first: this inference path
+reproduces session 41 Part B's exact test R2 (0.6657) before trusting
+the coverage number.
+
+**Split-conformal (3-way split), directly against the most recent
+prior number:**
+
+| | coverage |
+|---|---|
+| session 6 (original) | 83.3% |
+| session 11 (corrected) | 93.0% |
+| Stage 1.6 (OLD joint model, 3-way split) | 99.6%-99.9% |
+| **JointSOHRULModelFusion (this run, NEW model)** | **97.8%** (width=944.1 cycles) |
+
+**OUTCOME: (a) - coverage remains comfortably above the 90% target**,
+so the severe SOH-style "accuracy improves, coverage collapses"
+pattern (session 38 Part A: 16.6%->6.7% for CALCE) does NOT repeat for
+RUL. Reported plainly rather than rounded to "no change," though: there
+IS a real, measurable decrease from the prior 99.6-99.9% down to 97.8%
+- a genuine, if modest, calibration cost of the accuracy gain, just
+nowhere near severe enough to cross the 90% target the way SOH's case
+did.
+
+**Optional secondary check - a NEW construction, not an established
+precedent, stated explicitly**: Stage 1.6 scoped genuine Jackknife+/CV+
+for RUL down to plain split-conformal only, citing the cost of
+retraining a deep model K times. This pass tried a cheap workaround
+(a linear Ridge recalibration layer over [RUL_point_pred, cycle_idx],
+cross-validated via MAPIE's leave-one-battery-out CrossConformalRegressor)
+- analogous to SOH's own Ridge-over-fixed-predictions trick, but with
+no prior precedent specific to RUL in this project.
+
+**Result: this construction HURTS, not helps** - coverage drops to
+**61.3%** (well below the 90% target), against the already-good 97.8%
+plain split-conformal result. Reported honestly as a negative finding
+for this specific new construction, not smoothed over: a 2-feature
+linear recalibration layer with only 5 calibration batteries is too
+crude a proxy for the deep model's own genuine predictive structure,
+and likely adds more variance than it removes. **Plain split-conformal
+remains the better method for RUL on this model** - this new
+Jackknife+ variant is not recommended.
+
+New file: `src/run_stage1_final_partB_rul_conformal.py`. Output:
+`outputs/stage1_final_partB_rul_conformal.csv`.
+
+### Part C — isolating session 41 Part B's confound: the reformulation is NOT the driver
+
+Session 41 Part B's RUL result (R2 0.432->0.666) confounded two
+different changes: (1) 1.1's specific reformulated duration features,
+and (2) giving `JointSOHRULModelFusion` access to ANY version of the 8
+BFA HI features at all, which it structurally never had before that
+session. Retrained the identical architecture/budget/pool/loss-
+weighting, swapping in the ORIGINAL, UNREFORMULATED raw duration
+features (ICHV/TEVD/TEVI, not `_rel`) as the control - everything else
+held exactly identical to session 41 Part B's run.
+
+**Result - a clean, unambiguous answer:**
+
+| | SOH R2 | RUL R2 |
+|---|---|---|
+| fixed_balanced (session 4) | 0.416 | 0.428 |
+| adaptive-clamped (session 4) | 0.344 | 0.432 |
+| **CONTROL: adaptive-clamped + RAW HI features (this run)** | **0.9246** | **0.6807** |
+| session 41 Part B: adaptive-clamped + 1.1's REFORMULATED features | 0.9241 | 0.6657 |
+
+**OUTCOME: (a) - the control run performs COMPARABLY, and if anything
+marginally BETTER, than session 41 Part B's reformulated-feature run**
+(SOH R2 +0.0005, RUL R2 +0.015 in the raw-feature control's favor -
+both differences small enough to be well within normal training-run
+noise, not a meaningful advantage either way). **1.1's specific
+reformulation is NOT what is driving RUL's improvement.** The real
+driver is the architecture extension itself - giving the joint model
+access to ANY HI features, fused into the LSTM's hidden state,
+regardless of whether they're raw or reformulated.
+
+**The corrected, precise claim this project can now honestly make**:
+"Fusing BFA HI features into the joint SOH+RUL architecture helps RUL
+substantially" (R2 0.43->~0.67-0.68, confirmed with either feature
+version) - NOT "1.1's reformulation transfers to RUL." 1.1's specific
+protocol-invariant reformulation remains a real, verified,
+substantial win for XGBoost-fusion (CALCE R2 +0.20, Stage 1.1) - that
+finding is untouched by this result - but it is not what explains
+session 41 Part B's RUL win, and that broader claim should not be
+repeated without this correction attached.
+
+**A plausible, architecturally-grounded explanation for why raw and
+reformulated perform so similarly here (offered as reasoning, not
+claimed as independently confirmed)**: 1.1's reformulation was
+specifically designed to fix a PROTOCOL-SCALE problem (NASA's absolute
+duration values sitting on a wildly different scale than MIT's) that
+matters most when a model's ENTIRE input is the 8 HI features
+(XGBoost-fusion). In the joint model, the HI features are a small
+supplementary signal concatenated onto a much richer LSTM
+representation that already sees the raw V/I/T sequence directly and
+its own learned cycle-level dynamics - the same protocol-scale
+distortion that dominated a features-only model's behavior is far
+less consequential when it's one small piece of a much bigger,
+sequence-derived picture.
+
+New file: `src/run_stage1_final_partC_control_raw_features.py`. Model:
+`models/joint_adaptive_fusion_control_raw.pt` (additive, does not
+touch `joint_adaptive_fusion_canonical.pt`). Output:
+`outputs/stage1_final_partC_control_results.csv`. Trained in 10.7 min.
+
+---
+
+### Overall synthesis
+
+**Part A is this pass's most consequential finding**: a systematic,
+previously-invisible data-quality pattern across this project's NASA
+extended battery sub-batch, affecting 7 TRAINING batteries silently
+(only 2 of 9 total cases were ever visible via test-set evaluation) -
+a genuine, well-evidenced lead for a future retrain's exclusion
+criteria, reported for the record without acting on it, per scope.
+
+**Part B confirms RUL's calibration held up better than SOH's did**
+under a comparable accuracy jump (97.8% vs. SOH's collapse to 6.7% in
+session 38) - a real, useful, non-obvious asymmetry between the two
+tasks' calibration behavior - alongside an honest negative result for
+a new, untested Jackknife+ construction (61.3%, worse than the simple
+baseline it was meant to improve on).
+
+**Part C is a genuine, important correction to session 41's own
+claim** - not a reversal of session 41 Part B's headline number (RUL
+R2 ~0.67 stands, confirmed twice now with two different feature
+versions), but a correction to WHY it happens. Exactly the kind of
+result this project's standing practice exists to catch: a real
+result, cited for the wrong reason, caught and corrected before it
+could propagate further uncorrected.
+
+No retraining of the deployed lean pipeline; does not touch the
+deployed Streamlit app. This is the final closeout before Stage 2 -
+nothing found here changes the plan to proceed to Stage 2 next.

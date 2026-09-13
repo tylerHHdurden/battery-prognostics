@@ -1,0 +1,43 @@
+[artifact-sweep] === TUNING: verifying the detector catches all 3 known cases first ===
+[artifact-sweep] NASA/B0053 cycle 55: CAUGHT (all flags for this battery: [55])
+[artifact-sweep] NASA/B0044 cycle 6: CAUGHT (all flags for this battery: [6])
+[artifact-sweep] NASA/B0045 cycle 19: CAUGHT (all flags for this battery: [19, 65])
+[artifact-sweep] detector catches all 3 known cases: True
+
+[artifact-sweep] === FULL SWEEP: EXPANDED (204-battery) pool (hi_table_expanded.parquet) ===
+[artifact-sweep] 19 isolated-drop cycles flagged across 207 batteries
+dataset battery_id  cycle_idx  soh_value  local_median  neighbor_before  neighbor_after                                position
+  CALCE     CS2_36         97   8.820444     92.985447        92.335975       93.025319                                interior
+  CALCE     CS2_36        255  12.862607     90.966048        91.017322       90.378241                                interior
+  CALCE     CS2_37         98   4.891039     91.151818        89.801473       91.306242                                interior
+   NASA      B0042          6   0.000000     99.178261        99.621729       98.840577                                interior
+   NASA      B0043          6   0.000000     98.215182        98.457667       97.972696                                interior
+   NASA      B0044          6   0.000000     98.120850        98.388137       97.853563                                interior
+   NASA      B0045         19   0.000000     83.121837        83.679525       82.564148                                interior
+   NASA      B0045         65   0.000000     70.991265        71.058786       70.790791                                interior
+   NASA      B0046         19   0.000000     90.941163        90.583374       93.806688                                interior
+   NASA      B0046         53   0.000000     77.000430        74.758521       80.773208                                interior
+   NASA      B0046         65   0.000000     77.550977        75.525405       83.365519                                interior
+   NASA      B0047         19   0.000000     87.407637        86.944831       88.816689                                interior
+   NASA      B0047         53   0.000000     76.085704        73.336962       78.960875                                interior
+   NASA      B0047         65   0.000000     77.185862        75.486506       80.984648                                interior
+   NASA      B0048         19   0.000000     90.015934        89.665907       91.558078                                interior
+   NASA      B0048         53   0.000000     80.842074        77.234323       84.017419                                interior
+   NASA      B0048         65   0.000000     82.598577        80.605524       86.720534                                interior
+   NASA      B0053         55   0.000000     91.003922        87.838262             NaN last_cycle (no after-neighbor to check)
+   NASA      B0054        102   0.000000     77.127372        75.764784             NaN last_cycle (no after-neighbor to check)
+
+[artifact-sweep] batteries flagged: 11 total, 8 NOT among the 3 already-known cases: ['B0042', 'B0043', 'B0046', 'B0047', 'B0048', 'B0054', 'CS2_36', 'CS2_37']
+[artifact-sweep] saved C:\Users\manoj\OneDrive\Desktop\battery-prognostics\outputs\artifact_sweep_expanded.csv
+
+[artifact-sweep] === FULL SWEEP: ORIGINAL (32-battery) pool (hi_table.parquet) ===
+[artifact-sweep] 3 isolated-drop cycles flagged across 35 batteries
+dataset battery_id  cycle_idx  soh_value  local_median  neighbor_before  neighbor_after position
+  CALCE     CS2_36         97   8.820444     92.985447        92.335975       93.025319 interior
+  CALCE     CS2_36        255  12.862607     90.966048        91.017322       90.378241 interior
+  CALCE     CS2_37         98   4.891039     91.151818        89.801473       91.306242 interior
+
+[artifact-sweep] batteries flagged: 2 total, 2 NOT among the 3 already-known cases: ['CS2_36', 'CS2_37']
+[artifact-sweep] saved C:\Users\manoj\OneDrive\Desktop\battery-prognostics\outputs\artifact_sweep_original.csv
+
+[artifact-sweep] DONE

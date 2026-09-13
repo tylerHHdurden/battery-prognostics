@@ -1,0 +1,72 @@
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[joint-fusion-control] fit=21 val=5 test=6 batteries
+[joint-fusion-control] fit=14872 val=3973 test=5208 cycles (loaded in 98.4s)
+[joint-fusion-control] RAW (unreformulated) canonical feature set: ['ICHV', 'SCV', 'VDEDT', 'VIECT', 'MATD', 'MET', 'TEVD', 'TEVI']
+[joint-fusion-control] epoch  0 train=0.3068 val_soh=0.3944 val_rul=0.6383 alpha=0.824 beta=0.741
+[joint-fusion-control] epoch  1 train=-0.4270 val_soh=0.1966 val_rul=0.4400 alpha=1.389 beta=1.225
+[joint-fusion-control] epoch  2 train=-0.8347 val_soh=0.1819 val_rul=0.5490 alpha=2.028 beta=1.836
+[joint-fusion-control] epoch  3 train=-1.0609 val_soh=0.1533 val_rul=0.6818 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch  4 train=-1.1447 val_soh=0.1234 val_rul=0.6927 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch  5 train=-1.1727 val_soh=0.1105 val_rul=0.6105 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch  6 train=-1.1897 val_soh=0.0947 val_rul=0.5136 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch  7 train=-1.1939 val_soh=0.1130 val_rul=0.6099 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch  8 train=-1.2168 val_soh=0.0906 val_rul=0.5940 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch  9 train=-1.2248 val_soh=0.0983 val_rul=0.5515 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 10 train=-1.2291 val_soh=0.0895 val_rul=0.6057 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 11 train=-1.2287 val_soh=0.0907 val_rul=0.6471 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 12 train=-1.2381 val_soh=0.0836 val_rul=0.5816 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 13 train=-1.2542 val_soh=0.0787 val_rul=0.6306 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 14 train=-1.2542 val_soh=0.0941 val_rul=0.7009 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 15 train=-1.2542 val_soh=0.0938 val_rul=0.6668 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 16 train=-1.2773 val_soh=0.0809 val_rul=0.7759 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 17 train=-1.2818 val_soh=0.0815 val_rul=0.7425 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 18 train=-1.2641 val_soh=0.0908 val_rul=0.6918 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 19 train=-1.2850 val_soh=0.0903 val_rul=0.5603 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 20 train=-1.2951 val_soh=0.0836 val_rul=0.7556 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 21 train=-1.2888 val_soh=0.0827 val_rul=0.5470 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 22 train=-1.2974 val_soh=0.0925 val_rul=0.5466 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 23 train=-1.3000 val_soh=0.0740 val_rul=0.9066 alpha=2.028 beta=2.028
+[joint-fusion-control] epoch 24 train=-1.2912 val_soh=0.0817 val_rul=0.6491 alpha=2.028 beta=2.028
+
+[joint-fusion-control] TEST SOH: {'rmse': 1.3284492096960292, 'mae': 1.0125294923782349, 'r2': 0.9245524406433105}
+[joint-fusion-control] TEST RUL: {'rmse': 189.51913862787052, 'mae': 139.4340362548828, 'r2': 0.6807078123092651}
+
+[joint-fusion-control] === COMPARISON ===
+[joint-fusion-control] fixed_balanced (session 4):  SOH R2=0.416, RUL R2=0.428
+[joint-fusion-control] adaptive-clamped (session 4): SOH R2=0.344, RUL R2=0.432
+[joint-fusion-control] adaptive-clamped + RAW HI features (this CONTROL run): SOH R2=0.9246, RUL R2=0.6807
+[joint-fusion-control] adaptive-clamped + 1.1's REFORMULATED HI features (session 41 Part B): SOH R2=0.9241, RUL R2=0.6657
+
+[joint-fusion-control] saved outputs/stage1_final_partC_control_results.csv
+[joint-fusion-control] ALL DONE in 644.8s (10.7 min)
