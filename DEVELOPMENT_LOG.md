@@ -6723,3 +6723,115 @@ No model retrained; `hi_table.parquet`/`hi_table_expanded.parquet` not
 regenerated; does not touch the deployed Streamlit app. **This closes
 out Stage 2 and everything preceding it completely - nothing owed from
 earlier work carries into Stage 3.**
+
+## Follow-up session 46 — B0045 root-cause investigation: a third confirmation AND a genuinely distinct additional problem
+
+B0045 has now surfaced independently in three places (session 41's
+artifact sweep, session 41 Part A.1's outlier check, and this
+closeout's item 5's GroupKFold weakness) - the same convergence pattern
+that motivated dedicated investigations for B0018 (session 27) and
+B0044 (session 41 Part B). Mirrored that same 4-angle methodology here.
+Pure analysis, no retraining, no deployed-app changes.
+
+**Correction to the task's own framing, checked directly before
+proceeding rather than assumed**: B0045 was **never** part of Stage
+2.1's 14-battery exclusion/recovery set (`EXCLUDED_NASA_BATTERIES`
+does not include it). The "GROUP 3, pervasive scattered anomalies, not
+cleanly recoverable" classification from Stage 2.1 belongs to
+NASA/B0050, a different battery. B0045 sits in the expanded pool's
+TRAIN split, untouched by that exclusion pass, and was investigated
+separately in session 41 Part A.1.
+
+**1. Training representation**: NASA = 11.6% of training batteries but
+1.3% of training cycles - unchanged from session 38/41's own finding
+for this pool. B0045 sits inside this same underrepresented
+population. **Matches B0018/B0044.**
+
+**2. Lifetime/fade-rate**: B0045 ranks **#3 of 204** fastest-fading
+batteries in the WHOLE pool (compared against train+test together,
+since B0045 itself is a train battery, not test) and #3 of 23 NASA
+batteries specifically - **16.3x the pool median fade rate, only 9%
+of the median lifetime**. The 2 NASA batteries fading even faster
+(B0053, B0054) are themselves the other known end-of-trace zero-
+artifact cases. **Matches B0018/B0044's established pattern.**
+
+**3. Feature-distribution outlier check** (canonical Stage 1.1+1.5
+features): **AUC(MIT-train vs. B0045) = 1.0000 - an EXACT match to
+both B0018's AUC (1.0000) and B0044's AUC (1.0000)**. Top z-score
+outlier: MET, z=131.4 (100th percentile) - the same feature that
+dominated B0044's own z-score ranking (z=141.7 there). **Matches
+B0018/B0044 exactly on this axis.**
+
+**4. Degradation-mode signature** (session 23's peak-tracking method):
+B0045 -> **"LAM-leaning" signature** (peak height collapsed, position
+stable) - **genuinely DIFFERENT from B0018's and B0044's shared
+"mixed LLI+LAM-leaning" label**. This is a real, honest point of
+divergence, not glossed over: on this specific axis, B0045 does NOT
+replicate the other two batteries' exact signature.
+
+**5. Raw capacity-trace inspection** (characterizing "scattered"
+precisely, as requested, rather than re-asserting it):
+- **Exactly 2 exact-zero cycles: cycle 19 and cycle 65** - the SAME
+  systematic, shared-cause artifact class session 41's project-wide
+  sweep found recurring across this exact NASA sub-batch (B0046/47/48
+  also show cycle 19 and/or 65 as isolated zero-artifacts). Not a
+  novel finding, but now directly confirmed by raw-trace inspection
+  rather than only the earlier sweep table.
+- **Excluding those 2 artifact cycles, the remaining 69 cycles still
+  show real local scatter** (32.4% of steps increase rather than
+  decrease vs. the previous cycle, cycle-to-cycle relative change
+  std=2.03%, max=6.85%) - genuinely noisier than a perfectly smooth
+  aging curve, BUT comparable in magnitude to B0044's own equivalent
+  figure (36.9% increasing steps, session 41 Part B) - **this is
+  ordinary noise-level for a short, fast-fading NASA battery, not
+  something uniquely worse for B0045** - checked directly rather than
+  assumed to be a distinguishing factor.
+- **A genuine, still-UNEXPLAINED whole-battery capacity-scale
+  anomaly, unique to B0045**: cycle-1 capacity = 0.928Ah, only
+  **57.6%** of its immediate NASA ID-cohort's mean cycle-1 capacity
+  (B0043=1.71Ah, B0044=1.69Ah, B0046=1.52Ah, B0047=1.52Ah). This has
+  **no equivalent finding for either B0018 or B0044** - a real,
+  distinct, currently unexplained data-quality question specific to
+  B0045.
+
+### SYNTHESIS: both - a genuine third confirmation AND a genuinely distinct additional problem, reported as both rather than forced into one story
+
+**On 3 of 4 axes checked (training representation, lifetime/fade-rate,
+domain-classifier AUC), B0045 IS confirmed as a THIRD independent
+instance of the same training-representation root cause established
+for B0018 (session 27) and B0044 (session 41 Part B)** - discovered
+via a THIRD different path (GroupKFold cross-validation variance,
+distinct from B0018's original early-prediction/second-life/noise-
+robustness discovery and B0044's loss-function-sensitivity discovery).
+The AUC match in particular (1.0000, identical to both prior cases) is
+a strong, precise confirmation, not a loose analogy.
+
+**But B0045 ALSO carries its own distinct, unresolved data-quality
+problem that B0018 and B0044 do not share**: a degradation-mode
+signature that doesn't match the other two ("LAM-leaning" vs. their
+shared "mixed LLI+LAM-leaning"), and - more importantly - an
+unexplained whole-battery capacity-SCALE anomaly (~58% of its
+immediate cohort's starting capacity) with no counterpart in either
+prior investigation. This is not accounted for by the training-
+representation story at all.
+
+**Stated plainly, per instruction, rather than forced into a single
+narrative**: this is neither a clean "third confirmation" nor a
+"genuinely different cause" in isolation - it is BOTH, simultaneously,
+on different axes. Reporting it as only one or the other would
+overstate the match (ignoring the real capacity-scale anomaly and
+degradation-mode divergence) or understate it (ignoring the exact AUC
+match and consistent lifetime pattern). **For the paper: B0045 is
+citable as a third AUC-confirmed instance of the training-
+representation finding, WITH the explicit caveat that it also carries
+its own separate, unexplained data-quality anomaly not present in the
+other two cases** - the two findings should be reported together, not
+collapsed into either "confirmed" or "different" alone.
+
+New file: `src/run_b0045_root_cause_analysis.py`. Outputs:
+`outputs/b0045_rootcause_{lifetime,feature_zscores,degradation_mode,
+summary}.csv`, `logs/logs_b0045_rootcause.txt`.
+
+No retraining; does not touch the deployed Streamlit app. Per
+instruction: not proceeding to Stage 3 - reporting back and awaiting
+further direction.

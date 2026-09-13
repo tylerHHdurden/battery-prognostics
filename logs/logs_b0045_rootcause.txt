@@ -1,0 +1,75 @@
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\lib\_nanfunctions_impl.py:1845: RuntimeWarning: invalid value encountered in subtract
+  np.subtract(arr, avg, out=arr, casting='unsafe', where=where)
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\run_b0045_root_cause_analysis.py:137: RuntimeWarning: invalid value encountered in subtract
+  Xp = np.nan_to_num((Xp - mean) / std, nan=0.0)
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\pandas\core\nanops.py:1016: RuntimeWarning: invalid value encountered in subtract
+  sqr = _ensure_numeric((avg - values) ** 2)
+
+[b0045-rootcause] === 0. Status check (correcting the premise before proceeding) ===
+[b0045-rootcause] B0045 in Stage 2.1's 14-battery EXCLUDED_NASA_BATTERIES set: False
+[b0045-rootcause] B0045 in expanded-pool train_ids: True, test_ids: False
+[b0045-rootcause] CONFIRMED: B0045 was NEVER part of Stage 2.1's 14-battery set - the 'GROUP 3, pervasive scattered anomalies' classification belongs to NASA/B0050, a different battery. B0045 sits in TRAIN, untouched by that exclusion pass.
+
+[b0045-rootcause] === 1. Training representation: NASA vs MIT (expanded pool) ===
+[b0045-rootcause] training batteries: 19 NASA, 145 MIT (11.6% NASA by battery count)
+[b0045-rootcause] training CYCLES: 1649 NASA, 122119 MIT (1.3% NASA by cycle count) - matches session 38/41's own finding for this same pool (1.3%), unchanged since - B0045 sits inside this same underrepresented-by-cycle-count training population.
+
+[b0045-rootcause] === 2. Lifetime/fade-rate: B0045 vs. the FULL expanded pool (train+test, since B0045 itself is a TRAIN battery, not test) ===
+[b0045-rootcause] B0045: n_cycles=71, SOH 104.8%->68.6% (36.3pp), fade_rate=0.5108pp/cycle
+[b0045-rootcause] B0045 ranks #3 of 204 FASTEST-fading batteries (whole pool), #13 of 204 SHORTEST-lived
+[b0045-rootcause] whole-pool median: n_cycles=784, fade_rate=0.0314pp/cycle
+[b0045-rootcause] B0045 is 16.3x the median fade rate, and only 9% of the median lifetime
+
+[b0045-rootcause] B0045's rank among the 23 NASA batteries specifically (fade rate): #3 of 23
+dataset battery_id  n_cycles  SOH_first  SOH_last  SOH_drop_pp  fade_rate_pp_per_cycle
+   NASA      B0053        55 100.340846  0.000000   100.340846                1.824379
+   NASA      B0054       102 105.545511  0.000000   105.545511                1.034760
+   NASA      B0045        71 104.830446 68.566652    36.263794                0.510758
+   NASA      B0032        39 101.027503 87.253437    13.774066                0.353181
+   NASA      B0047        71 101.080178 76.700944    24.379235                0.343370
+   NASA      B0046        71 100.866707 76.760552    24.106155                0.339523
+   NASA      B0029        39 101.055283 88.311962    12.743322                0.326752
+   NASA      B0030        39 101.111577 88.695102    12.416475                0.318371
+   NASA      B0048        71 100.585155 81.600452    18.984703                0.267390
+   NASA      B0055       101 103.360175 77.585915    25.774260                0.255191
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+
+[b0045-rootcause] === 3. Feature-distribution outlier check (canonical Stage 1.1+1.5 features) ===
+[b0045-rootcause] MIT training rows (reference distribution): 122119
+[b0045-rootcause] AUC(MIT-train vs. B0045): 1.0000 (NEAR-TOTAL separation)
+[b0045-rootcause] for direct comparison: B0018's AUC=1.0000, B0044's AUC=1.0000 (both session 27/41)
+
+[b0045-rootcause] per-feature z-score of B0045's MEAN vs. MIT-train distribution (top 8 by |z|):
+    MET: MIT-train mean=0.052, B0045 mean=3.049, z=131.4 (100.0th percentile of MIT-train)
+    fusion_8: MIT-train mean=4.013, B0045 mean=1.119, z=-18.4 (0.0th percentile of MIT-train)
+    fusion_5: MIT-train mean=6.502, B0045 mean=1.102, z=-17.0 (0.0th percentile of MIT-train)
+    fusion_1: MIT-train mean=5.979, B0045 mean=1.174, z=-16.9 (0.0th percentile of MIT-train)
+    fusion_4: MIT-train mean=4.546, B0045 mean=1.577, z=-16.3 (0.0th percentile of MIT-train)
+    fusion_11: MIT-train mean=7.892, B0045 mean=0.305, z=-16.1 (0.0th percentile of MIT-train)
+    fusion_9: MIT-train mean=0.470, B0045 mean=3.534, z=15.4 (100.0th percentile of MIT-train)
+    fusion_15: MIT-train mean=4.422, B0045 mean=1.678, z=-14.3 (0.0th percentile of MIT-train)
+
+[b0045-rootcause] === 4. Degradation-mode signature (session 23's peak-tracking method) ===
+[b0045-rootcause] NASA/B0045: delta_V_frac=0.5%, delta_H_frac=-0.410 -> LAM-leaning signature (peak height collapsed, position relatively stable)
+[b0045-rootcause] NASA/B0025: delta_V_frac=12.7%, delta_H_frac=+55.978 -> LLI-leaning signature (peak position shifted, height relatively preserved)
+[b0045-rootcause] NASA/B0030: delta_V_frac=0.2%, delta_H_frac=+0.217 -> minimal peak-shape change over the observed test-set window
+[b0045-rootcause] NASA/B0053: delta_V_frac=0.5%, delta_H_frac=+0.284 -> minimal peak-shape change over the observed test-set window
+[b0045-rootcause] MIT/b4c25: delta_V_frac=1.4%, delta_H_frac=+0.145 -> minimal peak-shape change over the observed test-set window
+[b0045-rootcause] MIT/b3c17: delta_V_frac=3.4%, delta_H_frac=-0.333 -> LAM-leaning signature (peak height collapsed, position relatively stable)
+[b0045-rootcause] MIT/b2c9: delta_V_frac=2.5%, delta_H_frac=+0.146 -> minimal peak-shape change over the observed test-set window
+
+[b0045-rootcause] === 5. Raw capacity-trace inspection for B0045 - characterizing 'scattered' precisely (direct on raw discharge_capacity, not hi_table's SOH, since the point is to check the RAW measurement pattern itself) ===
+[b0045-rootcause] B0045: 71 cycles, cycle-1 capacity=0.9280Ah, final capacity=0.6069Ah
+[b0045-rootcause] EXACT-ZERO cycles: [19, 65] (2 of 71 cycles, 2.8%)
+[b0045-rootcause] EXCLUDING the exact-zero cycles, the remaining 69 cycles: fraction where capacity INCREASED vs. previous kept cycle = 32.4% (a smooth monotonic decline would be close to 0%)
+[b0045-rootcause] remaining-trace relative cycle-to-cycle change: mean=-0.60%, std=2.03%, max|change|=6.85%
+[b0045-rootcause] VERDICT: still shows real scatter/noise beyond the exact-zero cycles once the exact-zero artifact cycles are set aside.
+
+[b0045-rootcause] cycle-1 capacity, B0045=0.9280Ah vs. immediate-ID-neighbor cohort: {'B0043': 1.7138, 'B0044': 1.6865, 'B0046': 1.5161, 'B0047': 1.5244}
+[b0045-rootcause] B0045's cycle-1 capacity is 57.6% of its immediate cohort's mean cycle-1 capacity - a genuine, unexplained whole-battery scale anomaly
+
+[b0045-rootcause] === SYNTHESIS ===
+[b0045-rootcause] See DEVELOPMENT_LOG.md follow-up entry for the full synthesized explanation.
+[b0045-rootcause] DONE

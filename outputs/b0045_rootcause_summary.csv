@@ -1,0 +1,2 @@
+auc_vs_mit_train,n_cycles,n_exact_zero_cycles,exact_zero_cycle_idxs,cycle1_capacity,cohort_mean_cycle1_capacity,ratio_to_cohort,frac_increasing_excl_zeros,max_abs_rel_change_excl_zeros
+1.0,71,2,"[19, 65]",0.927952404748273,1.610205813645294,0.5762942829323855,0.3235294117647059,0.06852798103949907
