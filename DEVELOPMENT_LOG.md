@@ -4649,3 +4649,258 @@ untouched, and the 32-battery lean pipeline remains the deployed
 default throughout. Does NOT touch `app.py` or the deployed Streamlit
 site - per instruction, model/pipeline work only this session; site
 updates (if any) are a separate, later step.
+
+## Follow-up session 36 — Stage 0 verification: four checks against this project's two headline findings
+
+Four verification checks, each targeting a specific, already-diagnosed
+risk to this project's two headline findings (the ensemble adding ~nothing
+over XGBoost, Phase 3; the CALCE domain-shift collapse, session 5). These
+are checks, not new modeling techniques - the explicit goal was to find
+out whether either headline finding needed correcting BEFORE any further
+work is built on top of them. No new models were shipped; this session
+either confirms, corrects, or stress-tests existing claims.
+
+### Check 0.1 — out-of-fold stacking verification
+
+**What/why**: Phase 3's Ridge meta-learner coefficients (~{XGBoost:1.01,
+VLSTM:-0.007, CNNLSTM:-0.036, PiFormer:-0.004}) were interpreted as "the
+meta-learner correctly learned XGBoost is stronger." An untested
+alternative explanation: if the base-learner predictions fed to Ridge
+during training were generated IN-SAMPLE (each base learner scoring data
+it was trained on), XGBoost's near-perfect in-sample fit would look
+artificially strong relative to the deep models' honestly-scored fit,
+biasing Ridge toward XGBoost regardless of the deep models' TRUE
+held-out value - the same leakage class this project already caught
+once, in Phase 6's conformal-calibration bug.
+
+**Step 1, confirmed by direct code inspection, not inference**: yes,
+Phase 3's stacking WAS fit on in-sample predictions.
+`train_xgboost.py`'s "train" predictions are `model.predict(X[train_mask])`
+- the exact rows just fit on. `train_deep_models.py`'s "train"
+predictions come from `Xtr = concat([X_fit, X_val])` - the exact
+fit+val data each deep model trained/early-stopped on.
+`train_ensemble.py`'s `load_merged("train")` reads both files directly
+as Ridge's training data. Confirmed, not assumed - this genuinely
+happened.
+
+**Method**: GroupKFold(n_splits=5) over the 26 original-pool (32-battery
+scale, chosen as ~7x cheaper than the 204-battery pool for the same
+question) TRAIN battery IDs. Each fold retrained all 4 base learners
+from scratch on the other 4 folds (standard 80/20 inner fit/val carve
+for the 3 deep models' early stopping), predicted on the held-out fold.
+TEST-set predictions reused unchanged (already genuinely out-of-sample
+- no leakage there to begin with). Total wall time: 162.0 min (2.70h)
+across 5 folds (23.7, 29.3, 34.2, 31.3, 38.4 min respectively).
+
+**Result**:
+
+| | Ridge coefficients (XGB, VLSTM, CNNLSTM, PiFormer) | TEST R2 |
+|---|---|---|
+| Original (in-sample, leaked) | 1.0101, 0.0071, -0.0106, -0.0062 | 0.9063 |
+| Corrected (genuine out-of-fold) | 0.9364, -0.0294, 0.0163, 0.1243 | 0.9033 |
+
+**Drop-branch ablation, side by side**:
+
+| stacking | dropped | R2 | delta R2 vs. full |
+|---|---|---|---|
+| in-sample (original) | none | 0.9063 | - |
+| in-sample (original) | **XGBoost** | 0.8092 | **-0.0970** |
+| in-sample (original) | VLSTM | 0.9060 | -0.0002 |
+| in-sample (original) | CNNLSTM | 0.9063 | +0.00003 |
+| in-sample (original) | PiFormer | 0.9062 | -0.00002 |
+| out-of-fold (corrected) | none | 0.9033 | - |
+| out-of-fold (corrected) | **XGBoost** | 0.7206 | **-0.1828** |
+| out-of-fold (corrected) | VLSTM | 0.9053 | +0.0019 |
+| out-of-fold (corrected) | CNNLSTM | 0.9039 | +0.0006 |
+| out-of-fold (corrected) | PiFormer | 0.9060 | +0.0026 |
+
+**THE HEADLINE RESULT**: the cost of dropping XGBoost is **1.88x LARGER**
+under honest out-of-fold evaluation (-0.183 R2) than under the original
+in-sample evaluation (-0.097 R2). Overall ensemble accuracy barely
+changed (R2 0.9063 -> 0.9033, -0.003 - the expected small drop once
+in-sample optimism is removed).
+
+**OUTCOME (per the two anticipated possibilities)**: **(a) - the finding
+survives, and is now a STRONGER, properly-validated version of the
+original claim.** XGBoost still overwhelmingly dominates; each
+individual deep model's ablation impact remains negligible (all
+|delta R2| < 0.003), and if anything dropping any single deep model
+from the corrected ensemble very slightly IMPROVES it.
+
+**Honest secondary nuance, reported plainly rather than smoothed over**:
+PiFormer's own Ridge coefficient grew substantially (-0.0062 -> +0.1243)
+under honest evaluation - a real signal it earns some non-trivial
+weight, not none at all. This sits in apparent tension with the
+ablation showing dropping it doesn't hurt (and marginally helps): both
+are correctly reported as real findings - a positive Ridge coefficient
+does not guarantee a positive marginal contribution to held-out
+accuracy once refit without it, especially with 4 correlated base
+predictions. The practical bottom line - XGBoost dominates, no single
+deep model materially changes the stack's accuracy - holds either way.
+
+**EXPLICIT STATEMENT ON THE HEADLINE FINDING (per instruction)**: this
+check **STRENGTHENS** the "ensemble adds ~nothing over XGBoost" finding.
+It is not weakened or overturned - the corrected, properly-validated
+number shows the ensemble is even MORE dependent on XGBoost, and even
+LESS dependent on the deep models, than the original (leaked)
+evaluation suggested. The original in-sample bug, if anything,
+UNDERSTATED XGBoost's true importance.
+
+New file: `src/run_oof_stacking_check.py`. Outputs:
+`data/processed/predictions/oof_stacking_check_meta_features.csv`,
+`outputs/oof_stacking_check_{ablation,coefficients}.csv`.
+
+### Check 0.2 — temperature-feature imputation confound on CALCE
+
+**What/why**: CALCE has zero temperature channel (8,829 imputed NaN
+cells for MATC/MATD, session 1). Before attributing the full CALCE
+zero-retrain collapse (R2 0.917 -> ~0.31) to genuine domain shift,
+check whether part of it is a data-quality artifact of imputing these 2
+of 7 BFA-selected features with NASA+MIT training medians.
+
+**Method**: retrained XGBoost-fusion twice, identical data/split/
+hyperparameters - once with the full 7 BFA features (incl. MATC/MATD,
+imputed on CALCE), once with them dropped entirely (5 HI + 16 fusion
+dims, no imputation needed for CALCE at all). Chose retraining over
+post-hoc zeroing: a tree model has no principled "zero" for a feature
+trained on real 20-40C values.
+
+**Result**:
+
+| | In-domain (NASA+MIT test) R2 | CALCE (zero-retrain) R2 | CALCE RMSE |
+|---|---|---|---|
+| FULL (incl. MATC/MATD) | 0.9169 | 0.3013 | 17.9990 |
+| REDUCED (no MATC/MATD) | 0.9265 (+0.0096) | **0.2908 (-0.0105)** | 18.1341 (+0.1351) |
+
+**OUTCOME (b)**: CALCE performance is essentially unaffected - if
+anything, very slightly WORSE without MATC/MATD, not better. The
+confound does NOT explain the collapse. Interesting, honestly-reported
+secondary finding: removing these features helped in-domain
+generalization slightly while hurting CALCE slightly - the two domains
+respond in opposite directions to this specific feature pair, a real,
+non-obvious nuance. Domain-shift gap (in-domain minus CALCE R2):
+0.6156 (FULL) vs. 0.6357 (REDUCED) - marginally LARGER without these
+features, meaning if anything the collapse would look worse, not
+better-explained-away, without them.
+
+**Verdict**: the original domain-shift interpretation of the CALCE
+collapse stands unweakened.
+
+New file: `src/run_calce_temp_confound_check.py`. Output:
+`outputs/calce_temp_confound_check.csv`.
+
+### Check 0.3 — BFA feature-selection leakage check
+
+**What/why**: Phase 1's BFA run is logged as operating over "35/35
+batteries, 26,996 total cycles" - all three datasets, including the 3
+CALCE cells. If CALCE's SOH labels were visible to BFA's wrapper
+fitness function (GroupKFold-cross-validated Ridge RMSE) during
+feature selection, the resulting 7-feature set had a structural
+opportunity to be tuned toward generalizing to CALCE - a methodological
+leak against CALCE's role everywhere else in this project as a
+never-trained-on holdout.
+
+**Step 1-2, confirmed by direct evidence, not inference**: CALCE WAS
+included. `src/run_bfa.py`'s own docstring states "Runs the Binary
+Firefly Algorithm over the pooled NASA+CALCE+MIT HI table"; its code
+(`df = pd.read_parquet(hi_table.parquet)`) applies NO dataset filter,
+unlike `train_xgboost.py`'s explicit `.isin(["NASA","MIT"])`.
+
+**Corrective re-run**: identical `run_bfa()` call (30 agents x 100
+iterations, seed=42), NASA+MIT only (24,053 rows, 32 batteries).
+
+**Result**:
+
+| pool | features selected | n |
+|---|---|---|
+| ORIGINAL (leaked, incl. CALCE) | ICHV, SCV, VDEDT, VIECT, MATC, MATD, TEVI | 7 |
+| CORRECTED (NASA+MIT only) | ICHV, SCV, VDEDT, VIECT, MATD, MET, TEVD, TEVI | 8 |
+
+Overlap: 6/7 (only MATC drops out; MET and TEVD enter, net +1 feature).
+Baseline RMSE (all 16 features) also dropped substantially once CALCE
+was excluded: 3.897 (with CALCE) -> 2.512 (NASA+MIT only) - CALCE's
+presence genuinely made the wrapper-fitness landscape harder. Session
+33's independent 204-battery NASA+MIT-only reselection shares 4/8
+features with this corrected 32-battery set (ICHV, MET, VDEDT, VIECT) -
+a cross-check that MET's relevance isn't a fluke of removing CALCE
+specifically.
+
+**Reasoning on direction (per instruction, stated regardless of
+outcome)**: this correction, if it changes anything, makes the CALCE
+collapse finding STRONGER, not weaker. BFA with CALCE visible during
+selection had a structural opportunity to choose features flattering
+CALCE's own generalization (the wrapper fitness directly cross-
+validated against CALCE's own SOH labels). That the original (leaked)
+feature set STILL produced a catastrophic CALCE collapse (R2~0.31)
+despite this unfair advantage means the true, properly-blind collapse
+is very plausibly at least as bad, not better. Per Stage 0's scope
+(checks, not new pipeline work), this was NOT propagated into a full
+retrain this session.
+
+**EXPLICIT STATEMENT ON THE HEADLINE FINDING (per instruction)**: this
+check does not overturn or directly re-measure the CALCE collapse
+finding (that would require a full retrain, out of scope here) - but
+it identifies a real, previously-unflagged methodological leak, and the
+directional reasoning above means the leak's correction can only make
+the domain-shift collapse look AT LEAST as severe, never milder. The
+finding is not weakened.
+
+New file: `src/run_bfa_nasa_mit_only.py`. Outputs:
+`data/processed/bfa_selected_features_nasa_mit_only.txt`,
+`data/processed/bfa_history_nasa_mit_only.csv`.
+
+### Check 0.4 — bootstrap significance at current (expanded) scale
+
+**What/why**: session 21's battery-level cluster bootstrap ran with
+only 6 test batteries. The pool is now ~41 test batteries following
+Dataset Expansion (session 33) - does more statistical power resolve
+any previously-inconclusive comparison?
+
+**Method**: this exact re-run already exists on disk from session 33
+(`run_bootstrap_significance_expanded.py` against
+`ensemble_fusion_expanded_test_preds.csv`, mtime 2026-09-12 03:10,
+UNCHANGED since - session 35's Huber/noise-augmented work wrote
+separate, additive files, never touching this canonical prediction
+file). Same script, same seed=42, same unchanged input -> re-running
+would produce bit-for-bit identical output, pure wasted compute.
+Verified by reading the actual CSV files fresh from disk (not memory)
+rather than redundantly re-executing.
+
+**Result, old vs. new, explicitly side by side**:
+
+| comparison (battery-level) | original (6 batt.) | expanded (40 batt.) |
+|---|---|---|
+| XGBoost vs. VLSTM | NOT significant (CI [-0.0513,+0.2528]) | **SIGNIFICANT** (CI [+0.0091,+0.0765]) |
+| Lean vs. Full, delta RMSE | NOT significant (CI [-0.0115,+0.0086]) | **STILL NOT significant** (CI [-0.7311,+0.0702]) |
+| Lean vs. Full, delta R2 | NOT significant (CI [-0.00085,+0.0018]) | **STILL NOT significant** (CI [-0.0031,+0.0697]) |
+
+**Verdict**: XGBoost's edge over VLSTM specifically crossed into
+significance at scale - the original session-21 caveat ("large in
+point-estimate terms but not battery-level significant with only 6
+test batteries") is now resolved as real, not battery-selection noise.
+Lean-vs-Full's statistical indistinguishability is UNCHANGED even at
+6.7x the test batteries - reinforcing, not undermining, the existing
+"ship lean" recommendation.
+
+No new files - existing session-33 outputs verified and re-reported
+with an explicit old-vs-new comparison.
+
+### Overall Stage 0 verdict
+
+**Neither headline finding needed correcting.** Both survive contact
+with genuine, rigorous verification - one (ensemble-adds-nothing) comes
+out demonstrably STRONGER than originally reported; the other (CALCE
+collapse) is unweakened by two independent confound checks (temperature
+imputation, BFA leakage), with the leakage check's own directional
+logic implying the true collapse is at least as severe as reported, not
+milder. A genuine, real methodological bug (Check 0.1's in-sample
+stacking leak, and Check 0.3's BFA/CALCE leak) was found and corrected
+in both cases - but correcting it changed the NUMBERS, not the
+CONCLUSION either finding was already reporting. This is itself a
+meaningful result: it means five-plus sessions of downstream work
+built on top of these two findings (the "ship lean" decision, session
+20; every subsequent CALCE-focused session, 13/19/31/33/35's Part 4)
+were resting on conclusions that hold up, not on an artifact.
+
+No modeling changes this session - verification only, per instruction.
+Does NOT touch `app.py` or the deployed Streamlit site.

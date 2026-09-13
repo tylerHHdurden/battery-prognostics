@@ -1,0 +1,21 @@
+[calce-confound] original 7 BFA features: ['ICHV', 'SCV', 'VDEDT', 'VIECT', 'MATC', 'MATD', 'TEVI']
+[calce-confound] reduced (MATC/MATD dropped) features: ['ICHV', 'SCV', 'VDEDT', 'VIECT', 'TEVI']
+[calce-confound] NASA+MIT training pool: 24053 rows
+[calce-confound] [FULL (incl. MATC/MATD)] NASA+MIT TEST (in-domain): RMSE=1.3942 MAE=0.9658 R2=0.9169 (n_features=23)
+[calce-confound] [REDUCED (no MATC/MATD)] NASA+MIT TEST (in-domain): RMSE=1.3108 MAE=0.8666 R2=0.9265 (n_features=21)
+
+[calce-confound] === Building CALCE tensors + fusion embeddings (shared, unchanged encoder) ===
+[calce-confound] CALCE cycles: 2941
+[calce-confound] CALCE merged rows: 2941
+[calce-confound] [FULL (incl. MATC/MATD, imputed)] CALCE (zero-retrain): RMSE=17.9990 MAE=14.2230 R2=0.3013 (5882 of 7 feature-columns' NaNs imputed with NASA+MIT medians)
+[calce-confound] [REDUCED (no MATC/MATD)] CALCE (zero-retrain): RMSE=18.1341 MAE=14.6148 R2=0.2908 (0 of 5 feature-columns' NaNs imputed with NASA+MIT medians)
+
+[calce-confound] === SIDE-BY-SIDE COMPARISON ===
+[calce-confound] In-domain (NASA+MIT test) R2:  FULL=0.9169  REDUCED=0.9265  (delta=+0.0096)
+[calce-confound] CALCE (zero-retrain)       R2:  FULL=0.3013  REDUCED=0.2908  (delta=-0.0105)
+[calce-confound] CALCE (zero-retrain)     RMSE:  FULL=17.9990  REDUCED=18.1341  (delta=+0.1351)
+
+[calce-confound] Domain-shift GAP (in-domain R2 minus CALCE R2): FULL=0.6156  REDUCED=0.6357
+[calce-confound] FINDING: CALCE performance WORSENS without MATC/MATD - these features were (surprisingly) net-helpful even under imputation on CALCE. The domain-shift interpretation is NOT weakened by this - if anything the collapse is slightly UNDER-stated by keeping them.
+
+[calce-confound] DONE

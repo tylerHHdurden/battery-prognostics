@@ -1,0 +1,24 @@
+[bfa-nomcalce] hi_table full (incl. CALCE): (26996, 22), NASA+MIT only: (24053, 22) (2943 CALCE rows excluded)
+[bfa-nomcalce] batteries: 32 (was 35 incl. CALCE)
+[bfa-nomcalce] imputed 0 NaN cells (median-per-column, NASA+MIT only - no CALCE MATC/MATD/MATDL NaNs to impute anymore)
+[BFA] baseline RMSE (all 16 features): 2.5122
+[BFA] iter   0: best_fitness=0.0407 best_rmse=2.4215 n_selected=8/16
+[BFA] iter  10: best_fitness=0.0891 best_rmse=2.3002 n_selected=7/16
+[BFA] iter  20: best_fitness=0.1025 best_rmse=2.2616 n_selected=10/16
+[BFA] iter  30: best_fitness=0.1303 best_rmse=2.1957 n_selected=7/16
+[BFA] iter  40: best_fitness=0.1303 best_rmse=2.1957 n_selected=7/16
+[BFA] iter  50: best_fitness=0.1303 best_rmse=2.1957 n_selected=7/16
+[BFA] iter  60: best_fitness=0.1303 best_rmse=2.1957 n_selected=7/16
+[BFA] iter  70: best_fitness=0.1303 best_rmse=2.1957 n_selected=7/16
+[BFA] iter  80: best_fitness=0.1303 best_rmse=2.1957 n_selected=7/16
+[BFA] iter  90: best_fitness=0.1380 best_rmse=2.1795 n_selected=5/16
+[BFA] iter  99: best_fitness=0.1388 best_rmse=2.1726 n_selected=8/16
+[BFA] DONE. Selected 8/16 features: ['ICHV', 'SCV', 'VDEDT', 'VIECT', 'MATD', 'MET', 'TEVD', 'TEVI']
+
+[bfa-nomcalce] === COMPARISON ===
+[bfa-nomcalce] ORIGINAL (leaked, incl. CALCE, 32-battery pool): ['ICHV', 'SCV', 'VDEDT', 'VIECT', 'MATC', 'MATD', 'TEVI']
+[bfa-nomcalce] CORRECTED (NASA+MIT only, 32-battery pool):      ['ICHV', 'SCV', 'VDEDT', 'VIECT', 'MATD', 'MET', 'TEVD', 'TEVI']
+[bfa-nomcalce] Overlap: ['ICHV', 'MATD', 'SCV', 'TEVI', 'VDEDT', 'VIECT'] (6/7)
+[bfa-nomcalce] Session 33's 204-battery reselection (NASA+MIT only, already never included CALCE): ['CDECT', 'ICHV', 'VDEDT', 'VIECT', 'LVP', 'MET', 'TCCC', 'TCVC']
+[bfa-nomcalce] Overlap (corrected-32 vs. 204-battery): ['ICHV', 'MET', 'VDEDT', 'VIECT'] (4/8)
+[bfa-nomcalce] DONE
