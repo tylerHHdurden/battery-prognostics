@@ -1,0 +1,70 @@
+[part-c] === building the Stage 1.1+1.5 model (canonical reformulated features + monotone_constraints) ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[part-c] model trained on 18845 rows, feature order: ['ICHV_rel', 'SCV', 'VDEDT', 'VIECT', 'MATD', 'MET', 'TEVD_rel', 'TEVI_rel', 'cycle_idx', 'fusion_0', 'fusion_1', 'fusion_2', 'fusion_3', 'fusion_4', 'fusion_5', 'fusion_6', 'fusion_7', 'fusion_8', 'fusion_9', 'fusion_10', 'fusion_11', 'fusion_12', 'fusion_13', 'fusion_14', 'fusion_15']
+
+[part-c] === C.1/C.2: second-life grading, Stage 1.1+1.5 model ===
+[part-c] B0018 in test set: True (must be True for the original 32-battery pool per session 33's finding that B0018 only moves to train in the EXPANDED split)
+[part-c] grading agreement: 98.71% of 5208 test cycles (session 25's original lean-pipeline agreement - see second_life_grading_per_cycle.csv for exact recompute if needed)
+[part-c]   correct: 5141 (98.71%)
+[part-c]   risky (predicted too optimistic): 63 (1.21%)
+[part-c]   conservative (predicted too pessimistic): 4 (0.08%)
+
+[part-c] === per-battery CURRENT-STATUS grade (Stage 1.1+1.5 model) ===
+dataset battery_id  cycle_idx       SOH    y_pred            true_grade            pred_grade
+   NASA      B0018        132 72.756873 81.046387 Second-life candidate        Primary EV use
+    MIT       b1c4       1225 94.712507 95.171951        Primary EV use        Primary EV use
+    MIT      b2c24        523 77.280234 76.879288 Second-life candidate Second-life candidate
+    MIT       b3c0       1007 82.415552 82.825417        Primary EV use        Primary EV use
+    MIT      b3c35       1091 82.734079 83.368149        Primary EV use        Primary EV use
+    MIT      b4c38       1230 78.349593 79.414307 Second-life candidate Second-life candidate
+
+[part-c] B0018 CURRENT-STATUS: true SOH=72.76% (grade=Second-life candidate), predicted SOH=81.05% (grade=Primary EV use)
+[part-c] ORIGINAL lean pipeline (session 25): true=72.76%, predicted=81.50% - a RISKY misgrade
+[part-c] B0018 misgrade under Stage 1.1+1.5: STILL a misgrade (risky (predicted too optimistic))
+[part-c] B0018 predicted-SOH error: original lean pipeline +8.74pp (81.50 vs 72.76), Stage 1.1+1.5 +8.29pp (81.05 vs 72.76)
+
+[part-c] === C.3/C.4: sensor-noise robustness, Stage 1.1+1.5 model ===
+[part-c] loading raw test-battery cycles once...
+[part-c]   NASA/B0018: 132 cycles
+[part-c]   MIT/b1c4: 1225 cycles
+[part-c]   MIT/b2c24: 523 cycles
+[part-c]   MIT/b3c0: 1007 cycles
+[part-c]   MIT/b3c35: 1091 cycles
+[part-c]   MIT/b4c38: 1230 cycles
+
+[part-c] === noise level: clean (baseline) ===
+[part-c] clean (baseline): n=5208 RMSE=0.7653 R2=0.9750
+
+[part-c] === noise level: 1x BMS-grade ===
+[part-c] 1x BMS-grade: n=5208 RMSE=0.7762 R2=0.9742
+
+[part-c] === noise level: 2x BMS-grade ===
+[part-c] 2x BMS-grade: n=5208 RMSE=0.7865 R2=0.9736
+
+[part-c] === noise level: 5x BMS-grade (stress) ===
+[part-c] 5x BMS-grade (stress): n=5208 RMSE=1.0987 R2=0.9484
+
+[part-c] === pooled results across noise levels ===
+          noise_level    n     rmse       r2
+     clean (baseline) 5208 0.765262 0.974963
+         1x BMS-grade 5208 0.776208 0.974242
+         2x BMS-grade 5208 0.786462 0.973557
+5x BMS-grade (stress) 5208 1.098665 0.948396
+
+[part-c] === per-battery R2 across noise levels (Stage 1.1+1.5 model) ===
+noise_level  1x BMS-grade  2x BMS-grade  5x BMS-grade (stress)  clean (baseline)
+battery_id                                                                      
+B0018            0.763964      0.757009               0.750907          0.767225
+b1c4             0.976789      0.977141               0.760083          0.973163
+b2c24            0.980006      0.977406               0.905122          0.984009
+b3c0             0.997470      0.995552               0.974786          0.998511
+b3c35            0.996267      0.995548               0.976313          0.996425
+b4c38            0.987680      0.989627               0.978226          0.987120
+
+[part-c] B0018 R2 trend across noise levels: {'1x BMS-grade': 0.7639638354581313, '2x BMS-grade': 0.7570094434405483, '5x BMS-grade (stress)': 0.7509068265566532, 'clean (baseline)': 0.7672246495457657}
+[part-c] B0018 degrades monotonically with noise level (session 26's original finding): True
+
+[part-c] saved outputs/stage1_followup_partC_{grading_current_status,noise_pooled,noise_perbattery}.csv
+[part-c] DONE

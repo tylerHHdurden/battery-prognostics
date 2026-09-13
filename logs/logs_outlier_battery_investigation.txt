@@ -1,0 +1,21 @@
+
+[outlier-invest] === NASA/B0045 - first 20 cycles' discharge capacity ===
+[outlier-invest] B0045: [0.928, 0.8852, 0.8581, 0.8409, 0.8245, 0.7936, 0.8184, 0.7978, 0.7994, 0.7783, 0.7804, 0.7713, 0.7953, 0.7824, 0.7649, 0.7545, 0.7504, 0.7407, 0.0, 0.7309]
+[outlier-invest] B0045: min=0.0000 (cycle 19), cycle-1=0.9280, mean(first 20)=0.7597, std=0.1807
+
+[outlier-invest] === MIT/b2c15 - first 20 cycles' discharge capacity ===
+[outlier-invest] b2c15: [0.9717, 0.9705, 0.9709, 0.9701, 0.9694, 0.9683, 0.9683, 0.9671, 0.9663, 0.9667, 0.9653, 0.9648, 0.964, 0.9638, 0.9634, 0.9628, 0.9617, 0.9615, 0.9604, 0.9591]
+[outlier-invest] b2c15: min=0.9591 (cycle 20), cycle-1=0.9717, mean(first 20)=0.9658, std=0.0036
+
+[outlier-invest] === MIT/b2c16 - first 20 cycles' discharge capacity ===
+[outlier-invest] b2c16: [1.0096, 1.0109, 1.0113, 1.0123, 1.0125, 1.0122, 1.013, 1.0127, 1.0117, 1.0124, 1.0124, 1.0124, 1.0131, 1.013, 1.0129, 1.0127, 1.0129, 1.0124, 1.0123, 1.0125]
+[outlier-invest] b2c16: min=1.0096 (cycle 1), cycle-1=1.0096, mean(first 20)=1.0123, std=0.0008
+
+[outlier-invest] === reference: a few normal batteries' cycle-1 capacity, for scale ===
+[outlier-invest] NASA/B0005 cycle-1 capacity: 1.8565
+[outlier-invest] NASA/B0025 cycle-1 capacity: 1.8470
+[outlier-invest] NASA/B0030 cycle-1 capacity: 1.7816
+[outlier-invest] MIT/b1c4 cycle-1 capacity: 1.0784
+[outlier-invest] MIT/b3c0 cycle-1 capacity: 1.0675
+
+[outlier-invest] DONE

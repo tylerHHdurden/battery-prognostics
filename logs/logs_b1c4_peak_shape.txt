@@ -1,0 +1,32 @@
+
+[b1c4-shape] === NASA/B0018 (n cycles checked=10) ===
+[b1c4-shape] mean n_peaks_found=2.30, mean max_prominence=236583.1294, mean relative_prominence=75936.49, mean V_range=1.7733V, mean n_samples/cycle=352
+
+[b1c4-shape] === MIT/b1c4 (n cycles checked=10) ===
+[b1c4-shape] mean n_peaks_found=1.20, mean max_prominence=37158.0249, mean relative_prominence=50.87, mean V_range=1.5907V, mean n_samples/cycle=441
+
+[b1c4-shape] === MIT/b3c0 (n cycles checked=10) ===
+[b1c4-shape] mean n_peaks_found=1.20, mean max_prominence=9865.1457, mean relative_prominence=13.02, mean V_range=1.5859V, mean n_samples/cycle=324
+
+[b1c4-shape] === MIT/b3c35 (n cycles checked=10) ===
+[b1c4-shape] mean n_peaks_found=1.20, mean max_prominence=7893.9889, mean relative_prominence=9.76, mean V_range=1.5866V, mean n_samples/cycle=321
+
+[b1c4-shape] === MIT/b4c38 (n cycles checked=10) ===
+[b1c4-shape] mean n_peaks_found=1.50, mean max_prominence=17493.0460, mean relative_prominence=22.29, mean V_range=1.5859V, mean n_samples/cycle=320
+
+[b1c4-shape] === SUMMARY, all 5 batteries side by side ===
+dataset battery_id  mean_n_peaks  mean_max_prominence  mean_relative_prominence  mean_v_range  mean_n_samples
+    MIT       b1c4           1.2         37158.024903                 50.871475      1.590656           441.1
+    MIT       b3c0           1.2          9865.145681                 13.019220      1.585853           323.8
+    MIT      b3c35           1.2          7893.988904                  9.757110      1.586640           320.9
+    MIT      b4c38           1.5         17493.046000                 22.287618      1.585945           320.3
+   NASA      B0018           2.3        236583.129403              75936.491720      1.773262           352.4
+
+[b1c4-shape] b1c4's relative_prominence (50.87) vs. others' range [9.76, 75936.49]
+[b1c4-shape] b1c4's V_range (1.5907V) vs. others' range [1.5859, 1.7733]
+[b1c4-shape] b1c4's n_samples/cycle (441) vs. others' range [320, 352]
+
+[b1c4-shape] Is b1c4's peak MEANINGFULLY flatter/less prominent than every comparison battery: False
+
+[b1c4-shape] saved outputs/b1c4_peak_shape_investigation.csv
+[b1c4-shape] DONE

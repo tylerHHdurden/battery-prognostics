@@ -5764,3 +5764,268 @@ any downstream number.
 No retraining of any deep model; does not touch the deployed Streamlit
 app. Per instruction: not proceeding to Stage 2 - reporting back and
 awaiting further direction.
+
+## Follow-up session 41 — closeout pass: two flagged outlier items, RUL applying Stage 1, stale downstream analyses, OC-SVM scale check
+
+A closeout pass covering two small flagged items and a broader gap
+found by a fresh full-log review: Stage 0/1's rigor never touched RUL
+prediction or several downstream analyses that depend on stale point
+predictors. No deployed-app changes. Same standard throughout:
+root-cause before concluding, report plainly regardless of outcome.
+
+### Part A.1 — the 3 unactioned outlier batteries: 2 false positives, 1 real artifact
+
+Session 35 Part 1 flagged NASA/B0045, MIT/b2c15, MIT/b2c16 by a
+z-score check on early-cycle capacity, never investigated further.
+Inspected the actual raw per-cycle values directly for each (same
+method as B0053's correction), not the summary statistic alone.
+
+**MIT/b2c15 and MIT/b2c16: classification (b), statistical false
+positives.** Both traces are smooth, ordinary, slow-fading early-life
+cells with tight cycle-to-cycle variance (b2c15: 0.9717->0.9591 over 20
+cycles, std=0.0036; b2c16: 1.0096->1.0125, essentially flat, std=0.0008)
+- nothing resembling an artifact. Their nominal capacities (0.97-1.01Ah)
+sit within a normal range for MIT cells (comparison cells b1c4/b3c0:
+1.07-1.08Ah) - the z-score flag reflects ordinary cell-to-cell variance
+at the edge of the pool's distribution, not a data problem.
+
+**NASA/B0045: classification (a)/(c) hybrid - a real, two-part
+concern, reported for a future retrain's exclusion decision, NOT acted
+on here.** Two distinct issues found:
+1. **An isolated single-cycle artifact**: cycle 19 reads EXACTLY 0.0Ah
+   (surrounded by 0.7407Ah at cycle 18, 0.7309Ah at cycle 20) - a
+   spurious dropped-reading, the same class of artifact as B0053's and
+   B0044's own isolated zero-readings (session 35 Part 1, this
+   project's session 38 follow-up).
+2. **A whole-battery capacity-scale anomaly, found only by checking
+   neighbors, not assumed**: B0045's cycle-1 capacity (0.928Ah) is
+   roughly HALF even of its closest same-ID-range NASA neighbors
+   (B0043=1.71Ah, B0044=1.69Ah, B0046=1.52Ah, B0047=1.52Ah) - not
+   explainable as ordinary sub-batch variation (those 4 neighbors
+   themselves span a real but much smaller 1.5-1.7Ah range). This is a
+   genuine outlier even within its own immediate cohort, not just
+   relative to the whole 34-battery NASA pool.
+
+**Recommendation, not acted on this pass per instruction**: B0045 is a
+real candidate for exclusion in a future full retrain, on stronger
+grounds than a lone z-score flag - both an isolated logging artifact
+AND an unexplained whole-battery capacity-scale anomaly relative to its
+own cohort.
+
+New file: `src/run_outlier_battery_investigation.py`. Log:
+`logs/logs_outlier_battery_investigation.txt`.
+
+### Part A.2 — b1c4's tracking-coverage collapse: the flatter-curve hypothesis is REFUTED
+
+Session 23's unconfirmed hypothesis: MIT fast-charge cells (specifically
+b1c4, 44.7% peak-tracking coverage vs. 92-99% for comparison batteries)
+may have flatter voltage-capacity curves with less-pronounced
+phase-transition features. Directly computed dV/dQ peak prominence
+(session 23's own method: `find_peaks(prominence=0.05*max)`) for b1c4
+against 3 comparison MIT batteries (b3c0, b3c35, b4c38) and NASA/B0018,
+over each battery's first 10 valid cycles.
+
+**Result: the opposite of the hypothesis.** b1c4's peaks are MORE
+prominent, not less, than every MIT comparison battery:
+
+| battery | mean relative prominence | mean V range |
+|---|---|---|
+| **b1c4 (44.7% coverage)** | **50.9** | 1.591V |
+| b3c0 (92.3% coverage) | 13.0 | 1.586V |
+| b3c35 | 9.8 | 1.587V |
+| b4c38 | 22.3 | 1.586V |
+
+**OUTCOME: the flatter-curve hypothesis does NOT hold.** b1c4's dV/dQ
+peaks are 2-5x MORE prominent than the comparison batteries that track
+far more reliably, and voltage range is essentially identical across
+all 4 MIT batteries (1.586-1.591V) - ruling out both candidate
+explanations session 23's hypothesis implied.
+
+A follow-up check of early-cycle peak POSITION stability (a plausible
+alternative: does the peak drift too fast for the fixed 0.15V search
+window to follow?) also found nothing distinguishing in the first ~15
+cycles (position std 0.021-0.027V, comparable across all 4 batteries,
+well inside the search window). **Best-supported alternative
+explanation, offered honestly as a plausible hypothesis, not
+independently confirmed further within this pass**: `track_peak()`'s
+own tracking logic only updates its reference position (`last_v`) on a
+SUCCESSFUL match - once any single cycle is lost, subsequent cycles
+must match against an increasingly stale reference, making
+re-acquisition progressively harder. b1c4 has more total cycles (1225)
+than b3c35 (1091) or b3c0 (1007), giving it more opportunities across
+a longer life for this self-reinforcing loss to compound - an
+algorithm-level explanation distinct from curve shape, not chased
+further in this small closeout pass.
+
+New file: `src/run_b1c4_peak_shape_investigation.py`. Output:
+`outputs/b1c4_peak_shape_investigation.csv`.
+
+### Part D — OC-SVM at expanded scale: never retrained, on record
+
+Checked directly: only `src/train_ocsvm.py` and `models/ocsvm_{model,
+scaler}.pkl` exist anywhere in this repo - no `train_ocsvm_expanded.py`
+or equivalent, and `DEVELOPMENT_LOG.md` itself confirms `ocsvm_model.pkl`/
+`ocsvm_scaler.pkl` were "reused as-is" in later sessions. **The OC-SVM
+anomaly detector has never been retrained on the 204-battery expanded
+pool** - the deployed lean pipeline's OC-SVM remains 32-battery-scale,
+consistent with the pipeline itself remaining the 32-battery default
+(the expanded pool was never swapped into the deployed app). Per this
+item's own instruction, no further action taken - reported so it's on
+record rather than silently assumed fine. Session 7's original
+NASA-vs-MIT false-flag imbalance (24.4% vs. ~2.3%) stands unchecked at
+whatever scale a future retrain would use.
+
+### Part C — re-running stale downstream analyses on Stage 1's 1.1+1.5 model
+
+Both session 25's second-life grading and session 26's sensor-noise
+robustness were built on the original lean pipeline (or its session-33
+204-battery re-run) and had never been checked against Stage 1's
+1.1+1.5 XGBoost-fusion model - the actual current best point predictor.
+Re-ran both exact methodologies with the point predictor swapped in,
+same 32-battery pool. Confirmed B0018 is in the test set before
+reporting (True, as expected for the unpinned original split).
+
+**C.1/C.2 - second-life grading: essentially a WASH, B0018's
+misgrade is barely dented, NOT fixed.**
+
+| | grading agreement | risky misgrades | B0018 predicted SOH | B0018 error |
+|---|---|---|---|---|
+| original lean pipeline (session 25) | 98.75% | 61 (1.17%) | 81.50% | +8.74pp |
+| **Stage 1.1+1.5** | **98.71%** | **63 (1.21%)** | **81.05%** | **+8.29pp** |
+
+Grading agreement is statistically indistinguishable (98.75% vs.
+98.71%, if anything a hair worse) despite Stage 1.1+1.5's large
+in-domain accuracy gain (R2 0.917->0.975 on this same pool). **B0018's
+known risky misgrade is NOT fixed** - true SOH=72.76% (Second-life
+candidate), predicted=81.05% (Primary EV use), still cleanly on the
+wrong side of the 80% threshold. The prediction error shrinks only
+marginally (8.74pp -> 8.29pp, a 5% reduction) despite the underlying
+model being substantially more accurate overall - **Stage 1's
+accuracy gains do not transfer to this specific practically-important
+failure case at all.**
+
+**C.3/C.4 - sensor-noise robustness: the session-26 pooled-masking
+artifact is GONE, replaced by an honest monotonic pooled trend - plus
+one genuinely new finding.**
+
+| noise level | pooled RMSE | pooled R2 |
+|---|---|---|
+| clean | 0.7653 | 0.9750 |
+| 1x BMS-grade | 0.7762 | 0.9742 |
+| 2x BMS-grade | 0.7865 | 0.9736 |
+| 5x BMS-grade (stress) | 1.0987 | 0.9484 |
+
+Unlike session 26's original pooled result (which ticked UP slightly
+at every noise level, masking B0018's real degradation), **the pooled
+number now degrades monotonically and honestly** - no masking artifact,
+because no other battery's mild "improvement" is large enough to offset
+real degradation once the underlying model is this much more accurate.
+
+**B0018 still degrades monotonically with noise** (session 26's
+original finding direction confirmed: R2 0.767->0.764->0.757->0.751),
+but the DEGRADATION MAGNITUDE is ~4x smaller in absolute R2 terms
+(-0.016 total) than the original lean pipeline's B0018 (-0.063, from
+0.576 to 0.513) - Stage 1.1+1.5 is both substantially more accurate
+AND relatively more noise-robust for B0018 specifically, even though
+the qualitative monotonic-degradation pattern persists.
+
+**A genuinely new finding, only visible now that the model is accurate
+enough to reveal it**: MIT/b1c4 - whose original R2 values (0.195-0.370)
+were too poor and erratic to show any clean signal (a known artifact of
+that battery's near-flat true SOH range, per session 26) - now shows a
+sharp, real, STRESS-LEVEL-SPECIFIC vulnerability: stable through 1x/2x
+(R2 0.977, even ticking slightly up) then a large, genuine collapse at
+5x-stress specifically (R2 0.977 -> 0.760, delta=-0.217) - the single
+largest per-battery degradation in this re-run, previously invisible
+because the old model was too inaccurate on b1c4 to show a clean trend
+at all.
+
+New file: `src/run_stage1_followup_partC_stale_analyses.py`. Outputs:
+`outputs/stage1_followup_partC_{grading_current_status,noise_pooled,
+noise_perbattery}.csv`,
+`data/processed/predictions/stage1_followup_partC_grading_per_cycle.csv`.
+
+### Part B — RUL prediction: applying Stage 1's canonical features
+
+**Architectural mismatch, root-caused before writing any training code**:
+B.1's instruction asks to retrain the joint-adaptive model "on Stage 1's
+canonical feature set... same architecture... as its original training."
+Checked `models/joint_model.py`/`train_joint_adaptive.py` directly
+first: `JointSOHRULModel` is a CNN+LSTM on 6-channel RAW SEQUENCE
+TENSORS (200 timesteps of V_t/I_t/T_t/dQdV/dVdQ/dIdV) - it has NEVER
+consumed the 8 BFA HI features at all, unlike XGBoost-fusion. "Same
+architecture" and "Stage 1's canonical feature set" are mutually
+exclusive as literally written - the model has no input slot for 8
+static per-cycle features to begin with; a literal same-architecture
+retrain would be a byte-for-byte no-op.
+
+**Resolution, stated explicitly rather than silently picking one**:
+implemented the smallest faithful extension that lets the actual
+question be tested at all - a new, clearly-flagged, ADDITIVE
+`JointSOHRULModelFusion` variant that concatenates the 8 canonical
+(1.1-reformulated) HI features onto the LSTM's final hidden state
+before the two regression heads, directly analogous to how
+"XGBoost-fusion" itself is built (HI features + a learned embedding,
+concatenated, then a final regressor). This is a real, disclosed
+deviation from "identical architecture" - the closest architecture
+that can actually receive the requested features. Backbone, training
+budget (25 epochs), split, and the adaptive-clamped loss weighting
+(the variant behind the best recorded RUL baseline) all match the
+original exactly. Per B.3's scope, only this one loss-weighting
+variant was retrained, on the ORIGINAL 32-battery pool.
+
+**Result - a dramatic, clean win on BOTH tasks:**
+
+| | SOH R2 | RUL R2 |
+|---|---|---|
+| fixed_balanced (session 4) | 0.416 | 0.428 |
+| adaptive-clamped (session 4, best recorded RUL) | 0.344 | 0.432 |
+| **adaptive-clamped + 1.1's canonical features (this run)** | **0.9241** | **0.6657** |
+
+SOH R2 more than DOUBLES (0.344 -> 0.924); RUL R2 improves by
++54-56% relative to both recorded baselines (0.428/0.432 -> 0.666) -
+**the single largest improvement found anywhere in this project's RUL
+work, and confirms 1.1's feature-engineering insight transfers well
+beyond XGBoost-fusion**, onto a completely different architecture and a
+task (RUL) it was never validated against before. Trained in 8.7
+minutes (25 epochs, no early stopping needed - the original ablation's
+budget).
+
+New files: `src/run_stage1_followup_partB_joint_rul.py` (defines
+`JointSOHRULModelFusion` inline, additive). Model:
+`models/joint_adaptive_fusion_canonical.pt`. Output:
+`outputs/stage1_followup_partB_joint_rul_results.csv`.
+
+---
+
+### Overall synthesis
+
+**Real, adoptable findings**: Part B is this session's headline result
+- Stage 1's canonical feature reformulation transfers dramatically to
+RUL prediction via a disclosed architectural extension, nearly
+doubling SOH R2 and improving RUL R2 by over 50% relative to the best
+prior recorded result. Part A.2 cleanly refutes an 18-session-old
+unconfirmed hypothesis with direct evidence. Part A.1 gives a future
+retrain a concrete, evidence-backed exclusion candidate (B0045) while
+correctly clearing two false-positive flags.
+
+**Honest non-wins, reported with the same weight**: Part C found
+Stage 1's large accuracy gains do NOT transfer to the second-life
+grading task at all (98.75% -> 98.71% agreement, a wash; B0018's
+risky misgrade barely dents from +8.74pp to +8.29pp error) - a real,
+important limit on how far "more accurate point predictions" alone
+goes toward fixing a specific, practically-consequential failure case.
+Part D confirms a known, still-unresolved limitation (OC-SVM class
+imbalance) has simply never been re-examined at the current pipeline
+scale.
+
+**A genuinely new finding surfaced only by this pass's own work**:
+re-running noise robustness on a materially more accurate model
+revealed a real, previously-invisible stress-specific vulnerability in
+MIT/b1c4 (R2 collapsing from 0.977 to 0.760 specifically at 5x-stress)
+- masked in every prior noise-robustness run by that battery's own
+poor baseline accuracy under the old, less accurate models.
+
+No retraining of the deployed lean pipeline itself; does not touch the
+deployed Streamlit app. Per instruction: not proceeding to Stage 2 -
+reporting back and awaiting further direction.
