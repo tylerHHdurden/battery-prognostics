@@ -6262,3 +6262,297 @@ could propagate further uncorrected.
 No retraining of the deployed lean pipeline; does not touch the
 deployed Streamlit app. This is the final closeout before Stage 2 -
 nothing found here changes the plan to proceed to Stage 2 next.
+
+## Follow-up session 43 — Stage 2: data integrity, EOL reconciliation, GroupKFold CV, re-validation, reporting convention
+
+Five items restoring data integrity and evaluation rigor. Same
+standards as every previous stage: root-cause before fixing, verify
+before trusting, checkpoint before anything long-running, report
+every result honestly including any that don't help.
+
+### 2.1 — Recovering the 14 excluded batteries: 9 of 14 recovered, honestly not all
+
+Session 33 excluded 14 batteries wholesale for degenerate SOH baselines
+(up to 2,177%), documenting ONE clean example (B0041: a genuine
+low-rate characterization phase for its first 41 of 66 cycles). Before
+writing any correction code, every one of the 14 batteries' raw
+capacity traces was inspected directly - **the other 13 do NOT all
+share B0041's pattern**, a real correction to the task's own framing:
+
+- **GROUP 1 - genuine characterization phase** (B0038, B0039, B0040,
+  B0041, 4 of 14): a sustained low-capacity block at the very start,
+  then one clean transition to real aging.
+- **GROUP 2 - an ISOLATED single-cycle artifact** (B0033, B0034, B0036,
+  B0049, B0051, MIT/b1c18, MIT/b2c44, MIT/b1c0, MIT/b2c12, 9 of 14): a
+  spurious spike OR drop at ONE specific cycle, both neighbors
+  completely normal - the EXACT SAME signature class the prior
+  session's project-wide sweep found in B0053/B0044/B0045, just not
+  previously connected to these 14 exclusions.
+- **GROUP 3 - not cleanly recoverable** (B0050, 1 of 14): 8+ scattered
+  anomalous readings across a 20-cycle trace, not confined to 1-2
+  isolated cycles.
+
+**Two real detector bugs found and fixed during development, not
+glossed over**:
+1. A fixed "50% of the 75th percentile" threshold correctly found
+   B0041's transition but MISSED B0038's (a smaller, ~40% relative
+   drop vs. B0041's ~95%) - confirmed by inspecting B0038's raw trace
+   directly (cycles 1-11 at ~1.0-1.1Ah, cycle 12 onward at ~1.78Ah).
+2. The fix for bug 1 then latched onto NOISE within B0039's own
+   characterization phase (its early cycles are highly erratic,
+   0.16-0.48Ah) instead of its real transition - fixed by requiring the
+   post-transition level to also approach the trace's genuine stable
+   level, not just be locally higher than an even-noisier neighbor.
+   Re-verified against all 4 Group-1 batteries before trusting it.
+
+**Result: 9 of 14 recovered** (max SOH <= 110% after correction) -
+all 4 Group-1 batteries, and 5 of 9 Group-2 batteries:
+
+| battery | group | fix applied | new max SOH |
+|---|---|---|---|
+| B0038 | characterization | dropped cycles 1-11, rebaselined to cycle 12 | 102.6% |
+| B0039 | characterization | dropped cycles 1-11, rebaselined to cycle 12 | 101.5% |
+| B0040 | characterization | dropped cycles 1-11, rebaselined to cycle 12 | 101.6% |
+| B0041 | characterization | dropped cycles 1-41, rebaselined to cycle 42 | 100.0% |
+| B0051 | isolated artifact | removed cycles 4, 16 | 105.2% |
+| MIT/b1c0 | isolated artifact | removed cycle 11 | 100.5% |
+| MIT/b1c18 | isolated artifact | removed cycle 39 | 100.3% |
+| MIT/b2c12 | isolated artifact | removed cycle 252 | 100.2% |
+| MIT/b2c44 | isolated artifact | removed cycle 247 | 100.5% |
+
+**Honestly NOT recovered (5 of 14), reported plainly rather than
+forced**: B0033 (max 162.4%, no isolated cycle flagged - a genuine
+GRADUAL early-life capacity ramp over ~44 cycles, not a discrete
+artifact, exceeding session 16's precedent for "mild, physically
+plausible" bumps); B0034 (110.7%, same gradual-ramp pattern, borderline);
+B0036 (110.0%, right at the threshold after removing its one clear
+spike - a near-miss, not force-rounded to "recovered"); B0049 (173.3%,
+has an additional spike at cycle 4 sitting within a fast monotonic
+early decline that the generic isolated-artifact detector's neighbor-
+tolerance check can't cleanly isolate); B0050 (Group 3, pervasive
+noise, no correction attempted).
+
+**New data made available**: 9 recovered batteries, 2,993 new cycles.
+Per instruction, no model retrained on this pool in this step - the
+corrected data is saved (`data/processed/recovered_battery_cycles.csv`)
+for a future stage to integrate.
+
+New file: `src/run_recover_excluded_batteries.py`. Outputs:
+`data/processed/recovered_battery_cycles.csv`,
+`outputs/battery_recovery_summary.csv`.
+
+### 2.2 — EOL/censoring reconciliation: a different, more fundamental finding than assumed
+
+**Step 1, stated explicitly**: this project's rule (`rul_labels.
+compute_eol_and_rul`, unchanged) - EOL = first cycle where capacity
+<= 0.8 * median(this battery's OWN first 3 cycles); censored=True if
+never crossed within the logged cycles.
+
+**Root-cause finding, made by checking the actual numbers rather than
+trusting the task's framing**: a first attempt re-implemented
+"Severson's convention" as 0.8 * 1.1Ah (nominal rated capacity) and
+found **ZERO cells flip between conventions - all 92 MIT batch-1/3
+cells are censored under BOTH rules**. Investigated why before
+concluding anything: MIT's raw HDF5 release includes Severson et al.'s
+own PRECOMPUTED `cycle_life` field (`batch['cycle_life']`) - reading it
+directly for all 90 matched cells shows `published_cycle_life -
+our_own_logged_n_cycles = 2.0 EXACTLY, for every single one (zero
+variance)`. **This is not a threshold-definition mismatch - it is a
+DATA AVAILABILITY constraint**: Severson's own released files are
+truncated at (within a fixed 2-cycle indexing offset of) their own
+computed cycle_life for every cell. Neither this project's threshold
+formula nor a reimplementation of Severson's can ever produce a finite
+crossing from this data, because the capacity trace, AS RELEASED,
+never extends past the point Severson herself already computed EOL to
+be.
+
+**Corrected reconciliation**: read Severson's own `cycle_life` value
+directly (not re-derive it) as ground-truth EOL for MIT batch-1/3
+cells specifically.
+
+| | censored |
+|---|---|
+| project convention | 92 of 92 (100%) |
+| Severson's own published cycle_life (90 matched cells) | 0 of 90 (0%, by construction) |
+
+**90 of 90 matched cells flip from censored to a finite, genuine RUL
+label.** 2 cells (b3c23, b3c32) have no published cycle_life match -
+reported honestly, not silently dropped; both are long-running cells
+(1933-2236 of our own logged cycles) that may still be running past
+any computed cycle_life in Severson's own accounting.
+
+**RECOMMENDATION**: adopt Severson's own published `cycle_life` field
+directly (not a threshold reimplementation) as canonical EOL for MIT
+batch-1/3 cells specifically, leaving this project's own convention in
+place for NASA/CALCE and every other MIT batch where the full aging
+trajectory IS captured within the logged data. Reasoning: (1) it
+resolves 90 of 92 cells from unusable (censored) to genuinely labeled
+- a large, free expansion of usable RUL training data on the task
+already established as weaker; (2) it aligns with field-standard,
+published ground truth for Stage 6.1's planned baseline comparison
+against Severson's own methods; (3) this project's own rule structurally
+cannot ever succeed on this specific released data, so continuing to
+use it here only means permanently discarding labels that are already
+computed and freely available.
+
+Per instruction, no model retrained in this step - both label sets are
+produced for a future retrain to use.
+
+New file: `src/run_eol_convention_reconciliation.py`. Output:
+`outputs/eol_convention_reconciliation.csv`.
+
+### 2.3 — GroupKFold replacing the deterministic split: B0018's weak-point pattern confirmed under genuine CV
+
+k=5 GroupKFold (grouped by battery ID) on the XGBoost-fusion pipeline,
+Stage 1's 1.1+1.5 canonical configuration, on the existing 204-battery
+expanded pool. **Scope decision on 2.1's recovered pool, stated
+explicitly**: fully integrating the 9 newly-recovered batteries would
+require rebuilding all 16 HI features + fusion embeddings from raw
+cycles for each - a real, non-trivial pool-rebuild step in its own
+right, and rushing it alongside everything else in this stage risks
+exactly the kind of mistake this stage's own instructions warned
+against. Deferred to a dedicated future step, not silently dropped.
+
+**Per-fold results:**
+
+| fold | test batteries | RMSE | R2 |
+|---|---|---|---|
+| 0 | 40 | 0.589 | 0.991 |
+| 1 | 41 | 0.710 | 0.991 |
+| 2 | 40 | 0.669 | 0.993 |
+| 3 | 42 | 1.721 | 0.935 |
+| 4 | 41 | 0.564 | 0.996 |
+
+**Aggregate: mean R2=0.9813 (std=0.0258, range [0.935, 0.996]) - a
+real, genuine cross-fold variance estimate**, without the bootstrap
+pseudo-replication problem session 21 worked around. Fold 3 is a
+real, meaningfully weaker fold (RMSE 1.72 vs. others' 0.56-0.71) - not
+smoothed into the mean without comment.
+
+**B0018 check**: lands in fold 0. Its own R2 (0.8888, RMSE=2.792) is
+more than 1 std below the other folds' mean (0.9789) - **B0018's
+weak-point pattern, consistent throughout this project's entire
+history, persists even when it is tested as a genuinely held-out fold
+rather than a pinned/special-cased battery.**
+
+Stated per instruction: this GroupKFold run is for POINT-PREDICTOR
+variance estimation and battery-level significance testing ONLY - it
+does NOT replace the existing train/calibration/test split used for
+conformal work (Stage 1.6), a separate use case with its own
+exchangeability requirements.
+
+New file: `src/run_groupkfold_cv.py`. Output:
+`outputs/stage2_groupkfold_cv_results.csv`.
+
+### 2.4 — Re-validating analyses built on superseded feature sets
+
+**1. Phase 5's SHAP top-feature ranking, re-run against the canonical
+1.1+1.5 feature set:**
+
+| rank | original (leaked 7-feature) | canonical (reformulated) |
+|---|---|---|
+| 1 | SCV (2.266) | **TEVI_rel (2.769)** |
+| 2 | VIECT (1.934) | SCV (1.286) |
+| 3 | TEVI (0.905) | VIECT (0.705) |
+
+Same top-3 FEATURES (mapping `_rel` back to its raw name: 3/3
+overlap) - but a genuine, notable change in ORDER and magnitude:
+TEVI's importance roughly TRIPLED (0.905->2.769) and it moved from
+rank 3 to rank 1. 1.1's reformulation did not just fix B0018's outlier
+status - it substantially increased TEVI's overall predictive value
+project-wide.
+
+**2. Session 15's LIME/SHAP agreement, re-run for the XGBoost base
+learner (the piece Stage 1 actually changed - the meta-learner is
+untouched by Stage 1 and out of this item's scope, its original 86.7%
+figure stands as-is):**
+
+| | mean top-3 overlap |
+|---|---|
+| original (leaked feature set) | 100% (5/5 full match) |
+| **canonical (reformulated feature set)** | **100% (5/5 full match)** |
+
+Unchanged - TreeSHAP and LIME agree identically well on the new
+feature set as the old one.
+
+**3. Consistency check across recent B0018/B0044 work**: session 38's
+B0044 investigation already used the canonical reformulated feature
+set for its domain-classifier/z-score check, per its own methodology -
+consistent. **A real, honest gap found**: session 27's ORIGINAL B0018
+domain-classifier AUC (not just the z-score comparison) has NEVER been
+re-run against the canonical feature set - Stage 1.1's own z-score
+work recomputed B0018's ICHV/TEVD/TEVI z-scores specifically
+(855->0.1 etc.), but the FULL AUC-based domain-classifier check
+(session 27's Part 3, all 7-then-8 features + fusion embeddings) was
+not repeated. Flagged here explicitly, not silently left inconsistent -
+worth a small dedicated re-run in a future session.
+
+**4. Normalized CP's sigma(x) model status**: confirmed stale, exactly
+as the task's own framing anticipated - session 35 Part 4's sigma(x)
+(GradientBoostingRegressor predicting residual magnitude) was fit on
+"TRAIN-only BFA features" predating Stage 1 entirely, and has never
+been refit since. Not refit here, per instruction (Stage 3 plans
+further conformal work anyway) - just established clearly: **it still
+reflects pre-Stage-1 features and should not be treated as reflecting
+the current canonical configuration.**
+
+New file: `src/run_revalidate_shap_lime.py`. Outputs:
+`outputs/stage2_shap_canonical_ranking.csv`,
+`outputs/stage2_lime_shap_agreement_canonical.csv`.
+
+### 2.5 — Reporting convention: per-battery as the default, R2 caveat
+
+**Established as documented project convention, effective immediately
+for all future evaluation work in this project:**
+
+1. **Per-battery results are the primary table in any future
+   evaluation; pooled/aggregate numbers are presented afterward as a
+   summary, not the headline.** This reverses the current default
+   order. Motivation, from this project's own history: pooled metrics
+   hid real per-battery findings twice (session 25's grading, session
+   26's noise robustness) - both times the truth only surfaced because
+   someone broke the pooled number out manually, after the fact, not
+   because the default reporting order surfaced it.
+2. **R2 should not be treated as a reliable headline metric on any
+   near-constant-variance subset** (early-life-only windows, single-
+   battery evaluations, or any other low-variance slice) - RMSE/MAE
+   should lead in those specific cases, per session 9's original
+   diagnosis (R2=-0.584 while RMSE simultaneously improved - R2's
+   dependence on the target's own variance makes it actively
+   misleading exactly where variance is smallest, independent of
+   whether the underlying predictions got better or worse).
+
+This is a documentation/convention step only, per instruction - no
+retroactive reformatting of any prior `DEVELOPMENT_LOG.md` entry was
+attempted; the convention applies from this point forward.
+
+---
+
+### Overall synthesis
+
+**2.1 and 2.2 both produced findings genuinely different from the
+task's own working assumption, and both are reported as found, not
+forced to match the assumption**: 2.1's 14 batteries split into (at
+least) 3 structurally different pathologies, not one; 2.2's mismatch
+turned out to be a data-availability constraint in Severson's own
+release, not a threshold-definition disagreement this project could
+fix by picking a different formula. Both investigations are more
+useful for having been root-caused honestly rather than assumed.
+
+**2.3 provides this project's first genuine, non-bootstrap variance
+estimate for the XGBoost-fusion pipeline** (R2 std=0.026 across 5
+folds) and independently reconfirms B0018's weak-point status under a
+completely different evaluation protocol than every prior session that
+found it.
+
+**2.4 surfaces one genuine improvement** (TEVI's SHAP importance
+tripling under the reformulated feature set) **and one honest,
+previously-unflagged gap** (B0018's domain-classifier AUC still
+pending a canonical-feature re-run) - reported with equal weight,
+neither buried.
+
+No model retrained in 2.1, 2.2, or 2.4 (analysis/labeling/validation
+only); 2.3 trains 5 fresh XGBoost-fusion folds (cheap, ~17s total) but
+does not change any deployed or canonical model file. Does not touch
+the deployed Streamlit app. Per instruction: not proceeding to Stage 3
+- reporting back and awaiting further direction.

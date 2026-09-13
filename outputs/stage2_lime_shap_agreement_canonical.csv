@@ -1,0 +1,6 @@
+dataset,battery_id,cycle_idx,shap_top3,lime_top3,overlap_count,match_fraction
+MIT,b1c4,192,TEVI_rel|SCV|VIECT,SCV|TEVI_rel|VIECT,3,1.0
+MIT,b3c0,190,TEVI_rel|SCV|VIECT,SCV|TEVI_rel|VIECT,3,1.0
+MIT,b3c0,507,TEVI_rel|SCV|VIECT,SCV|TEVI_rel|VIECT,3,1.0
+MIT,b4c38,178,TEVI_rel|SCV|VIECT,SCV|TEVI_rel|VIECT,3,1.0
+MIT,b4c38,592,TEVI_rel|SCV|VIECT,SCV|TEVI_rel|VIECT,3,1.0

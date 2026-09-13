@@ -1,0 +1,44 @@
+[revalidate] === building the Stage 1.1+1.5 canonical XGBoost-fusion model ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[revalidate] feature order: ['ICHV_rel', 'SCV', 'VDEDT', 'VIECT', 'MATD', 'MET', 'TEVD_rel', 'TEVI_rel', 'cycle_idx', 'fusion_0', 'fusion_1', 'fusion_2', 'fusion_3', 'fusion_4', 'fusion_5', 'fusion_6', 'fusion_7', 'fusion_8', 'fusion_9', 'fusion_10', 'fusion_11', 'fusion_12', 'fusion_13', 'fusion_14', 'fusion_15']
+
+[revalidate] === Part 1: TreeSHAP ranking, Stage 1.1+1.5 model (HI features + cycle_idx only, excluding the 16 fusion-embedding dims - matching Phase 5's original HI-only ranking scope) ===
+[revalidate] NEW TreeSHAP ranking (canonical, reformulated feature set):
+    TEVI_rel: 2.7691
+    SCV: 1.2855
+    VIECT: 0.7046
+    cycle_idx: 0.3082
+    ICHV_rel: 0.0952
+    TEVD_rel: 0.0778
+    MET: 0.0696
+    MATD: 0.0581
+    VDEDT: 0.0330
+
+[revalidate] ORIGINAL Phase 5 ranking (leaked 7-feature set), for direct comparison:
+feature  mean_abs_shap
+    SCV       2.266093
+  VIECT       1.934295
+   TEVI       0.905068
+   ICHV       0.244198
+   MATC       0.199057
+   MATD       0.135917
+  VDEDT       0.065975
+
+[revalidate] NEW top-3: ['TEVI_rel', 'SCV', 'VIECT']
+[revalidate] ORIGINAL top-3: ['SCV', 'VIECT', 'TEVI']
+[revalidate] top-3 overlap (mapping _rel features back to their raw name): 3/3
+
+[revalidate] === Part 2: LIME vs SHAP top-3 agreement, Stage 1.1+1.5 model ===
+[revalidate] {'dataset': 'MIT', 'battery_id': 'b1c4', 'cycle_idx': 192}: SHAP_top3=['TEVI_rel', 'SCV', 'VIECT']  LIME_top3=['SCV', 'TEVI_rel', 'VIECT']  overlap=3/3
+[revalidate] {'dataset': 'MIT', 'battery_id': 'b3c0', 'cycle_idx': 190}: SHAP_top3=['TEVI_rel', 'SCV', 'VIECT']  LIME_top3=['SCV', 'TEVI_rel', 'VIECT']  overlap=3/3
+[revalidate] {'dataset': 'MIT', 'battery_id': 'b3c0', 'cycle_idx': 507}: SHAP_top3=['TEVI_rel', 'SCV', 'VIECT']  LIME_top3=['SCV', 'TEVI_rel', 'VIECT']  overlap=3/3
+[revalidate] {'dataset': 'MIT', 'battery_id': 'b4c38', 'cycle_idx': 178}: SHAP_top3=['TEVI_rel', 'SCV', 'VIECT']  LIME_top3=['SCV', 'TEVI_rel', 'VIECT']  overlap=3/3
+[revalidate] {'dataset': 'MIT', 'battery_id': 'b4c38', 'cycle_idx': 592}: SHAP_top3=['TEVI_rel', 'SCV', 'VIECT']  LIME_top3=['SCV', 'TEVI_rel', 'VIECT']  overlap=3/3
+
+[revalidate] NEW mean top-3 overlap (XGBoost-base, canonical model): 100.0% (5/5 instances at full 3/3)
+[revalidate] ORIGINAL (session 15, leaked feature set): base learner=100%, meta=86.7%, overall mean=93.3%
+
+[revalidate] saved outputs/stage2_{shap_canonical_ranking,lime_shap_agreement_canonical}.csv
+[revalidate] DONE

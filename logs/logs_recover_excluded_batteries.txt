@@ -1,0 +1,60 @@
+[recover] 14 excluded batteries to process
+
+[recover] NASA/B0033: GROUP 2 (isolated artifact) - removed 0 flagged cycle(s) at index(es) [] (values []), baseline UNCHANGED (median first-3 kept cycles=1.1611), new max SOH=162.4%
+
+[recover] NASA/B0034: GROUP 2 (isolated artifact) - removed 0 flagged cycle(s) at index(es) [] (values []), baseline UNCHANGED (median first-3 kept cycles=1.6451), new max SOH=110.7%
+
+[recover] NASA/B0036: GROUP 2 (isolated artifact) - removed 1 flagged cycle(s) at index(es) [113] (values [2.4441]), baseline UNCHANGED (median first-3 kept cycles=1.8044), new max SOH=110.0%
+
+[recover] NASA/B0038: GROUP 1 (characterization phase) - dropped 11 leading cycles (cycles 1-11), new baseline=cycle 12 (1.7419Ah), 35 cycles kept, new max SOH=102.6%
+
+[recover] NASA/B0039: GROUP 1 (characterization phase) - dropped 11 leading cycles (cycles 1-11), new baseline=cycle 12 (1.7462Ah), 35 cycles kept, new max SOH=101.5%
+
+[recover] NASA/B0040: GROUP 1 (characterization phase) - dropped 11 leading cycles (cycles 1-11), new baseline=cycle 12 (1.7075Ah), 35 cycles kept, new max SOH=101.6%
+
+[recover] NASA/B0041: GROUP 1 (characterization phase) - dropped 41 leading cycles (cycles 1-41), new baseline=cycle 42 (1.2156Ah), 25 cycles kept, new max SOH=100.0%
+
+[recover] NASA/B0049: GROUP 2 (isolated artifact) - removed 1 flagged cycle(s) at index(es) [16] (values [0.0]), baseline UNCHANGED (median first-3 kept cycles=1.3729), new max SOH=173.3%
+
+[recover] NASA/B0050: GROUP 3 (not cleanly recoverable) - n=20 cycles, isolated-artifact detector alone flags 0 of them (pervasive, not confined to 1-2 cycles)
+
+[recover] NASA/B0051: GROUP 2 (isolated artifact) - removed 2 flagged cycle(s) at index(es) [4, 16] (values [2.3309, 0.0]), baseline UNCHANGED (median first-3 kept cycles=1.2289), new max SOH=105.2%
+
+[recover] MIT/b1c0: GROUP 2 (isolated artifact) - removed 1 flagged cycle(s) at index(es) [11] (values [1.5391]), baseline UNCHANGED (median first-3 kept cycles=1.0719), new max SOH=100.5%
+
+[recover] MIT/b1c18: GROUP 2 (isolated artifact) - removed 1 flagged cycle(s) at index(es) [39] (values [2.8841]), baseline UNCHANGED (median first-3 kept cycles=1.0668), new max SOH=100.3%
+
+[recover] MIT/b2c12: GROUP 2 (isolated artifact) - removed 1 flagged cycle(s) at index(es) [252] (values [1.4891]), baseline UNCHANGED (median first-3 kept cycles=1.0723), new max SOH=100.2%
+
+[recover] MIT/b2c44: GROUP 2 (isolated artifact) - removed 1 flagged cycle(s) at index(es) [247] (values [1.5447]), baseline UNCHANGED (median first-3 kept cycles=1.0723), new max SOH=100.5%
+
+[recover] === SUMMARY ===
+dataset battery_id                  group  n_cycles_original  n_dropped  n_cycles_kept  recovered  max_soh_after                                                       note
+   NASA      B0033      isolated_artifact                196        0.0            196      False     162.360246                                          removed cycles []
+   NASA      B0034      isolated_artifact                196        0.0            196      False     110.651023                                          removed cycles []
+   NASA      B0036      isolated_artifact                196        1.0            195      False     110.036868                                       removed cycles [113]
+   NASA      B0038 characterization_phase                 46       11.0             35       True     102.555602        dropped cycles up to idx10, rebaselined to cycle 12
+   NASA      B0039 characterization_phase                 46       11.0             35       True     101.454231        dropped cycles up to idx10, rebaselined to cycle 12
+   NASA      B0040 characterization_phase                 46       11.0             35       True     101.558710        dropped cycles up to idx10, rebaselined to cycle 12
+   NASA      B0041 characterization_phase                 66       41.0             25       True     100.000000        dropped cycles up to idx40, rebaselined to cycle 42
+   NASA      B0049      isolated_artifact                 24        1.0             23      False     173.262923                                        removed cycles [16]
+   NASA      B0050          unrecoverable                 20        NaN              0      False            NaN too many scattered anomalies for isolated-artifact removal
+   NASA      B0051      isolated_artifact                 24        2.0             22       True     105.231243                                     removed cycles [4, 16]
+    MIT       b1c0      isolated_artifact               1188        1.0           1187       True     100.483431                                        removed cycles [11]
+    MIT      b1c18      isolated_artifact                689        1.0            688       True     100.314307                                        removed cycles [39]
+    MIT      b2c12      isolated_artifact                490        1.0            489       True     100.180199                                       removed cycles [252]
+    MIT      b2c44      isolated_artifact                478        1.0            477       True     100.460743                                       removed cycles [247]
+
+[recover] 9 of 14 batteries successfully recovered (new max SOH <= 110% after correction)
+[recover] NOT recovered: dataset battery_id             group  max_soh_after
+   NASA      B0033 isolated_artifact     162.360246
+   NASA      B0034 isolated_artifact     110.651023
+   NASA      B0036 isolated_artifact     110.036868
+   NASA      B0049 isolated_artifact     173.262923
+   NASA      B0050     unrecoverable            NaN
+
+[recover] total NEW cycles made available by this recovery: 2993
+[recover] new pool total would be: 204 (current expanded) + 9 batteries + 2993 cycles (exact new total to be computed when this pool is actually rebuilt for training)
+
+[recover] saved data/processed/recovered_battery_cycles.csv (3603 rows) and outputs/battery_recovery_summary.csv
+[recover] DONE

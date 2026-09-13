@@ -1,0 +1,15 @@
+dataset,battery_id,group,n_cycles_original,n_dropped,n_cycles_kept,recovered,max_soh_after,note
+NASA,B0033,isolated_artifact,196,0.0,196,False,162.3602461033306,removed cycles []
+NASA,B0034,isolated_artifact,196,0.0,196,False,110.65102312511902,removed cycles []
+NASA,B0036,isolated_artifact,196,1.0,195,False,110.0368676492856,removed cycles [113]
+NASA,B0038,characterization_phase,46,11.0,35,True,102.55560192228992,"dropped cycles up to idx10, rebaselined to cycle 12"
+NASA,B0039,characterization_phase,46,11.0,35,True,101.45423148921881,"dropped cycles up to idx10, rebaselined to cycle 12"
+NASA,B0040,characterization_phase,46,11.0,35,True,101.5587097644713,"dropped cycles up to idx10, rebaselined to cycle 12"
+NASA,B0041,characterization_phase,66,41.0,25,True,100.0,"dropped cycles up to idx40, rebaselined to cycle 42"
+NASA,B0049,isolated_artifact,24,1.0,23,False,173.26292269338722,removed cycles [16]
+NASA,B0050,unrecoverable,20,,0,False,,too many scattered anomalies for isolated-artifact removal
+NASA,B0051,isolated_artifact,24,2.0,22,True,105.23124325716906,"removed cycles [4, 16]"
+MIT,b1c0,isolated_artifact,1188,1.0,1187,True,100.48343106473037,removed cycles [11]
+MIT,b1c18,isolated_artifact,689,1.0,688,True,100.31430658324652,removed cycles [39]
+MIT,b2c12,isolated_artifact,490,1.0,489,True,100.18019903306335,removed cycles [252]
+MIT,b2c44,isolated_artifact,478,1.0,477,True,100.46074276889563,removed cycles [247]

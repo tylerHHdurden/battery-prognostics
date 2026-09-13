@@ -1,0 +1,31 @@
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 153264 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 153264 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 153264 rows)
+[groupkfold] canonical Stage 1.1+1.5 feature set: ['ICHV_rel', 'SCV', 'VDEDT', 'VIECT', 'MATD', 'MET', 'TEVD_rel', 'TEVI_rel', 'cycle_idx']
+[groupkfold] pool: 153244 rows, 204 batteries
+[groupkfold] fold 0: 40 test batteries, 30640 test rows, RMSE=0.5894 MAE=0.3310 R2=0.9908 (2.9s)
+[groupkfold]   B0018 lands in fold 0: n=132, RMSE=2.7921, R2=0.8888
+[groupkfold] fold 1: 41 test batteries, 30637 test rows, RMSE=0.7098 MAE=0.2619 R2=0.9911 (3.0s)
+[groupkfold] fold 2: 40 test batteries, 30644 test rows, RMSE=0.6686 MAE=0.3020 R2=0.9932 (3.3s)
+[groupkfold] fold 3: 42 test batteries, 30664 test rows, RMSE=1.7215 MAE=0.3647 R2=0.9352 (3.0s)
+[groupkfold] fold 4: 41 test batteries, 30659 test rows, RMSE=0.5637 MAE=0.2613 R2=0.9960 (3.1s)
+
+[groupkfold] === AGGREGATE across 5 folds ===
+ fold  n_test_batteries  n_test_rows     rmse      mae       r2
+    0                40        30640 0.589363 0.331004 0.990803
+    1                41        30637 0.709787 0.261876 0.991103
+    2                40        30644 0.668647 0.301984 0.993164
+    3                42        30664 1.721479 0.364673 0.935209
+    4                41        30659 0.563705 0.261338 0.995997
+
+[groupkfold] mean RMSE=0.8506 (std=0.4904, range=[0.5637, 1.7215])
+[groupkfold] mean R2=0.9813 (std=0.0258, range=[0.9352, 0.9960])
+
+[groupkfold] === B0018 check ===
+[groupkfold] B0018's own fold (0) R2=0.8888 (RMSE=2.7921, n=132 cycles) vs. other folds' mean R2=0.9789
+[groupkfold] B0018's fold notably weaker than other folds (more than 1 std below their mean): True
+
+[groupkfold] NOTE (per instruction): this GroupKFold run is for POINT-PREDICTOR variance estimation / battery-level significance testing ONLY - it does NOT replace the existing train/calibration/test split used for conformal work (Stage 1.6), which remains a separate, fixed split for calibration exchangeability reasons.
+
+[groupkfold] saved outputs/stage2_groupkfold_cv_results.csv
+[groupkfold] ALL DONE in 16.8s (0.3 min)

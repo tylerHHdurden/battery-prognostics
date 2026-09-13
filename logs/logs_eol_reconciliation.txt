@@ -1,0 +1,19 @@
+[eol-reconcile] 92 MIT batch-1/3 cells to process
+[eol-reconcile] loaded Severson's published cycle_life for 185 total MIT cells (all batches)
+[eol-reconcile] ...30/92 cells processed
+[eol-reconcile] ...60/92 cells processed
+[eol-reconcile] ...90/92 cells processed
+
+[eol-reconcile] === RESULT: 92 cells processed, 90 matched to a published cycle_life ===
+[eol-reconcile] 2 cells with NO published cycle_life match: ['b3c23', 'b3c32'] (not covered by this reconciliation - reported, not silently dropped)
+
+[eol-reconcile] censored under PROJECT convention: 92 (100.0%)
+[eol-reconcile] censored under SEVERSON's OWN published cycle_life (of the 90 matched cells): 0 (0.0%) - by construction, a precomputed value IS a finite observation
+
+[eol-reconcile] cells that FLIP from censored (project) -> finite (Severson's own value): 90 of 90 matched cells
+
+[eol-reconcile] EOL cycle difference where project reports a finite value anyway vs. Severson's own (project - Severson, all cells, since project's is always finite by construction - either a real crossing or last-cycle+1): mean=+1.0, median=+1.0, std=0.0
+[eol-reconcile] (this diff is dominated by the 92 still-censored-under-project cells, where eol_project = n_cycles+1 by definition, NOT a genuine threshold-crossing - those rows are NOT a meaningful RUL-label comparison, only a raw cycle-count comparison)
+
+[eol-reconcile] saved outputs/eol_convention_reconciliation.csv
+[eol-reconcile] DONE
