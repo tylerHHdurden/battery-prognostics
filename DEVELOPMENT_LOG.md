@@ -6957,3 +6957,170 @@ Both items are now genuinely closed out. No retraining performed; does
 not touch the deployed Streamlit app. Per instruction: not proceeding
 to Stage 3 - reporting back and awaiting confirmation that everything
 preceding it is complete.
+
+## Follow-up session 48 — final independent verification sweep before Stage 3
+
+A read-only verification pass (plus one real fix Sweep 3 surfaced) to
+confirm nothing was left silently unflagged before Stage 3 begins. No
+retraining, no deployed-app changes.
+
+### Sweep 1 — DEVELOPMENT_LOG.md text scan
+
+Searched the full log for TODO/FIXME/"not yet"/"unconfirmed"/"not
+chased"/"not investigated"/"left open"/"still pending"/"not
+resolved"/"revisit"/"follow-up needed"/"not acted on"/"unclear
+why"/"not fully understood" (case-insensitive). **15 total hits.**
+Classified every one:
+
+**False positives (descriptive text, not open-item flags), 4 hits**:
+"TodoWrite" (tool-name mention), two uses of "revisit(ing)" describing
+a battery/scope being examined again (not a flag), one "not resolved
+unilaterally" describing normal deployment-decision process language.
+
+**Stale, already resolved later in the log, 5 hits**: PiFormer-
+attention-on-B0053 hypothesis (session 33, resolved session 47's item
+1 above); the 3-outlier-battery flag (B0045/b2c15/b2c16, session 35,
+resolved session 41 Part A.1); CNN-LSTM BatchNorm-speedup hypothesis
+(session 35, addressed session 47's item 2 - the epoch-count mechanism
+is now confirmed, the narrow BatchNorm sub-question remains explicitly
+open per that same entry, not silently dropped); the b1c4 flatter-
+curve hypothesis (session 23) and its "not chased further"
+self-reinforcing-loss alternative - the FIRST is refuted in the same
+session-41 entry that quotes it; the self-reinforcing-loss alternative
+itself is genuinely still open (see below).
+
+**Genuinely still open, correctly known/deferred (not silently
+missed), 5 hits**:
+1. Phase 2's PiFormer-capacity-vs-VLSTM architectural hypothesis
+   ("more parameters/capacity... not investigated further") -
+   practically superseded (Huber loss later made PiFormer far more
+   accurate than this original comparison point) but the specific
+   mechanism was never directly tested.
+2. An early session's early-life-window R2 weakness ("not investigated
+   further here") - the PRACTICAL takeaway (use RMSE/MAE, not R2, on
+   low-variance windows) was formalized project-wide in Stage 2.5
+   regardless of the specific unconfirmed mechanism.
+3. b1c4's "self-reinforcing tracking-loss" alternative explanation
+   (session 41 Part A.2, offered after refuting the flatter-curve
+   hypothesis) - never independently confirmed, no later session
+   revisited it. Minor, honestly flagged as a hypothesis at the time.
+4. The canonical Stage 1.1+1.5 feature configuration "not yet swapped
+   into the deployed Streamlit app" - a deliberate, repeatedly-
+   confirmed standing decision (every stage since has explicitly
+   avoided touching app.py), not an oversight.
+5. The Jackknife+/CV+ CALCE-coverage headroom finding ("worth carrying
+   into Stage 2's own priorities, though not acted on further") - Stage
+   2 did NOT revisit this (its scope was data integrity, not
+   conformal work) - genuinely still open, but exactly the kind of
+   item Stage 3 (further conformal work) is intended to pick up, not
+   something that fell through a gap.
+
+**Also confirmed still accurate**: B0045's exclusion recommendation
+("not acted on this pass") remains correctly un-acted-on - re-
+confirmed, not contradicted, by session 46's own B0045 investigation.
+
+### Sweep 2 — Codebase comment scan
+
+Same pattern list plus `# HACK`, `# XXX`, `# bug`, `# broken`, bare
+`NotImplementedError`, grepped across `src/`. **6 total hits.**
+
+- `digital_twin_streaming.py:177`, `run_bfa_expanded.py:39` - both
+  describe bugs that WERE caught and fixed, documented per this
+  project's standing convention of leaving a comment explaining a past
+  fix rather than silently rewriting history. Not open items.
+- `run_b1c4_peak_shape_investigation.py:4` - quotes the b1c4 hypothesis
+  before the same script refutes it. Not an open item (see Sweep 1).
+- `run_degradation_mode_analysis.py:61` - "revisits" used descriptively
+  (a comparison-battery choice), not a flag. False positive.
+- `load_mit.py:68` - a runtime STATUS print ("NOT YET DOWNLOADED") in a
+  diagnostic utility checking whether the 4 raw MIT batch files are
+  present locally - not a code TODO. All 4 files have been present and
+  successfully read throughout this entire project.
+- **`verify_b0018_pinned_split.py:112` - genuinely still open, and
+  worth flagging explicitly**: `battery_split_expanded_b0018pinned.json`
+  (produced session 35 Part 2, permanently pinning B0018 to the test
+  set) is confirmed via direct grep to be referenced ONLY by the script
+  that created it - no training script in this repo has ever used it.
+  Every Stage 1/Stage 2/closeout script confirmed to use the UNPINNED
+  `battery_split_expanded.json` instead, consistent with each of those
+  sessions' own explicit, stated reasoning (keeping results comparable
+  to prior numbers). This is the same category of item as Sweep 3's
+  question below - a deliberately-produced, ready-to-use artifact for
+  a future FULL retrain that hasn't happened yet, not a forgotten one.
+
+### Sweep 3 — Orphaned/unintegrated outputs check: confirmed the deferred status, AND found a real, now-fixed inconsistency
+
+**Main question answered**: `data/processed/recovered_battery_cycles.csv`
+is referenced ONLY by the script that produces it
+(`run_recover_excluded_batteries.py`) - confirmed via grep across all
+of `src/`. No training or hi_table-generation script reads it. This
+correctly matches its known status: produced in Stage 2.1, explicitly
+NOT integrated into any retrain per that item's own instruction
+("Do NOT retrain any model in this step"), waiting for a future full
+pool rebuild. **Not silently forgotten - still exactly where it was
+left, on purpose.**
+
+**But checking the file's own CONTENTS surfaced a real, concrete
+inconsistency, not previously caught**: the file silently mixed in
+B0033/B0034/B0049's UNSUCCESSFUL correction attempts (still >110% max
+SOH after correction) alongside the genuinely recovered batteries'
+data, with no column to tell them apart - a future consumer filtering
+this file by battery_id alone would have silently pulled in still-
+corrupted data. Separately, **B0036's entry was stale**: it reflected
+only the ORIGINAL single-spike correction (cycle 113 only, residual
+max SOH=110.0%), not the fully-corrected two-spike version (cycles 45
+AND 113, max SOH=100.0%) verified and reported in the prior closeout
+session.
+
+**Fixed directly** (qualifies as "something needs correcting" per this
+sweep's own explicit allowance): `run_recover_excluded_batteries.py`
+now (1) applies the previously-verified, battery-specific
+`SPIKE_FRAC=1.12` override for B0036 only (via a new, clearly-
+documented `PER_BATTERY_SPIKE_FRAC_OVERRIDE` dict - NOT a global
+threshold change, preserving the prior session's own explicit finding
+that a global relaxation is unsafe for B0033/B0034), and (2) adds an
+explicit `recovered` boolean column to `recovered_battery_cycles.csv`
+so a future consumer can safely filter to `recovered==True` without
+accidentally including failed attempts. Re-ran and verified: **B0036
+now shows max SOH=100.0019%, recovered=True** (matches the previously
+reported figure); the file now correctly separates 3,187 rows across
+10 genuinely-recovered batteries from 415 rows across the 3
+still-not-recovered ones (B0033, B0034, B0049) via the new column.
+**Recovery count updates from 9 to the already-reported 10 of 14** -
+consistent with the prior closeout entry, not a new number.
+
+### Sweep 4 — Git log sanity check
+
+`git log --oneline -20` reviewed against everything reported across
+this project's recent sessions. **All 11 most recent commits match
+exactly** what was reported back, in the correct order: items-1-2
+verification -> B0045 investigation -> final closeout (fold
+3/B0036/EOL) -> Stage 2 -> Stage 1 final closeout -> Stage 1 closeout
+(outliers/b1c4/RUL/stale-reruns/OC-SVM) -> Stage 1 closeout
+(noise/overlap/JK+ driver) -> JK+-not-general follow-up -> Stage 1
+follow-up (conformal/B0044) -> Stage 1 (seven items) -> Stage 0. No
+unexplained commit messages, no evidence of anything committed outside
+what was reported in conversation. Working tree before this sweep's
+own fix was clean except the expected pre-existing, never-staged
+scratch files (`_inventory.json`, `_inventory_full.txt`,
+`debug_p1{,b}_output.txt`, `final_smoke.txt`) that have persisted,
+untouched, across every session in this project's recent history.
+
+---
+
+### Overall verdict
+
+Sweeps 1, 2, and 4 come back clean - every hit is either a false
+positive, a stale flag already resolved elsewhere in the log, or a
+genuinely open item that is correctly known and appropriately deferred
+(most explicitly to Stage 3's own planned conformal-calibration scope),
+not silently missed. Sweep 3 found one real, concrete data-consistency
+issue in a not-yet-consumed artifact and it has been fixed and
+re-verified directly above, with the corrected file's numbers matching
+what was already reported (10 of 14 recovered) - not a new finding
+that changes any previously-reported result, only a fix to the
+underlying file's own internal consistency for whenever it IS
+eventually consumed.
+
+**The codebase and log are genuinely consistent with everything
+reported in this conversation. Stage 3 can begin with confidence.**

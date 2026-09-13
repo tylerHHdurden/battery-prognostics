@@ -1,7 +1,7 @@
 dataset,battery_id,group,n_cycles_original,n_dropped,n_cycles_kept,recovered,max_soh_after,note
 NASA,B0033,isolated_artifact,196,0.0,196,False,162.3602461033306,removed cycles []
 NASA,B0034,isolated_artifact,196,0.0,196,False,110.65102312511902,removed cycles []
-NASA,B0036,isolated_artifact,196,1.0,195,False,110.0368676492856,removed cycles [113]
+NASA,B0036,isolated_artifact,196,2.0,194,True,100.00189270896573,"removed cycles [45, 113]"
 NASA,B0038,characterization_phase,46,11.0,35,True,102.55560192228992,"dropped cycles up to idx10, rebaselined to cycle 12"
 NASA,B0039,characterization_phase,46,11.0,35,True,101.45423148921881,"dropped cycles up to idx10, rebaselined to cycle 12"
 NASA,B0040,characterization_phase,46,11.0,35,True,101.5587097644713,"dropped cycles up to idx10, rebaselined to cycle 12"

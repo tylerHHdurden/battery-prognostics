@@ -3,8 +3,9 @@
 [recover] NASA/B0033: GROUP 2 (isolated artifact) - removed 0 flagged cycle(s) at index(es) [] (values []), baseline UNCHANGED (median first-3 kept cycles=1.1611), new max SOH=162.4%
 
 [recover] NASA/B0034: GROUP 2 (isolated artifact) - removed 0 flagged cycle(s) at index(es) [] (values []), baseline UNCHANGED (median first-3 kept cycles=1.6451), new max SOH=110.7%
+[recover] NASA/B0036: using verified per-battery override SPIKE_FRAC=1.12 (see PER_BATTERY_SPIKE_FRAC_OVERRIDE docstring)
 
-[recover] NASA/B0036: GROUP 2 (isolated artifact) - removed 1 flagged cycle(s) at index(es) [113] (values [2.4441]), baseline UNCHANGED (median first-3 kept cycles=1.8044), new max SOH=110.0%
+[recover] NASA/B0036: GROUP 2 (isolated artifact) - removed 2 flagged cycle(s) at index(es) [45, 113] (values [1.9855, 2.4441]), baseline UNCHANGED (median first-3 kept cycles=1.8044), new max SOH=100.0%
 
 [recover] NASA/B0038: GROUP 1 (characterization phase) - dropped 11 leading cycles (cycles 1-11), new baseline=cycle 12 (1.7419Ah), 35 cycles kept, new max SOH=102.6%
 
@@ -32,7 +33,7 @@
 dataset battery_id                  group  n_cycles_original  n_dropped  n_cycles_kept  recovered  max_soh_after                                                       note
    NASA      B0033      isolated_artifact                196        0.0            196      False     162.360246                                          removed cycles []
    NASA      B0034      isolated_artifact                196        0.0            196      False     110.651023                                          removed cycles []
-   NASA      B0036      isolated_artifact                196        1.0            195      False     110.036868                                       removed cycles [113]
+   NASA      B0036      isolated_artifact                196        2.0            194       True     100.001893                                   removed cycles [45, 113]
    NASA      B0038 characterization_phase                 46       11.0             35       True     102.555602        dropped cycles up to idx10, rebaselined to cycle 12
    NASA      B0039 characterization_phase                 46       11.0             35       True     101.454231        dropped cycles up to idx10, rebaselined to cycle 12
    NASA      B0040 characterization_phase                 46       11.0             35       True     101.558710        dropped cycles up to idx10, rebaselined to cycle 12
@@ -45,16 +46,15 @@ dataset battery_id                  group  n_cycles_original  n_dropped  n_cycle
     MIT      b2c12      isolated_artifact                490        1.0            489       True     100.180199                                       removed cycles [252]
     MIT      b2c44      isolated_artifact                478        1.0            477       True     100.460743                                       removed cycles [247]
 
-[recover] 9 of 14 batteries successfully recovered (new max SOH <= 110% after correction)
+[recover] 10 of 14 batteries successfully recovered (new max SOH <= 110% after correction)
 [recover] NOT recovered: dataset battery_id             group  max_soh_after
    NASA      B0033 isolated_artifact     162.360246
    NASA      B0034 isolated_artifact     110.651023
-   NASA      B0036 isolated_artifact     110.036868
    NASA      B0049 isolated_artifact     173.262923
    NASA      B0050     unrecoverable            NaN
 
-[recover] total NEW cycles made available by this recovery: 2993
-[recover] new pool total would be: 204 (current expanded) + 9 batteries + 2993 cycles (exact new total to be computed when this pool is actually rebuilt for training)
+[recover] total NEW cycles made available by this recovery: 3187
+[recover] new pool total would be: 204 (current expanded) + 10 batteries + 3187 cycles (exact new total to be computed when this pool is actually rebuilt for training)
 
-[recover] saved data/processed/recovered_battery_cycles.csv (3603 rows) and outputs/battery_recovery_summary.csv
+[recover] saved data/processed/recovered_battery_cycles.csv (3602 rows total, 3187 with recovered=True) and outputs/battery_recovery_summary.csv
 [recover] DONE
