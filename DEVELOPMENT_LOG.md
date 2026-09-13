@@ -5589,3 +5589,63 @@ summary}.csv`, `logs/logs_b0044_rootcause.txt`.
 Neither Part A nor Part B involved retraining any deep model or
 touching the deployed Streamlit app. Per instruction: not proceeding
 to Stage 2 - reporting back and awaiting further direction.
+
+## Follow-up session 39 — is the Jackknife+ CALCE-coverage jump general, or specific to 1.1+1.5?
+
+One small, cheap check before Stage 2: the prior follow-up found
+Jackknife+ took CALCE coverage from 6.7% to 37.1% on the final 1.1+1.5
+model - a larger single jump than any point-predictor change in this
+project. Reused `run_stage1_followup_A_conformal_refit.py`'s Jackknife+
+code path UNCHANGED, pointed at the pre-Stage-1 baseline model (raw
+canonical features, no monotone_constraints, no sample weighting)
+instead, to test whether this is a general calibration-mechanism
+property or specific to 1.1/1.5.
+
+**Verification first, per instruction**: this run's plain split-
+conformal coverage on the baseline reproduced the previously reported
+number bit-for-bit (0.16626997619857192 both times) - confirmed the
+correct baseline was loaded before trusting anything downstream.
+
+**Side by side:**
+
+| model config | split-conformal | Jackknife+ | jump |
+|---|---|---|---|
+| pre-Stage-1 baseline | 16.6% (width=4.92) | **21.3% (width=11.70)** | **+4.7pp** |
+| 1.1+1.5 final | 6.7% (width=2.33) | **37.1% (width=11.89)** | **+30.3pp** |
+
+**OUTCOME: (b) - NOT general.** The baseline's Jackknife+ jump (+4.7pp)
+is far smaller than the 1.1+1.5 model's (+30.3pp) - roughly 1/6th the
+size. The 37.1% result is specific to the 1.1+1.5 configuration
+(interacting with the reformulated features and/or the monotone
+constraint in some way not further isolated here), not a general
+property of switching calibration mechanisms on this pipeline. The
+Jackknife+ finding is real but narrower/more conditional than it first
+appeared - it should NOT be treated as a general, already-demonstrated
+alternative to KMM-CP; it is a real, but configuration-specific, lead.
+
+**Width check, as instructed - a genuinely interesting secondary
+detail**: both models' Jackknife+ intervals converge to nearly the SAME
+absolute width (11.70 vs. 11.89), despite starting from very different
+split-conformal widths (4.92 vs. 2.33) and very different point-
+predictor accuracy (CALCE R2 0.35 vs. 0.57). This is consistent with
+the K=3 leave-one-battery-out structure itself dominating interval
+width (driven by between-battery residual variance across only 3
+calibration batteries) rather than either model's typical accuracy -
+a plausible explanation for why coverage differs so much between the
+two configs while width does not, not confirmed further here (out of
+this small follow-up's scope).
+
+**Practical implication for Stage 3 prioritization, stated plainly**:
+Jackknife+ is a genuine, verified improvement over plain split-
+conformal specifically on the 1.1+1.5 configuration (6.7%->37.1%), but
+is NOT a demonstrated general fix independent of which point predictor
+it's paired with. It remains a real, worth-investigating lead for
+Stage 3 - just not the strong, general, already-proven case the first
+follow-up's framing suggested before this check.
+
+New file: `src/run_stage1_followup_B_jackknife_baseline.py`. Output:
+`outputs/stage1_followup_B_jackknife_baseline_comparison.csv`.
+
+No retraining of any deep model; does not touch the deployed Streamlit
+app. Per instruction: not proceeding to Stage 2 - reporting back and
+awaiting further direction.

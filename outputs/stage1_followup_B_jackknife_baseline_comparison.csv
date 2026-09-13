@@ -1,0 +1,5 @@
+config,method,coverage,avg_width
+pre-Stage-1 baseline,split-conformal,0.16626997619857192,4.919843330781646
+pre-Stage-1 baseline,jackknife_plus,0.21319279156749404,11.699040053172036
+1.1+1.5 final,split-conformal,0.06732403944236655,2.3315267577021075
+1.1+1.5 final,jackknife_plus,0.37062223733424005,11.89

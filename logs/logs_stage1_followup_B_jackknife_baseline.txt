@@ -1,0 +1,29 @@
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[stage1-followB] === Building the PRE-STAGE-1 BASELINE configuration (raw canonical features) ===
+[stage1-followB] baseline in-domain: RMSE=1.3906 R2=0.9173
+[stage1-followB] baseline CALCE:      RMSE=17.3515 R2=0.3507
+
+[stage1-followB] === VERIFICATION: split-conformal on this baseline ===
+[stage1-followB] this run: 0.1663 | previously reported (outputs/stage1_canonical_baseline.csv): 0.16626997619857192
+[stage1-followB] reproduces bit-for-bit: True
+
+[stage1-followB] === Jackknife+ (K=3, leave-one-battery-out) on this SAME baseline model ===
+[stage1-followB] calibration battery pool: ['B0018', 'b2c24', 'b3c35'] (3 batteries) - identical pool used in the A follow-up's 1.1+1.5 Jackknife+ run
+[stage1-followB] CV+ calibration pool: 1746 rows, 3 batteries
+[stage1-followB] Jackknife+ (baseline model) CALCE coverage: 0.2132 (avg_width=11.699)
+
+[stage1-followB] === SIDE-BY-SIDE ===
+[stage1-followB] | model config | split-conformal | Jackknife+ |
+[stage1-followB] | pre-Stage-1 baseline | 16.6% (width=4.92) | 21.3% (width=11.70) |
+[stage1-followB] | 1.1+1.5 final (from prior follow-up) | 6.7% (width=2.33) | 37.1% (width=11.89) |
+
+[stage1-followB] baseline jump (split-conformal -> Jackknife+): +4.7pp
+[stage1-followB] 1.1+1.5 final jump (from prior follow-up): +30.3pp
+
+[stage1-followB] OUTCOME: (b) NOT general - the baseline does NOT show a comparably large jump. The 37.1% result on the 1.1+1.5 model is specific to that configuration (interacting with the reformulated features and/or the monotone constraint), not a general property of switching calibration mechanisms alone. The Jackknife+ finding is narrower/more conditional than it first appeared - still real, just not a blanket calibration fix.
+
+[stage1-followB] WIDTH CHECK: Jackknife+ intervals are wider than split-conformal's on the baseline too (4.92 -> 11.70) - consistent with the 1.1+1.5 case (also wider, 2.33->11.89).
+
+[stage1-followB] saved outputs/stage1_followup_B_jackknife_baseline_comparison.csv
+[stage1-followB] DONE
