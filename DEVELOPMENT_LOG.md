@@ -7618,3 +7618,257 @@ were adjusted or re-framed to manufacture a more favorable headline.
 Per instruction: no changes were made to the deployed Streamlit app
 (`app.py`) at any point in this stage. Not proceeding to Stage 4 -
 reporting back and awaiting further direction.
+
+## Closeout-and-consolidation pass before Stage 4
+
+Four items: a consolidated CALCE-coverage table pulling seven+ scattered
+attempts into one place, two small artifact-vs-real checks left
+hanging after the B0045/B0053 work, and four explicit carry-forward
+decisions for Stage 4's retrain, stated plainly rather than assumed.
+No deployed-app changes; no model retrained in this pass.
+
+### 1 — Consolidated CALCE conformal-coverage table (all attempts, chronological)
+
+Cross-referenced from, not duplicating, Stage 3's own entry above
+(which already carries a similar table scoped to its own 3 items) -
+this is the full project history in one place, each number re-checked
+against its original source rather than re-typed from memory.
+
+| # | session | method | mechanism | CALCE coverage | interval width | verdict |
+|---|---|---|---|---|---|---|
+| 1 | 13 | MMD | kernel mean-embedding alignment of the fusion encoder's CALCE-vs-source distributions | 4.4% | 4.43 (half-width 2.217) | WORSE than the un-aligned 6.1% baseline it targeted; fixed point-accuracy, not coverage |
+| 2 | 19 | weighted conformal (logistic domain classifier) | reweight calibration residuals by a classifier-estimated source/target density ratio | 4.4% (fusion-only config; full-feature config nominally 100% but every interval infinite/vacuous) | 4.38 (half-width 2.192) fusion-only; infinite full-feature | never genuinely improved coverage; broke in-domain coverage 94.6%->43.6% as a side effect (unstable weights, near-total AUC separation) |
+| 3 | 33 | dataset expansion alone (32->204 batteries) | more training data, same fixed-width split-conformal mechanism | 7.4% | 2.309 (constant, identical in-domain and CALCE - the mechanism being targeted) | small, real gain (6.1%->7.4%) from data alone, but the fixed-width mechanism itself is untouched - still far short |
+| 4 | 35 Part 4 | Normalized CP | secondary GBR predicts local residual magnitude sigma(x) from TRAIN-only data; width scales by sigma(x) | 19.3% | 6.545 mean (range 4.87-18.41) | real, ~2.6x gain over #3; the better-behaved of the two Part-4 methods, informative widths |
+| 5 | 35 Part 4 | CQR | two GBR quantile models (5%/95%) predict y directly, calibrated with a single additive correction | 21.3% | 18.267 mean (range 9.22-64.89, up to 73% of CALCE's SOH span) | similar raw coverage to #4 but bought via extrapolation-driven width inflation toward uninformativeness - a weaker result despite the similar headline number |
+| 6 | Stage 1 follow-up | Jackknife+/CV+ (plain) | K=3 leave-battery-group-out residuals, standard CV+ aggregation | 37.1% | 11.89 | largest prior gain; confirmed CONFIGURATION-SPECIFIC to the 1.1+1.5 model (not general - the pre-Stage-1 baseline model shows no comparable jump) |
+| 7 | Stage 3.1 | KMM-CP | bounded-weight kernel mean matching reweights calibration toward CALCE's covariate distribution; weighted conformal quantile | 34.0% | 9.924 | real, meaningful improvement beyond #1/#2/#4/#5; narrower width than #6 at near-equal coverage - the best coverage-per-unit-width tradeoff of any method tried |
+| 8 | Stage 3.4 | CORAL | second-order covariance alignment of the fusion encoder, direct MMD replacement | 3.2% | 2.347 | WORST of every method tried, including doing nothing (6.73% baseline); trains far more stably than MMD but doesn't help coverage |
+| 9 | Stage 3.5 | rescaled Jackknife+/CV+ | CV+ residuals rescaled by a TRAIN-only local-difficulty regressor, re-scaled by the target's own difficulty at prediction time | 82.0% | 58.905 | highest raw coverage ever recorded in this project; width now approaches vacuous (half-width ~29 points on a ~5-100 SOH scale) |
+
+(Plain, unweighted split-conformal on whichever model is current
+remains the ~6-7% do-nothing floor throughout; every row above is
+measured against it.)
+
+**The pattern, stated plainly**: no method across nine independent
+attempts, five sessions, and three structurally different mechanism
+families (domain alignment: #1/#8; reweighting: #2/#7; adaptive width:
+#4/#5/#9; more data: #3; resampling: #6) reaches 90% coverage at a
+non-degenerate width. The two closest approaches to 90% fail in
+**opposite** ways: KMM-CP (#7) keeps width reasonable (9.9, only 4.3x
+the do-nothing floor) but plateaus well below target (34%); rescaled
+Jackknife+ (#9) gets close to target on raw coverage (82%) but at a
+width (58.9, 25x the floor) that is barely informative. **This
+asymmetry is itself meaningful, not a coincidence of which two methods
+happened to get tried**: #7's mechanism (KMM) only ever reweights
+existing calibration RESIDUALS toward the target distribution - it has
+no way to make an individual interval wider than what the (still
+in-domain-shaped) residual distribution supports, so it caps out short
+of 90% no matter how the weights are tuned. #9's mechanism (local
+rescaling) has no such cap - it can inflate any single interval
+arbitrarily far - but has no principled anchor for HOW MUCH wider a
+given out-of-distribution point deserves, so it overshoots once the
+difficulty model is asked to extrapolate as far as CALCE's shift
+requires. **The most plausible reading: a genuine fix likely needs
+BOTH components together** - tighter distributional matching (of the
+#1/#7/#8 family, to reduce how far the model is actually extrapolating
+in the first place) AND principled, CALIBRATED per-input width control
+(of the #4/#9 family, but with the extrapolation constrained rather
+than left open-loop) - not either alone. Neither piece has been
+combined with the other in this project yet; this is flagged as the
+concrete lead for any future attempt, not pursued further in this pass.
+
+---
+
+### 2 — B0053 raw temperature: NOT a NASA artifact - confirmed this project's own preprocessing
+
+**Checked directly against the rawest available source** (`iterate_nasa_cycles('B0053')`,
+reading straight off `B0053.mat` with zero clipping/normalization/
+feature-engineering applied): B0053's raw discharge temperature is
+**completely normal, varying data** - per-cycle std ranges 0.31-4.11°C
+across all 55 cycles (0 cycles with near-zero std), mean=12.34°C,
+range [3.81, 22.11]°C, every one of 10,875 discharge-phase readings a
+distinct value. **The saturation does not exist in NASA's raw data at
+all** - this rules out a NASA sensor/logging artifact, unlike the
+Severson truncation finding it was initially suspected to parallel.
+
+**Traced to the exact pipeline stage where it is introduced**:
+`sequence_features.compute_channel_norm_stats` fits per-channel
+[1st, 99th] percentile clip bounds from the TRAINING pool, then
+`apply_channel_norm` clips every value (`np.clip(X, lo, hi)`) before
+z-scoring. The saved stats (`data/processed/channel_norm_stats.json`)
+give the temperature channel's clip range as **[28.97, 40.35]°C**
+(pool mean=34.05, std=2.42) - a range set by the training pool's
+predominantly MIT/temperature-chamber-cycled cells. B0053's ENTIRE raw
+trace (mean 12.34°C, max 22.11°C) sits completely below the 28.97°C
+floor, so `np.clip` maps every single one of its 10,875+ raw readings
+to the identical floor value, which z-scores to the identical constant
+- mechanically producing std=0.000 at every timestep of every cycle,
+exactly as previously observed (normalized T_t=-2.297).
+
+**Finding, stated precisely**: this is **not a fixable bug** in the
+sense of an error in the code - percentile-clipping before z-scoring is
+a deliberate, reasonable design choice (guards the model against
+extreme outliers dominating the normalization). But it has a real,
+previously-undiagnosed side effect: for any battery whose TRUE
+operating condition on some channel falls entirely outside the training
+pool's [1st, 99th] percentile range - as B0053's genuinely colder
+cycling temperature does - that channel's real signal is silently and
+completely destroyed by clipping, collapsing informative variation into
+an uninformative constant, rather than merely being represented
+imprecisely. **This should be characterized as a genuine, real
+covariate-shift interaction with this project's own preprocessing
+choice, not a NASA data-quality artifact** - B0053 really was cycled
+substantially colder than the training pool; the clip-to-percentile
+step is what turns that real difference into total information loss on
+that channel, rather than the milder distortion a real sensor artifact
+would produce. Citable as a project-specific preprocessing-robustness
+finding (parallel in kind, though not in origin, to the Severson
+truncation), not folded into that finding.
+
+---
+
+### 3 — B0045 cycle-1 capacity anomaly: persistent, not an isolated artifact - a real starting condition
+
+**Checked directly against B0045's raw discharge-capacity trace**
+(`iterate_nasa_cycles('B0045')`) for the first 15 cycles, alongside its
+immediate NASA ID-cohort (B0043, B0044, B0046, B0047) for the same
+range:
+
+| battery | cycle 1 | cycle 2 | cycle 3 | ... | cycle 15 |
+|---|---|---|---|---|---|
+| B0045 | 0.928 | 0.885 | 0.858 | (smooth decline) | 0.765 |
+| B0043 | 1.714 | 1.696 | 1.682 | (smooth decline, one exact-zero artifact at cycle 6) | 1.606 |
+| B0044 | 1.687 | 1.663 | 1.653 | (smooth decline, one exact-zero artifact at cycle 6) | 1.563 |
+| B0046 | 1.516 | 1.503 | 1.486 | (smooth decline) | 1.406 |
+| B0047 | 1.524 | 1.508 | 1.484 | (smooth decline) | 1.371 |
+
+**This is NOT the same signature as the confirmed isolated artifacts.**
+The confirmed cycle-19/65 zero-drops (and B0043/B0044's own cycle-6
+zero, visible in this same window) are single exact-zero readings with
+completely NORMAL neighbors immediately before and after (e.g. B0043:
+1.669 -> **0.000** -> 1.661) - a textbook isolated glitch. B0045's
+cycle-1 value, by contrast, is the START of a smooth, coherent,
+monotonic decline that stays in the same low range for at least 15
+consecutive cycles (0.928 -> 0.765, a normal ~18% fade over 15 cycles,
+comparable in shape to its cohort's own fade rate) - it never recovers
+toward the cohort's ~1.5-1.7Ah range at cycle 2 or any later point
+shown. A logging glitch produces a single wrong value surrounded by
+correct ones; this is a persistent, internally-consistent trajectory
+from a different starting point.
+
+**Verdict, stated plainly**: this is a **real starting-condition
+difference, not an artifact**. B0045 genuinely began its recorded life
+at roughly 55-61% of its cohort's cycle-1 capacity and aged smoothly
+from there - most plausibly a genuine manufacturing/formation variance
+or a meaningful amount of pre-existing degradation before NASA's
+logged test began, though this data alone cannot distinguish between
+those specific causes. **Since it is confirmed real rather than an
+artifact, the conditional follow-up does not apply**: there is no
+basis for excluding cycle 1 from B0045's degradation-mode signature
+computation, and revisiting that signature without it is NOT flagged as
+worth doing - the low starting capacity is part of the genuine
+degradation trajectory the signature is meant to characterize, not a
+corrupting outlier. B0045's already-noted distinct "LAM-leaning"
+degradation-mode signature (vs. B0018/B0044's shared "mixed
+LLI+LAM-leaning") stands without qualification from this specific
+check; it may still be worth an independent look at whether a lower
+starting capacity itself is mechanistically linked to a LAM-leaning
+fade pattern, but that is a separate, new question, not a data-quality
+correction to the existing signature.
+
+---
+
+### 4 — Explicit decision: what carries into Stage 4's retrain
+
+Stated plainly, item by item, per instruction - not left implicit.
+
+- **Stage 1.1 (reformulated duration features) and 1.5 (monotone
+  constraints on cycle_idx): CARRY FORWARD.** Already established as a
+  net positive across every downstream use (XGBoost-fusion in-domain
+  and CALCE R2, and - per Stage 3's own 3.2 baseline - the joint
+  SOH+RUL architecture too). No new evidence from Stage 3 changes this.
+
+- **Stage 1.2 (sample weighting): DO NOT CARRY FORWARD.** Already an
+  established trade-off, not adopted at the time; nothing in Stage 3
+  revisited or changed that call.
+
+- **Stage 1.6 (Jackknife+/CV+) as the SOH/RUL in-domain calibration
+  mechanism: CARRY FORWARD.** Still the cleanest calibration win in the
+  project for in-domain use (RUL: 97.8% per session 47's refit against
+  the current best joint model). Stage 3 did not test or challenge
+  in-domain calibration - only CALCE.
+
+- **CALCE-specific coverage correction: explicit recommendation - apply
+  NONE of the seven-plus attempts; report the plain baseline coverage
+  number honestly instead.** Reasoning: KMM-CP (#7 above) is the best
+  coverage-vs-width balance found, but "best available" is not the same
+  as "adequate" - 34% coverage against a 90% target is still a
+  near-total miss, and presenting KMM-CP as the deployed CALCE
+  correction risks implying a meaningfully de-risked interval where
+  none genuinely exists (a 34%-covered interval is not a safe basis for
+  a downstream decision any more than a 6.7%-covered one is - both fail
+  the target badly, and dressing the number up with a partially-working
+  mechanism is worse than stating the plain number plainly). Given
+  item 1's diagnosis above (the fix plausibly needs BOTH distributional
+  matching AND calibrated width control together, and no attempt so far
+  combines them), adopting a known-inadequate partial fix would
+  overstate this project's actual CALCE-domain reliability without
+  meaningfully improving it. **Recommendation: Stage 4 should report
+  CALCE performance and its plain (uncorrected) conformal coverage
+  number honestly, explicitly flagged as "this project's model does not
+  generalize to CALCE with reliable uncertainty quantification" - not
+  quietly paper over that gap with KMM-CP's partial number.** This
+  should be revisited only if a future attempt actually combines the
+  two mechanism families per item 1's lead.
+
+- **Stage 3.3 (NCL): CONFIRMS no ensemble reconfiguration is warranted.**
+  The lean, XGBoost-fusion-only deployment decision (session 20 -
+  LEAN marginally BEATS the full 5-branch ensemble on accuracy, at
+  ~52x lower latency) now stands on STRONGER grounds than before: not
+  only does dropping any deep learner fail to hurt accuracy (Check
+  0.1), but an explicit, correctly-implemented, smoke-tested attempt to
+  MAKE the deep learners diverse enough to be useful also failed (3.3).
+  No basis remains for reconsidering the lean deployment for Stage 4.
+
+- **Stage 2.1's 9 recovered batteries (2,993 cycles): explicit
+  recommendation - FOLD INTO Stage 4's retrain pool.** Each of the 9 was
+  individually verified with a documented, specific correction (e.g.
+  isolated-artifact-cycle removal, characterization-phase-prefix
+  rebaselining), not a blanket heuristic; `battery_recovery_summary.csv`
+  shows no unresolved data-quality caveat for any of the 9 (the
+  unrecoverable case, B0050, was correctly excluded and is not part of
+  this set). They are verified, available, and Stage 4 is explicitly
+  scoped as "one clean retrain incorporating everything that survived" -
+  holding back verified, already-available data with no identified risk
+  would be inconsistent with that scope. No real concern was found
+  worth deferring for.
+
+- **Stage 2.2's Severson-aware EOL convention: live in CODE, but
+  requires Stage 4 to regenerate `hi_table.parquet` to actually take
+  effect - checked directly, not assumed.** Confirmed
+  `run_phase1_features.py`/`run_phase1_features_expanded.py` call
+  `compute_eol_and_rul_severson_aware` by default (session 43). But
+  also confirmed directly against the CURRENTLY SAVED
+  `hi_table.parquet`: `b1c20`'s cycle-1 RUL is 532, which matches the
+  OLD convention's EOL=533 (RUL=EOL-1=532), not the Severson-aware
+  convention's EOL=532 (which would give RUL=531) - **the on-disk
+  `hi_table.parquet` has NOT been regenerated since session 43 and
+  still reflects the pre-Severson-aware labels**, exactly as session 43
+  itself flagged ("the next actual feature-generation run will pick it
+  up automatically" - that run has not yet happened). Since Stage 4
+  must already re-run feature extraction to incorporate the 9 recovered
+  batteries above, this convention WILL take effect as a natural
+  consequence of that regeneration - no separate action is needed
+  BEYOND ensuring Stage 4's retrain actually regenerates
+  `hi_table.parquet` (not just retrains models on the existing file).
+  Flagged explicitly so this isn't silently missed: Stage 4 must
+  include a `run_phase1_features.py`-equivalent regeneration step, not
+  skip straight to model training on the current on-disk file.
+
+---
+
+Per instruction: no changes to the deployed Streamlit app; no model
+retrained in this pass. Not proceeding to Stage 4 - reporting back with
+the four explicit decisions above for confirmation before the retrain
+actually runs.
