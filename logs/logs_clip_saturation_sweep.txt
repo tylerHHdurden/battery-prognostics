@@ -1,0 +1,205 @@
+[clip-sweep] === loading EXPANDED pool raw tensors (disk cache) ===
+[clip-sweep] loaded 204 batteries in 0.5s
+
+[clip-sweep] === EXPANDED pool: any battery >5% fully-saturated cycles on any channel ===
+        pool battery_id channel  frac_cycles_fully_saturated  frac_values_clipped  n_cycles
+expanded_204      B0029     T_t                     1.000000             1.000000        39
+expanded_204      B0030     T_t                     1.000000             1.000000        39
+expanded_204      B0031     T_t                     1.000000             1.000000        39
+expanded_204      B0032     T_t                     1.000000             1.000000        39
+expanded_204      B0047     T_t                     1.000000             1.000000        71
+expanded_204      B0046     T_t                     1.000000             1.000000        71
+expanded_204      B0045     T_t                     1.000000             1.000000        71
+expanded_204      B0053     T_t                     1.000000             1.000000        54
+expanded_204      B0054     T_t                     1.000000             1.000000       101
+expanded_204      B0055     T_t                     1.000000             1.000000       101
+expanded_204      B0048     T_t                     1.000000             1.000000        71
+expanded_204      B0056     T_t                     1.000000             1.000000       101
+expanded_204      B0043     T_t                     0.613208             0.707358       106
+expanded_204      B0044     T_t                     0.613208             0.678868       106
+expanded_204      B0042     T_t                     0.254717             0.583868       106
+
+[clip-sweep] === EXPANDED pool: any battery >10% of VALUES clipped on any channel (partial saturation, even if not whole-cycle) ===
+        pool battery_id channel  frac_cycles_fully_saturated  frac_values_clipped  n_cycles
+expanded_204      B0029     T_t                     1.000000             1.000000        39
+expanded_204      B0046     T_t                     1.000000             1.000000        71
+expanded_204      B0047     T_t                     1.000000             1.000000        71
+expanded_204      B0048     T_t                     1.000000             1.000000        71
+expanded_204      B0053     T_t                     1.000000             1.000000        54
+expanded_204      B0045     T_t                     1.000000             1.000000        71
+expanded_204      B0054     T_t                     1.000000             1.000000       101
+expanded_204      B0056     T_t                     1.000000             1.000000       101
+expanded_204      B0055     T_t                     1.000000             1.000000       101
+expanded_204      B0031     T_t                     1.000000             1.000000        39
+expanded_204      B0032     T_t                     1.000000             1.000000        39
+expanded_204      B0030     T_t                     1.000000             1.000000        39
+expanded_204      B0053     I_t                     0.000000             0.990000        54
+expanded_204      B0031     I_t                     0.000000             0.987051        39
+expanded_204      B0032     I_t                     0.000000             0.978846        39
+expanded_204      B0029     I_t                     0.000000             0.974744        39
+expanded_204      B0030     I_t                     0.000000             0.936026        39
+expanded_204      B0027    dQdV                     0.000000             0.916250        28
+expanded_204      B0018     I_t                     0.000000             0.907424       132
+expanded_204      B0054     I_t                     0.000000             0.891832       101
+expanded_204      B0005     I_t                     0.000000             0.888690       168
+expanded_204      B0006     I_t                     0.000000             0.879107       168
+expanded_204      B0056     I_t                     0.000000             0.854950       101
+expanded_204      B0048    dQdV                     0.000000             0.848169        71
+expanded_204      B0055    dQdV                     0.000000             0.817723       101
+expanded_204      B0054    dQdV                     0.000000             0.809653       101
+expanded_204      B0047    dQdV                     0.000000             0.790211        71
+expanded_204      B0056    dQdV                     0.000000             0.768317       101
+expanded_204      B0046    dQdV                     0.000000             0.751831        71
+expanded_204      B0042     I_t                     0.000000             0.751038       106
+expanded_204      B0053    dQdV                     0.000000             0.749352        54
+expanded_204      B0028    dQdV                     0.000000             0.735893        28
+expanded_204      B0045    dQdV                     0.000000             0.716197        71
+expanded_204      B0032    dQdV                     0.000000             0.712436        39
+expanded_204      B0043     T_t                     0.613208             0.707358       106
+expanded_204      B0005    dQdV                     0.000000             0.694673       168
+expanded_204      B0028     V_t                     0.000000             0.689643        28
+expanded_204      B0007     I_t                     0.000000             0.688571       168
+expanded_204      B0044     T_t                     0.613208             0.678868       106
+expanded_204      B0026    dQdV                     0.000000             0.648571        28
+expanded_204      B0018    dQdV                     0.000000             0.643409       132
+expanded_204      B0025    dQdV                     0.000000             0.621607        28
+expanded_204      B0006    dQdV                     0.000000             0.616577       168
+expanded_204      B0044    dQdV                     0.000000             0.612028       106
+expanded_204      B0031    dQdV                     0.000000             0.590641        39
+expanded_204      B0042     T_t                     0.254717             0.583868       106
+expanded_204      B0007    dQdV                     0.000000             0.562768       168
+expanded_204      B0043     V_t                     0.000000             0.546887       106
+expanded_204      B0043    dQdV                     0.000000             0.537547       106
+expanded_204      B0042    dQdV                     0.000000             0.512075       106
+expanded_204      B0044     V_t                     0.000000             0.507123       106
+expanded_204      B0030    dQdV                     0.000000             0.497692        39
+expanded_204      B0029    dQdV                     0.000000             0.478077        39
+expanded_204      B0045     V_t                     0.000000             0.421408        71
+expanded_204      B0007     V_t                     0.000000             0.383363       168
+expanded_204      B0044     I_t                     0.000000             0.377311       106
+expanded_204      B0005     V_t                     0.000000             0.355625       168
+expanded_204      B0018     V_t                     0.000000             0.341856       132
+expanded_204      B0006     V_t                     0.000000             0.308899       168
+expanded_204      B0047     V_t                     0.000000             0.272887        71
+expanded_204      B0055     V_t                     0.000000             0.268960       101
+expanded_204      B0046     V_t                     0.000000             0.261479        71
+expanded_204      B0048     V_t                     0.000000             0.258732        71
+expanded_204      B0025     I_t                     0.000000             0.257500        28
+expanded_204      B0027     I_t                     0.000000             0.256250        28
+expanded_204      B0026     I_t                     0.000000             0.251250        28
+expanded_204      B0025     V_t                     0.000000             0.229286        28
+expanded_204      B0027     T_t                     0.000000             0.222679        28
+expanded_204      B0031     V_t                     0.000000             0.221538        39
+expanded_204      B0029     V_t                     0.000000             0.218974        39
+expanded_204      B0026     V_t                     0.000000             0.217321        28
+expanded_204      B0056     V_t                     0.000000             0.214356       101
+expanded_204      B0043     I_t                     0.000000             0.213538       106
+expanded_204      B0042     V_t                     0.000000             0.206557       106
+expanded_204      B0018     T_t                     0.000000             0.203902       132
+expanded_204      B0056    dVdQ                     0.000000             0.196337       101
+expanded_204      B0030     V_t                     0.000000             0.182949        39
+expanded_204      B0027     V_t                     0.000000             0.168571        28
+expanded_204       b3c2     T_t                     0.000000             0.165937      1265
+expanded_204      B0032    dVdQ                     0.000000             0.165128        39
+expanded_204      B0026     T_t                     0.000000             0.157857        28
+expanded_204      B0055     I_t                     0.000000             0.153663       101
+expanded_204      B0025     T_t                     0.000000             0.153036        28
+expanded_204      B0054     V_t                     0.000000             0.149307       101
+expanded_204      B0053    dVdQ                     0.000000             0.148426        54
+expanded_204      B0032     V_t                     0.000000             0.148077        39
+expanded_204      B0007     T_t                     0.000000             0.144970       168
+expanded_204       b4c3     T_t                     0.000000             0.143145       911
+expanded_204      B0006     T_t                     0.000000             0.137857       168
+expanded_204      B0005     T_t                     0.000000             0.127054       168
+expanded_204       b4c2     T_t                     0.000000             0.123431       784
+expanded_204      B0055    dVdQ                     0.000000             0.120099       101
+expanded_204      B0030    dVdQ                     0.000000             0.115897        39
+expanded_204      B0054    dVdQ                     0.000000             0.114703       101
+expanded_204      B0031    dVdQ                     0.000000             0.113590        39
+expanded_204       b3c3     T_t                     0.000000             0.112749      1113
+expanded_204      b3c26     T_t                     0.000000             0.104176      1026
+
+[clip-sweep] === loading ORIGINAL 32-battery pool raw tensors ===
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+
+[clip-sweep] === ORIGINAL 32-pool: any battery >5% fully-saturated cycles on any channel ===
+  (none)
+
+[clip-sweep] === ORIGINAL 32-pool: any battery >10% of VALUES clipped on any channel ===
+       pool battery_id channel  frac_cycles_fully_saturated  frac_values_clipped  n_cycles
+original_32      B0005     I_t                          0.0             0.722887       168
+original_32      B0005    dQdV                          0.0             0.437024       168
+original_32      B0018    dQdV                          0.0             0.419015       132
+original_32      B0006    dQdV                          0.0             0.371815       168
+original_32      B0007    dQdV                          0.0             0.348690       168
+original_32      B0007     V_t                          0.0             0.329018       168
+original_32      B0018     T_t                          0.0             0.305947       132
+original_32      B0005     V_t                          0.0             0.299256       168
+original_32      B0018     V_t                          0.0             0.292992       132
+original_32      B0006     V_t                          0.0             0.257351       168
+original_32      B0006     T_t                          0.0             0.204643       168
+original_32      B0007     T_t                          0.0             0.197321       168
+original_32      B0005     T_t                          0.0             0.171667       168
+original_32      B0006     I_t                          0.0             0.162381       168
+original_32      b3c28     T_t                          0.0             0.129332       539
+original_32      b2c24     T_t                          0.0             0.119130       523
+
+[clip-sweep] === CALCE: building raw (pre-clip) tensors per cell ===
+[clip-sweep] CALCE/CS2_35: 932 cycles
+[clip-sweep] CALCE/CS2_36: 972 cycles
+[clip-sweep] CALCE/CS2_37: 1037 cycles
+
+[clip-sweep] === CALCE per-cell, per-channel saturation (full detail, not pooled) ===
+  cell channel       clip_lo     clip_hi       raw_min       raw_max       raw_mean  frac_cycles_fully_saturated  frac_values_clipped  n_cycles
+CS2_35     V_t      1.999691    3.621531  2.699296e+00      4.192369       3.586619                     0.000000             0.443283       932
+CS2_35     I_t     -4.000398    2.011429 -1.100283e+00     -0.000019      -1.076746                     0.000000             0.000000       932
+CS2_35     T_t     28.966032   40.354130  0.000000e+00      0.000000       0.000000                     1.000000             1.000000       932
+CS2_35    dQdV     -1.157268    0.002095 -8.244215e+00      7.110996      -0.572304                     0.000000             0.256915       932
+CS2_35    dVdQ -53775.162656 4987.053477 -3.569518e+06 271583.851357 -142993.058393                     0.000000             0.137564       932
+CS2_35    dIdV    -45.344246   41.101854 -2.373823e+01     24.049503       0.696468                     0.000000             0.000000       932
+CS2_36     V_t      1.999691    3.621531  2.699369e+00      4.193890       3.581972                     0.002058             0.443997       972
+CS2_36     I_t     -4.000398    2.011429 -1.100422e+00     -0.000165      -1.077513                     0.000000             0.000000       972
+CS2_36     T_t     28.966032   40.354130  0.000000e+00      0.000000       0.000000                     1.000000             1.000000       972
+CS2_36    dQdV     -1.157268    0.002095 -8.282149e+00      7.161529      -0.559506                     0.000000             0.246960       972
+CS2_36    dVdQ -53775.162656 4987.053477 -5.589665e+05  42524.427871  -12692.874561                     0.000000             0.088915       972
+CS2_36    dIdV    -45.344246   41.101854 -2.398250e+01     24.677793       0.610844                     0.000000             0.000000       972
+CS2_37     V_t      1.999691    3.621531  2.699063e+00      4.194193       3.587601                     0.000000             0.447083      1037
+CS2_37     I_t     -4.000398    2.011429 -1.100155e+00     -0.000040      -1.098373                     0.000000             0.000000      1037
+CS2_37     T_t     28.966032   40.354130  0.000000e+00      0.000000       0.000000                     1.000000             1.000000      1037
+CS2_37    dQdV     -1.157268    0.002095 -7.193335e+00      6.884880      -0.623393                     0.000000             0.223327      1037
+CS2_37    dVdQ -53775.162656 4987.053477 -9.894117e+05  75271.602811    -581.167296                     0.000000             0.001307      1037
+CS2_37    dIdV    -45.344246   41.101854 -2.278313e+01     24.688550       0.041812                     0.000000             0.000000      1037
+
+[clip-sweep] saved outputs/clip_saturation_sweep_{expanded_pool,original_pool,calce}.csv
+[clip-sweep] ALL DONE in 300.5s

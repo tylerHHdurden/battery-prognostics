@@ -7872,3 +7872,190 @@ Per instruction: no changes to the deployed Streamlit app; no model
 retrained in this pass. Not proceeding to Stage 4 - reporting back with
 the four explicit decisions above for confirmation before the retrain
 actually runs.
+
+## Systematic follow-up: does the B0053 clip-floor mechanism generalize?
+
+Follow-up to the closeout's item 2 (B0053's temperature-channel
+saturation, traced to `sequence_features.compute_channel_norm_stats`'s
+training-pool-fit percentile clip). No retraining in this pass; no
+deployed-app changes.
+
+**Self-caught bug, reported per this project's "verify before
+trusting" standard**: the first version of the sweep script detected
+"fully saturated" cycles via `std() < 1e-6` on the float32 clipped
+array. For B0053's own T_t channel - the ALREADY-CONFIRMED saturated
+case - this returned a FALSE NEGATIVE (std=1.9e-6, just above the
+1e-6 threshold, a float32 rounding artifact, not a real difference:
+`clipped.min()==clipped.max()` bit-for-bit). Caught by directly
+re-checking the known-saturated case against the sweep's own output
+before trusting any of its other results, exactly as this project's own
+practice requires. Fixed by casting to float64 and using max-min RANGE
+(exact regardless of float precision) instead of std, with a 1e-4
+threshold; re-verified against the known B0053 case (now correctly
+reads 100% fully-saturated) before re-running the full sweep and
+reporting anything below.
+
+### 1 — Systematic sweep: NOT isolated to B0053, but confined to the EXPANDED pool's later NASA batteries
+
+**EXPANDED (204-battery) pool**, against its own `channel_norm_stats_
+expanded.json`: **14 additional NASA batteries beyond B0053 show
+meaningful temperature-channel saturation** - all on the SAME channel
+(T_t), zero found on any other channel or in any MIT battery:
+
+| battery | frac cycles fully saturated | frac values clipped |
+|---|---|---|
+| B0029, B0030, B0031, B0032, B0045, B0046, B0047, B0048, B0053, B0054, B0055, B0056 | **100%** | 100% |
+| B0043, B0044 | 61.3% | 70.7% / 67.9% |
+| B0042 | 25.5% | 58.4% |
+
+**This is a genuinely broad, systematic pattern, not a one-off**: 15 of
+the expanded pool's NASA batteries (all from the B0029+ ID range added
+beyond the original 4) show real temperature-channel information loss,
+12 of them totally saturated for their entire recorded trace. The
+original 4 NASA batteries (B0005/6/7/18) plus B0025-28 show only mild
+PARTIAL clipping (13-31% of values, 0% full-cycle saturation) - real,
+but nowhere near as severe. **Every single flagged case is a NASA
+battery; zero MIT batteries show meaningful saturation on any channel**
+(the few MIT entries appearing in the >10%-partial-clip table top out
+at 16.6% on T_t, mild). This points to the same conclusion B0053's own
+investigation already reached, now generalized: NASA's later-added
+battery batches were evidently cycled at a systematically colder
+ambient temperature than the pool's MIT-dominated fit distribution -
+real, not a per-battery fluke. **Two of these are TEST-split batteries
+in the expanded pool (B0044 at 61.3%, B0053 at 100%)** - both already
+independently known to have severe prediction-quality issues in this
+project's history; this clip-saturation finding is a plausible
+CONTRIBUTING factor for B0044 specifically (not previously connected to
+its known training-representation root cause), flagged here for the
+record, not investigated further in this no-retrain pass.
+
+**ORIGINAL 32-battery pool**, against its own `channel_norm_stats.json`:
+**zero batteries exceed 5% full-cycle saturation on any channel** - the
+severe cases above (B0029-32/42-48/53-56) are simply not members of
+this pool at all (expansion-only additions), so this issue is entirely
+invisible to the canonical Stage 1-3 pipeline. Only mild partial
+clipping is seen (13-72% of VALUES on I_t/dQdV/V_t/T_t for the original
+4 NASA batteries specifically, still 0% full saturation).
+
+**The 9 recovered batteries (Stage 2.1, not yet integrated into any
+trained model) do NOT appear in either flagged list** - none of
+B0036/38/39/40/41/49/50/51 show meaningful clip-saturation on any
+channel in the expanded-pool sweep (which covers all of them). This is
+reassuring, though not a substitute for checking against whatever
+clip stats Stage 4's actual retrain pool (original 32 + these 9) ends
+up fitting fresh - noted as a caveat, not re-verified against a
+not-yet-existing stats file in this pass.
+
+### 2 — CALCE-specific check (highest priority): real, but narrower than it first looks
+
+**Per-cell, per-channel** (all 3 cells checked individually, not
+pooled, against `channel_norm_stats.json` - the exact file the
+CANONICAL CALCE-evaluation pipeline, `stage1_common.build_calce_
+tensors`, actually applies):
+
+| channel | CS2_35 clipped | CS2_36 clipped | CS2_37 clipped | full saturation | feeds the fusion embedding? |
+|---|---|---|---|---|---|
+| V_t | 44.3% | 44.4% | 44.7% | ~0% | **NO** |
+| I_t | 0.0% | 0.0% | 0.0% | 0% | NO |
+| T_t | 100% | 100% | 100% | **100%** | NO |
+| dQdV | 25.7% | 24.7% | 22.3% | ~0% | **YES** |
+| dVdQ | 13.8% | 8.9% | 0.1% | ~0% | **YES** |
+| dIdV | 0.0% | 0.0% | 0.0% | 0% | NO |
+
+**T_t's 100% saturation is NOT a new finding and NOT caused by
+clipping**: CALCE has no temperature column at all
+(`data_adapters.iterate_calce_cycles`'s documented, pre-existing
+limitation - `T` is always `None`, zero-filled by
+`sequence_features.get_cycle_tensor`). Confirmed directly: raw_min=
+raw_max=raw_mean=0.000 for all 3 cells - there was never any real
+signal on this channel for CALCE to lose. Distinct from B0053's case
+(real data destroyed by clipping) - here there was no real data to
+begin with. Already disclosed in the module's own docstring; not a new
+confound.
+
+**V_t's 44% clipping is real** (CALCE's raw voltage range [2.70, 4.19]
+extends well above the NASA+MIT-fit ceiling of 3.62 - consistent with
+CALCE's different cell chemistry having a genuinely different, higher
+charge-voltage range) **but does not affect this project's central
+CALCE finding**: the canonical XGBoost-fusion model's fusion embedding
+comes from `ICAEncoder`, which (per `ICA_CHANNEL_SLICE = slice(3, 6)`
+in every fusion-encoder training script) consumes ONLY dQdV/dVdQ/dIdV -
+never V_t, I_t, or T_t. V_t clipping would only matter for the
+non-deployed CNN-LSTM/PiFormer branches if they were ever run on CALCE
+directly, which they are not in the canonical pipeline.
+
+**dQdV (22-26% clipped) and dVdQ (9-14% clipped) DO feed the fusion
+embedding, and this IS a real, previously-undiagnosed partial
+confound**: roughly a quarter of CALCE's dQdV values and roughly a
+tenth of its dVdQ values are being flattened to one of two fixed
+bounds fit on NASA+MIT data alone, before ever reaching the encoder
+that produces the embedding XGBoost-fusion relies on for CALCE.
+Root cause, same mechanism as B0053: CALCE's raw dQdV/dVdQ ranges
+(e.g. dVdQ up to -3.57 million for CS2_35) genuinely extend far beyond
+NASA+MIT's fit range (dVdQ clip bounds only [-53775, 4987]) - a real
+chemistry/protocol difference, not a data-quality artifact on either
+side.
+
+**Answering the question directly, per instruction**: **partially,
+yes** - this project's R2~0.31 (pre-Stage-1) / 0.567 (1.1+1.5) CALCE
+collapse is NOT purely attributable to "the model doesn't generalize to
+CALCE's physics" in the cleanest possible sense; some (unquantified in
+this no-retrain pass) fraction of that gap plausibly reflects avoidable
+information loss where dQdV/dVdQ's real, informative tail values are
+being clipped away before the fusion embedding ever sees them. This
+does NOT overturn the domain-shift finding itself (CALCE's V_t/dQdV/
+dVdQ ranges genuinely differing from NASA+MIT's is itself evidence of a
+real physical/chemistry difference, not an artifact) - but it means the
+PRECISE SIZE of the reported R2 gap carries a real, disclosable caveat:
+part of it may be a preprocessing choice rather than a hard
+generalization ceiling. **Not quantified further here per instruction**
+(no retrain/re-evaluation in this pass) - flagged as a concrete,
+scoped follow-up: refit clip bounds using a percentile range that also
+incorporates CALCE's raw, UNLABELED dQdV/dVdQ distributions (zero-
+label-leakage, exactly the same legitimacy basis MMD/CORAL already use
+for CALCE's unlabeled curves), then re-run the existing zero-retrain
+CALCE evaluation to see whether the R2 gap narrows at all - this would
+cleanly separate "avoidable clipping loss" from "genuine physics gap"
+without ever touching CALCE's labels.
+
+### 3 — Explicit synthesis and recommendation
+
+- **Is saturation isolated to B0053?** No - it is a systematic pattern
+  affecting at least 15 NASA batteries in the EXPANDED (204-battery)
+  pool specifically, all on the temperature channel, entirely absent
+  from the ORIGINAL 32-battery pool (the affected batteries simply
+  aren't members of it) and from every MIT battery in either pool.
+
+- **Does CALCE show meaningful saturation?** Yes, on 3 of 6 channels
+  (V_t 44%, dQdV 23-26%, dVdQ 9-14%), consistently across all 3 cells
+  individually (not just pooled). T_t's 100% is a pre-existing,
+  already-disclosed zero-fill limitation, not new. Of the 3 real
+  findings, only dQdV and dVdQ actually reach the fusion embedding this
+  project's central CALCE claim depends on - a real, previously-
+  undiagnosed partial confound on that specific claim, of unquantified
+  but plausibly non-trivial size.
+
+- **Recommendation for Stage 4's configuration, stated explicitly**:
+  **No change needed for Stage 4's clip-bound CONVENTION as it applies
+  to the original-32-plus-9-recovered retrain pool** - none of those
+  batteries show meaningful saturation, so the current TRAIN-only
+  percentile-clip design is not creating a live problem for the
+  in-domain model Stage 4 is about to train. **A change IS recommended
+  for how CALCE's own evaluation is reported and, separately, scoped as
+  a follow-up**: (1) the paper/report should explicitly disclose this
+  partial confound alongside the CALCE R2 finding, so the domain-shift
+  claim isn't read as more mechanistically clean than it is; (2) the
+  zero-label-leakage CALCE-inclusive clip-bound refit described above
+  is a concrete, cheap, well-scoped follow-up experiment worth running
+  before or alongside Stage 4 (it touches only the fusion-encoder
+  training pipeline, not the retrain pool itself, and does not
+  conflict with anything already decided) - recommended as a SEPARATE,
+  small follow-up item, not a blocker for Stage 4's retrain itself
+  proceeding on schedule.
+
+New file: `src/run_clip_saturation_sweep.py`. Outputs:
+`outputs/clip_saturation_sweep_{expanded_pool,original_pool,calce}.csv`.
+
+No changes to the deployed Streamlit app; no model retrained. Not
+proceeding to Stage 4 - reporting back given this could affect how
+Stage 4's CALCE reporting (and the optional follow-up) is scoped.
