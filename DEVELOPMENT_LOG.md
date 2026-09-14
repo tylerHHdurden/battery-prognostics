@@ -7665,6 +7665,24 @@ against its original source rather than re-typed from memory.
 remains the ~6-7% do-nothing floor throughout; every row above is
 measured against it.)
 
+**CAVEAT, added after Stage 4's CALCE coverage-swing investigation
+(see that entry) - read before treating any single percentage above as
+precise**: CALCE's conformal coverage statistic is inherently noisy at
+this operating point - its median residual runs roughly 6x the typical
+conformal half-width, so which exact points fall inside a razor-thin
+interval is sensitive to ordinary refit-to-refit variation. Confirmed
+directly for one pair of runs (the SAME 1.1+1.5 model/pool, only the
+XGBoost random_state changed): coverage swung from 2.69% to 5.47%
+across 3 reseeds alone, a wider range than several of the gaps between
+rows above. **This almost certainly applies to every row in this
+table, not only the pair actually tested** - none of the other methods'
+numbers have been individually re-verified for the same instability.
+Treat the RELATIVE ordering and the QUALITATIVE finding (every method
+falls far short of 90%; near-total coverage collapse vs. in-domain's
+near-full coverage) as robust - that pattern would not change under a
+few points of refit noise on any single row. Do NOT read any individual
+percentage above as precise to the percentage point.
+
 **The pattern, stated plainly**: no method across nine independent
 attempts, five sessions, and three structurally different mechanism
 families (domain alignment: #1/#8; reweighting: #2/#7; adaptive width:
@@ -8070,7 +8088,8 @@ without ever touching CALCE's labels.
 
 - **Recommendation for Stage 4's configuration, stated explicitly**:
   **No change needed for Stage 4's clip-bound CONVENTION as it applies
-  to the original-32-plus-9-recovered retrain pool** - none of those
+  to the original-32-plus-9-recovered [stale count, corrected to 10 -
+  see Stage 4's Step 1] retrain pool** - none of those
   batteries show meaningful saturation, so the current TRAIN-only
   percentile-clip design is not creating a live problem for the
   in-domain model Stage 4 is about to train. **A change IS recommended
@@ -8611,3 +8630,64 @@ No changes to `outputs/stage4_step2b_summary.csv` or any deployed
 artifact - this is a documentation/investigation-only pass. Not
 proceeding to Stage 5 - reporting back to confirm these are the final
 loose ends.
+
+## Final loose ends before Stage 5: recovered-battery-list audit, CALCE table caveat
+
+No retraining, no deployed-app changes.
+
+### 1 — Confirmed: no other analysis used the wrong recovered-battery list computationally
+
+Searched both the codebase (every hardcoded NASA/MIT battery-ID list
+in `src/*.py`) and DEVELOPMENT_LOG.md for any place the recovered-
+battery LIST (not just its count) fed an actual computation. Result:
+
+- `src/stage4_recovered_batteries.py`'s `RECOVERED_NASA`/`RECOVERED_
+  MIT` (10 batteries) and `src/run_stage4_feature_regen.py` (reads
+  `recovered_battery_cycles.csv`'s `recovered==True` rows dynamically)
+  both use the CORRECT list - confirmed.
+- `run_recover_excluded_batteries.py`'s `CHAR_PHASE_BATTERIES`/
+  `ISOLATED_ARTIFACT_BATTERIES` are the original 13-battery CANDIDATE
+  groups (before determining which succeed) - correct by construction,
+  unaffected.
+- A prior session (the "final verification sweep before Stage 3," its
+  Sweep 3) had ALREADY fixed `recovered_battery_cycles.csv` itself -
+  adding the `recovered` boolean column and confirming 10 genuinely-
+  recovered batteries / 3,187 rows - **before Stage 3 even began**.
+  Every later script that reads this file dynamically therefore always
+  got the correct list; the count was never actually wrong in the data
+  itself, only in later PROSE that cited it from memory.
+- The clip-saturation sweep's SCRIPT (`run_clip_saturation_sweep.py`)
+  iterates over every battery in each pool unconditionally - it never
+  filtered to a "recovered battery list" computationally at all. The
+  wrong 8-battery list (found last session) existed ONLY in that
+  session's prose write-up, summarizing which rows to highlight - not
+  in any code path, and not affecting the CSV outputs. Its actual
+  conclusion was already re-verified against the correct 10-battery
+  set last session and held.
+- One additional stale prose citation of "the original-32-plus-9-
+  recovered...pool" found in that same session's recommendation
+  paragraph (missed in the prior pass) - corrected with the same inline
+  note as the others.
+
+**Conclusion, stated plainly**: nothing else used the incorrect list as
+a computational input - only narrative counts/lists in prose were
+affected, and all now-identified instances are corrected. This is
+fully closed; no further re-verification is needed.
+
+### 2 — Refit-instability caveat added to the consolidated CALCE table
+
+Added a clearly-marked caveat directly below the 9-row consolidated
+CALCE coverage table (the closeout's "Consolidated CALCE conformal-
+coverage table" entry): states plainly that CALCE's coverage statistic
+carries several percentage points of refit-to-refit sampling noise at
+this sample size (confirmed directly for one pair of runs: 2.69%-5.47%
+across 3 XGBoost reseeds alone, holding pool/model otherwise fixed) -
+that this almost certainly applies to every row in the table, not only
+the pair tested - and that the table's relative ordering and
+qualitative finding (no method reaches 90%; near-total collapse vs.
+in-domain's near-full coverage) should be read as robust, while no
+individual percentage should be treated as precise to the point. No
+other numbers in the table were re-run or altered.
+
+Both items closed. Not proceeding to Stage 5 - reporting back to
+confirm.
