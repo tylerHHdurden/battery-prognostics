@@ -2560,6 +2560,18 @@ resampling?**
 | PiFormer | [+0.2578, +0.3266] | significant | [+0.0623, +0.5125] | **significant** |
 | CNN-BiGRU | [+0.3031, +0.3696] | significant | [+0.0619, +0.6567] | **significant** |
 
+[**Transcription correction (transcription-accuracy sweep)**: the
+VLSTM battery-level CI upper bound above reads +0.2528; the exact
+source value (`bootstrap_base_learner_delta_vs_xgb_ci.csv`,
+`battery_ci_hi=0.252747022177233`) rounds to **+0.2527**, not +0.2528.
+One-digit rounding error, does not change the NOT-significant verdict.
+This also corrects the same figure where restated later in this log
+(the "original 40-battery expansion" comparison and the consolidated
+Check-0.3/0.4 summary table both cite this same [-0.0513,+0.2528] CI -
+those are downstream restatements of this one number, not independent
+measurements, so they inherit this same correction rather than being
+separately wrong.]
+
 **The single most useful, nuanced finding of this whole session**:
 XGBoost's dominance over the 3 WEAKER deep models (CNN-LSTM, PiFormer,
 CNN-BiGRU) is robust even under the strict, battery-clustered bootstrap
@@ -5226,6 +5238,13 @@ BFA set and was never a model input before this item) -
 | 1.1 (unconstrained) | 0.9774 | 0.5530 | 9.5% | 2,394 |
 | **1.5 (constrained)** | 0.9750 (-0.0024) | **0.5672 (+0.0142)** | 6.7% (-2.8pp) | **2,375 (-19, -0.8%)** |
 
+[**Transcription correction (transcription-accuracy sweep)**: the CALCE
+coverage delta above reads -2.8pp. Exact source values (1.1's
+coverage=0.0945256715402924=9.4526%, 1.5's=0.0673240394423665=6.7324%)
+give an exact delta of -2.7202pp, which rounds to **-2.7pp**, not
+-2.8pp. Off by 0.1 percentage point; does not change the "HELPS, small
+practical magnitude" verdict below.]
+
 **VERDICT: HELPS, but the effect is small in practical magnitude.**
 Non-physical steps drop by only 0.8% (19 of 2,394) - a real but modest
 reduction, not a dramatic fix. Root cause of the modest size: XGBoost's
@@ -5333,6 +5352,24 @@ these batteries' SOH trajectories are close to linear over their
 observed lifetime (no genuine two-phase "knee" shape), so the
 two-segment model's optimizer pushes the breakpoint to an extreme,
 sometimes nonsensical value chasing a knee that isn't really there.
+
+[**Transcription correction (transcription-accuracy sweep)**: the count
+above reads "5 of 6". Direct count from
+`bacon_watts_knee_detection.csv`'s `true_knee_past_eol`/
+`pred_knee_past_eol` columns shows only **4 of 6** batteries have
+either flag True (B0018: pred=True; b1c4: true=True; b2c24: true=True;
+b3c0: true=True); b3c35 and b4c38 are both False/False, not one of
+them. Corrected count is **4 of 6**, still a clear majority (67%) of
+the test set. This does not change the section's VERDICT below: the
+"NOT a net improvement" conclusion is driven by the mean-absolute-
+offset comparison (430.9 vs. 161.8 cycles, both independently
+re-verified exact against this same CSV and unaffected by this count),
+not by the raw count of knee-past-EOL flags - 4/6 still supports
+"fired broadly" and the same overall verdict as 5/6 did. No other
+location in this log cites this specific count downstream (the Stage 1
+synthesis section references the same failure mode generically,
+without restating the "5 of 6"/"4 of 6" figure, so needs no separate
+correction).]
 
 **VERDICT, both halves reported plainly**: Bacon-Watts fixes the
 SPECIFIC hypothesized failure mode - b3c0 improves dramatically
@@ -6198,7 +6235,18 @@ held exactly identical to session 41 Part B's run.
 marginally BETTER, than session 41 Part B's reformulated-feature run**
 (SOH R2 +0.0005, RUL R2 +0.015 in the raw-feature control's favor -
 both differences small enough to be well within normal training-run
-noise, not a meaningful advantage either way). **1.1's specific
+noise, not a meaningful advantage either way).
+
+[**Transcription correction (transcription-accuracy sweep)**: the SOH
+R2 delta above reads +0.0005. Exact source values (0.924552 vs.
+0.924104) give an exact delta of 0.000448, which rounds to **+0.0004**,
+not +0.0005. Off by one in the 4th decimal; does not change the "(a)
+comparable/marginally better, within normal training-run noise"
+outcome or the "1.1's reformulation is NOT what's driving RUL's
+improvement" conclusion, both of which rest on the magnitude being
+small, not on its exact 4th-decimal value.]
+
+**1.1's specific
 reformulation is NOT what is driving RUL's improvement.** The real
 driver is the architecture extension itself - giving the joint model
 access to ANY HI features, fused into the LSTM's hidden state,
@@ -8871,3 +8919,69 @@ instructed - the 4 mismatches need an explicit decision (correct
 in-place with an annotation, following the same convention already
 used for the "9 vs 10" precision pass, is the obvious candidate, but
 that is the user's call) before Stage 5 begins.
+
+---
+
+## Four transcription-mismatch corrections applied (closes the transcription-accuracy sweep)
+
+All 4 mismatches found by the transcription-accuracy sweep are now
+annotated in place, using the same bracketed inline-correction
+convention already established for the "9 vs 10 recovered batteries"
+fix: original text preserved untouched, a bracketed note added
+immediately after stating the corrected value and pointing back to the
+sweep. Nothing was silently rewritten.
+
+1. **Stage 0, Check 0.4** - VLSTM battery-level CI upper bound
+   (+0.2528 -> +0.2527) annotated at its primary table. Also noted:
+   this same CI is restated twice more downstream (the 40-battery
+   expansion comparison and the consolidated Check-0.3/0.4 summary
+   table) - both are direct restatements of this one number, not
+   independent measurements, so they inherit the correction via the
+   pointer rather than needing 3 separate annotations.
+2. **Stage 1, item 1.5** - CALCE coverage delta (-2.8pp -> -2.7pp)
+   annotated in place. No downstream citation found elsewhere.
+3. **Stage 1, item 1.7 (Bacon-Watts)** - knee-past-EOL count (5 of 6 ->
+   4 of 6) annotated in place, with the corrected battery list spelled
+   out (B0018, b1c4, b2c24, b3c0 fire; b3c35 and b4c38 do not).
+4. **Session 42, Part C** - SOH R2 delta (+0.0005 -> +0.0004) annotated
+   in place. No downstream citation found elsewhere.
+
+### Item 3's downstream verdict check (explicitly required)
+
+**Does the section's overall verdict still hold under 4/6, not 5/6?**
+Yes, unchanged. The "NOT a net improvement over max-curvature"
+conclusion was never driven by the raw count of knee-past-EOL flags -
+it rests on the mean-absolute-offset comparison (430.9 cycles for
+Bacon-Watts vs. 161.8 for max-curvature, both independently
+re-verified exact against `bacon_watts_knee_detection.csv` during the
+original sweep and unaffected by this count correction). 4 of 6 (67%)
+is still a clear majority of the test set experiencing the failure
+mode, so "fired broadly" and the b3c0-specific-fix-but-not-net-win
+verdict both stand exactly as written.
+
+**Was the 5/6 (now 4/6) count cited or relied on anywhere else
+downstream?** Searched the full log for every other mention of
+"knee-past", "Bacon-Watts", and the count itself. Only one other
+location references this failure mode at all - the Stage 1 overall
+synthesis section (`"...firing broadly on near-linear degradation
+trajectories"`) - and it does so generically, without restating the
+"5 of 6"/"4 of 6" figure. No other session, no consolidated summary,
+and no later stage cites this specific count as a computational input
+anywhere. Nothing further needed correcting.
+
+### Status
+
+All 4 corrections applied and verified in place. No numbers were
+silently changed - every original figure remains visible in the log
+exactly as first written, with the correction stated alongside it.
+No retraining, no re-analysis, no deployed-app changes.
+
+**This closes the transcription-accuracy sweep completely.** Combined
+with Stage 0-4's own prior methodological verification passes (the
+per-stage re-derivations, the closeout/consolidation passes, the
+clip-saturation and CALCE-refit follow-ups, the precision pass, and
+the loose-ends pass), everything preceding Stage 5 is now verified on
+both axes that matter: the METHOD was checked and found sound
+throughout, and every recorded NUMBER has now been checked against its
+source, with all discrepancies found corrected in place rather than
+left standing. Stage 5 can begin.
