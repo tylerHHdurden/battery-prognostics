@@ -6272,6 +6272,11 @@ every result honestly including any that don't help.
 
 ### 2.1 — Recovering the 14 excluded batteries: 9 of 14 recovered, honestly not all
 
+*(Header count stale as of session 45: B0036 was later individually
+recovered, bringing this to 10 of 14 - see "### 6 — B0036's near-miss"
+below and Stage 4's Step 1 for the current authoritative count/cycle
+total.)*
+
 Session 33 excluded 14 batteries wholesale for degenerate SOH baselines
 (up to 2,177%), documenting ONE clean example (B0041: a genuine
 low-rate characterization phase for its first 41 of 66 cycles). Before
@@ -6306,7 +6311,12 @@ glossed over**:
    Re-verified against all 4 Group-1 batteries before trusting it.
 
 **Result: 9 of 14 recovered** (max SOH <= 110% after correction) -
-all 4 Group-1 batteries, and 5 of 9 Group-2 batteries:
+all 4 Group-1 batteries, and 5 of 9 Group-2 batteries. [**Stale as of
+session 45**: B0036 (line below, "near-miss") was individually
+recovered via a case-specific threshold relaxation later in this same
+log, bringing the total to **10 of 14** - see "### 6 — B0036's
+near-miss" and Stage 4's Step 1, which is the current authoritative
+count.]
 
 | battery | group | fix applied | new max SOH |
 |---|---|---|---|
@@ -6333,7 +6343,11 @@ tolerance check can't cleanly isolate); B0050 (Group 3, pervasive
 noise, no correction attempted).
 
 **New data made available**: 9 recovered batteries, 2,993 new cycles.
-Per instruction, no model retrained on this pool in this step - the
+[**Stale as of session 45**: later corrected to 10 recovered batteries/
+3,187 cycles after B0036's individually-verified recovery - see Stage
+4's Step 1 for the authoritative current count and a real duplication
+bug (b2c44) caught and fixed while reconciling this.] Per instruction,
+no model retrained on this pool in this step - the
 corrected data is saved (`data/processed/recovered_battery_cycles.csv`)
 for a future stage to integrate.
 
@@ -6406,8 +6420,9 @@ New file: `src/run_eol_convention_reconciliation.py`. Output:
 k=5 GroupKFold (grouped by battery ID) on the XGBoost-fusion pipeline,
 Stage 1's 1.1+1.5 canonical configuration, on the existing 204-battery
 expanded pool. **Scope decision on 2.1's recovered pool, stated
-explicitly**: fully integrating the 9 newly-recovered batteries would
-require rebuilding all 16 HI features + fusion embeddings from raw
+explicitly**: fully integrating the 9 newly-recovered batteries
+[stale count - corrected to 10 as of session 45/Stage 4, see below]
+would require rebuilding all 16 HI features + fusion embeddings from raw
 cycles for each - a real, non-trivial pool-rebuild step in its own
 right, and rushing it alongside everything else in this stage risks
 exactly the kind of mistake this stage's own instructions warned
@@ -7831,7 +7846,11 @@ Stated plainly, item by item, per instruction - not left implicit.
   MAKE the deep learners diverse enough to be useful also failed (3.3).
   No basis remains for reconsidering the lean deployment for Stage 4.
 
-- **Stage 2.1's 9 recovered batteries (2,993 cycles): explicit
+- **Stage 2.1's 9 recovered batteries (2,993 cycles) [stale count -
+  corrected to 10 recovered batteries/3,187 cycles as of Stage 4's Step
+  1, which also caught and fixed a real b2c44 duplication bug while
+  reconciling this - see that entry for the authoritative current
+  number]: explicit
   recommendation - FOLD INTO Stage 4's retrain pool.** Each of the 9 was
   individually verified with a documented, specific correction (e.g.
   isolated-artifact-cycle removal, characterization-phase-prefix
@@ -7858,7 +7877,8 @@ Stated plainly, item by item, per instruction - not left implicit.
   itself flagged ("the next actual feature-generation run will pick it
   up automatically" - that run has not yet happened). Since Stage 4
   must already re-run feature extraction to incorporate the 9 recovered
-  batteries above, this convention WILL take effect as a natural
+  [stale count, corrected to 10 - see Stage 4's Step 1] batteries above,
+  this convention WILL take effect as a natural
   consequence of that regeneration - no separate action is needed
   BEYOND ensuring Stage 4's retrain actually regenerates
   `hi_table.parquet` (not just retrains models on the existing file).
@@ -7940,7 +7960,20 @@ clipping is seen (13-72% of VALUES on I_t/dQdV/V_t/T_t for the original
 **The 9 recovered batteries (Stage 2.1, not yet integrated into any
 trained model) do NOT appear in either flagged list** - none of
 B0036/38/39/40/41/49/50/51 show meaningful clip-saturation on any
-channel in the expanded-pool sweep (which covers all of them). This is
+channel in the expanded-pool sweep (which covers all of them). [**Two
+corrections found during a later reconciliation pass (Stage 4/this
+closeout), stated precisely rather than silently fixed**: (1) the
+recovered-battery count is stale here - corrected to 10 as of Stage 4's
+Step 1; (2) this specific battery list is ALSO inaccurate as a list of
+"the recovered batteries" - B0049 and B0050 were NEVER recovered
+(reported not-recovered in the 2.1 entry itself), and the 4 recovered
+MIT batteries (b1c0/b1c18/b2c12/b2c44) are missing entirely from this
+list. The underlying CONCLUSION still holds under the correct 10-
+battery set, checked directly: none of B0036/38/39/40/41/51/b1c0/b1c18/
+b2c12/b2c44 appear in either the full-saturation or partial-clip tables
+from that same sweep - but this specific sentence's own battery list
+was wrong, not just its count, and is corrected here for the record.]
+This is
 reassuring, though not a substitute for checking against whatever
 clip stats Stage 4's actual retrain pool (original 32 + these 9) ends
 up fitting fresh - noted as a caveat, not re-verified against a
@@ -8453,3 +8486,128 @@ these four small files specifically.
 No changes to app.py's UI/UX. Per instruction: not proceeding to Stage
 5 - reporting back and confirming the deployment is verified working
 before further work begins.
+
+## Precision pass before Stage 5: recovered-battery count reconciliation, CALCE coverage-swing pinned down
+
+No retraining, no deployed-app changes - documentation precision and
+one investigative script (not kept - findings captured here).
+
+### 1 — Recovered-battery count reconciled everywhere it appears
+
+Searched DEVELOPMENT_LOG.md for every "9 of 14" / "9 recovered" /
+"2,993 cycles" reference to Stage 2.1's recovery. **8 locations
+corrected** with an inline note (historical entries preserved
+unedited otherwise, per instruction - nothing silently rewritten):
+
+1. Stage 2.1's own section header ("9 of 14 recovered...") - note added.
+2. "Result: 9 of 14 recovered" (the original outcome line) - note added,
+   pointing to item 6 below and Stage 4.
+3. "New data made available: 9 recovered batteries, 2,993 new cycles" -
+   note added with the corrected 10/3,187 figures.
+4. Stage 2.3's GroupKFold scope-decision note ("fully integrating the 9
+   newly-recovered batteries...") - note added.
+5. The pre-Stage-4 closeout's explicit carry-forward decision ("Stage
+   2.1's 9 recovered batteries...FOLD INTO Stage 4's retrain pool") -
+   note added.
+6. The same closeout's Severson-EOL confirmation ("must already re-run
+   feature extraction to incorporate the 9 recovered...") - note added.
+7. The clip-saturation-sweep session's recovered-battery check - note
+   added, and **a second, separate inaccuracy found and corrected
+   here**: that sentence's own battery list (`B0036/38/39/40/41/49/50/
+   51`) was not just the wrong COUNT but the wrong BATTERIES - it
+   wrongly includes B0049 and B0050 (both explicitly reported
+   NOT-recovered in the 2.1 entry itself) and omits all 4 recovered MIT
+   batteries (b1c0/b1c18/b2c12/b2c44) entirely. Checked directly
+   whether this changes that session's conclusion: it does not - none
+   of the CORRECT 10-battery set (B0036/38/39/40/41/51/b1c0/b1c18/
+   b2c12/b2c44) appear in either of that sweep's flagged-saturation
+   tables either - but the sentence itself was wrong on more than the
+   count, now corrected for the record.
+8. Session 45's own "B0036 IS recovered (10th of 14)" entry and Stage
+   4's Step 1 entry ("this project's own prior framing said '9
+   recovered batteries'...") were ALREADY correct/self-correcting -
+   no edit needed; confirmed by direct check, not assumed.
+
+One instance (the fold-3-weakness entry noting B0045 "was NOT among
+the 9 batteries actually recovered") was checked and left AS WRITTEN -
+it is temporally accurate narrative (written before that same
+session's own B0036 fix, further down the same entry) and remains true
+regardless of 9 vs 10, since B0045 was never recovered under either
+count.
+
+**Authoritative count, confirmed unambiguous**: **10 recovered
+batteries (6 NASA: B0036/38/39/40/41/51; 4 MIT: b1c0/b1c18/b2c12/
+b2c44), 3,187 cycles** - already stated clearly in Stage 4's own Step 1
+entry, and now the only figure this reconciliation pass leaves
+uncontradicted anywhere in the log.
+
+### 2 — CALCE coverage-swing (6.73%->2.69%), pinned to a precise mechanism
+
+**Step 1 - what actually differs between the two evaluations, checked
+directly rather than assumed**: the calibration battery SPLIT is
+**identical** in both - `calib_eval_battery_split` is a deterministic
+even/odd sort of the (unchanged) 6-battery test set, not randomized;
+confirmed both runs' logs read `['B0018', 'b2c24', 'b3c35']`. What DOES
+differ: the entire retrained pipeline (XGBoost-fusion, the ICA fusion
+encoder, and `channel_norm_stats.json`, all refit on the 32+10 pool).
+
+**Step 2 - does the clip-bound shift alone plausibly explain it?**
+Checked directly: `channel_norm_stats.json`'s dQdV bounds shifted
+substantially (lo -1.157->-2.116, **82.9%**; hi **27.5%**) from the
+pool expansion - dVdQ shifted more modestly (lo 1.4%, hi 10.7%); V_t/
+I_t/dIdV barely moved (<4%). This is a real, non-trivial, systematic
+shift in the encoder's own input normalization on exactly the channels
+CALCE's fusion embedding depends on - a genuine contributing factor,
+not nothing.
+
+**Step 3 - the decisive check: does ordinary XGBoost refitting
+variance ALONE (holding the retrained encoder/norm-stats/embeddings
+completely fixed) produce a swing of comparable size?** Reran CALCE
+evaluation 3 times, changing ONLY XGBoost's `random_state` (42/43/44),
+everything else byte-identical:
+
+| random_state | CALCE R2 | coverage | width | q |
+|---|---|---|---|---|
+| 42 (the actually-deployed seed) | 0.5679 | **2.69%** | 2.288 | 1.144 |
+| 43 | 0.5766 | **5.47%** | 2.993 | 1.497 |
+| 44 | 0.5763 | **3.16%** | 2.479 | 1.240 |
+
+**A single reseed, with the pool/encoder/normalization all held fixed,
+swings coverage from 2.69% to 5.47% - a wider range than the 6.73%->
+2.69% "drop" being investigated.** R2 barely moves across seeds
+(0.568-0.577); the coverage number itself is what's unstable.
+
+**Precise, evidenced conclusion, stated plainly per instruction**: the
+6.73%->2.69% movement is **not attributable to any single systematic
+cause** - it sits comfortably inside the range ordinary XGBoost
+refitting noise alone produces at this specific operating point.
+Mechanism, stated exactly rather than left as "just noise": CALCE's
+median absolute residual (~7.17) is roughly **6x** the conformal
+half-width q (~1.14-1.50 across these runs) - at that ratio, coverage
+counts a binary in/out event for points sitting almost entirely in the
+interval's far tail, so which EXACT points cross the boundary is
+acutely sensitive to small, model-fitting-ordinary shifts in
+individual predictions, with no need to invoke a systematic cause. The
+clip-bound shift documented in Step 2 is real and does contribute some
+of the movement, but the seed experiment shows it is not NEEDED to
+explain a swing this size - ordinary refitting variance is already
+sufficient on its own. **This is exactly the instability class Stage
+1.6's Jackknife+/CV+ work already exists to reduce** (Stage 3.1's own
+KMM-CP/rescaled-Jackknife+ results show CALCE coverage numbers only
+become informative once q is brought closer to CALCE's actual residual
+scale) - it is not a new failure mode, it is the SAME one, now
+observed and quantified directly rather than inferred.
+
+**Implication for how this number should be read going forward**: the
+plain split-conformal CALCE coverage percentage on its own (2.69%,
+6.73%, or any single run's number) should not be treated as
+precise to within a few percentage points - it is a genuinely noisy
+statistic at this operating point, evidenced by a 2.7-point swing from
+seed alone. The QUALITATIVE finding it supports (near-total coverage
+collapse on CALCE, nowhere near the 90% target) is robust and
+unaffected by this noise; the exact single-digit percentage is not.
+
+No changes to `outputs/stage4_step2b_summary.csv` or any deployed
+artifact - this is a documentation/investigation-only pass. Not
+proceeding to Stage 5 - reporting back to confirm these are the final
+loose ends.

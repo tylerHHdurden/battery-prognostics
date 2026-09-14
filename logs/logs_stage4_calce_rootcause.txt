@@ -1,0 +1,26 @@
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+=== confirming calibration battery split is deterministic/identical ===
+calibration batteries (this run): ['B0018', 'b2c24', 'b3c35']
+(Stage 1 canonical run and Stage 4 Step 2b run both logged: ['B0018', 'b2c24', 'b3c35'])
+CONFIRMED: identical calibration split (deterministic even/odd sort - no randomness here)
+
+=== isolating ordinary XGBoost refitting variance (same encoder/norm/embeddings, different random_state) ===
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[seed=42 (Step 2b's actual deployed seed)] random_state=42: CALCE R2=0.5679 RMSE=14.1553 | coverage=2.69% width=2.2875 q=1.1438 | calib_resid mean=0.5504 median=0.2049
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[seed=43 (alternate seed, everything else identical)] random_state=43: CALCE R2=0.5766 RMSE=14.0121 | coverage=5.47% width=2.9932 q=1.4966 | calib_resid mean=0.5863 median=0.1751
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[seed=44 (second alternate seed)] random_state=44: CALCE R2=0.5763 RMSE=14.0167 | coverage=3.16% width=2.4792 q=1.2396 | calib_resid mean=0.5300 median=0.1807
+
+=== SUMMARY ===
+seed 42 (deployed): coverage=2.69%
+seed 43:            coverage=5.47%
+seed 44:            coverage=3.16%
+spread across 3 seeds (same pool/encoder/norm, only XGBoost's own fit varies): 2.69% - 5.47%
+original Stage 1 canonical number (OLD pool/encoder/norm entirely): 6.73%
