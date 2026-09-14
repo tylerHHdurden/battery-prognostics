@@ -1,0 +1,96 @@
+[calce-clip-refit] === Item 1: fix already re-verified against B0053 above this script ===
+
+[calce-clip-refit] === building NASA+MIT X_fit (same protocol as train_deep_models.py) ===
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[calce-clip-refit] X_fit: 21 fit batteries, 14872 cycles
+
+[calce-clip-refit] === building CALCE raw (pre-clip) tensors, all 3 cells ===
+[calce-clip-refit] CALCE/CS2_35: 932 cycles
+[calce-clip-refit] CALCE/CS2_36: 972 cycles
+[calce-clip-refit] CALCE/CS2_37: 1037 cycles
+
+[calce-clip-refit] === new bounds vs. original (NASA+MIT-only) bounds ===
+[calce-clip-refit] dQdV: OLD bounds [-1.157, 0.002095] -> NEW bounds [-2.532, 0.004819]
+[calce-clip-refit] dQdV: NASA+MIT raw range [-139.8, 139.3], CALCE raw range [-8.282, 7.162]
+[calce-clip-refit] dQdV: lo shifted 118.8%, hi shifted 130.0% (lo pulled toward CALCE's own min: False, hi pulled toward CALCE's own max: False)
+[calce-clip-refit] dVdQ: OLD bounds [-5.378e+04, 4987] -> NEW bounds [-1.065e+05, 4638]
+[calce-clip-refit] dVdQ: NASA+MIT raw range [-1.817e+13, 1.106e+13], CALCE raw range [-3.57e+06, 2.716e+05]
+[calce-clip-refit] dVdQ: lo shifted 98.1%, hi shifted 7.0% (lo pulled toward CALCE's own min: False, hi pulled toward CALCE's own max: False)
+
+[calce-clip-refit] === confirming V_t/I_t/T_t/dIdV bounds UNTOUCHED ===
+[calce-clip-refit] channel 0 (V_t): unchanged=True
+[calce-clip-refit] channel 1 (I_t): unchanged=True
+[calce-clip-refit] channel 2 (T_t): unchanged=True
+[calce-clip-refit] channel 5 (dIdV): unchanged=True
+
+[calce-clip-refit] === Item 3: re-evaluating CALCE with the NEW bounds (same trained encoder) ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[calce-clip-refit] building CALCE-merged frame under NEW (CALCE-inclusive) bounds...
+[calce-clip-refit] building CALCE-merged frame under ORIGINAL bounds (re-verification)...
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[calce-clip-refit] in-domain R2=0.9750 (sanity check, should match Stage 1's 0.9750)
+
+[calce-clip-refit] verification (should reproduce Stage 1's canonical R2=0.5672): pooled R2=0.5672 RMSE=14.1669
+[calce-clip-refit] reproduces the canonical 1.1+1.5 baseline: True
+
+[calce-clip-refit] === POOLED RESULT: original bounds vs. CALCE-inclusive bounds ===
+[calce-clip-refit] ORIGINAL bounds:        R2=0.5672 RMSE=14.1669
+[calce-clip-refit] CALCE-inclusive bounds:  R2=0.5659 RMSE=14.1883
+[calce-clip-refit] delta R2: -0.0013
+
+[calce-clip-refit] === PER-CELL RESULT (Stage 2.5 convention: per-battery first) ===
+[calce-clip-refit] CS2_35: original R2=0.6465 RMSE=11.5431  |  new R2=0.6667 RMSE=11.2075  |  delta R2=+0.0203
+[calce-clip-refit] CS2_36: original R2=0.5706 RMSE=15.5312  |  new R2=0.5725 RMSE=15.4966  |  delta R2=+0.0019
+[calce-clip-refit] CS2_37: original R2=0.4981 RMSE=14.9449  |  new R2=0.4766 RMSE=15.2623  |  delta R2=-0.0215
+
+[calce-clip-refit] === saturation fractions, dQdV/dVdQ, OLD vs NEW bounds, per cell ===
+[calce-clip-refit] CS2_35/dQdV: frac_clipped OLD=25.7% -> NEW=8.4% (fully-saturated cycles OLD=0.0% -> NEW=0.0%)
+[calce-clip-refit] CS2_35/dVdQ: frac_clipped OLD=13.8% -> NEW=13.6% (fully-saturated cycles OLD=0.0% -> NEW=0.0%)
+[calce-clip-refit] CS2_36/dQdV: frac_clipped OLD=24.7% -> NEW=7.9% (fully-saturated cycles OLD=0.0% -> NEW=0.0%)
+[calce-clip-refit] CS2_36/dVdQ: frac_clipped OLD=8.9% -> NEW=5.6% (fully-saturated cycles OLD=0.0% -> NEW=0.0%)
+[calce-clip-refit] CS2_37/dQdV: frac_clipped OLD=22.3% -> NEW=3.9% (fully-saturated cycles OLD=0.0% -> NEW=0.0%)
+[calce-clip-refit] CS2_37/dVdQ: frac_clipped OLD=0.1% -> NEW=0.1% (fully-saturated cycles OLD=0.0% -> NEW=0.0%)
+
+[calce-clip-refit] === HONEST INTERPRETATION ===
+[calce-clip-refit] baseline compared against: 1.1+1.5 canonical CALCE R2=0.5672 (the CURRENT, most rigorously-established Stage 1 canonical number, same exact model/feature config as this follow-up - the only variable that changes here is the CALCE clip-bound preprocessing step; the older pre-Stage-1 R2~0.31 baseline used a different feature/model config entirely and is not the right comparator here)
+[calce-clip-refit] delta R2 = -0.0013 (-0.2% relative to the 0.5672 baseline)
+[calce-clip-refit] in-domain R2 = 0.9750; original CALCE gap = 0.4078; this fix closes -0.3% of that gap
+[calce-clip-refit] OUTCOME: (b) R2 barely moves - the clip-bound confound, while real and worth disclosing, is NOT a major driver of the CALCE collapse.
+
+[calce-clip-refit] saved outputs/calce_inclusive_clip_refit_{pooled,percell,saturation}.csv
+[calce-clip-refit] DONE
