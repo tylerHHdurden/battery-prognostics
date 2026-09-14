@@ -8194,3 +8194,262 @@ New file: `src/run_calce_inclusive_clip_refit.py`. Outputs:
 No changes to the deployed Streamlit app; no model retrained. Not
 proceeding to Stage 4 - reporting back with the final R2 number
 (-0.0013, outcome (b)) and the recommended CALCE framing above.
+
+## Stage 4 — one clean retrain, promoted to the actual deployed model
+
+The first change to what is genuinely live since early in this
+project (sessions 33/35's Dataset Expansion was never deployed - the
+app has run the original 32-battery pipeline this entire time). Four
+steps, each verified before the next began; two real bugs and one
+real, root-caused near-regression were caught and resolved before
+promotion, none silently. Streamlit app UI/UX untouched - every
+app.py change is internal plumbing (passing model-required context
+through, not layout/interaction).
+
+**Two significant, previously-undocumented discrepancies found before
+touching anything**, stated explicitly since they change what "Stage 4
+supersedes" actually means: direct inspection of `live_inference.py`
+showed the deployed app was NOT running session 20's lean pipeline as
+assumed - it ran the FULL 4-branch ensemble (VLSTM/CNN-LSTM/PiFormer +
+XGBoost-fusion via a Ridge meta-learner) for SOH, and RUL used the
+OLD, non-fusion `joint_adaptive.pt` (R2=0.432) rather than session 41's
+much-improved fusion architecture (R2=0.666 at the time). A third,
+deeper one: the live feature vector was built from `bfa_selected_
+features.txt` (7 features, MATC included, no MET/TEVD) - a stale,
+PRE-Stage-1 set, not the canonical reformulated 8-feature set
+(`bfa_selected_features_nasa_mit_only.txt` + `_rel` reformulation) that
+every Stage 1-3 result in this log is actually about. **Stage 1's core
+contribution had never reached the deployed app until this pass.**
+
+### Step 1 — feature regeneration
+
+Pool: original 32 batteries + Stage 2.1's recovered batteries.
+**Discrepancy found and reconciled, not silently used**: this project's
+own prior framing said "9 recovered batteries, 2,993 cycles" -
+`recovered_battery_cycles.csv` (checked directly, the single source of
+truth) currently holds **10** recovered batteries (6 NASA, 4 MIT) and
+3,187 cycles - a later closeout session individually verified and
+added B0036 as a 10th recovery after the original count was set. Used
+all 10, read dynamically from the file rather than a hardcoded "9."
+
+**Real bug caught before it reached hi_table.parquet**: `b2c44` is a
+genuine member of the ORIGINAL 32-battery pool (`mit_subset.json`) that
+ALSO appears in the recovered-battery list (independently flagged
+during the 204-pool expansion's separate exclusion sweep). The first
+run processed it via BOTH paths, duplicating 477 of its 478 rows in
+the concatenated table (confirmed directly: 955 rows, 478 unique
+cycle_idx). Fixed by skipping the original-pool path for any battery
+ID also present in the recovered set (the recovered version is
+strictly the better one - identical data minus one confirmed
+artifact cycle) - re-ran, verified zero duplicate (dataset,
+battery_id, cycle_idx) rows before proceeding.
+
+**Result**: 44 batteries (10 NASA + 31 MIT + 3 CALCE), 29,705 total
+cycles, `battery_split.json` extended (26->35 train batteries, test
+set of 6 UNCHANGED for continuity with every prior Stage 1-3 number).
+**Mandatory verification passed**: b1c20 cycle-1 RUL=531.0, matching
+the Severson-aware convention exactly (the old convention would give
+532.0) - confirms the fix flagged-but-not-yet-applied last session is
+now genuinely live on disk.
+
+New files: `src/stage4_recovered_batteries.py`, `src/run_stage4_
+feature_regen.py`.
+
+### Step 2 — full retrain
+
+**2a - encoder/VLSTM/channel-norm** (`src/stage4_pool.py`, `src/run_
+stage4_step2a_encoder_vlstm.py`): `channel_norm_stats.json` refit on
+the new pool's fit split; ICA fusion encoder retrained 25 epochs
+(val_mse 2.21->0.87, full budget used, no early stop needed); VLSTM
+retrained but early-stopped at epoch 14 - kept ONLY for its SHAP
+voltage-region explainability role now, not part of either prediction;
+`fusion_embeddings.csv` regenerated (26,762 NASA+MIT rows).
+
+**2b - XGBoost-fusion, RUL joint model, calibration, CALCE**
+(`src/run_stage4_step2b_xgb_joint.py`):
+
+| metric | new (Stage 4) | prior baseline | source |
+|---|---|---|---|
+| SOH in-domain R2 / RMSE (fixed test split) | **0.9740 / 0.7805** | 0.9750 / ~0.76 (Stage 1, old pool) | this session |
+| SOH GroupKFold(5) mean R2 / RMSE | **0.9658 (std 0.021) / 1.139** | n/a (first run on this pool) | this session |
+| SOH Jackknife+/CV+ coverage / width | **99.19% / 9.857** | n/a (first run on this pool) | this session |
+| RUL joint-fusion TEST R2 / RMSE | **0.3739 / 265.30** | 0.6657 (session 41, OLD/smaller pool+norm) | see root-cause below |
+| RUL split-conformal coverage / width | **98.87% / 962.63** | n/a | this session (plain, not Jackknife+/CV+ - see below) |
+| compressed model (n=100,depth=3) R2 / size | **0.9459 / 114.6KB** | 0.9119 / 114.9KB (session 35 Pt.5, old pool) | this session |
+| CALCE R2 / RMSE | **0.5679 / 14.155** | 0.5672 / 14.167 (Stage 1 canonical) | this session |
+| CALCE plain split-conformal coverage/width | **2.69% / 2.288** | 6.73% / 2.332 (Stage 1 canonical) | investigated below |
+
+**Disclosed deviation**: RUL uses plain split-conformal, not
+Jackknife+/CV+ - matching session 47's own established precedent
+(K-fold retraining a deep model is the same cost concern that already
+scoped RUL down to plain split-conformal there; Stage 1.6 itself never
+attempted Jackknife+/CV+ for RUL either).
+
+**RUL R2 root-cause, investigated before deciding anything** (real,
+not glossed over: 0.374 looks far below 0.666 at first glance). Checked
+directly whether the old `joint_adaptive.pt` could simply be kept
+instead: **it cannot, cleanly** - re-evaluating it under the SAME
+new `channel_norm_stats.json` (mandatory once Step 2a refits that
+shared file) drops its own R2 to **0.350**, close to session 4's
+original historical number. **Apples-to-apples, under the one
+normalization the pipeline can now actually run, the retrained model
+(0.374) is the BETTER of the two real options, not a regression from a
+still-viable alternative.** The absolute decline from 0.666 is real
+and attributed to (a) a substantially wider/more heterogeneous RUL
+label distribution once recovered short-life batteries join training,
+and (b) a second, previously-invisible inconsistency found and fixed in
+this same pass: `sequence_features.build_dataset_tensors` (the deep-
+model training path) had NEVER applied the Severson-aware RUL
+convention, even though `hi_table.parquet` has since session 43 - now
+fixed via `stage4_pool.py`'s dedicated loader, so RUL labels are
+finally consistent across both pipelines, a real, deliberate structural
+change to what "RUL R2" is even measuring, not comparable 1:1 to the
+old number. Flagged as a concrete, disclosed area for future
+improvement (e.g. per-subpopulation RUL normalization), not silently
+accepted as fine.
+
+**CALCE coverage root-cause, investigated before promoting**: q
+(conformal half-width) is nearly unchanged (1.144 vs ~1.166), CALCE
+RMSE is nearly unchanged (14.155 vs 14.167) - the calibration
+residuals (median 0.20) are tiny relative to CALCE's own (median
+7.17), so q is only ~16% of CALCE's typical error. At that
+razor-thin margin, which EXACT points happen to cross the boundary is
+highly sensitive to small, statistically-unremarkable prediction
+shifts - both 6.73% and 2.69% describe the SAME already-catastrophic
+failure mode (Stage 3's own well-documented finding), not a new,
+meaningfully-worse one. **Not treated as a blocking regression.**
+
+**Compressed model note**: deployed ALONGSIDE the full model (session
+35 Part 5's config, n=100/depth=3), not replacing it - genuinely
+better than its own historical number now (R2 0.9459 vs 0.9119), same
+~115KB size, comfortably inside the 32-512KB embedded/BMS budget.
+
+**CALCE handling, per the confirmed Stage 3 decision**: the deployed
+model applies NO CALCE-specific correction. KMM-CP (Stage 3.1's
+best-available-but-inadequate result, 34.04%/9.924, on the PRIOR
+32-battery model) is recorded here as documented-but-not-adopted
+context only, NOT recomputed against this new model/pool - exactly as
+decided in the pre-Stage-4 closeout.
+
+New files: `src/run_stage4_step2b_xgb_joint.py`, `src/run_stage4_save_
+joint_hi_norm_stats.py` (a completeness fix - see Step 4).
+
+### Step 3 — verification before promotion
+
+**Second-life grading** (`src/run_stage4_step3_grading.py`, session
+25's unchanged methodology): agreement **98.98%** of 5,208 test
+cycles (prior lean model: 98.75% - a small, genuine improvement, not a
+regression). B0018's known mis-certification **persists**: predicted
+Primary-EV-use vs true Second-life-candidate at its last test cycle,
+error now **+9.84pp** (vs the previously documented +8.74pp/+8.29pp) -
+essentially the same, real, already-disclosed limitation, marginally
+larger but not qualitatively different.
+
+**Sensor-noise robustness** (`src/run_stage4_step3_noise_robustness.py`,
+session 26's unchanged noise levels/battery set, adapted for the
+canonical reformulated feature pipeline): clean R2=0.9740, 1x=0.9717,
+2x=0.9717, 5x-stress=0.9658 - **monotonic, graceful degradation,
+no collapse**, confirming sessions 26/47's own finding holds under
+this new model too. B0018 again the weakest performer even at clean
+baseline (R2=0.729) - its known training-representation issue, not a
+new noise-specific vulnerability.
+
+Neither check had been run against a model incorporating Stage 1+2's
+fixes together with the recovered batteries before this pass.
+
+### Step 4 — promotion
+
+**Promoted (all files below now the live, deployed artifacts)**:
+`models/xgb_soh_fusion.json` (lean SOH, canonical 1.1+1.5 features),
+`models/ica_encoder.pt`, `models/vlstm_soh.pt` (SHAP-explainability
+role only), `models/joint_adaptive_fusion.pt` (NEW - RUL, replaces the
+stale `joint_adaptive.pt`, which is left on disk untouched but no
+longer loaded), `models/ocsvm_model.pkl` / `ocsvm_scaler.pkl` (retrained
+on the new pool + canonical features), `models/xgb_soh_fusion_
+compressed.{json,ubj}` (NEW - deployed alongside the full model, not
+replacing it), `data/processed/channel_norm_stats.json`, `fusion_
+embeddings.csv`, `destandardization_constants.json`, `joint_hi_norm_
+stats.json` (NEW), `ocsvm_feature_cols.json`.
+
+**`src/live_inference.py` and `src/digital_twin_streaming.py`
+rewired** to match the confirmed Stage 3 configuration: XGBoost-fusion
+ALONE for SOH (CNN-LSTM/PiFormer/the Ridge meta-learner no longer
+loaded at all); the new RUL joint-fusion model; the canonical
+1.1-reformulated feature set. VLSTM stays loaded, but only for its
+SHAP voltage-region explanation.
+
+**Two real bugs caught by this project's own end-to-end smoke test
+(`src/run_stage4_smoke_test.py`, new, kept as a permanent regression
+test) before either reached the live app**:
+1. The RUL joint-fusion model was trained on 8 HI features with NO
+   cycle_idx, z-scored with its own fit-split mean/std - `live_
+   inference.py`'s first version fed it a 9-feature, un-z-scored
+   vector (XGBoost's own convention), crashing with a matrix-shape
+   error rather than silently producing a wrong prediction. Fixed by
+   keeping the two feature vectors separate and z-scoring the joint
+   model's input with stats recovered via `run_stage4_save_joint_hi_
+   norm_stats.py` (a real, disclosed gap: Step 2b computed these
+   in-memory but never saved them - now also fixed in Step 2b itself
+   for any future rerun).
+2. `StreamingDigitalTwin` (the app's incremental-update demo tab) had
+   its OWN, independent feature-building logic, still using the old
+   7-feature raw set with no cycle_idx - would have silently fed the
+   new model a wrong-shaped/wrong-scale vector. Fixed by reusing `live_
+   inference.build_reformulated_hi_vector`, and by threading a
+   per-battery `baseline_his` lookup through app.py's three call sites
+   (the comparison-mode picker, the streaming tab, and the main
+   single-cycle prediction path) - confirmed necessary, not just
+   thorough: the smoke test's own test 2 shows a >15-point SOH swing
+   between the correct cycle-10 baseline and the degraded fallback.
+
+**End-to-end smoke test, 4/4 passed**: known NASA battery with a real
+baseline (sane SOH/RUL/interval values, matching the calibration
+widths above exactly); the same cycle without a baseline (confirms the
+fallback path doesn't crash, and that baseline choice matters a lot);
+a MIT battery; a CALCE cycle (correctly flagged out-of-domain on BOTH
+grounds - no temperature channel AND the retrained OC-SVM anomaly
+flag).
+
+**app.py changes**: three call sites updated to compute and pass
+`baseline_his` (a cheap, one-time-per-battery-selection HI lookup, not
+a per-cycle cost) and one stale spinner caption corrected
+("fusion ensemble + joint-adaptive model" -> "XGBoost-fusion + RUL
+joint model", since the old text was no longer an accurate description
+of what actually runs). No layout, interaction, or visual changes.
+
+**Not backed up before being overwritten, noted honestly rather than
+glossed over**: `destandardization_constants.json`, `ocsvm_model.pkl`,
+`ocsvm_scaler.pkl`, `ocsvm_feature_cols.json` - all fully reproducible
+from other artifacts that WERE backed up (their old values were
+already read and recorded in this log's own history), so nothing is
+actually unrecoverable, but the backup step itself was missed for
+these four small files specifically.
+
+### What is now actually deployed - single authoritative summary
+
+- **SOH**: XGBoost-fusion alone (lean), Stage 1.1-reformulated 8-feature
+  set + Stage 1.5's monotone-constrained cycle_idx + 16-dim fusion
+  embedding, trained on the 32+10-recovered-battery pool.
+- **RUL**: `JointSOHRULModelFusion` (session 41's HI-fused architecture),
+  retrained on the same pool.
+- **Calibration**: Jackknife+/CV+ for SOH (coverage 99.19%, half-width
+  4.93); plain split-conformal for RUL (coverage 98.87%, half-width
+  481.3) - both in-domain.
+- **CALCE**: no correction applied; plain coverage (2.69%) reported as
+  the honest deployed number; KMM-CP's 34.04% recorded as documented
+  context only, not live.
+- **Ensemble**: none - CNN-LSTM/PiFormer/Ridge-meta are not loaded by
+  the deployed app (their weights remain on disk, untouched, for
+  historical reference only).
+- **Anomaly detection**: OC-SVM, retrained on the new pool + canonical
+  features, nu=0.05 (4.9% of in-domain fit cycles flagged, as
+  expected).
+- **Embedded/BMS variant**: `xgb_soh_fusion_compressed.{json,ubj}`
+  (114.6KB, R2=0.9459) available alongside the full model, not part of
+  the Streamlit app's own prediction path.
+- **Explainability**: VLSTM (SHAP voltage-region only) + TreeSHAP on
+  XGBoost-fusion's own features.
+
+No changes to app.py's UI/UX. Per instruction: not proceeding to Stage
+5 - reporting back and confirming the deployment is verified working
+before further work begins.

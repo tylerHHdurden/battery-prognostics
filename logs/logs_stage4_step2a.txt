@@ -1,0 +1,109 @@
+[stage4-2a] backed up data/processed/channel_norm_stats.json -> _pre_stage4_backup/channel_norm_stats.json
+[stage4-2a] backed up models/ica_encoder.pt -> _pre_stage4_backup/ica_encoder.pt
+[stage4-2a] backed up models/vlstm_soh.pt -> _pre_stage4_backup/vlstm_soh.pt
+[stage4-2a] backed up data/processed/fusion_embeddings.csv -> _pre_stage4_backup/fusion_embeddings.csv
+[stage4-2a] loading full Stage 4 pool (32 original + recovered)...
+[stage4-pool] loaded NASA/B0005: (168, 200, 6)
+[stage4-pool] loaded NASA/B0006: (168, 200, 6)
+[stage4-pool] loaded NASA/B0007: (168, 200, 6)
+[stage4-pool] loaded NASA/B0018: (132, 200, 6)
+[stage4-pool] loaded MIT/b1c20: (532, 200, 6)
+[stage4-pool] loaded MIT/b1c43: (649, 200, 6)
+[stage4-pool] loaded MIT/b1c32: (729, 200, 6)
+[stage4-pool] loaded MIT/b1c17: (855, 200, 6)
+[stage4-pool] loaded MIT/b1c22: (889, 200, 6)
+[stage4-pool] loaded MIT/b1c41: (1049, 200, 6)
+[stage4-pool] loaded MIT/b1c4: (1225, 200, 6)
+[stage4-pool] loaded MIT/b2c1: (169, 200, 6)
+[stage4-pool] loaded MIT/b2c44: (478, 200, 6)
+[stage4-pool] loaded MIT/b2c42: (491, 200, 6)
+[stage4-pool] loaded MIT/b2c13: (519, 200, 6)
+[stage4-pool] loaded MIT/b2c24: (523, 200, 6)
+[stage4-pool] loaded MIT/b2c32: (543, 200, 6)
+[stage4-pool] loaded MIT/b2c9: (1059, 200, 6)
+[stage4-pool] loaded MIT/b3c28: (539, 200, 6)
+[stage4-pool] loaded MIT/b3c13: (814, 200, 6)
+[stage4-pool] loaded MIT/b3c14: (856, 200, 6)
+[stage4-pool] loaded MIT/b3c0: (1007, 200, 6)
+[stage4-pool] loaded MIT/b3c35: (1091, 200, 6)
+[stage4-pool] loaded MIT/b3c33: (1282, 200, 6)
+[stage4-pool] loaded MIT/b3c38: (1933, 200, 6)
+[stage4-pool] loaded MIT/b4c9: (529, 200, 6)
+[stage4-pool] loaded MIT/b4c36: (713, 200, 6)
+[stage4-pool] loaded MIT/b4c39: (761, 200, 6)
+[stage4-pool] loaded MIT/b4c21: (903, 200, 6)
+[stage4-pool] loaded MIT/b4c0: (982, 200, 6)
+[stage4-pool] loaded MIT/b4c5: (1067, 200, 6)
+[stage4-pool] loaded MIT/b4c38: (1230, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0036: (194, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0038: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0039: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0040: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0041: (25, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0051: (22, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c0: (1187, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c18: (688, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c12: (489, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c44: (477, 200, 6)
+[stage4-2a] fit=28 val=7 test=6 batteries (41 total loaded, 258.4s)
+
+[stage4-2a] === refitting channel_norm_stats.json on the NEW pool's fit split ===
+[stage4-2a] channel 0 (V_t): clip=[2,3.722] mean=2.95 std=0.5369
+[stage4-2a] channel 1 (I_t): clip=[-4,2.012] mean=-2.002 std=2.039
+[stage4-2a] channel 2 (T_t): clip=[26.41,41.37] mean=33.86 std=2.599
+[stage4-2a] channel 3 (dQdV): clip=[-2.116,0.002671] mean=-0.05121 std=0.261
+[stage4-2a] channel 4 (dVdQ): clip=[-5.455e+04,4455] mean=-2545 std=7930
+[stage4-2a] channel 5 (dIdV): clip=[-47.07,40.52] mean=1.657 std=10.61
+[stage4-2a] saved data/processed/channel_norm_stats.json (OVERWRITES the prior 32-battery-only stats)
+
+[stage4-2a] === retraining ICA fusion encoder ===
+[stage4-2a/encoder] epoch   0 train_mse=0.8793 val_mse=2.2098
+[stage4-2a/encoder] epoch   1 train_mse=0.8025 val_mse=2.0906
+[stage4-2a/encoder] epoch   2 train_mse=0.7302 val_mse=1.9398
+[stage4-2a/encoder] epoch   3 train_mse=0.6426 val_mse=1.7438
+[stage4-2a/encoder] epoch   4 train_mse=0.5503 val_mse=1.5540
+[stage4-2a/encoder] epoch   5 train_mse=0.5125 val_mse=1.4835
+[stage4-2a/encoder] epoch   6 train_mse=0.4891 val_mse=1.4027
+[stage4-2a/encoder] epoch   7 train_mse=0.4746 val_mse=1.3744
+[stage4-2a/encoder] epoch   8 train_mse=0.4562 val_mse=1.3154
+[stage4-2a/encoder] epoch   9 train_mse=0.4478 val_mse=1.2972
+[stage4-2a/encoder] epoch  10 train_mse=0.4301 val_mse=1.2479
+[stage4-2a/encoder] epoch  11 train_mse=0.4192 val_mse=1.2687
+[stage4-2a/encoder] epoch  12 train_mse=0.4007 val_mse=1.1964
+[stage4-2a/encoder] epoch  13 train_mse=0.3874 val_mse=1.1965
+[stage4-2a/encoder] epoch  14 train_mse=0.3653 val_mse=1.1132
+[stage4-2a/encoder] epoch  15 train_mse=0.3493 val_mse=1.1093
+[stage4-2a/encoder] epoch  16 train_mse=0.3353 val_mse=1.0612
+[stage4-2a/encoder] epoch  17 train_mse=0.3236 val_mse=1.0318
+[stage4-2a/encoder] epoch  18 train_mse=0.3016 val_mse=1.0140
+[stage4-2a/encoder] epoch  19 train_mse=0.2877 val_mse=0.9619
+[stage4-2a/encoder] epoch  20 train_mse=0.2727 val_mse=0.9857
+[stage4-2a/encoder] epoch  21 train_mse=0.2619 val_mse=0.9337
+[stage4-2a/encoder] epoch  22 train_mse=0.2487 val_mse=0.9089
+[stage4-2a/encoder] epoch  23 train_mse=0.2465 val_mse=0.8944
+[stage4-2a/encoder] epoch  24 train_mse=0.2372 val_mse=0.8662
+[stage4-2a] saved models/ica_encoder.pt (OVERWRITES the prior 32-battery-only encoder)
+
+[stage4-2a] === retraining VLSTM (kept for SHAP explainability role only) ===
+[stage4-2a/vlstm] epoch   0 train_mse=0.7956 val_mse=2.2420
+[stage4-2a/vlstm] epoch   1 train_mse=0.6022 val_mse=1.7179
+[stage4-2a/vlstm] epoch   2 train_mse=0.5441 val_mse=1.3937
+[stage4-2a/vlstm] epoch   3 train_mse=0.5154 val_mse=1.2161
+[stage4-2a/vlstm] epoch   4 train_mse=0.5071 val_mse=1.1449
+[stage4-2a/vlstm] epoch   5 train_mse=0.5022 val_mse=1.1201
+[stage4-2a/vlstm] epoch   6 train_mse=0.4955 val_mse=1.0957
+[stage4-2a/vlstm] epoch   7 train_mse=0.4882 val_mse=1.1220
+[stage4-2a/vlstm] epoch   8 train_mse=0.4797 val_mse=1.1290
+[stage4-2a/vlstm] epoch   9 train_mse=0.4681 val_mse=1.1472
+[stage4-2a/vlstm] epoch  10 train_mse=0.4579 val_mse=1.1910
+[stage4-2a/vlstm] epoch  11 train_mse=0.4535 val_mse=1.2125
+[stage4-2a/vlstm] epoch  12 train_mse=0.4420 val_mse=1.2133
+[stage4-2a/vlstm] epoch  13 train_mse=0.4164 val_mse=1.3564
+[stage4-2a/vlstm] epoch  14 train_mse=0.3794 val_mse=1.3978
+[stage4-2a/vlstm] early stopping at epoch 14
+[stage4-2a] saved models/vlstm_soh.pt (OVERWRITES the prior 32-battery-only VLSTM)
+
+[stage4-2a] === regenerating fusion_embeddings.csv for the full new pool ===
+[stage4-2a] saved 26762 embeddings to data/processed/fusion_embeddings.csv (OVERWRITES the prior 32-battery-only file)
+
+[stage4-2a] ALL DONE in 1500.5s (25.0 min)

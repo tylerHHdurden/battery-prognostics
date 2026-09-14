@@ -483,10 +483,16 @@ def _comparison_picker(label_prefix: str, key_prefix: str):
         cycles = load_battery_cycles(dataset, battery_id)
     except (FileNotFoundError, OSError, KeyError) as e:
         st.error(f"Could not load {dataset}/{battery_id}: {e}")
-        return None, None, None
+        return None, None, None, None
     idx = st.slider(f"{label_prefix} cycle", 1, len(cycles), value=len(cycles),
                      key=f"{key_prefix}_cycle")
-    return dataset, battery_id, cycles[idx - 1]
+    # Stage 4: this battery's own cycle-10 raw HI values, for the
+    # canonical 1.1-reformulated (_rel) feature set.
+    from health_indicators import compute_health_indicators as _compute_his
+    from stage1_common import BASELINE_CYCLE as _BASELINE_CYCLE
+    baseline_cycle = next((c for c in cycles if c["cycle_idx"] == _BASELINE_CYCLE), cycles[0])
+    baseline_his = _compute_his(baseline_cycle)
+    return dataset, battery_id, cycles[idx - 1], baseline_his
 
 
 def render_battery_comparison_section():
@@ -496,10 +502,10 @@ def render_battery_comparison_section():
     col_a, col_b = st.columns(2)
     with col_a:
         st.markdown("### Battery A")
-        ds_a, bid_a, cyc_a = _comparison_picker("A", "cmp_a")
+        ds_a, bid_a, cyc_a, base_his_a = _comparison_picker("A", "cmp_a")
     with col_b:
         st.markdown("### Battery B")
-        ds_b, bid_b, cyc_b = _comparison_picker("B", "cmp_b")
+        ds_b, bid_b, cyc_b, base_his_b = _comparison_picker("B", "cmp_b")
 
     if cyc_a is None or cyc_b is None:
         st.info("Select both batteries above to compare.")
@@ -507,8 +513,8 @@ def render_battery_comparison_section():
 
     res = get_resources()
     with st.spinner("Running live inference for both batteries..."):
-        ctx_a = predict_and_explain(cyc_a, res)
-        ctx_b = predict_and_explain(cyc_b, res)
+        ctx_a = predict_and_explain(cyc_a, res, baseline_his=base_his_a)
+        ctx_b = predict_and_explain(cyc_b, res, baseline_his=base_his_b)
 
     col_a, col_b = st.columns(2)
     for col, ds, bid, cyc, ctx in [(col_a, ds_a, bid_a, cyc_a, ctx_a), (col_b, ds_b, bid_b, cyc_b, ctx_b)]:
@@ -1739,10 +1745,19 @@ def render_streaming_twin_tab(res: dict):
         soh_lookup = hi_df[(hi_df["dataset"] == dataset) & (hi_df["battery_id"] == battery_id)] \
             .set_index("cycle_idx")["SOH"].to_dict()
 
+        # Stage 4: this battery's own cycle-10 raw HI values, for the
+        # canonical 1.1-reformulated (_rel) feature set - computed once
+        # here (not per streamed cycle) from the already-loaded `cycles`.
+        from health_indicators import compute_health_indicators as _compute_his
+        from stage1_common import BASELINE_CYCLE as _BASELINE_CYCLE
+        baseline_cycle = next((c for c in cycles if c["cycle_idx"] == _BASELINE_CYCLE), cycles[0])
+        baseline_his = _compute_his(baseline_cycle)
+
         twin = StreamingDigitalTwin(
             res["xgb_fusion"], res["encoder"], res["ocsvm"], res["ocsvm_scaler"],
             res["ocsvm_feature_cols"], res["bfa_selected"], res["train_medians"],
             res["norm_stats"], res["constants"]["soh_conformal_half_width"],
+            baseline_his=baseline_his,
         )
 
         n_stream = min(max_cycles, max(0, len(cycles) - 5))
@@ -1937,8 +1952,12 @@ def main():
                    "signal every prediction below is ultimately derived from.")
 
         res = get_resources()
-        with st.spinner("Running fusion ensemble + joint-adaptive model + SHAP explanation..."):
-            ctx = predict_and_explain(selected_cycle, res)
+        with st.spinner("Running XGBoost-fusion + RUL joint model + SHAP explanation..."):
+            from health_indicators import compute_health_indicators as _compute_his
+            from stage1_common import BASELINE_CYCLE as _BASELINE_CYCLE
+            _baseline_cycle = next((c for c in cycles if c["cycle_idx"] == _BASELINE_CYCLE), cycles[0])
+            _baseline_his = _compute_his(_baseline_cycle)
+            ctx = predict_and_explain(selected_cycle, res, baseline_his=_baseline_his)
 
         if "error" in ctx:
             st.error(ctx["error"])

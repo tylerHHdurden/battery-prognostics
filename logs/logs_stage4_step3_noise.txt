@@ -1,0 +1,44 @@
+[stage4-noise] canonical (Stage 4) feature set: ['ICHV_rel', 'SCV', 'VDEDT', 'VIECT', 'MATD', 'MET', 'TEVD_rel', 'TEVI_rel', 'cycle_idx']
+[stage4-noise] loading raw test-battery cycles ONCE (reused across all noise levels)...
+[stage4-noise]   NASA/B0018: 132 cycles loaded
+[stage4-noise]   MIT/b1c4: 1225 cycles loaded
+[stage4-noise]   MIT/b2c24: 523 cycles loaded
+[stage4-noise]   MIT/b3c0: 1007 cycles loaded
+[stage4-noise]   MIT/b3c35: 1091 cycles loaded
+[stage4-noise]   MIT/b4c38: 1230 cycles loaded
+
+[stage4-noise] === noise level: clean (baseline) ===
+[stage4-noise] clean (baseline): n=5208 RMSE=0.7805 MAE=0.3063 R2=0.9740
+
+[stage4-noise] === noise level: 1x BMS-grade ===
+[stage4-noise] 1x BMS-grade: n=5208 RMSE=0.8135 MAE=0.3480 R2=0.9717
+
+[stage4-noise] === noise level: 2x BMS-grade ===
+[stage4-noise] 2x BMS-grade: n=5208 RMSE=0.8138 MAE=0.3542 R2=0.9717
+
+[stage4-noise] === noise level: 5x BMS-grade (stress) ===
+[stage4-noise] 5x BMS-grade (stress): n=5208 RMSE=0.8950 MAE=0.4538 R2=0.9658
+
+[stage4-noise] === AGGREGATE (all 6 test batteries pooled) ===
+          noise_level  sigma_V_mV  sigma_I_mA  sigma_T_degC    n     rmse      mae       r2  delta_rmse_vs_clean  delta_r2_vs_clean
+     clean (baseline)         0.0         0.0           0.0 5208 0.780493 0.306346 0.973957             0.000000           0.000000
+         1x BMS-grade         1.0        10.0           0.5 5208 0.813541 0.347991 0.971705             0.033048          -0.002252
+         2x BMS-grade         2.0        20.0           1.0 5208 0.813781 0.354232 0.971688             0.033288          -0.002269
+5x BMS-grade (stress)         5.0        50.0           2.5 5208 0.895049 0.453756 0.965751             0.114556          -0.008206
+
+[stage4-noise] prior (lean, pre-Stage-4) result for comparison: clean R2=0.9750, 1x=0.9742, 2x=0.9736, 5x-stress=... (session 26/47's monotonic-degradation, no-collapse finding)
+
+[stage4-noise] === per-battery breakdown ===
+noise_level         clean (baseline)  1x BMS-grade  2x BMS-grade  5x BMS-grade (stress)
+dataset battery_id                                                                     
+MIT     b1c4                0.980377      0.963553      0.963949               0.855760
+        b2c24               0.985276      0.975977      0.973695               0.951117
+        b3c0                0.998449      0.997994      0.997277               0.995469
+        b3c35               0.995926      0.995885      0.995142               0.991960
+        b4c38               0.992816      0.993328      0.994408               0.995124
+NASA    B0018               0.729137      0.721740      0.724369               0.732512
+
+[stage4-noise] monotonic degradation pattern (R2 non-increasing with noise level, within tolerance): True
+
+[stage4-noise] saved outputs/stage4_noise_robustness_{summary,per_battery}.csv
+[stage4-noise] DONE

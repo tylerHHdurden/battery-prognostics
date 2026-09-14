@@ -1,0 +1,74 @@
+[stage4-grade] Stage 4 model test-set rows: 5208, 6 batteries
+
+[stage4-grade] grading agreement: 98.98% of 5208 test cycles (prior lean model, session 25: 98.75%)
+[stage4-grade] misgrade breakdown:
+    correct: 5155 (98.98%)
+    risky (predicted too optimistic): 50 (0.96%)
+    conservative (predicted too pessimistic): 3 (0.06%)
+
+[stage4-grade] RISKY misgrades: 50
+dataset battery_id  cycle_idx       SOH  y_pred_soh_fusion            true_grade     pred_grade
+   NASA      B0018         77 79.943107          83.192650 Second-life candidate Primary EV use
+   NASA      B0018         78 79.645337          83.132866 Second-life candidate Primary EV use
+   NASA      B0018         79 79.106765          82.851501 Second-life candidate Primary EV use
+   NASA      B0018         80 78.551954          82.533386 Second-life candidate Primary EV use
+   NASA      B0018         82 78.262757          82.666748 Second-life candidate Primary EV use
+   NASA      B0018         83 78.085654          82.631325 Second-life candidate Primary EV use
+   NASA      B0018         84 77.509279          81.821968 Second-life candidate Primary EV use
+   NASA      B0018         85 77.306105          82.336899 Second-life candidate Primary EV use
+   NASA      B0018         87 78.807806          82.967995 Second-life candidate Primary EV use
+   NASA      B0018         88 78.278955          83.421898 Second-life candidate Primary EV use
+   NASA      B0018         89 77.494549          82.934708 Second-life candidate Primary EV use
+   NASA      B0018         90 76.793523          82.811256 Second-life candidate Primary EV use
+   NASA      B0018         92 77.491396          82.780128 Second-life candidate Primary EV use
+   NASA      B0018         93 77.023987          82.834694 Second-life candidate Primary EV use
+   NASA      B0018         94 76.799267          82.208664 Second-life candidate Primary EV use
+   NASA      B0018         95 76.263208          82.568451 Second-life candidate Primary EV use
+   NASA      B0018         97 75.784406          81.737617 Second-life candidate Primary EV use
+   NASA      B0018         98 75.606034          81.132065 Second-life candidate Primary EV use
+   NASA      B0018         99 75.378027          81.182800 Second-life candidate Primary EV use
+   NASA      B0018        102 74.345079          81.529449 Second-life candidate Primary EV use
+   NASA      B0018        105 73.606630          80.828560 Second-life candidate Primary EV use
+   NASA      B0018        107 78.673145          83.133911 Second-life candidate Primary EV use
+   NASA      B0018        108 78.024315          83.421562 Second-life candidate Primary EV use
+   NASA      B0018        109 77.494122          82.960228 Second-life candidate Primary EV use
+   NASA      B0018        110 76.757318          82.457222 Second-life candidate Primary EV use
+   NASA      B0018        112 75.897166          82.697472 Second-life candidate Primary EV use
+   NASA      B0018        113 75.701803          82.552124 Second-life candidate Primary EV use
+   NASA      B0018        114 75.415012          82.526901 Second-life candidate Primary EV use
+   NASA      B0018        115 75.196968          81.294426 Second-life candidate Primary EV use
+   NASA      B0018        117 74.662869          82.278458 Second-life candidate Primary EV use
+   NASA      B0018        118 74.040809          81.173676 Second-life candidate Primary EV use
+   NASA      B0018        119 73.729859          81.506859 Second-life candidate Primary EV use
+   NASA      B0018        120 73.037877          81.649544 Second-life candidate Primary EV use
+   NASA      B0018        122 76.304881          82.001007 Second-life candidate Primary EV use
+   NASA      B0018        123 75.601895          82.450768 Second-life candidate Primary EV use
+   NASA      B0018        124 75.317530          81.319901 Second-life candidate Primary EV use
+   NASA      B0018        125 74.337628          82.013870 Second-life candidate Primary EV use
+   NASA      B0018        127 74.254663          83.544930 Second-life candidate Primary EV use
+   NASA      B0018        128 73.933403          83.435577 Second-life candidate Primary EV use
+   NASA      B0018        129 73.969641          80.978493 Second-life candidate Primary EV use
+   NASA      B0018        130 73.343527          82.221146 Second-life candidate Primary EV use
+   NASA      B0018        132 72.756873          82.600761 Second-life candidate Primary EV use
+    MIT      b4c38       1210 79.994800          81.303398 Second-life candidate Primary EV use
+    MIT      b4c38       1211 79.920670          81.253403 Second-life candidate Primary EV use
+    MIT      b4c38       1212 79.846737          81.823669 Second-life candidate Primary EV use
+    MIT      b4c38       1213 79.766506          81.218040 Second-life candidate Primary EV use
+    MIT      b4c38       1214 79.682784          81.223495 Second-life candidate Primary EV use
+    MIT      b4c38       1215 79.604598          81.229759 Second-life candidate Primary EV use
+    MIT      b4c38       1216 79.523765          80.223412 Second-life candidate Primary EV use
+    MIT      b4c38       1217 79.445822          80.285149 Second-life candidate Primary EV use
+
+[stage4-grade] === per-battery CURRENT-STATUS grade (last test cycle per battery) ===
+dataset battery_id  cycle_idx       SOH  y_pred_soh_fusion            true_grade            pred_grade
+   NASA      B0018        132 72.756873          82.600761 Second-life candidate        Primary EV use
+    MIT       b1c4       1225 94.712507          95.240677        Primary EV use        Primary EV use
+    MIT      b2c24        523 77.280234          75.820129 Second-life candidate Second-life candidate
+    MIT       b3c0       1007 82.415552          82.890793        Primary EV use        Primary EV use
+    MIT      b3c35       1091 82.734079          83.723099        Primary EV use        Primary EV use
+    MIT      b4c38       1230 78.349593          79.681389 Second-life candidate Second-life candidate
+
+[stage4-grade] B0018 (known mis-certification battery from prior sessions): true SOH=72.76 pred SOH=82.60 error=+9.84 true_grade=Second-life candidate pred_grade=Primary EV use misgraded=YES
+
+[stage4-grade] saved outputs/stage4_second_life_grading_current_status.csv
+[stage4-grade] DONE

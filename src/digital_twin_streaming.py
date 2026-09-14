@@ -76,6 +76,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "models"))
 
 from health_indicators import compute_health_indicators
 from sequence_features import get_cycle_tensor, apply_channel_norm
+from live_inference import build_reformulated_hi_vector
 
 CONFORMAL_WINDOW = 10  # score-buffer size ACI's quantile is drawn from - kept IDENTICAL to session 28's sliding-window size, deliberately, so this session's comparison isolates the effect of the alpha-adaptation mechanism itself, not a side effect of also handing ACI a bigger buffer
 MIN_HISTORY_FOR_CORRECTION = 2  # need at least this many revealed cycles before the online corrector is trusted at all
@@ -160,18 +161,24 @@ class StreamingDigitalTwin:
 
     def __init__(self, xgb_fusion, encoder, ocsvm, ocsvm_scaler, ocsvm_feature_cols,
                  bfa_selected, train_medians, norm_stats, fallback_half_width,
-                 window: int = CONFORMAL_WINDOW):
+                 window: int = CONFORMAL_WINDOW, baseline_his: dict | None = None):
         # --- frozen, pretrained components (never modified) ---
         self.xgb_fusion = xgb_fusion
         self.encoder = encoder
         self.ocsvm = ocsvm
         self.ocsvm_scaler = ocsvm_scaler
         self.ocsvm_feature_cols = ocsvm_feature_cols
-        self.bfa_selected = bfa_selected
+        self.bfa_selected = bfa_selected  # kept for API compatibility; no longer used for feature-building (see _raw_predict, Stage 4)
         self.train_medians = train_medians
         self.norm_stats = norm_stats
         self.fallback_half_width = fallback_half_width
         self.window = window
+        # Stage 4: this stream's own battery's cycle-10 raw HI values,
+        # for the canonical 1.1-reformulated (_rel) feature set - looked
+        # up ONCE by the caller (app.py, from this same battery's full
+        # cycle list) and passed in here, exactly as live_inference.py's
+        # predict_and_explain expects it (see build_reformulated_hi_vector).
+        self.baseline_his = baseline_his
 
         # --- online-updating state (this is what actually changes) ---
         # Bug caught by run_streaming_dt_test.py before this ever reached
@@ -202,10 +209,11 @@ class StreamingDigitalTwin:
 
     def _raw_predict(self, cycle: dict):
         his = compute_health_indicators(cycle)
-        hi_vec = np.array([
-            his[c] if (c in his and not np.isnan(his[c])) else self.train_medians[c]
-            for c in self.bfa_selected
-        ], dtype=float)
+        # Stage 4: canonical 1.1-reformulated features + cycle_idx (1.5's
+        # monotone-constrained feature) - same construction as
+        # live_inference.predict_and_explain, reused not duplicated.
+        hi_rel_vec = build_reformulated_hi_vector(his, self.train_medians, self.baseline_his)
+        hi_vec = np.concatenate([hi_rel_vec, [float(cycle["cycle_idx"])]])
         x_raw = get_cycle_tensor(cycle, n_bins=200)
         if x_raw is None:
             return None, None

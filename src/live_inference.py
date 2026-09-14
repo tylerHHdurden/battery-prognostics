@@ -2,21 +2,42 @@
 Generic, live (no-lookup) inference pipeline for the Digital Twin
 dashboard: given ONE cycle record (in the data_adapters convention -
 {"charge": {t,V,I,T}, "discharge": {t,V,I,T}, "discharge_capacity",
-"cycle_idx"}), runs the complete fusion-enabled ensemble (SOH) + the
-joint-adaptive model (RUL) + per-instance SHAP explanation + OC-SVM
-anomaly check + out-of-domain determination, entirely from already-
-trained weights - no retraining, ever (matches "a full pipeline rerun
-per new upload is fine, skip live incremental meta-learner updating").
+"cycle_idx"}), runs XGBoost-fusion (SOH, lean deployment) + the RUL
+joint-fusion model + per-instance SHAP explanation + OC-SVM anomaly
+check + out-of-domain determination, entirely from already-trained
+weights - no retraining, ever.
 
-Deliberately NOT physics-informed models - the fusion ensemble and the
-plain joint-adaptive model, per every instruction in this project since
-they diverged from the physics-informed variant.
+STAGE 4 REWIRE (session: Stage 4 promotion), stated explicitly since
+this changes what was actually running before: prior to this pass the
+deployed app used the FULL 4-branch ensemble (VLSTM/CNN-LSTM/PiFormer +
+XGBoost-fusion, combined via a Ridge meta-learner) for SOH, and the
+OLD, non-fusion `JointSOHRULModel` for RUL - despite session 20's lean
+decision and session 41's fusion joint model both being recommended
+long before this. This module now implements what was actually decided:
+- SOH: XGBoost-fusion ALONE (lean, session 20 + Stage 3.3's NCL result -
+  no ensemble reconfiguration warranted). CNN-LSTM/PiFormer/the Ridge
+  meta-learner are no longer loaded at all.
+- RUL: JointSOHRULModelFusion (session 41's HI-fused architecture),
+  replacing the old bare JointSOHRULModel.
+- VLSTM stays loaded, but ONLY for its SHAP voltage-region
+  explainability feature - not part of either prediction anymore.
+- Features: Stage 1's canonical 1.1-reformulated 8-feature set (+
+  cycle_idx, 1.5's monotone-constrained feature) instead of the older,
+  pre-Stage-1 7-feature bfa_selected_features.txt set.
+
+Reformulated (`_rel`) duration features need a per-battery BASELINE (
+that battery's own cycle-10 raw value) - `predict_and_explain` accepts
+an optional `baseline_his` dict for this (the caller looks it up once
+per battery selection, not on every cycle - see app.py). Without it,
+the function falls back to using the CURRENT cycle's own raw value as
+its baseline (ratio=1.0) - a defensive, disclosed degradation for
+contexts with no other cycle available, not a silent wrong answer.
 
 Uses `data/processed/destandardization_constants.json` and
 `data/processed/shap_background.npy` (both precomputed once by
 `precompute_app_constants.py`) so this module - and the Streamlit app
-built on top of it - never needs to reload the full NASA+MIT battery set
-(a multi-minute operation) to answer a single prediction request.
+built on top of it - never needs to reload the full NASA+MIT battery
+set (a multi-minute operation) to answer a single prediction request.
 """
 
 import json
@@ -38,59 +59,63 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "models"))
 from health_indicators import compute_health_indicators, HI_NAMES
 from sequence_features import get_cycle_tensor, apply_channel_norm, CHANNEL_NAMES
 from models.vlstm import VLSTM
-from models.cnn_lstm import CNNLSTM
-from models.piformer import PiFormer
 from models.ica_encoder import ICAEncoder
-from models.joint_model import JointSOHRULModel
+from stage1_common import canonical_feature_cols, fusion_cols as _fusion_cols, DURATION_FEATURES, BASELINE_CYCLE
+from run_stage1_followup_partB_joint_rul import JointSOHRULModelFusion
 
 ROOT = Path(__file__).resolve().parents[1]
 PROC_DIR = ROOT / "data" / "processed"
 MODELS_DIR = ROOT / "models"
 
+CANONICAL_RAW = canonical_feature_cols(reformulated=False)   # e.g. ICHV, SCV, ...
+CANONICAL_REL = canonical_feature_cols(reformulated=True)    # e.g. ICHV_rel, SCV, ...
+FEATURE_COLS = CANONICAL_REL + ["cycle_idx"]
+
 HI_DESCRIPTIONS = {
-    "ICHV": "time spent charging near peak voltage (high-voltage/CV-tail duration)",
+    "ICHV_rel": "time spent charging near peak voltage (high-voltage/CV-tail duration), relative to this battery's own cycle-10 baseline",
     "SCV": "average capacity-vs-voltage slope during discharge",
     "VDEDT": "rate of voltage collapse near the end of discharge",
     "VIECT": "voltage reached at a fixed elapsed time into charging",
-    "MATC": "mean cell temperature during charging",
     "MATD": "mean cell temperature during discharging",
-    "TEVI": "time spent traversing the mid-range of the discharge voltage curve",
+    "MET": "mean energy during test (average of charge and discharge energy)",
+    "TEVD_rel": "time elapsed until discharge voltage first falls to 50%, relative to this battery's own cycle-10 baseline",
+    "TEVI_rel": "time spent traversing the mid-range of the discharge voltage curve, relative to this battery's own cycle-10 baseline",
+    "cycle_idx": "cycle number (monotone-constrained: the model is constrained to never predict higher SOH for a later cycle)",
 }
 
 
 def load_resources() -> dict:
     """Loads every trained model + precomputed constant ONCE. Callers
     (the Streamlit app) should wrap this in st.cache_resource."""
-    with open(PROC_DIR / "bfa_selected_features.txt") as f:
-        bfa_selected = [l.strip() for l in f if l.strip()]
     norm_stats = json.loads((PROC_DIR / "channel_norm_stats.json").read_text())
     constants = json.loads((PROC_DIR / "destandardization_constants.json").read_text())
     background = np.load(PROC_DIR / "shap_background.npy")
+    # the RUL joint-fusion model's OWN HI feature z-score stats (8
+    # canonical _rel-ratio features, NO cycle_idx - see build_hi_features/
+    # run_stage1_followup_partB_joint_rul.py; this is a DIFFERENT, smaller
+    # feature vector than XGBoost-fusion's own 9-feature (+cycle_idx) one,
+    # and is separately z-scored where XGBoost's is not - both facts
+    # caught by a real shape-mismatch crash in this project's own
+    # pre-promotion smoke test, not assumed).
+    joint_hi_norm = json.loads((PROC_DIR / "joint_hi_norm_stats.json").read_text())
 
     hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
     train_hi = hi_df[hi_df["dataset"].isin(["NASA", "MIT"])]
-    train_medians = train_hi[bfa_selected].median(numeric_only=True).to_dict()
+    train_medians = train_hi[CANONICAL_RAW].median(numeric_only=True).to_dict()
 
     vlstm = VLSTM(input_size=1, hidden_size=32, n_targets=1)
     vlstm.load_state_dict(torch.load(MODELS_DIR / "vlstm_soh.pt"))
     vlstm.eval()
-    cnn_lstm = CNNLSTM()
-    cnn_lstm.load_state_dict(torch.load(MODELS_DIR / "cnn_lstm_soh.pt"))
-    cnn_lstm.eval()
-    piformer = PiFormer()
-    piformer.load_state_dict(torch.load(MODELS_DIR / "piformer_soh.pt"))
-    piformer.eval()
     encoder = ICAEncoder(in_channels=3, embed_dim=16)
     encoder.load_state_dict(torch.load(MODELS_DIR / "ica_encoder.pt"))
     encoder.eval()
-    joint = JointSOHRULModel()
-    joint.load_state_dict(torch.load(MODELS_DIR / "joint_adaptive.pt"))
-    joint.eval()
+    joint_fusion = JointSOHRULModelFusion(n_hi_features=len(CANONICAL_REL))
+    joint_fusion.load_state_dict(torch.load(MODELS_DIR / "joint_adaptive_fusion.pt"))
+    joint_fusion.eval()
 
     xgb_fusion = XGBRegressor()
     xgb_fusion.load_model(str(MODELS_DIR / "xgb_soh_fusion.json"))
-    with open(MODELS_DIR / "ridge_meta_fusion.pkl", "rb") as f:
-        ridge_fusion = pickle.load(f)
+
     with open(MODELS_DIR / "ocsvm_model.pkl", "rb") as f:
         ocsvm = pickle.load(f)
     with open(MODELS_DIR / "ocsvm_scaler.pkl", "rb") as f:
@@ -98,12 +123,15 @@ def load_resources() -> dict:
     ocsvm_feature_cols = json.loads((PROC_DIR / "ocsvm_feature_cols.json").read_text())
 
     return {
-        "bfa_selected": bfa_selected, "norm_stats": norm_stats, "constants": constants,
+        "norm_stats": norm_stats, "constants": constants, "joint_hi_norm": joint_hi_norm,
         "background": background, "train_medians": train_medians,
-        "vlstm": vlstm, "cnn_lstm": cnn_lstm, "piformer": piformer,
-        "encoder": encoder, "joint": joint,
-        "xgb_fusion": xgb_fusion, "ridge_fusion": ridge_fusion,
+        "vlstm": vlstm, "encoder": encoder, "joint_fusion": joint_fusion,
+        "xgb_fusion": xgb_fusion,
         "ocsvm": ocsvm, "ocsvm_scaler": ocsvm_scaler, "ocsvm_feature_cols": ocsvm_feature_cols,
+        # kept for StreamingDigitalTwin's constructor API (digital_twin_streaming.py) -
+        # the canonical reformulated names now, not the old pre-Stage-1 set; no longer
+        # used for feature-BUILDING directly (build_reformulated_hi_vector handles that)
+        "bfa_selected": CANONICAL_REL,
     }
 
 
@@ -120,7 +148,9 @@ def _tree_shap_top_features(feat_vector, xgb_fusion, feature_cols, n_top=3):
 
 def _vlstm_voltage_region(x_raw, x_norm, vlstm, background):
     """Per-instance DeepSHAP on VLSTM's voltage channel, mapped back to
-    real volts via this cycle's own (unnormalized) V(t) curve."""
+    real volts via this cycle's own (unnormalized) V(t) curve. VLSTM is
+    used HERE ONLY, as an explainability tool - not part of either the
+    SOH or RUL prediction (see module docstring)."""
     raw_v_t = x_raw[:, 0].copy()
     bg = torch.tensor(background[:, :, 0:1], dtype=torch.float32)
     test_sample = torch.tensor(x_norm[None, :, 0:1], dtype=torch.float32)
@@ -141,22 +171,63 @@ def _vlstm_voltage_region(x_raw, x_norm, vlstm, background):
     return {"v_lo": round(v_lo, 2), "v_hi": round(v_hi, 2), "frac_of_attribution": round(frac_mass, 3)}, None
 
 
-def predict_and_explain(cycle: dict, res: dict) -> dict:
-    """cycle: single cycle record (data_adapters convention). Returns a
-    full context dict for display, or {"error": ...} if the cycle is too
-    short/malformed for the sequence models."""
-    bfa_selected = res["bfa_selected"]
+def build_reformulated_hi_vector(his: dict, train_medians: dict, baseline_his: dict | None) -> np.ndarray:
+    """Builds the canonical 1.1-reformulated feature vector (8 features,
+    NOT including cycle_idx - added separately by the caller) for ONE
+    cycle's raw HI dict.
+
+    baseline_his: this SAME battery's own cycle-10 (BASELINE_CYCLE) raw
+    HI dict, as returned by compute_health_indicators - looked up ONCE
+    per battery selection by the caller (app.py), not recomputed here.
+    If None (no other cycle available in this context), falls back to
+    using THIS cycle's own raw value as its baseline (ratio=1.0 for
+    every duration feature) - a disclosed degradation, not silently
+    wrong: this only fires when the caller genuinely has no other cycle
+    to offer (e.g. a single isolated cycle with no battery history)."""
+    vec = np.zeros(len(CANONICAL_REL), dtype=float)
+    for i, col in enumerate(CANONICAL_REL):
+        raw_feat = col[:-4] if col.endswith("_rel") else col
+        raw_val = his.get(raw_feat)
+        if raw_val is None or raw_val != raw_val:  # NaN check without pandas
+            raw_val = train_medians.get(raw_feat, 0.0)
+
+        if col.endswith("_rel"):
+            base_val = None
+            if baseline_his is not None:
+                base_val = baseline_his.get(raw_feat)
+                if base_val is not None and (base_val != base_val or abs(base_val) < 1e-6):
+                    base_val = None
+            if base_val is None:
+                base_val = raw_val if abs(raw_val) >= 1e-6 else train_medians.get(raw_feat, 1.0)
+            vec[i] = raw_val / base_val if abs(base_val) >= 1e-6 else 1.0
+        else:
+            vec[i] = raw_val
+    return vec
+
+
+def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None) -> dict:
+    """cycle: single cycle record (data_adapters convention). baseline_his:
+    optional - this battery's own cycle-10 raw HI dict (see
+    build_reformulated_hi_vector). Returns a full context dict for
+    display, or {"error": ...} if the cycle is too short/malformed for
+    the sequence models."""
     train_medians = res["train_medians"]
 
     # 1. Health Indicators (always computable, even for very short cycles)
     his = compute_health_indicators(cycle)
-    hi_vector = np.array([
-        his[c] if (c in his and not (his[c] != his[c])) else train_medians[c]  # NaN check without pandas
-        for c in bfa_selected
-    ], dtype=float)
+    hi_rel_vector = build_reformulated_hi_vector(his, train_medians, baseline_his)  # 8-dim, no cycle_idx
+    hi_vector = np.concatenate([hi_rel_vector, [float(cycle["cycle_idx"])]])  # 9-dim, XGBoost's own feature set (1.5's cycle_idx)
     no_temperature = cycle["discharge"]["T"] is None
 
-    # 2. sequence tensor (needed for VLSTM/CNN-LSTM/PiFormer/fusion/joint/RUL)
+    # RUL joint-fusion model's own input: the SAME 8 _rel-ratio features
+    # (no cycle_idx - it was never part of that model's feature set),
+    # z-scored with ITS OWN fit-split mean/std (a different normalization
+    # than XGBoost's, which uses raw values - see load_resources).
+    jn = res["joint_hi_norm"]
+    hi_rel_z = (hi_rel_vector - np.array(jn["hi_mean"])) / np.array(jn["hi_std"])
+
+    # 2. sequence tensor (needed for VLSTM's SHAP explanation, the
+    # fusion embedding, and RUL's joint model)
     x_raw = get_cycle_tensor(cycle, n_bins=200)
     if x_raw is None:
         return {"error": "This cycle is too short (or its ICA computation failed) for the "
@@ -171,24 +242,18 @@ def predict_and_explain(cycle: dict, res: dict) -> dict:
         return float(t.detach().numpy().reshape(-1)[0]) * std + mean
 
     with torch.no_grad():
-        pred_vlstm = destd(res["vlstm"](torch.tensor(x_norm[None, :, 0:1])), soh_mean, soh_std)
-        pred_cnnlstm = destd(res["cnn_lstm"](torch.tensor(x_norm[None])), soh_mean, soh_std)
-        pred_piformer = destd(res["piformer"](torch.tensor(x_norm[None])), soh_mean, soh_std)
         fusion_emb = res["encoder"].encode(torch.tensor(x_norm[None, :, 3:6])).numpy()[0]
-        _, pred_rul_z = res["joint"](torch.tensor(x_norm[None]))
+        _, pred_rul_z = res["joint_fusion"](torch.tensor(x_norm[None]), torch.tensor(hi_rel_z[None], dtype=torch.float32))
         pred_rul = destd(pred_rul_z, rul_mean, rul_std)
 
     feat_vector = np.concatenate([hi_vector, fusion_emb])
-    pred_xgb_fusion = float(res["xgb_fusion"].predict(feat_vector.reshape(1, -1))[0])
-
-    meta_vector = np.concatenate([[pred_xgb_fusion, pred_vlstm, pred_cnnlstm, pred_piformer], fusion_emb])
-    pred_soh = float(res["ridge_fusion"].predict(meta_vector.reshape(1, -1))[0])
+    pred_soh = float(res["xgb_fusion"].predict(feat_vector.reshape(1, -1))[0])
 
     soh_half = res["constants"]["soh_conformal_half_width"]
     rul_half = res["constants"]["rul_conformal_half_width"]
 
-    # OC-SVM anomaly check (same 23-feature vector, in the order saved by train_ocsvm.py)
-    ocsvm_feat = feat_vector.reshape(1, -1)  # feature_cols == bfa_selected + fusion_cols, same order
+    # OC-SVM anomaly check (same feature vector, in the order saved by train_ocsvm.py)
+    ocsvm_feat = feat_vector.reshape(1, -1)
     ocsvm_scaled = res["ocsvm_scaler"].transform(ocsvm_feat)
     anomaly_flag = bool(res["ocsvm"].predict(ocsvm_scaled)[0] == -1)
 
@@ -202,7 +267,7 @@ def predict_and_explain(cycle: dict, res: dict) -> dict:
                                "anything in the NASA+MIT training data")
 
     top_features = _tree_shap_top_features(feat_vector, res["xgb_fusion"],
-                                            bfa_selected + [f"fusion_{i}" for i in range(16)])
+                                            FEATURE_COLS + [f"fusion_{i}" for i in range(16)])
     voltage_region, voltage_region_error = _vlstm_voltage_region(
         x_raw, x_norm, res["vlstm"], res["background"]
     )
@@ -212,8 +277,7 @@ def predict_and_explain(cycle: dict, res: dict) -> dict:
         "soh_conformal_lo": round(pred_soh - soh_half, 1),
         "soh_conformal_hi": round(pred_soh + soh_half, 1),
         # clip to >=0 for display - the raw regression output can go
-        # slightly negative for deeply past-EOL cycles (e.g. -15 observed
-        # on NASA B0005's last logged cycle, true RUL=0), which is a
+        # slightly negative for deeply past-EOL cycles, which is a
         # faithful regression residual but a meaningless thing to show a
         # dashboard user ("-15 cycles remaining" isn't interpretable).
         "rul_pred": max(0, round(pred_rul)),

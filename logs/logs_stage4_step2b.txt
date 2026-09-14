@@ -1,0 +1,127 @@
+[stage4-2b] backed up models/xgb_soh_fusion.json -> _pre_stage4_backup/xgb_soh_fusion.json
+[stage4-2b] === retraining XGBoost-fusion (1.1+1.5 canonical) on the NEW pool ===
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage4-2b] pool: 26696 rows, 40 batteries (21488 train rows, 5208 test rows)
+[stage4-2b] in-domain (fixed test-battery split) SOH R2=0.9740 RMSE=0.7805
+[stage4-2b] saved models/xgb_soh_fusion.json (OVERWRITES the prior 32-battery/stale-feature-set model)
+[stage4-2b] saved data/processed/predictions/xgb_fusion_preds_stage4.csv (per-cycle train+test predictions, for Step 3's grading re-run)
+
+[stage4-2b] === GroupKFold(5) in-domain SOH CV (Stage 2.3 protocol) ===
+[stage4-2b] fold 0: 6 test batteries, 5487 rows, R2=0.9936 RMSE=0.4229
+[stage4-2b] fold 1: 9 test batteries, 5254 rows, R2=0.9581 RMSE=0.9305
+[stage4-2b] fold 2: 9 test batteries, 5270 rows, R2=0.9409 RMSE=1.7077
+[stage4-2b] fold 3: 8 test batteries, 5355 rows, R2=0.9793 RMSE=0.9012
+[stage4-2b] fold 4: 8 test batteries, 5330 rows, R2=0.9570 RMSE=1.7315
+[stage4-2b] GroupKFold mean R2=0.9658 (std=0.0207), mean RMSE=1.1388 (std=0.5673)
+
+[stage4-2b] === Jackknife+/CV+ SOH calibration (Stage 1.6's method) ===
+[stage4-2b] calibration batteries: ['B0018', 'b2c24', 'b3c35']
+[stage4-2b] SOH Jackknife+/CV+ (in-domain eval battery split): coverage=0.9919 avg_width=9.8569
+
+[stage4-2b] === retraining RUL joint model (JointSOHRULModelFusion) on the NEW pool ===
+[stage4-pool] loaded NASA/B0005: (168, 200, 6)
+[stage4-pool] loaded NASA/B0006: (168, 200, 6)
+[stage4-pool] loaded NASA/B0007: (168, 200, 6)
+[stage4-pool] loaded NASA/B0018: (132, 200, 6)
+[stage4-pool] loaded MIT/b1c20: (532, 200, 6)
+[stage4-pool] loaded MIT/b1c43: (649, 200, 6)
+[stage4-pool] loaded MIT/b1c32: (729, 200, 6)
+[stage4-pool] loaded MIT/b1c17: (855, 200, 6)
+[stage4-pool] loaded MIT/b1c22: (889, 200, 6)
+[stage4-pool] loaded MIT/b1c41: (1049, 200, 6)
+[stage4-pool] loaded MIT/b1c4: (1225, 200, 6)
+[stage4-pool] loaded MIT/b2c1: (169, 200, 6)
+[stage4-pool] loaded MIT/b2c44: (478, 200, 6)
+[stage4-pool] loaded MIT/b2c42: (491, 200, 6)
+[stage4-pool] loaded MIT/b2c13: (519, 200, 6)
+[stage4-pool] loaded MIT/b2c24: (523, 200, 6)
+[stage4-pool] loaded MIT/b2c32: (543, 200, 6)
+[stage4-pool] loaded MIT/b2c9: (1059, 200, 6)
+[stage4-pool] loaded MIT/b3c28: (539, 200, 6)
+[stage4-pool] loaded MIT/b3c13: (814, 200, 6)
+[stage4-pool] loaded MIT/b3c14: (856, 200, 6)
+[stage4-pool] loaded MIT/b3c0: (1007, 200, 6)
+[stage4-pool] loaded MIT/b3c35: (1091, 200, 6)
+[stage4-pool] loaded MIT/b3c33: (1282, 200, 6)
+[stage4-pool] loaded MIT/b3c38: (1933, 200, 6)
+[stage4-pool] loaded MIT/b4c9: (529, 200, 6)
+[stage4-pool] loaded MIT/b4c36: (713, 200, 6)
+[stage4-pool] loaded MIT/b4c39: (761, 200, 6)
+[stage4-pool] loaded MIT/b4c21: (903, 200, 6)
+[stage4-pool] loaded MIT/b4c0: (982, 200, 6)
+[stage4-pool] loaded MIT/b4c5: (1067, 200, 6)
+[stage4-pool] loaded MIT/b4c38: (1230, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0036: (194, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0038: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0039: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0040: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0041: (25, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0051: (22, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c0: (1187, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c18: (688, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c12: (489, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c44: (477, 200, 6)
+[stage4-2b] joint model: fit=14666 val=6888 test=5208 cycles
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[joint-fusion] 66 rows missing ICHV_rel - imputed with train median 0.9593
+[joint-fusion] 66 rows missing SCV - imputed with train median 0.6600
+[joint-fusion] 66 rows missing VDEDT - imputed with train median 0.0446
+[joint-fusion] 66 rows missing VIECT - imputed with train median 3.4377
+[joint-fusion] 66 rows missing MATD - imputed with train median 34.2737
+[joint-fusion] 66 rows missing MET - imputed with train median 0.0534
+[joint-fusion] 66 rows missing TEVD_rel - imputed with train median 0.8930
+[joint-fusion] 66 rows missing TEVI_rel - imputed with train median 0.9514
+[stage4-2b/joint] epoch  0 train=0.3640 val_soh=0.6067 val_rul=2.6471 alpha=0.792 beta=0.785
+[stage4-2b/joint] epoch  1 train=-0.2177 val_soh=0.4259 val_rul=2.4254 alpha=1.279 beta=1.180
+[stage4-2b/joint] epoch  2 train=-0.6012 val_soh=0.2359 val_rul=2.1392 alpha=1.963 beta=1.672
+[stage4-2b/joint] epoch  3 train=-0.8431 val_soh=0.1564 val_rul=2.2799 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch  4 train=-0.9284 val_soh=0.1082 val_rul=2.0740 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch  5 train=-0.9858 val_soh=0.0997 val_rul=2.0431 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch  6 train=-1.0150 val_soh=0.0749 val_rul=1.8883 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch  7 train=-1.0390 val_soh=0.0668 val_rul=2.0146 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch  8 train=-1.0652 val_soh=0.0675 val_rul=2.1668 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch  9 train=-1.0634 val_soh=0.0568 val_rul=1.6983 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 10 train=-1.0886 val_soh=0.0515 val_rul=1.9807 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 11 train=-1.1042 val_soh=0.0559 val_rul=1.8566 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 12 train=-1.1200 val_soh=0.0495 val_rul=1.9611 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 13 train=-1.1201 val_soh=0.0501 val_rul=1.7998 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 14 train=-1.1276 val_soh=0.0483 val_rul=1.8764 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 15 train=-1.1396 val_soh=0.0503 val_rul=1.9124 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 16 train=-1.1500 val_soh=0.0458 val_rul=1.9311 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 17 train=-1.1499 val_soh=0.0515 val_rul=1.8021 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 18 train=-1.1684 val_soh=0.0545 val_rul=1.9785 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 19 train=-1.1725 val_soh=0.0530 val_rul=1.8145 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 20 train=-1.1707 val_soh=0.0485 val_rul=1.9104 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 21 train=-1.1934 val_soh=0.0483 val_rul=1.8507 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 22 train=-1.1874 val_soh=0.0504 val_rul=1.8369 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 23 train=-1.1775 val_soh=0.0611 val_rul=1.8952 alpha=2.028 beta=2.028
+[stage4-2b/joint] epoch 24 train=-1.1990 val_soh=0.0516 val_rul=2.0639 alpha=2.028 beta=2.028
+
+[stage4-2b] joint model TEST SOH: {'rmse': 1.2402886326253029, 'mae': 0.7306308746337891, 'r2': 0.934234082698822}
+[stage4-2b] joint model TEST RUL: {'rmse': 265.2997862089225, 'mae': 170.9613800048828, 'r2': 0.373879611492157}
+[stage4-2b] saved models/joint_adaptive_fusion.pt (NEW file - deployed app will be repointed to this in Step 4, replacing the stale joint_adaptive.pt)
+
+[stage4-2b] === RUL split-conformal calibration ===
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[stage4-2b] RUL split-conformal coverage=0.9887 avg_width=962.6326
+
+[stage4-2b] === compressed model (n=100, depth=3 - session 35 Part 5's config) ===
+[stage4-2b] compressed model: R2=0.9459 RMSE=1.1247 UBJ size=114.6KB (session 35 Part 5's own number for this config: 114.9KB, R2=0.9119 - on the OLD 32-battery/stale-feature-set model)
+[stage4-2b] saved models/xgb_soh_fusion_compressed.{json,ubj} (NEW files - the embedded/BMS-feasible variant, deployed ALONGSIDE the full model)
+
+[stage4-2b] === CALCE zero-retrain evaluation ===
+[stage4-2b] CALCE point accuracy: R2=0.5679 RMSE=14.1553
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[stage4-2b] CALCE PLAIN split-conformal (PRIMARY, deployed number): coverage=0.0269 avg_width=2.2875
+[stage4-2b] KMM-CP context (documented-but-NOT-adopted, Stage 3.1 result on the PRIOR 32-battery model): coverage=34.04% avg_width=9.924 - NOT recomputed against this new model/pool in this pass; reported here only as documented context per instruction, not as this deployment's actual calibration.
+
+[stage4-2b] saved outputs/stage4_groupkfold_cv.csv, outputs/stage4_step2b_summary.csv
+[stage4-2b] ALL DONE in 1015.0s (16.9 min)

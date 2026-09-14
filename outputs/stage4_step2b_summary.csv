@@ -1,0 +1,17 @@
+metric,value
+soh_indomain_r2,0.9739568832487542
+soh_indomain_rmse,0.780492685553031
+soh_groupkfold_mean_r2,0.9657628399971541
+soh_groupkfold_mean_rmse,1.1387732065275267
+soh_jackknife_coverage,0.9919121894858464
+soh_jackknife_width,9.856942808405663
+rul_joint_r2,0.373879611492157
+rul_joint_rmse,265.2997862089225
+rul_split_conformal_coverage,0.988734835355286
+rul_split_conformal_width,962.6326293945312
+calce_r2,0.5678764726067165
+calce_rmse,14.155331877704725
+calce_plain_coverage,0.0268616116967018
+calce_plain_width,2.2875144032204844
+joint_soh_test_r2,0.934234082698822
+joint_soh_test_rmse,1.2402886326253029

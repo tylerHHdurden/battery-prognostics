@@ -24,17 +24,28 @@ from sklearn.svm import OneClassSVM
 from sklearn.preprocessing import StandardScaler
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from stage1_common import canonical_feature_cols, add_reformulated_duration_features
 
 ROOT = Path(__file__).resolve().parents[1]
 PROC_DIR = ROOT / "data" / "processed"
 
 
 def main():
-    with open(PROC_DIR / "bfa_selected_features.txt") as f:
-        selected = [l.strip() for l in f if l.strip()]
+    # STAGE 4: canonical 1.1-reformulated feature set + cycle_idx (1.5's
+    # monotone-constrained feature), replacing the old pre-Stage-1
+    # bfa_selected_features.txt set - matching what live_inference.py's
+    # feature vector now actually contains.
+    selected = canonical_feature_cols(reformulated=True) + ["cycle_idx"]
 
     hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
-    hi_df = hi_df[hi_df["dataset"].isin(["NASA", "MIT"])]
+    # .reset_index(drop=True) is required here, not cosmetic: add_reformulated_
+    # duration_features indexes a same-length array by the DataFrame's own
+    # index - without resetting it after this filter, the original (sparse,
+    # CALCE-inclusive) index values exceed the filtered array's length and
+    # raise IndexError (caught directly, not assumed - see run_groupkfold_cv.py
+    # for the same established pattern this now matches).
+    hi_df = hi_df[hi_df["dataset"].isin(["NASA", "MIT"])].reset_index(drop=True)
+    hi_df = add_reformulated_duration_features(hi_df)
 
     fusion = pd.read_csv(PROC_DIR / "fusion_embeddings.csv")
     fusion_cols = [c for c in fusion.columns if c.startswith("fusion_")]

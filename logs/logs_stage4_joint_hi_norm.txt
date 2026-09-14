@@ -1,0 +1,59 @@
+[stage4-pool] loaded NASA/B0005: (168, 200, 6)
+[stage4-pool] loaded NASA/B0006: (168, 200, 6)
+[stage4-pool] loaded NASA/B0007: (168, 200, 6)
+[stage4-pool] loaded NASA/B0018: (132, 200, 6)
+[stage4-pool] loaded MIT/b1c20: (532, 200, 6)
+[stage4-pool] loaded MIT/b1c43: (649, 200, 6)
+[stage4-pool] loaded MIT/b1c32: (729, 200, 6)
+[stage4-pool] loaded MIT/b1c17: (855, 200, 6)
+[stage4-pool] loaded MIT/b1c22: (889, 200, 6)
+[stage4-pool] loaded MIT/b1c41: (1049, 200, 6)
+[stage4-pool] loaded MIT/b1c4: (1225, 200, 6)
+[stage4-pool] loaded MIT/b2c1: (169, 200, 6)
+[stage4-pool] loaded MIT/b2c44: (478, 200, 6)
+[stage4-pool] loaded MIT/b2c42: (491, 200, 6)
+[stage4-pool] loaded MIT/b2c13: (519, 200, 6)
+[stage4-pool] loaded MIT/b2c24: (523, 200, 6)
+[stage4-pool] loaded MIT/b2c32: (543, 200, 6)
+[stage4-pool] loaded MIT/b2c9: (1059, 200, 6)
+[stage4-pool] loaded MIT/b3c28: (539, 200, 6)
+[stage4-pool] loaded MIT/b3c13: (814, 200, 6)
+[stage4-pool] loaded MIT/b3c14: (856, 200, 6)
+[stage4-pool] loaded MIT/b3c0: (1007, 200, 6)
+[stage4-pool] loaded MIT/b3c35: (1091, 200, 6)
+[stage4-pool] loaded MIT/b3c33: (1282, 200, 6)
+[stage4-pool] loaded MIT/b3c38: (1933, 200, 6)
+[stage4-pool] loaded MIT/b4c9: (529, 200, 6)
+[stage4-pool] loaded MIT/b4c36: (713, 200, 6)
+[stage4-pool] loaded MIT/b4c39: (761, 200, 6)
+[stage4-pool] loaded MIT/b4c21: (903, 200, 6)
+[stage4-pool] loaded MIT/b4c0: (982, 200, 6)
+[stage4-pool] loaded MIT/b4c5: (1067, 200, 6)
+[stage4-pool] loaded MIT/b4c38: (1230, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0036: (194, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0038: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0039: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0040: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0041: (25, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0051: (22, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c0: (1187, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c18: (688, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c12: (489, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c44: (477, 200, 6)
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[joint-fusion] 66 rows missing ICHV_rel - imputed with train median 0.9593
+[joint-fusion] 66 rows missing SCV - imputed with train median 0.6600
+[joint-fusion] 66 rows missing VDEDT - imputed with train median 0.0446
+[joint-fusion] 66 rows missing VIECT - imputed with train median 3.4377
+[joint-fusion] 66 rows missing MATD - imputed with train median 34.2737
+[joint-fusion] 66 rows missing MET - imputed with train median 0.0534
+[joint-fusion] 66 rows missing TEVD_rel - imputed with train median 0.8930
+[joint-fusion] 66 rows missing TEVI_rel - imputed with train median 0.9514
+joint_feature_cols: ['ICHV_rel', 'SCV', 'VDEDT', 'VIECT', 'MATD', 'MET', 'TEVD_rel', 'TEVI_rel']
+hi_mean: [0.8980756402015686, 0.6638121604919434, -1060.6611328125, 3.4779486656188965, 34.335121154785156, 0.3817773759365082, 0.9049780368804932, 0.9378489851951599]
+hi_std: [0.42596501111984253, 0.08401023596525192, 450295.0, 0.1321517825126648, 1.8776435852050781, 1.3884810209274292, 0.5364137887954712, 0.4830578565597534]
+train_medians_hi: [0.9592853046456671, 0.6600408803431459, 0.04464494840635977, 3.4377308, 34.27372668926878, 0.0534175943454613, 0.8930147324729113, 0.9513607736015968]
+saved data/processed/joint_hi_norm_stats.json

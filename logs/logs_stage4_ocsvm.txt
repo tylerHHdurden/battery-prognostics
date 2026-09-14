@@ -1,0 +1,7 @@
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26762 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26762 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26762 rows)
+[ocsvm] training on 4557 cycles from 28 FIT batteries (never test or CALCE), capped at 200 cycles/battery for balance
+[ocsvm] fraction of FIT (in-domain) cycles flagged anomalous: 0.049 (should be close to nu=0.05)
+[ocsvm] DONE - saved models/ocsvm_model.pkl, models/ocsvm_scaler.pkl

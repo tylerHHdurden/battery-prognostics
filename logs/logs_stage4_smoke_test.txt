@@ -1,0 +1,20 @@
+=== loading resources (as app.py's get_resources() would) ===
+loaded keys: ['background', 'bfa_selected', 'constants', 'encoder', 'joint_fusion', 'joint_hi_norm', 'norm_stats', 'ocsvm', 'ocsvm_feature_cols', 'ocsvm_scaler', 'train_medians', 'vlstm', 'xgb_fusion']
+
+=== test 1: known NASA battery, mid-life cycle, WITH baseline_his ===
+SOH pred=82.4 interval=[77.5,87.3]
+RUL pred=28 interval=[0,509]
+anomaly_flag=False out_of_domain=False
+top_features=['VIECT', 'TEVI_rel', 'fusion_1']
+voltage_region={'v_lo': 2.89, 'v_hi': 3.38, 'frac_of_attribution': 0.999} (error=None)
+
+=== test 2: same cycle, WITHOUT baseline_his (fallback path) ===
+SOH pred=97.4 (fallback baseline - should differ somewhat from test 1)
+
+=== test 3: MIT battery (different chemistry-adjacent profile) ===
+SOH pred=98.5 RUL pred=311 anomaly=False
+
+=== test 4: CALCE cycle (expect out-of-domain / no temperature) ===
+SOH pred=94.1 out_of_domain=True reasons=["no temperature channel present (this cell's data can't confirm it was measured the way NASA/MIT training cells were)", "the One-Class SVM flags this cycle's feature vector as unlike anything in the NASA+MIT training data"]
+
+=== ALL SMOKE TESTS PASSED ===
