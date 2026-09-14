@@ -1,0 +1,5 @@
+method,coverage,avg_width
+plain_jackknife_cv_plus_mapie,0.3706,11.89
+plain_jackknife_cv_plus_manual_unscaled,0.37062223733424005,11.890039855068816
+kmm_cp_stage3_1,0.3404,9.924
+rescaled_jackknife_cv_plus,0.8201292077524651,58.905297956037536

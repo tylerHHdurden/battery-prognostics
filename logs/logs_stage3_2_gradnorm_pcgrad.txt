@@ -1,0 +1,108 @@
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[stage3.2] fit=21 val=5 test=6 batteries
+[stage3.2] fit=14872 val=3973 test=5208 cycles (loaded in 82.8s)
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+
+[stage3.2] === Training GradNorm ===
+[gradnorm] epoch  0 train=0.8439 val_soh=0.3959 val_rul=0.5424 w_soh=1.358 w_rul=0.642
+[gradnorm] epoch  1 train=0.2322 val_soh=0.2127 val_rul=0.5974 w_soh=1.268 w_rul=0.732
+[gradnorm] epoch  2 train=0.1903 val_soh=0.1512 val_rul=0.5405 w_soh=1.202 w_rul=0.798
+[gradnorm] epoch  3 train=0.1729 val_soh=0.1307 val_rul=0.8375 w_soh=1.015 w_rul=0.985
+[gradnorm] epoch  4 train=0.1378 val_soh=0.1244 val_rul=0.8452 w_soh=1.153 w_rul=0.847
+[gradnorm] epoch  5 train=0.1141 val_soh=0.0949 val_rul=0.8138 w_soh=1.177 w_rul=0.823
+[gradnorm] epoch  6 train=0.1095 val_soh=0.0906 val_rul=0.7059 w_soh=1.111 w_rul=0.889
+[gradnorm] epoch  7 train=0.1284 val_soh=0.0992 val_rul=0.7310 w_soh=1.144 w_rul=0.856
+[gradnorm] epoch  8 train=0.0918 val_soh=0.0892 val_rul=0.7998 w_soh=1.260 w_rul=0.740
+[gradnorm] epoch  9 train=0.0825 val_soh=0.0893 val_rul=0.6725 w_soh=1.262 w_rul=0.738
+[gradnorm] epoch 10 train=0.0871 val_soh=0.0773 val_rul=0.8200 w_soh=1.265 w_rul=0.735
+[gradnorm] epoch 11 train=0.0809 val_soh=0.0891 val_rul=0.7929 w_soh=1.252 w_rul=0.748
+[gradnorm] epoch 12 train=0.0833 val_soh=0.0824 val_rul=0.7785 w_soh=0.962 w_rul=1.038
+[gradnorm] epoch 13 train=0.0825 val_soh=0.0729 val_rul=0.9052 w_soh=1.143 w_rul=0.857
+[gradnorm] epoch 14 train=0.0741 val_soh=0.0927 val_rul=0.6708 w_soh=1.045 w_rul=0.955
+[gradnorm] epoch 15 train=0.0775 val_soh=0.0828 val_rul=0.8061 w_soh=0.991 w_rul=1.009
+[gradnorm] epoch 16 train=0.0818 val_soh=0.0757 val_rul=0.6907 w_soh=1.036 w_rul=0.964
+[gradnorm] epoch 17 train=0.0676 val_soh=0.0638 val_rul=0.8264 w_soh=1.103 w_rul=0.897
+[gradnorm] epoch 18 train=0.0642 val_soh=0.0654 val_rul=0.7968 w_soh=1.056 w_rul=0.944
+[gradnorm] epoch 19 train=0.0679 val_soh=0.0727 val_rul=0.9359 w_soh=1.051 w_rul=0.949
+[gradnorm] epoch 20 train=0.0615 val_soh=0.0633 val_rul=0.6992 w_soh=1.003 w_rul=0.997
+[gradnorm] epoch 21 train=0.0651 val_soh=0.0656 val_rul=0.7060 w_soh=1.095 w_rul=0.905
+[gradnorm] epoch 22 train=0.0578 val_soh=0.0809 val_rul=0.8722 w_soh=1.004 w_rul=0.996
+[gradnorm] epoch 23 train=0.0550 val_soh=0.0541 val_rul=0.8966 w_soh=1.210 w_rul=0.790
+[gradnorm] epoch 24 train=0.0561 val_soh=0.0757 val_rul=0.7714 w_soh=0.995 w_rul=1.005
+[gradnorm] TEST SOH: {'rmse': 1.4097931624270672, 'mae': 0.9431354999542236, 'r2': 0.9150298833847046}
+[gradnorm] TEST RUL: {'rmse': 215.74863303448763, 'mae': 155.2837371826172, 'r2': 0.5862116813659668}
+
+[stage3.2] === Training PCGrad ===
+[pcgrad] epoch  0 train=0.8493 val_soh=0.4177 val_rul=0.5557 conflict_frac=0.51
+[pcgrad] epoch  1 train=0.2857 val_soh=0.2488 val_rul=0.5859 conflict_frac=0.39
+[pcgrad] epoch  2 train=0.2078 val_soh=0.1934 val_rul=0.5213 conflict_frac=0.44
+[pcgrad] epoch  3 train=0.1648 val_soh=0.1378 val_rul=0.7483 conflict_frac=0.39
+[pcgrad] epoch  4 train=0.1506 val_soh=0.1267 val_rul=0.9108 conflict_frac=0.34
+[pcgrad] epoch  5 train=0.1292 val_soh=0.1163 val_rul=0.8639 conflict_frac=0.31
+[pcgrad] epoch  6 train=0.1295 val_soh=0.0894 val_rul=0.7708 conflict_frac=0.36
+[pcgrad] epoch  7 train=0.1215 val_soh=0.1030 val_rul=0.7889 conflict_frac=0.32
+[pcgrad] epoch  8 train=0.1111 val_soh=0.0818 val_rul=0.8265 conflict_frac=0.33
+[pcgrad] epoch  9 train=0.1023 val_soh=0.0980 val_rul=0.8098 conflict_frac=0.36
+[pcgrad] epoch 10 train=0.1001 val_soh=0.0811 val_rul=0.8032 conflict_frac=0.27
+[pcgrad] epoch 11 train=0.0973 val_soh=0.0864 val_rul=0.8631 conflict_frac=0.32
+[pcgrad] epoch 12 train=0.0899 val_soh=0.0767 val_rul=0.8278 conflict_frac=0.33
+[pcgrad] epoch 13 train=0.0846 val_soh=0.0817 val_rul=0.8456 conflict_frac=0.37
+[pcgrad] epoch 14 train=0.0837 val_soh=0.0891 val_rul=0.7996 conflict_frac=0.30
+[pcgrad] epoch 15 train=0.0832 val_soh=0.0692 val_rul=0.8609 conflict_frac=0.34
+[pcgrad] epoch 16 train=0.0817 val_soh=0.0788 val_rul=0.6647 conflict_frac=0.34
+[pcgrad] epoch 17 train=0.0794 val_soh=0.0698 val_rul=0.8948 conflict_frac=0.30
+[pcgrad] epoch 18 train=0.0755 val_soh=0.0666 val_rul=0.8001 conflict_frac=0.23
+[pcgrad] epoch 19 train=0.0762 val_soh=0.0619 val_rul=0.7971 conflict_frac=0.27
+[pcgrad] epoch 20 train=0.0713 val_soh=0.0578 val_rul=0.8132 conflict_frac=0.28
+[pcgrad] epoch 21 train=0.0704 val_soh=0.0610 val_rul=0.7907 conflict_frac=0.27
+[pcgrad] epoch 22 train=0.0651 val_soh=0.0651 val_rul=1.0024 conflict_frac=0.28
+[pcgrad] epoch 23 train=0.0629 val_soh=0.0543 val_rul=0.9229 conflict_frac=0.25
+[pcgrad] epoch 24 train=0.0847 val_soh=0.0655 val_rul=0.9332 conflict_frac=0.25
+[pcgrad] TEST SOH: {'rmse': 1.4283632075606725, 'mae': 0.9331648349761963, 'r2': 0.9127767086029053}
+[pcgrad] TEST RUL: {'rmse': 208.3886280786454, 'mae': 168.5496826171875, 'r2': 0.613961935043335}
+
+[stage3.2] === COMPARISON vs. all prior loss-weighting variants ===
+[stage3.2] fixed_balanced (session 4):           SOH R2=0.416  RUL R2=0.428
+[stage3.2] adaptive-clamped (session 4):          SOH R2=0.344  RUL R2=0.432
+[stage3.2] softmax-normalized:                    SOH R2=0.091  RUL R2=0.244 (loses both)
+[stage3.2] session 41 HI-fused (adaptive-clamped + 1.1 features, PRIMARY baseline for this item since it is the same architecture/feature-config as GradNorm/PCGrad here - isolates the loss-balancing mechanism as the only variable): SOH R2=0.9241  RUL R2=0.6657
+[stage3.2] GradNorm (THIS ITEM):  SOH R2=0.9150  RUL R2=0.5862
+[stage3.2] PCGrad (THIS ITEM):    SOH R2=0.9128  RUL R2=0.6140
+[stage3.2] GradNorm verdict: beats existing best on NEITHER task
+[stage3.2] PCGrad verdict: beats existing best on NEITHER task
+
+[stage3.2] saved outputs/stage3_2_gradnorm_pcgrad_results.csv
+[stage3.2] ALL DONE in 6129.1s (102.2 min)

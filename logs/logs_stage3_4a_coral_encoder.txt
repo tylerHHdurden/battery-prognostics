@@ -1,0 +1,66 @@
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[fusion-coral] source fit cycles=14872, source val cycles=3973
+[fusion-coral] === building UNLABELED CALCE tensors for CORAL target covariance ===
+[fusion-coral] CALCE/CS2_35: 932 cycles (unlabeled, features only)
+[fusion-coral] CALCE/CS2_36: 972 cycles (unlabeled, features only)
+[fusion-coral] CALCE/CS2_37: 1037 cycles (unlabeled, features only)
+[fusion-coral] target (CALCE, unlabeled) cycles=2941 (loaded in 262.0s)
+[fusion-coral] epoch   0 sup_mse=0.8615 coral=0.00046 val_mse=2.7551
+[fusion-coral] epoch   1 sup_mse=0.8027 coral=0.00252 val_mse=2.5801
+[fusion-coral] epoch   2 sup_mse=0.7493 coral=0.00293 val_mse=2.3263
+[fusion-coral] epoch   3 sup_mse=0.6811 coral=0.00272 val_mse=1.9935
+[fusion-coral] epoch   4 sup_mse=0.6075 coral=0.00216 val_mse=1.7454
+[fusion-coral] epoch   5 sup_mse=0.5510 coral=0.00127 val_mse=1.6449
+[fusion-coral] epoch   6 sup_mse=0.5192 coral=0.00060 val_mse=1.5231
+[fusion-coral] epoch   7 sup_mse=0.4951 coral=0.00038 val_mse=1.4216
+[fusion-coral] epoch   8 sup_mse=0.4796 coral=0.00033 val_mse=1.4042
+[fusion-coral] epoch   9 sup_mse=0.4687 coral=0.00023 val_mse=1.3330
+[fusion-coral] epoch  10 sup_mse=0.4591 coral=0.00019 val_mse=1.3695
+[fusion-coral] epoch  11 sup_mse=0.4487 coral=0.00021 val_mse=1.4310
+[fusion-coral] epoch  12 sup_mse=0.4334 coral=0.00026 val_mse=1.2881
+[fusion-coral] epoch  13 sup_mse=0.4197 coral=0.00029 val_mse=1.3192
+[fusion-coral] epoch  14 sup_mse=0.4132 coral=0.00033 val_mse=1.3658
+[fusion-coral] epoch  15 sup_mse=0.3958 coral=0.00041 val_mse=1.1638
+[fusion-coral] epoch  16 sup_mse=0.3814 coral=0.00065 val_mse=1.1427
+[fusion-coral] epoch  17 sup_mse=0.3736 coral=0.00069 val_mse=1.1648
+[fusion-coral] epoch  18 sup_mse=0.3604 coral=0.00090 val_mse=1.2063
+[fusion-coral] epoch  19 sup_mse=0.3535 coral=0.00086 val_mse=1.0787
+[fusion-coral] epoch  20 sup_mse=0.3414 coral=0.00111 val_mse=1.0290
+[fusion-coral] epoch  21 sup_mse=0.3228 coral=0.00144 val_mse=1.0340
+[fusion-coral] epoch  22 sup_mse=0.3164 coral=0.00171 val_mse=1.1157
+[fusion-coral] epoch  23 sup_mse=0.3079 coral=0.00198 val_mse=1.0313
+[fusion-coral] epoch  24 sup_mse=0.2930 coral=0.00264 val_mse=0.9279
+[fusion-coral] saved 24053 embeddings (16-dim) to data/processed/fusion_embeddings_coral.csv
+[fusion-coral] CORAL_LAMBDA=1.0 (single fixed weight, not tuned)
+[fusion-coral] ALL DONE in 382.6s

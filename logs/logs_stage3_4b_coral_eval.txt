@@ -1,0 +1,19 @@
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[coral-stage34] === Building the Stage 1.1+1.5 canonical model on CORAL embeddings ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[coral-stage34] in-domain R2=0.9751 RMSE=0.7625
+[coral-stage34] CALCE R2=0.5293 RMSE=14.7734
+[coral-stage34] CALCE split-conformal coverage=0.0320 width=2.3469
+
+[coral-stage34] === COMPARISON ===
+[coral-stage34] no-alignment 1.1+1.5 baseline (this project, same config, stage3_1 run): CALCE R2=0.5672 RMSE=14.1669 | coverage=6.73% width=2.332
+[coral-stage34] MMD (session 13, DIFFERENT downstream config - original BFA features, no monotone_constraints, no 1.1 reformulation): CALCE R2=0.337 RMSE=17.54 | coverage=4.4%
+[coral-stage34] CORAL (THIS ITEM, canonical 1.1+1.5 config, same as no-alignment baseline): CALCE R2=0.5293 RMSE=14.7734 | coverage=3.20% width=2.3469
+
+[coral-stage34] CORAL vs no-alignment baseline (apples-to-apples, same 1.1+1.5 config): R2 UNDERPERFORMS, coverage UNDERPERFORMS
+
+[coral-stage34] saved outputs/stage3_4_coral_results.csv
+[coral-stage34] DONE

@@ -1,0 +1,37 @@
+[stage3.5] === Building the Stage 1.1+1.5 canonical model ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage3.5] in-domain R2=0.9750 | CALCE R2=0.5672
+[stage3.5] calibration batteries: ['B0018', 'b2c24', 'b3c35']
+[stage3.5] CV+ calibration pool: 1746 rows, 3 battery-groups
+[stage3.5] fold 0: held-out battery/ies ['b3c35'], 1091 rows
+[stage3.5] fold 1: held-out battery/ies ['b2c24'], 523 rows
+[stage3.5] fold 2: held-out battery/ies ['B0018'], 132 rows
+
+[stage3.5] === Step 1: verify unscaled CV+ (this manual implementation) ===
+[stage3.5] manual unscaled CV+: coverage=0.3706 width=11.8900
+[stage3.5] existing mapie-based Jackknife+/CV+ (Stage 1 follow-up): coverage=0.3706 width=11.890
+[stage3.5] reasonably reproduces the known result (within 5pp): True
+
+[stage3.5] === Step 2: fitting local difficulty sigma_hat(x) from TRAINING data only ===
+[stage3.5] out-of-fold training |residual|: mean=0.6272 std=1.4428 (from 5-fold GroupKFold over the TRAINING pool only)
+[stage3.5] sigma_hat(calibration set): mean=0.8479 [-0.0309, 9.2754]
+[stage3.5] sigma_hat(CALCE target set): mean=3.0884 [1.1027, 9.2090]
+[stage3.5] CALCE/calibration sigma_hat ratio (mean): 3.642 (>1 means CALCE is flagged as harder/more out-of-distribution, consistent with domain shift)
+
+[stage3.5] === Step 3: rescaled Jackknife+/CV+ ===
+[stage3.5] rescaled CV+: coverage=0.8201 width=58.9053
+
+[stage3.5] === COMPARISON ===
+[stage3.5] (a) plain Jackknife+/CV+ (Stage 1 follow-up, mapie):     coverage=37.06%  width=11.890
+[stage3.5] (b) plain Jackknife+/CV+ (this script, manual, unscaled): coverage=37.06%  width=11.890
+[stage3.5] (c) 3.1 KMM-CP (this Stage's item 3.1):                   coverage=34.04%  width=9.924
+[stage3.5] (d) rescaled Jackknife+/CV+ (THIS ITEM):                  coverage=82.01%  width=58.905
+
+[stage3.5] rescaling vs. plain CV+ (this script's own unscaled run): +44.95pp
+[stage3.5] rescaled CV+ vs. 3.1's KMM-CP:                             +47.97pp
+[stage3.5] VERDICT: rescaling adds a real, meaningful improvement beyond plain Jackknife+/CV+
+
+[stage3.5] saved outputs/stage3_5_jackknife_rescaled_results.csv
+[stage3.5] DONE

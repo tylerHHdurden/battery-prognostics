@@ -7124,3 +7124,497 @@ eventually consumed.
 
 **The codebase and log are genuinely consistent with everything
 reported in this conversation. Stage 3 can begin with confidence.**
+
+## Stage 3 — the methodological contribution stage: five real attempts at this project's two most resistant problems
+
+**Scope**: five independent attempts (3.1-3.5) targeting CALCE conformal
+coverage (resisted 4 independent prior attempts: MMD session 13,
+weighted conformal session 19, dataset expansion session 35 Part 4,
+Jackknife+ Stage 1 follow-up) and the ensemble's near-zero marginal
+value (Stage 0 Check 0.1). Canonical configuration throughout unless
+stated otherwise: Stage 1's 1.1+1.5 feature/model config (reformulated
+duration features + monotone_constraints), Stage 2's GroupKFold-
+validated splits, Stage 2.3/1.6 conformal conventions. Every item below
+states explicitly which exact configuration it ran against.
+
+### 3.1 — KMM-CP + Selective KMM (attempt five at CALCE coverage)
+
+**Configuration**: Stage 1.1+1.5 canonical XGBoost-fusion model, original
+32-battery pool. Calibration: calib-half of the 6 NASA+MIT test
+batteries (B0018, b2c24, b3c35). Target: CALCE zero-retrain (all 3
+cells). KMM feature space: the model's own 25-dim input (8 canonical
+1.1-reformulated HI features + cycle_idx + 16-dim fusion embedding,
+standardized on calibration-set stats).
+
+**Implementation note**: no QP solver is available in this environment
+(checked: cvxpy, qpsolvers, quadprog all absent). Standard KMM's
+box-constrained QP with a near-equality sum constraint was solved via
+L-BFGS-B with the sum constraint converted to a soft quadratic penalty
+- smoke-tested on synthetic covariate-shift data first (weighted
+calibration mean moved from [0.00,-0.08,-0.13] to [1.14,1.17,1.13],
+target mean [1.50,1.73,1.63] - confirms the reweighting mechanism works)
+before trusting it on real CALCE data. New file: src/kmm_utils.py.
+
+**Result**:
+
+| method | CALCE coverage | avg width | notes |
+|---|---|---|---|
+| plain split-conformal (unweighted) | 6.73% | 2.332 | reproduces the existing 1.1+1.5 baseline number exactly |
+| (1) MMD (session 13) | 4.4% | - | fixed point-accuracy, coverage got WORSE (6.1%->4.4%) |
+| (2) weighted conformal, logistic domain classifier (session 19) | 4.4% (fusion-only, unchanged) or nominally 100% but VACUOUS (full-feature, AUC=1.0 total separation) | - | CALCE coverage NEVER genuinely improved; also broke in-domain coverage 94.6%->43.6% as a side effect |
+| (3) dataset expansion + Normalized CP / CQR (session 35 Part 4) | 19.3% / 21.3% | - | real, partial gain from 7.4% |
+| (4) Jackknife+/CV+ (Stage 1 follow-up, 1.1+1.5-specific) | 37.1% | 11.89 | largest prior gain, but confirmed configuration-specific |
+| (5) standard KMM-CP (this item) | 34.04% | 9.924 | ESS=383.3/1746=22.0% of calibration weight mass, 77.7% of weights near-zero |
+| (5) Selective KMM-CP (this item) | 34.04% | 9.924 | essentially IDENTICAL to standard KMM - see below |
+
+**Was Selective KMM needed?** No - reported plainly, not glossed over.
+The automatic instability check (ESS fraction < 20% OR >80% of weights
+near-zero) evaluated FALSE by a narrow margin (ESS=22.0%, just above
+the 20% cutoff; near-zero fraction=77.7%, just below the 80% cutoff).
+Given how close this came to triggering, Selective KMM was run anyway
+for completeness rather than trusting the narrow miss - result:
+ESS=22.2%, coverage/width identical to 4 significant figures
+(34.04%/9.924 both ways). Standard KMM's global moment-matching was
+already stable enough here; per-point relevance bounds changed nothing
+material. This is itself the honest answer to "which was actually
+needed and why": standard KMM, because the calibration/CALCE support
+overlap - while poor - was not poor enough to require per-point
+bounding on top of the global constraint.
+
+**Verdict, stated plainly (not the auto-generated threshold label)**:
+this is (b) real, meaningful improvement - KMM-CP's 34.04% clearly
+and substantially beats MMD (4.4%), weighted conformal (4.4%/vacuous),
+and Normalized CP/CQR (19.3%/21.3%), the first three of four prior
+attempts, by a wide margin. It falls short of Jackknife+'s 37.1% (a
+~3pp gap) and, like every other attempt, is nowhere near the 90%
+target. Width check (per instruction, not just coverage alone):
+KMM-CP's width (9.924) is actually 17% NARROWER than Jackknife+'s
+(11.89) while achieving nearly the same coverage - on the
+coverage-per-unit-width tradeoff, KMM-CP is arguably the MORE
+EFFICIENT of the two, even though its raw coverage is marginally lower.
+Both remain far short of the plain baseline's tight width (2.332) -
+closing the coverage gap here still costs a real, substantial width
+penalty (KMM-CP: 4.26x wider; Jackknife+: 5.10x wider), the same
+structural tension already familiar from this project's other conformal
+work.
+
+New files: src/kmm_utils.py, src/run_stage3_1_kmm_cp.py. Output:
+outputs/stage3_1_kmm_cp_results.csv.
+
+---
+
+### 3.2 — Gradient-level multi-task loss balancing (GradNorm, PCGrad)
+
+**Configuration**: JointSOHRULModelFusion (session 41 Part B's improved
+joint architecture: 4-branch CNN+LSTM backbone + 8 canonical
+1.1-reformulated HI features fused before the two regression heads) -
+used rather than the original bare JointSOHRULModel because session 41
+Part B already established this is the best-performing joint
+architecture found in this project (SOH R2 0.344->0.924, RUL R2
+0.432->0.666 over the original model), so testing gradient-level
+balancing on the OLD, already-known-worse architecture would confound
+"did gradient-level balancing help" with "did we regress to a worse
+backbone." Same 8 canonical HI features, same original 32-battery pool,
+same 25-epoch budget, same train/val/test split as session 41 Part B.
+
+**Implementation**: both mechanics were smoke-tested on toy random
+data/labels BEFORE writing the real-data training script, per this
+project's "verify before trusting" standard for a new gradient-level
+mechanism (real first-attempt risk was explicitly flagged going in).
+GradNorm (Chen et al. 2018): learnable per-task weights w_soh, w_rul
+(separate Adam optimizer, lr=0.025), gradient norms of each weighted
+task loss taken w.r.t. the LSTM's own hidden-to-hidden weight matrix
+(the shared-layer proxy), renormalized to sum=2 each step - confirmed
+on toy data the weights move away from init and renormalize correctly
+with no NaN. PCGrad (Yu et al. 2020): per-batch, per-task gradients
+computed separately for the SHARED backbone (branches+LSTM) via two
+`torch.autograd.grad` calls, pairwise-projected onto each other's
+normal plane whenever their dot product is negative, summed; head
+parameters (soh_head/rul_head) get their own task's unprojected
+gradient automatically, since each head only ever appears in one task's
+computational graph - confirmed on toy data the projection triggers
+correctly on conflict and leaves gradients untouched otherwise.
+A 2-epoch dry run on REAL data (not just toy data) was also run before
+committing to the full 25-epoch budget, to catch any real-data-specific
+integration bugs - completed cleanly.
+
+Checkpointed per-epoch, per-method (two independent checkpoint files) -
+both cleaned up (no stray checkpoints) after completion. Total wall
+time: 102.2 minutes (GradNorm's per-batch `create_graph=True` gradient-
+norm computation is markedly slower per-epoch than PCGrad's).
+
+**Result**:
+
+| method | SOH R2 | RUL R2 | SOH RMSE | RUL RMSE |
+|---|---|---|---|---|
+| fixed_balanced (session 4, OLD non-fusion architecture) | 0.416 | 0.428 | - | - |
+| adaptive-clamped (session 4, OLD non-fusion architecture) | 0.344 | 0.432 | - | - |
+| softmax-normalized (OLD non-fusion architecture) | 0.091 | 0.244 | - | - |
+| **session 41 HI-fused baseline (adaptive-clamped + fusion architecture - PRIMARY comparison, same architecture as this item)** | **0.9241** | **0.6657** | - | - |
+| GradNorm (THIS ITEM, fusion architecture) | 0.9150 | 0.5862 | 1.410 | 215.75 |
+| PCGrad (THIS ITEM, fusion architecture) | 0.9128 | 0.6140 | 1.428 | 208.39 |
+
+**Verdict, reported plainly**: **neither GradNorm nor PCGrad beats the
+existing best (session 41's adaptive-clamped + fusion architecture) on
+EITHER task.** SOH R2 drops slightly for both (0.924->0.915 GradNorm,
+0.924->0.913 PCGrad); RUL R2 drops more substantially (0.666->0.586
+GradNorm, a real regression; 0.666->0.614 PCGrad, a smaller but still
+real regression). A mechanistically different family - gradient-level
+rather than loss-level balancing - was genuinely tried, and it does NOT
+fix what the three prior loss-level attempts (fixed, Kendall
+homoscedastic/clamped, softmax) already failed to fix; if anything it
+makes the current best JOINT model slightly worse on both tasks. Both
+methods DO still comfortably beat the OLD non-fusion architecture's
+three variants (fixed_balanced/adaptive-clamped/softmax, RUL R2
+0.244-0.432) - but that comparison mixes the architecture change
+(session 41's own fusion contribution) with the loss-balancing change
+and should not be read as evidence for GradNorm/PCGrad specifically.
+
+**A secondary, honest observation**: PCGrad's conflict_frac (fraction
+of batches where the SOH/RUL shared-parameter gradients pointed in
+genuinely conflicting directions) stayed in the 0.23-0.51 range
+throughout training, never near zero - confirming real, persistent
+gradient conflict exists between the two tasks on this architecture
+(not a null result of "there was never any conflict to resolve"), yet
+resolving that conflict via projection still did not translate into
+better held-out accuracy. This is itself informative: gradient conflict
+between SOH and RUL is real and measurable, but removing it (via
+PCGrad) or reweighting around it (via GradNorm) does not, on this
+architecture/feature-set, improve on the simpler adaptive-clamped
+loss-level baseline that already works reasonably well post-fusion.
+
+New file: `src/run_stage3_2_gradnorm_pcgrad.py`. Models:
+`models/joint_fusion_gradnorm.pt`, `models/joint_fusion_pcgrad.pt`.
+Output: `outputs/stage3_2_gradnorm_pcgrad_results.csv`.
+
+---
+
+### 3.3 — Negative Correlation Learning on the ensemble
+
+**Configuration**: the 3 deep base learners (VLSTM, CNN-LSTM, PiFormer),
+original 32-battery pool, exactly Check 0.1's own GroupKFold(5)-over-
+26-TRAIN-battery-IDs out-of-fold protocol (same fold splits, same inner
+fit/val carve, same TEST-set reuse) - the only change is HOW the 3 deep
+learners are trained (joint+NCL instead of independent). XGBoost is
+retrained unchanged/independent (not an NCL target - a fundamentally
+different model family, not part of the correlation being addressed).
+
+**Context, re-confirmed fresh rather than trusted from memory**: before
+writing any NCL code, Check 0.1's own OOF meta-features file
+(`oof_stacking_check_meta_features.csv`) was read directly and its
+pairwise correlation matrix recomputed: all 6 base-learner pairs fall
+in [0.7224, 0.9198] - confirms the task's own cited "0.72-0.92" range
+exactly. The 3 deep learners' own pairwise range is [0.7887, 0.9198].
+
+**Mechanism**: standard NCL ambiguity-decomposition loss (Liu & Yao
+1999). For each deep member i, with f_ens = mean of all 3 members'
+CURRENT batch predictions: L_i = MSE(f_i,y) - lambda*mean((f_i-f_ens)^2),
+summed and backpropagated through all 3 models TOGETHER in one joint
+optimizer step per batch (the essential change from independent
+training - NCL requires joint training since each member's loss depends
+on the others' current predictions). lambda=0.3, chosen conservatively
+and smoke-tested on toy data first (confirmed stable, no NaN/exploding
+loss, diversity term grows gradually) before running on real data.
+Early stopping/model selection used PLAIN validation MSE (no NCL term),
+matching Check 0.1's own criterion.
+
+Checkpointed per-fold AND per-epoch-within-fold. Total wall time: 215.8
+minutes (5 OOF folds + one final full-26-battery-pool refit for TEST
+predictions) - real first-attempt risk was explicitly flagged going in
+given this is the first joint (non-independent) multi-model training in
+this project; none materialized (no NaN, no divergence, no crash across
+any of the 5 folds or the final refit).
+
+**Result 1 - pairwise correlation, direct comparison against the
+original**:
+
+| pair | original (Check 0.1) | NCL (this item) | delta |
+|---|---|---|---|
+| VLSTM-CNNLSTM | 0.7887 | 0.8303 | **+0.0416** (got MORE correlated) |
+| VLSTM-PiFormer | 0.9198 | 0.8895 | -0.0303 |
+| CNNLSTM-PiFormer | 0.8199 | 0.8088 | -0.0110 |
+| **mean** | **0.8428** | **0.8429** | **+0.0001 (essentially unchanged)** |
+
+**Has correlation actually decreased? No** - reported plainly. The mean
+pairwise correlation among the 3 deep learners is, to 4 decimal places,
+IDENTICAL before and after an explicit, smoke-tested, correctly-applied
+decorrelation penalty. One pair (VLSTM-CNNLSTM) is actually MORE
+correlated after NCL, not less. The other two dropped only slightly
+(-0.01 to -0.03), well within what could be ordinary training-seed
+noise rather than a genuine diversity effect.
+
+**Result 2 - drop-branch ablation, does any deep learner now show
+genuine marginal value?**
+
+| stacking | dropped | R2 | delta R2 vs full |
+|---|---|---|---|
+| NCL (this item) | none (full) | 0.9086 | - |
+| NCL (this item) | XGBoost | 0.8312 | -0.0774 |
+| NCL (this item) | VLSTM | 0.9049 | -0.0037 |
+| NCL (this item) | CNNLSTM | 0.9084 | -0.0001 |
+| NCL (this item) | PiFormer | 0.9085 | -0.0000 |
+
+**No** - none of the 3 NCL-trained deep learners shows genuine marginal
+value (all |delta R2| < 0.01 when dropped; PiFormer and CNNLSTM's
+impact rounds to zero). XGBoost still overwhelmingly dominates the
+stack, exactly as in Check 0.1's original finding. The overall ensemble
+TEST R2 did tick up slightly (0.9033 -> 0.9086) - reported honestly,
+but the ablation makes clear this is NOT because NCL gave any deep
+learner real marginal value; it is far more consistent with ordinary
+retraining variance (the XGBoost-drop penalty here, -0.0774, is itself
+noticeably SMALLER than Check 0.1's original -0.1828, a further sign
+that this run's specific numbers carry meaningful fold-to-fold noise
+that should not be over-read).
+
+**Verdict, per the task's own two anticipated outcomes, stated
+plainly**: this is outcome **(b) - correlation did NOT meaningfully
+drop even with an explicit, correctly-implemented, smoke-tested NCL
+penalty. This is stronger evidence of a feature/architecture ceiling**,
+not weaker: it rules out "the prior training procedure just never tried
+to decorrelate the base learners" as an explanation for the observed
+inter-correlation. All 3 deep learners see the same 6-channel sequence
+tensors (V/I/T/dQdV/dVdQ/dIdV) built from the same underlying discharge
+curves; their architectural differences (VLSTM/CNN-LSTM/PiFormer) are
+apparently not enough, even under active pressure to diverge, to learn
+meaningfully different error patterns from this shared input
+representation. Combined with Check 0.1's original finding (dropping
+any one deep learner never hurts, and NCL's own re-verification
+confirms it again here) - the ensemble's near-zero deep-learner
+marginal value is not an artifact of how the base learners were trained
+originally; it appears to be a structural property of this project's
+current feature/architecture setup, not a fixable training-procedure
+oversight.
+
+New file: `src/run_stage3_3_ncl_ensemble.py`. Models:
+`models/vlstm_ncl.pt`, `models/cnn_lstm_ncl.pt`, `models/piformer_ncl.pt`.
+Outputs: `data/processed/predictions/ncl_oof_meta_features.csv`,
+`outputs/stage3_3_ncl_ablation.csv`,
+`outputs/stage3_3_ncl_correlation_deltas.csv`,
+`outputs/stage3_3_ncl_coefficients.csv`.
+
+---
+### 3.4 — CORAL / Deep CORAL replacing MMD
+
+**Configuration**: CORAL and the no-alignment baseline both use Stage
+1's 1.1+1.5 canonical XGBoost-fusion config, original 32-battery pool -
+directly, apples-to-apples comparable to each other. Session 13's MMD
+number (cited from DEVELOPMENT_LOG.md, re-verified before use) used a
+DIFFERENT, earlier downstream config (original un-reformulated BFA
+features, no monotone_constraints) - flagged explicitly wherever
+compared, since that comparison mixes an alignment-method change with a
+downstream-model-config change.
+
+**Implementation**: Deep CORAL (second-order covariance alignment,
+src/coral_loss.py) as a direct drop-in replacement for
+train_fusion_encoder_mmd.py's MMD term, in a new
+train_fusion_encoder_coral.py - same encoder, optimizer,
+early-stopping criterion, CALCE-unlabeled-tensor pipeline, zero-label-
+leakage discipline. Smoke-tested first on toy data (coral(a,a)~0,
+small for a pure mean shift, large for an actual covariance-scaling
+difference - confirms the loss behaves correctly) before training.
+CORAL_LAMBDA=1.0. Trained cleanly through all 25 epochs with NO
+divergence (unlike MMD's own lambda=1.0, which broke training and
+required a lambda sweep down to 0.1) - val_mse descended smoothly
+2.76->0.93, actually better than MMD's own best (lambda=0.1, val_mse
+1.105).
+
+**Result**:
+
+| model | CALCE R2 | CALCE RMSE | CALCE coverage | avg width |
+|---|---|---|---|---|
+| no-alignment 1.1+1.5 baseline (this project, same config) | 0.5672 | 14.167 | 6.73% | 2.332 |
+| MMD (session 13, DIFFERENT downstream config) | 0.337 | 17.54 | 4.4% | - |
+| CORAL (THIS ITEM, canonical 1.1+1.5 config) | 0.5293 | 14.773 | 3.20% | 2.347 |
+
+**Verdict, reported plainly**: on the apples-to-apples comparison (same
+1.1+1.5 config), CORAL UNDERPERFORMS the no-alignment baseline on
+BOTH metrics - R2 drops (0.567->0.529) and coverage drops further
+(6.73%->3.20%, nearly half). CORAL does still numerically beat MMD's
+R2 (0.529 vs 0.337), but that comparison mixes two changed variables
+(alignment method AND downstream config) and should not be read as
+"CORAL beats MMD" in isolation. On coverage specifically, CORAL is
+the WORST of all three variants tested (3.20% < MMD's 4.4% < the
+6.73% baseline that does nothing at all) - domain alignment of any kind
+tested so far in this project (MMD or CORAL) has never improved CALCE
+coverage, and CORAL is a genuine, new negative data point on top of
+MMD's already-known one, not a fix. This directly contradicts the
+motivating MDPI Batteries 2026 12(9),340 paper's reported success with
+a similar CORAL+GBM+conformal pipeline under leave-one-cell-out on
+NASA cells - a real, honestly-reported divergence, plausibly explained
+by CALCE's much larger domain shift from NASA+MIT than a leave-one-
+NASA-cell-out split would ever see, though this is not verified further
+here (leave-one-cell-out on the NASA subset was scoped as optional/
+time-permitting context for Stage 6, not attempted in this pass given
+the clear negative result already in hand and this stage's time budget
+being needed for 3.2/3.3).
+
+New files: src/coral_loss.py, src/train_fusion_encoder_coral.py,
+src/run_stage3_4_coral.py. Outputs: models/ica_encoder_coral.pt,
+data/processed/fusion_embeddings_coral.csv,
+outputs/stage3_4_coral_results.csv.
+
+---
+
+### 3.5 — Jackknife+/CV+ with locally rescaled conformal scores (run AFTER 3.1, per instruction)
+
+**Configuration**: Stage 1.1+1.5 canonical model, identical calibration
+battery pool as 3.1 and the original Jackknife+/CV+ result (3
+battery-groups: B0018, b2c24, b3c35).
+
+**Implementation**: mapie's CrossConformalRegressor does not support
+per-point rescaling, so CV+ (Barber, Candes, Ramdas, Tibshirani 2021)
+was reimplemented manually - K=3 fold models, per-fold leave-fold-out
+residuals, the paper's exact lower/upper quantile-index formula.
+Verified before trusting: an UNSCALED run of this manual
+implementation was checked against the existing mapie-based result
+FIRST - reproduced it to 4 decimal places (coverage 0.37062 vs 0.37062,
+width 11.8900 vs 11.890) - confirms the from-scratch reimplementation
+is correct before layering rescaling on top of it.
+
+Local difficulty sigma_hat(x) was fit using ONLY training-set
+information, per instruction (not a separate calibration-consuming
+model like Normalized CP): a 5-fold GroupKFold split of the 26 TRAINING
+batteries (disjoint from the calibration battery pool, never touching
+CALCE) produced genuine out-of-fold |residual| values; a second
+XGBRegressor was fit on (X_train, log1p(oof_abs_residual)) to predict
+local difficulty anywhere. Each calibration nonconformity score was
+rescaled by its own sigma_hat, then re-scaled by the target point's
+sigma_hat when constructing the interval - the standard normalized-
+conformal generalization applied to CV+'s residuals.
+
+**Result**:
+
+| method | CALCE coverage | avg width |
+|---|---|---|
+| plain Jackknife+/CV+ (Stage 1 follow-up, mapie) | 37.06% | 11.890 |
+| plain Jackknife+/CV+ (this script, manual, unscaled - verification) | 37.06% | 11.890 |
+| 3.1 KMM-CP | 34.04% | 9.924 |
+| rescaled Jackknife+/CV+ (THIS ITEM) | 82.01% | 58.905 |
+
+**Verdict, reported plainly and NOT as an unqualified win**: rescaling
+produces a dramatic +45pp coverage jump over plain Jackknife+/CV+ and
+comes closer to the 90% target than any other attempt in this project's
+history (3.1-3.5 included). But the width cost is severe: 58.9 is
+~5x plain Jackknife+/CV+'s width, ~6x KMM-CP's, and ~25x the do-nothing
+baseline's - on a SOH scale where the practical range is roughly
+5-100, a half-width of ~29 points is genuinely close to vacuous, not a
+narrow miss. Root cause, diagnosed rather than left as a mystery: the
+sigma_hat model, trained only on the training domain, extrapolates
+CALCE as ~3.6x harder than the calibration set on average (mean
+sigma_hat: calibration=0.85, CALCE=3.09) - a real domain-shift signal
+picked up despite never seeing CALCE labels, but this extrapolation is
+UNCONSTRAINED (no cap, no calibration of its own magnitude), so the
+resulting width is highly sensitive to how far out-of-distribution the
+difficulty regressor happens to extrapolate, with no guardrail against
+overshooting. Per this project's own precedent (session 35's CQR-vs-
+Normalized-CP width discipline), a coverage gain bought via a
+near-vacuous interval is a WEAKER result than an efficient one - this
+should be read as "rescaling can trade width for coverage dramatically,
+but this specific naive, uncapped version overshoots badly," not as
+"rescaling solves CALCE coverage." A capped/regularized version of
+sigma_hat's extrapolation is a natural, disclosed follow-up, not
+attempted further within this stage's time budget given 3.2/3.3's
+compute demands.
+
+New file: src/run_stage3_5_jackknife_rescaled.py. Output:
+outputs/stage3_5_jackknife_rescaled_results.csv.
+
+---
+
+### Stage 3 — overall synthesis and final verdict
+
+**CALCE conformal coverage: full comparison table, all 7 attempts across
+this project's history (4 prior + 3 from this stage)**:
+
+| # | method | CALCE coverage | avg width | notes |
+|---|---|---|---|---|
+| 1 | MMD (session 13) | 4.4% | - | point-accuracy fixed, coverage got WORSE |
+| 2 | weighted conformal (session 19) | 4.4% / vacuous | - | never genuinely improved; broke in-domain coverage as a side effect |
+| 3 | dataset expansion + Normalized CP/CQR (session 35) | 19.3% / 21.3% | - | real, partial |
+| 4 | Jackknife+/CV+ (Stage 1 follow-up) | 37.1% | 11.89 | largest prior gain, configuration-specific |
+| 5 | **KMM-CP (3.1)** | **34.04%** | **9.924** | real improvement beyond 1-3; narrower width than #4 at near-equal coverage |
+| 6 | **CORAL (3.4)** | **3.20%** | **2.347** | WORST of all 7 - clean negative |
+| 7 | **rescaled Jackknife+/CV+ (3.5)** | **82.01%** | **58.905** | highest coverage in project history, but width approaches vacuous |
+
+Plain (no-alignment, no-reweighting) split-conformal on this exact
+model remains 6.73% (width=2.332) throughout - the do-nothing floor
+every attempt above is measured against.
+
+**CALCE coverage verdict**: no single method in this project's history
+- across all 7 independent attempts now - reaches the 90% target with
+an interval that is both correctly calibrated AND practically useful.
+The two attempts that get numerically closest to 90% (#4 Jackknife+ at
+37.1% and #7 rescaled Jackknife+ at 82.01%) both do so by paying a
+severe width penalty (5-25x the do-nothing baseline); the attempts that
+keep width reasonable (#1, #2, #3, #5, #6) all fall well short of 90%.
+This is a genuine, structural tension in this project's data/pipeline,
+not a bug any single attempt has fixed: CALCE's domain shift from
+NASA+MIT is severe enough that reliable 90% coverage, if achievable at
+all with this model class, appears to require intervals wide enough to
+be of limited practical decision-making use. **3.1's KMM-CP is this
+stage's cleanest real, if partial, win** - a genuine improvement over 3
+of 4 prior attempts at reasonable width, though still short of both
+Jackknife+'s raw coverage number and the 90% target. **3.5's rescaled
+Jackknife+ is this stage's most important DIAGNOSTIC finding**: it
+demonstrates that a locally-adaptive width mechanism CAN close most of
+the way to 90% (an honest, real result, not a forced one), and
+localizes the reason it isn't yet a practical fix precisely - an
+unconstrained training-domain difficulty extrapolation - which is a
+concrete, well-understood target for a future capped/regularized
+version, not a dead end. **3.4's CORAL is a clean, unambiguous
+negative** that adds to, rather than resolves, this project's now
+two-attempt history (MMD, CORAL) of domain alignment methods failing to
+help CALCE coverage specifically, even when (as CORAL does) they
+train more stably than MMD did.
+
+**Ensemble diversity/value (3.3, building on Stage 0 Check 0.1)**:
+Negative Correlation Learning - implemented correctly, smoke-tested,
+applied with a real, non-trivial penalty (lambda=0.3), trained without
+incident across 5 OOF folds plus a final full-pool refit - **did not
+reduce the 3 deep learners' pairwise correlation** (mean 0.8428 ->
+0.8429, one pair even increased) and **did not give any deep learner
+genuine marginal ensemble value** (all |delta R2| < 0.01 on drop,
+consistent with Check 0.1's original finding). This is a clean,
+informative negative that STRENGTHENS rather than merely repeats Check
+0.1's original finding: it rules out "the base learners were just never
+trained to be diverse" as the explanation for their high correlation,
+leaving a feature/architecture ceiling (all 3 models see the same
+6-channel sequence tensors, and appear unable to extract meaningfully
+different error structure from them even under explicit, correctly-
+implemented pressure to diverge) as the better-supported explanation.
+
+**Multi-task loss balancing (3.2)**: GradNorm and PCGrad, a
+mechanistically different (gradient-level, not loss-level) family from
+all 3 prior attempts, were implemented correctly (smoke-tested,
+dry-run-verified, trained to completion with no divergence) and **both
+underperform the existing best (session 41's adaptive-clamped + fusion
+architecture) on both SOH and RUL** - a clean negative, joining the 3
+prior loss-level attempts in not beating that baseline.
+
+**EXPLICIT FINAL VERDICT, per instruction**: Stage 3 does **not**
+produce a single, clean, top-tier-caliber "working fix" - no method
+reaches 90% CALCE coverage at a practically useful width, and the
+ensemble's near-zero deep-learner value is now more firmly established
+as structural rather than fixed. Read narrowly, this places Stage 3
+closer to "five more independent attempts, all partial or negative" -
+consistent with, and extending, this project's now nine-attempt history
+(4 prior + 3.1/3.4/3.5) of CALCE-coverage attempts and two-attempt
+history (Check 0.1 + 3.3) of ensemble-diversity attempts. **But this
+should not be read as equivalent to Stage 0-2's uniformly negative
+results**: unlike a pure "nothing worked" outcome, this stage produced
+(a) one genuine, if partial and width-costly, coverage improvement
+beyond most prior methods (3.1), (b) one high-coverage result whose
+practical limitation is now precisely diagnosed rather than mysterious,
+with a concrete, disclosed path to a possible future fix (3.5), and (c)
+a STRENGTHENED (not merely repeated) structural finding on ensemble
+diversity that closes off "insufficient training pressure" as an
+explanation (3.3). **Honest bottom line for the paper-targeting
+decision this stage exists to inform**: the evidence supports a
+rigorous-diagnostic framing with real, partial, honestly-bounded
+progress - not a "diagnostic + working fix" top-tier claim. Every
+result above, positive and negative, is reported at face value; none
+were adjusted or re-framed to manufacture a more favorable headline.
+
+Per instruction: no changes were made to the deployed Streamlit app
+(`app.py`) at any point in this stage. Not proceeding to Stage 4 -
+reporting back and awaiting further direction.

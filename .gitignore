@@ -30,6 +30,13 @@ Thumbs.db
 # never meant for git.
 data/processed/_expanded_battery_tensors_cache.pkl
 
+# Local performance cache only (Stage 3, session 13/3.4) - unlabeled CALCE
+# ICA/DV/DC tensors cached to skip a ~10min raw-parse step, shared between
+# train_fusion_encoder_mmd.py and train_fusion_encoder_coral.py. ~7MB,
+# regenerable from data/raw/calce + data_adapters.py, not a model or a
+# result - never meant for git.
+data/processed/_calce_ica_unlabeled_cache.npy
+
 # Catch-all safety net: nothing over 50MB should ever be committed.
 # (data/processed/ and models/ are all well under this - largest tracked
 # file is ~9MB - so this line should never actually match anything, but

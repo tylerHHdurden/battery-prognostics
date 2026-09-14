@@ -1,0 +1,4 @@
+method,calce_r2,calce_rmse,coverage,avg_width
+no_alignment_1.1_1.5_baseline,0.5672,14.1669,0.0673,2.3315
+MMD_session13_different_config,0.337,17.54,0.044,
+CORAL_1.1_1.5_config,0.529319529114002,14.773356886468463,0.031961917715062904,2.3469011209716086

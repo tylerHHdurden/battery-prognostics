@@ -1,0 +1,29 @@
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[kmm-cp] === Building the Stage 1.1+1.5 canonical model ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 26996 rows)
+[kmm-cp] in-domain R2=0.9750 | CALCE R2=0.5672 RMSE=14.1669
+[kmm-cp] calibration batteries: ['B0018', 'b2c24', 'b3c35']
+[kmm-cp] calibration set: 1746 rows | CALCE target set: 2941 rows
+[kmm-cp] plain split-conformal (unweighted): coverage=0.0673 width=2.3315
+
+[kmm-cp] === Standard KMM ===
+[kmm-cp] KMM diagnostics: {'gamma': np.float64(0.002926156739150761), 'converged': True, 'n_iter': 110, 'sum_weights': 1527.8085592278348, 'n_calib': 1746, 'effective_sample_size': 383.3055720618003, 'ess_frac': 0.21953354642714795, 'weight_min': 0.0, 'weight_max': 4.0, 'frac_at_upper_bound': 0.21534936998854526, 'frac_near_zero': 0.777205040091638}
+[kmm-cp] standard KMM-CP: coverage=0.3404 width=9.9239 (q=4.9620)
+
+[kmm-cp] standard KMM stability check: ESS=383.3 (22.0% of n=1746), 77.7% of weights near-zero -> stable enough, Selective KMM not required
+
+[kmm-cp] === COMPARISON: all 5 CALCE-coverage attempts ===
+[kmm-cp] (1) MMD (session 13): fixed point-accuracy, coverage stayed collapsed (6.1%->4.4%, got WORSE)
+[kmm-cp] (2) Weighted conformal via logistic domain classifier (session 19): CALCE coverage NEVER improved (fusion-only config: 4.4%, statistically identical to the unweighted baseline; full-feature config: nominally 100% but VACUOUS - every CALCE point got an infinite-width interval from AUC=1.0 total separation). A genuine SIDE EFFECT also broke the in-domain sanity check (94.6%->43.6% under the full-feature config) - the classifier-odds approach's instability under limited overlap, exactly the structural failure mode this item's own context describes.
+[kmm-cp] (3) Dataset expansion + input-adaptive CP (session 35 Part 4): 7.4% -> 19.3% (Normalized CP) / 21.3% (CQR)
+[kmm-cp] (4) Jackknife+ (Stage 1 follow-up, configuration-specific): 6.7% -> 37.1% on the 1.1+1.5 model specifically
+[kmm-cp] (5) THIS ITEM - KMM-CP: plain=6.7% -> standard KMM=34.0%
+
+[kmm-cp] VERDICT: (c) no meaningful improvement beyond prior attempts, or a new KMM-specific failure mode
+[kmm-cp] final coverage=34.0%, width=9.924 (vs. plain width=2.332 - WIDER)
+
+[kmm-cp] saved outputs/stage3_1_kmm_cp_results.csv
+[kmm-cp] DONE
