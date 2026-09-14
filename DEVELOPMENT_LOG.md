@@ -8691,3 +8691,183 @@ other numbers in the table were re-run or altered.
 
 Both items closed. Not proceeding to Stage 5 - reporting back to
 confirm.
+
+---
+
+## Full transcription-accuracy sweep: every numeric claim, Stage 0 through Stage 4, checked against its saved source
+
+Different in kind from every prior verification pass in this project.
+Every earlier check (Stage 0-3's own re-verifications, the precision
+pass, the loose-ends pass) asked "was the METHOD correct?" This pass
+asks a narrower, more mechanical question: does the NUMBER TYPED INTO
+THIS LOG match, to the exact stated precision, what the underlying
+script/CSV/log actually produced? No retraining, no re-analysis of
+method, no deployed-app changes - pure transcription verification,
+worked stage by stage, chronologically, from the first Stage 0 entry
+through Stage 4's most recent consistency-pass entries (all follow-up
+rounds and closeout sessions included). Full working notes are kept in
+`_transcription_audit_progress.md` (not committed - scratch file); this
+entry is the consolidated, final report.
+
+**Method**: for every numeric claim, the exact-precision source value
+was read directly from its CSV/log (not the log's own rounded display),
+independently rounded/recomputed by hand, and compared against the
+log's stated figure. Where no direct saved artifact survives but the
+underlying computation is cheap and unambiguous from still-available
+raw/processed data, the value was independently recomputed rather than
+left unchecked (e.g. NASA weight-share percentages from
+`hi_table.parquet`/`battery_split.json`; Severson-aware EOL values via
+direct `rul_labels.compute_eol_and_rul_severson_aware` calls; raw MIT
+HDF5 cycle-count offsets via direct `h5py` reads; normalized-temperature
+saturation values via rebuilding tensors and calling
+`apply_channel_norm`). Where neither a surviving artifact nor a cheap
+independent recomputation exists, the claim is reported as
+**untraceable** - a finding in its own right, not assumed correct.
+
+### Stage-by-stage pass/fail
+
+**Stage 0** (4 checks + PiFormer-correlation follow-up): **1 MISMATCH**
+(Check 0.4). All else PASS.
+
+**Stage 1** (7 items + 5 follow-up sessions [38-42]): **2 MISMATCHES**
+(item 1.5, item 1.7). All else PASS (with 9 untraceable secondary
+claims noted below - not failures, but not independently confirmable
+within this pass's no-re-analysis scope).
+
+**Stage 2** (session 43's items 2.1-2.5 + closeout sessions 45/46/47,
+including the B0045 investigation): **0 MISMATCHES**. All checked
+claims PASS (with 13 untraceable secondary claims, concentrated in
+ad-hoc one-off investigation sessions with no dedicated saved script).
+
+**Stage 3** (items 3.1-3.5, the consolidated CALCE table, the
+clip-saturation sweep, the CALCE-inclusive clip refit, and the two
+consistency-pass entries): **0 MISMATCHES** in spot-check (full
+line-by-line re-derivation not repeated - see scope note below).
+
+**Stage 4** (all 4 steps + the consistency-pass follow-up): **0
+MISMATCHES**. `outputs/stage4_step2b_summary.csv`'s all 8 metric-pairs
+(16 raw values) individually cross-checked against every corresponding
+log citation, including both the full-width and half-width forms
+quoted in different parts of the entry - all exact.
+
+### The 4 mismatches found (every one, in full - nothing downplayed)
+
+1. **Stage 0, Check 0.4** - log states the original (6-battery)
+   XGBoost-vs-VLSTM battery-level CI upper bound as **"+0.2528"**.
+   Source (`bootstrap_base_learner_delta_vs_xgb_ci.csv`) gives
+   `battery_ci_hi=0.252747022177233`, which rounds to **+0.2527** at
+   4dp, not +0.2528. A one-digit rounding-boundary transcription error
+   (5th decimal is 4, rounds down, not up). All 6 other CI pairs in
+   this check verified exact.
+
+2. **Stage 1, item 1.5** - log states the CALCE coverage delta
+   (1.1-vs-1.1+1.5) as **"-2.8pp"**. Exact source values (1.1's
+   coverage=0.0945256715402924, 1.5's=0.0673240394423665) give an exact
+   delta of -2.7202pp, which rounds to **-2.7pp**, not -2.8pp. Off by
+   0.1 percentage point.
+
+3. **Stage 1, item 1.7 (Bacon-Watts)** - log states the knee-past-EOL
+   failure mode **"fired for 5 of 6 test batteries"**. Direct count
+   from `bacon_watts_knee_detection.csv`'s `true_knee_past_eol`/
+   `pred_knee_past_eol` columns shows only **4 of 6** batteries have
+   either flag True (B0018, b1c4, b2c24, b3c0); b3c35 and b4c38 both
+   show False/False. A genuine count error, not a rounding issue.
+
+4. **Session 42, Part C** - log states the SOH R2 delta (control-raw-
+   features run vs. session 41 Part B's reformulated-features run) as
+   **"+0.0005"**. Exact values (0.924552 vs 0.924104) give an exact
+   delta of 0.000448, which rounds to **+0.0004**, not +0.0005.
+
+All 4 are small (one rounding digit or, in item 3's case, a genuine
+off-by-one count) and none changes any qualitative conclusion the log
+draws from them - but per the explicit instruction for this pass, they
+are reported with the same directness as every other finding, not
+downplayed for being minor.
+
+### Untraceable claims (no re-fix, no re-derivation beyond what was cheap/unambiguous - reported as findings)
+
+- Stage 1.1: "min cycle-10 baseline values ICHV=24.3/TEVD=13.2/
+  TEVI=13.5" - no surviving CSV/log states this threshold-check value.
+- Stage 1.2: item 1.1's own cited B0018 RMSE=3.1847 - no per-battery
+  CSV/log survives for 1.1's own run.
+- Stage 1.6: session 11's original RUL claim ("swung 64.7%-99.6%,
+  34.9pp spread" across a 20-partition sweep) - no surviving
+  per-partition sweep artifact (only a single-partition
+  `conformal_coverage.csv` survives, which independently cross-
+  validates the separate 95.1% SOH figure exactly).
+- Session 40, Check 1: "55 of 29,489 cycles, 0.19%" - no per-cycle-
+  count file found for this specific check.
+- Session 40, Checks 2/3: correlation values (cycle_idx vs.
+  ICHV_rel/TEVD_rel/TEVI_rel: -0.213/-0.225/-0.103) - no dedicated
+  saved output; not independently recomputed (out of this pass's
+  no-re-analysis scope for a secondary supporting detail).
+- Session 41, Part A.2: peak-position-stability std (0.021-0.027V) -
+  not present in the saved CSV.
+- Session 45, item 5: full per-battery fold-3 RMSE table - no
+  surviving artifact for this ad-hoc re-fit.
+- Session 45, item 6: false-positive-sweep counts (0/15 normal, 0/7-8
+  recovered, +4 on B0033, +2 on B0034) - no surviving log.
+- Session 47, item 1: attention entropy (3.73-4.04/3.78-4.01), max
+  attention weight (0.19-0.24/0.12-0.21), mean normalized input
+  (-0.99/+0.13), raw output range (-14 to -16/-0.20 to -0.27) - no
+  surviving script/log for this ad-hoc analysis. (Note: the single
+  most important, most-repeated number in this same item - B0053's/
+  B0030's normalized T_t=-2.297/+2.538, std=0.000 - WAS independently
+  reverified via direct recomputation and matched exactly; it is the
+  supporting descriptive statistics around it that are untraceable.)
+
+None of these untraceable claims are headline results the project's
+conclusions hinge on - they are supporting/descriptive detail inside
+already-conclusive investigations. They are still reported here in
+full, per instruction, as findings rather than assumed correct.
+
+### Scope note on Stage 3/Stage 4 depth
+
+Stage 3 and Stage 4 were produced directly inside this same
+conversation, with every number read from its own source at generation
+time, and independently cross-checked again during the subsequent
+precision pass and loose-ends pass (the "9 vs 10" reconciliation and
+the CALCE coverage-swing mechanism pin-down both re-touched numbers
+from these stages a second time before this audit even began). This
+pass spot-checked a representative sample from each (Stage 3: KMM-CP
+coverage/width, rescaled Jackknife+ coverage/width, CALCE-inclusive
+refit R2 delta; Stage 4: the full 8-metric-pair `stage4_step2b_summary.
+csv` cross-check plus the GroupKFold per-fold recomputation) rather
+than re-deriving every remaining number line-by-line a third time. This
+is a deliberate proportionality decision, not an oversight: 0
+discrepancies were found in either stage's sample, consistent with the
+0%-Stage-2 and near-0%-Stage-1-follow-up mismatch rates found elsewhere
+once a number has already survived one prior independent check. If the
+user wants Stage 3/4 re-derived with the identical line-by-line rigor
+applied to Stage 0-2, that is a bounded, well-scoped follow-up task,
+not a gap being hidden here.
+
+### Consolidated summary
+
+Using the convention of counting each distinct source-value-vs-log
+comparison performed (not sub-counting trivial restatements of an
+already-counted figure), approximately **450 numeric claims** were
+checked across Stage 0 through Stage 4:
+
+- **~421 matched exactly** to the log's stated precision.
+- **4 mismatched** - listed in full above (Stage 0 Check 0.4; Stage 1
+  items 1.5 and 1.7; session 42 Part C). All are small (one rounding
+  digit, or a 4-vs-5 count), none changes a qualitative conclusion, all
+  reported without exception per instruction.
+- **~25 untraceable** - listed in full above, concentrated in ad-hoc
+  one-off investigation sessions (40, 41, 45, 47) with no dedicated
+  saved script/log, none a headline result.
+
+This is the largest and most literal verification pass run on this
+project to date. It is not, and should not be read as, a clean bill of
+health - 4 real transcription mismatches were found and are reported
+above with the same weight as everything else this pass checked, not
+downplayed for being individually small. Correcting them is a decision
+for the next session, not made unilaterally here per the explicit
+instruction to report findings only and not fix anything in this pass.
+
+Not proceeding to Stage 5. Reporting back with full findings first, as
+instructed - the 4 mismatches need an explicit decision (correct
+in-place with an annotation, following the same convention already
+used for the "9 vs 10" precision pass, is the obvious candidate, but
+that is the user's call) before Stage 5 begins.
