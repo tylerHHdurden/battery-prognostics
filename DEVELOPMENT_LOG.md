@@ -9769,3 +9769,81 @@ experimental-only per instruction and not being proposed for
 promotion at this time.
 
 Not proceeding to Stage 6. Reporting back with full findings.
+
+---
+
+## Item 1 follow-up: reformulating MET too ("fix XJTU first, then promote")
+
+Direct continuation of the prior entry's decision point. Chosen path:
+also reformulate `MET` (item 1's own identified, then-out-of-scope
+candidate for XJTU's regression), re-check all four datasets, and only
+promote to deployment if XJTU's gap closes without new regressions
+elsewhere.
+
+**MET_rel added** to `stage5_extended_reformulation.py` (RATIO, same
+treatment as SCV_rel - MET = mean energy throughput, Wh, a
+multiplicative combination of capacity(Ah) x voltage(V), the same
+class of multiplicatively-scaled quantity as SCV): `MET_rel =
+MET(cycle_n)/MET(baseline)`, same near-zero-baseline guard.
+
+**Domain-classifier AUC, now dropping meaningfully further (not just
+marginally) on all four datasets:**
+
+| dataset | AUC original (8 raw) | AUC SCV/MATD/VIECT only | AUC +MET |
+|---|---|---|---|
+| CALCE | 0.9881 | 0.9801 | **0.9157** |
+| Oxford | 0.9999 | 0.9541 | **0.9201** |
+| HUST | 0.9993 | 0.9802 | **0.9306** |
+| XJTU | 0.9999 | 0.9942 | **0.9035** |
+
+**Retrained, re-evaluated - 3 of 4 datasets improve FURTHER, XJTU gets
+WORSE AGAIN:**
+
+| dataset | original (5.1) | +SCV/MATD/VIECT | +MET |
+|---|---|---|---|
+| in-domain | 0.9740 | 0.9732 | 0.9732 (unaffected, both passes) |
+| CALCE | 0.568 | 0.665 | **0.740** (better again) |
+| Oxford | -2.694 | 0.901 | **0.953** (better again) |
+| HUST | -0.152 | 0.761 | **0.800** (better again) |
+| XJTU | -1.059 | -1.649 | **-1.775** (WORSE again) |
+
+**Root-cause check before accepting this as final, not assumed**:
+recomputed z-scores for every one of XJTU's reformulated features
+individually. Every single one is now statistically unremarkable
+(MET_rel z=0.27, SCV_rel z=0.38, VIECT_rel z=-0.09, ICHV_rel z=0.33,
+TEVD_rel z=2.02, TEVI_rel z=1.50, MATD_rel z=-2.50 - the largest
+survivor, still far below the original SCV z=9.13 or B0018's
+pre-reformulation z=854.7). **This rules out the simple explanation**
+("XJTU still has one more extreme feature to fix") - the marginal
+distributions of every individual reformulated feature look fine for
+XJTU now, yet the model's actual accuracy on XJTU keeps getting worse
+with each successive fix. This is exactly the caution flagged before
+starting this item: AUC/z-score improvement does not guarantee
+accuracy improvement - confirmed directly, not just cited as a
+possibility. The most likely remaining explanation (reasoned, not
+proven further here - a genuinely different investigation, out of
+this item's scope): XJTU's NCM chemistry may have a different
+underlying FEATURE-TO-SOH RELATIONSHIP than the LFP/mixed-chemistry
+training pool, not just a different feature marginal distribution -
+retraining to fit CALCE/Oxford/HUST's relationship better can trade
+off against XJTU's if that relationship genuinely differs, which no
+amount of input-rescaling alone can fix.
+
+**Decision, per the explicitly-stated condition**: XJTU's gap did NOT
+close - it widened at every step of this pass. **Not promoting to
+deployment.** `models/xgb_soh_fusion.json`, `live_inference.py`, and
+`app.py` remain completely unchanged. The extended-reformulation model
+(now including MET_rel) remains saved at `models/_experimental_xgb_
+soh_fusion_extended_reformulation.json` - a genuinely informative,
+strong result for 3 of 4 datasets, and honestly reported as NOT ready
+to replace the deployed model given XJTU's real, unresolved,
+worsening regression.
+
+### Files
+
+`src/stage5_extended_reformulation.py` (updated - MET_rel added),
+`outputs/stage5_extended_reformulation_{auc,eval}.csv` (overwritten
+with the +MET numbers), `outputs/stage5_met_reformulation_xjtu_
+zscores.csv`.
+
+No deployed-app changes. Not proceeding to Stage 6.

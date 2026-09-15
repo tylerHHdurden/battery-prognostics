@@ -7,7 +7,7 @@ that separation and improve zero-retrain generalization?
 
 EXPERIMENTAL, ADDITIVE ONLY - does not modify stage1_common.py or any
 canonical/deployed feature-building code. Nothing here is imported by
-live_inference.py or app.py.
+live_inference.py or app.py, unless/until explicitly promoted.
 
 Reformulation choice, reasoned per-feature (not applying one blanket
 rule) - the same distinction Stage 1.1 itself relied on to determine
@@ -35,23 +35,29 @@ duration features needed a RATIO not a delta:
   capacity, cell voltage doesn't scale with nominal capacity). Same
   reasoning as MATD: a DELTA against the battery's own early-life
   VIECT - VIECT_rel = VIECT(cycle_n) - VIECT(baseline).
+- MET = mean charge/discharge energy throughput, Wh (health_
+  indicators.py) - energy = capacity(Ah) x voltage(V), a MULTIPLICATIVE
+  combination of two scale factors this project already treats as
+  multiplicative on their own (capacity via SCV's own ratio treatment;
+  voltage-level via chemistry). Added in this follow-up pass (the
+  original item 1 explicitly scoped MET out; identified there as
+  XJTU's likely remaining driver - z=5.49, by far the largest
+  surviving z-score of any feature/dataset after SCV/MATD/VIECT were
+  fixed - and confirmed worth reformulating on the same evidence
+  rather than guessed at). Same ratio treatment as SCV -
+  MET_rel = MET(cycle_n)/MET(baseline).
 
 Same baseline convention as add_reformulated_duration_features
 (battery's own cycle_idx==10 row, median-of-own-cycles fallback if
-missing), same near-zero-baseline guard for the one ratio (SCV_rel)
-- deltas need no such guard (no division).
-
-Scope note, disclosed rather than silently expanded: item 2's own
-z-score table also flagged MET (mean energy throughput, itself
-capacity/chemistry-scaled) as comparably large on 3 of 4 datasets -
-NOT reformulated here, since this item's instruction explicitly names
-only SCV/MATD/VIECT. Left as an identified, out-of-scope candidate for
-a future pass, not silently folded in.
+missing), same near-zero-baseline guard for the two ratios (SCV_rel,
+MET_rel) - deltas need no such guard (no division).
 """
 import numpy as np
 import pandas as pd
 
 BASELINE_CYCLE = 10
+RATIO_FEATURES = ["SCV", "MET"]
+DELTA_FEATURES = ["MATD", "VIECT"]
 
 
 def _baseline_map(hi_df: pd.DataFrame, feat: str) -> dict:
@@ -69,26 +75,27 @@ def _baseline_map(hi_df: pd.DataFrame, feat: str) -> dict:
 def add_scv_matd_viect_reformulated(hi_df: pd.DataFrame) -> pd.DataFrame:
     hi_df = hi_df.copy()
 
-    # SCV_rel - RATIO (multiplicative capacity scale), same guard logic
-    # as add_reformulated_duration_features's near-zero-baseline case.
-    base = _baseline_map(hi_df, "SCV")
-    rel = np.full(len(hi_df), np.nan, dtype=float)
-    n_fallback = 0
-    for bid, g in hi_df.groupby("battery_id"):
-        b = base[bid]
-        if not np.isfinite(b) or abs(b) < 1e-6:
-            b = float(g["SCV"].median())
-            n_fallback += 1
-        if not np.isfinite(b) or abs(b) < 1e-6:
-            continue
-        idx = g.index
-        rel[idx] = hi_df.loc[idx, "SCV"].to_numpy(dtype=float) / b
-    hi_df["SCV_rel"] = rel
-    print(f"[extended-reformulation] SCV -> SCV_rel (ratio): {n_fallback} batteries used "
-          f"median-fallback baseline, {int((~np.isfinite(rel)).sum())} non-finite output values")
+    # SCV_rel, MET_rel - RATIO (multiplicative scale), near-zero-
+    # baseline guard, same pattern as add_reformulated_duration_features.
+    for feat in RATIO_FEATURES:
+        base = _baseline_map(hi_df, feat)
+        rel = np.full(len(hi_df), np.nan, dtype=float)
+        n_fallback = 0
+        for bid, g in hi_df.groupby("battery_id"):
+            b = base[bid]
+            if not np.isfinite(b) or abs(b) < 1e-6:
+                b = float(g[feat].median())
+                n_fallback += 1
+            if not np.isfinite(b) or abs(b) < 1e-6:
+                continue
+            idx = g.index
+            rel[idx] = hi_df.loc[idx, feat].to_numpy(dtype=float) / b
+        hi_df[f"{feat}_rel"] = rel
+        print(f"[extended-reformulation] {feat} -> {feat}_rel (ratio): {n_fallback} batteries used "
+              f"median-fallback baseline, {int((~np.isfinite(rel)).sum())} non-finite output values")
 
     # MATD_rel, VIECT_rel - DELTA (additive offset), no divide-by-zero risk.
-    for feat in ["MATD", "VIECT"]:
+    for feat in DELTA_FEATURES:
         base = _baseline_map(hi_df, feat)
         rel = np.full(len(hi_df), np.nan, dtype=float)
         for bid, g in hi_df.groupby("battery_id"):
@@ -103,11 +110,13 @@ def add_scv_matd_viect_reformulated(hi_df: pd.DataFrame) -> pd.DataFrame:
     return hi_df
 
 
-EXTENDED_FEATURE_MAP = {"SCV": "SCV_rel", "MATD": "MATD_rel", "VIECT": "VIECT_rel"}
+EXTENDED_FEATURE_MAP = {"SCV": "SCV_rel", "MATD": "MATD_rel", "VIECT": "VIECT_rel", "MET": "MET_rel"}
 
 
 def extended_canonical_feature_cols(base_cols: list[str]) -> list[str]:
-    """Swaps SCV/MATD/VIECT for their _rel versions in an already-
+    """Swaps SCV/MATD/VIECT/MET for their _rel versions in an already-
     duration-reformulated canonical column list (leaves ICHV_rel/
-    TEVD_rel/TEVI_rel/VDEDT/MET untouched)."""
+    TEVD_rel/TEVI_rel/VDEDT untouched - VDEDT is a dV/dt RATE, already
+    scale-invariant in a way the others weren't, never flagged as an
+    outlier in item 2's z-score check)."""
     return [EXTENDED_FEATURE_MAP.get(c, c) for c in base_cols]
