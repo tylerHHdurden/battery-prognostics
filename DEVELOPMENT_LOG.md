@@ -9847,3 +9847,236 @@ with the +MET numbers), `outputs/stage5_met_reformulation_xjtu_
 zscores.csv`.
 
 No deployed-app changes. Not proceeding to Stage 6.
+
+---
+
+## Data-expansion pass: 204-battery pool retrain (Part A) + NASA Randomized Battery Usage acquisition (Part B)
+
+Two-part pass. CALCE/Oxford/HUST/XJTU remained untouched, held-out
+test sets throughout both parts - never trained on. No deployed-app
+changes.
+
+### Part A - full 204-battery pool regeneration and retrain
+
+**Scope decision, disclosed**: "the full 204-battery pool" is the 204
+IDs in `battery_split_expanded_b0018pinned.json` (23 NASA + 181 MIT,
+session 33's "Dataset Expansion Phase 1," all from already-downloaded
+raw data) - confirmed by direct check that NONE of Stage 2.1's 10
+separately-recovered batteries overlap with this list (they were
+excluded from a different, independent sweep). Not silently combined
+into 214 - interpreted literally as stated.
+
+**Step 1 - feature regeneration**: `hi_table_expanded.parquet` (session
+33's original build) was verified STALE before trusting it (b1c20
+cycle-1 RUL=532, the pre-Severson-aware value, not 531) - the exact
+same staleness Stage 4 found and fixed for the 42-battery pool.
+Regenerated from scratch through the CURRENT pipeline into a separate
+file (`hi_table_pool204.parquet` - does NOT touch the deployed
+`hi_table.parquet`).
+
+**Real bug found and fixed while regenerating**: `compute_eol_and_rul_
+severson_aware` (`rul_labels.py`) crashed with `ValueError: cannot
+convert float NaN to integer` on `b3c23` - a cell that was NEVER
+processed through this exact code path by the smaller 42-battery pool.
+Root-caused (not just caught): the function's own guard
+(`published_cl is not None`) only protects against a MISSING dict key,
+not a PRESENT key holding NaN - `b3c23`/`b3c32` (already flagged in
+Stage 2.2's EOL convention reconciliation as the 2 cells with no
+resolvable Severson match) have a real `cl_map` entry whose value IS
+NaN. Fixed by also checking `np.isfinite`, so both cells now correctly
+fall through to the manual `compute_eol_and_rul` convention, exactly
+as the function's own docstring already said they should. Verified
+directly: `b3c23`/`b3c32` now resolve to EOL=2189/2237 (both censored),
+no crash.
+
+Regenerated pool: 23 NASA + 181 MIT + 3 CALCE (structural only) = 207
+batteries, **156,207 total cycles**, 0 duplicate rows, Severson-aware
+convention verified live (b1c20 cycle-1 RUL=531.0, exact).
+
+**Step 2 - retrain**: fresh `channel_norm_stats_pool204.json`, ICA
+fusion encoder (`ica_encoder_pool204.pt`), fusion embeddings
+(`fusion_embeddings_pool204.csv`), XGBoost-fusion
+(`xgb_soh_fusion_pool204.json`) - canonical Stage 1.1 reformulated
+8-feature set + Stage 1.5's exact monotone-constraint convention
+(verified directly against `run_stage4_step2b_xgb_joint.py` before
+reusing it: only `cycle_idx` is constrained, none of the 8 HI features
+individually - applied unchanged, not reinvented). VLSTM NOT retrained
+(SHAP-explainability-only role, not needed for this comparison, scoped
+out to keep an already-large pass bounded). All 4 new files are
+SEPARATE from the deployed ones - `channel_norm_stats.json`,
+`ica_encoder.pt`, `fusion_embeddings.csv`, `xgb_soh_fusion.json`, and
+every file `live_inference.py` loads are untouched.
+
+**2 more real bugs found and fixed during this step** (this stage's
+first attempt at a materially larger pool than any prior retrain, so
+new edge cases surfacing is consistent with this project's whole
+history): (1) the XGBoost training path crashed on real `inf` values
+(the VDEDT channel, a previously-known issue elsewhere in this
+project) that the evaluation path already sanitized but the fit path
+didn't - fixed, and disclosed as a real, if narrowly-scoped, oversight
+in the first draft of this script; (2) the CALCE zero-retrain eval
+initially produced 0 usable rows - root-caused to a genuine
+misunderstanding, not a typo: `fusion_embeddings_pool204.csv` only
+ever contains NASA/MIT rows (the training-pool loader correctly never
+includes CALCE), so filtering it for `dataset=="CALCE"` was always
+going to be empty. Fixed by computing CALCE's own fusion embeddings
+the same way Oxford/HUST/XJTU's already correctly are (build CALCE's
+own tensors, apply the SAME frozen norm stats, encode via the SAME
+trained encoder) - not by looking them up in a file that structurally
+could never contain them. Both fixes verified before trusting any
+downstream number (a sanity-check re-evaluation of the in-domain split
+reproduced the pre-crash run's own R2=0.9966 exactly before accepting
+the completion run's CALCE/Oxford/HUST/XJTU numbers).
+
+**Step 3 - full before/after comparison against the deployed 42-battery
+model:**
+
+| dataset | Stage 4 (42-battery, DEPLOYED) | 204-battery pool | delta |
+|---|---|---|---|
+| in-domain (fixed split) | 0.9740 | **0.9966** | +0.0226 |
+| in-domain (GroupKFold(5) mean) | 0.9658 (std 0.0207) | **0.9792** (std 0.0307) | +0.0134 |
+| CALCE | 0.568 | **0.849** | **+0.281** |
+| Oxford | -2.694 | **-5.685** | **-2.991** |
+| HUST | -0.152 | **0.368** | **+0.520** |
+| XJTU | -1.059 | **-3.006** | **-1.947** |
+
+**Honest verdict, per the explicit "promote only if clearly better"
+instruction: NOT promoting.** This is a genuinely mixed result, not a
+clean win - in-domain accuracy improves, and 2 of 4 held-out datasets
+(CALCE, HUST) improve substantially, but the other 2 (Oxford, XJTU)
+get MUCH worse, not just flat. This does not meet "clearly better" by
+any reasonable reading.
+
+**Reasoned (not proven further here) explanation for the split
+direction**: the 204-battery pool is proportionally far more MIT-heavy
+than the 42-battery pool (11.3% NASA vs. 23.8% NASA - 23 of 204 vs. 10
+of 42). CALCE and HUST are both LFP-chemistry, MIT-adjacent-protocol
+domains (CALCE's own long-documented partial similarity; HUST's A123
+LFP cells cycled with a related fast-charge-style protocol) - more
+MIT-flavored training data plausibly helps them directly. Oxford
+(Kokam pouch, Artemis drive-cycle) and XJTU (NCM, several high-rate
+protocols including random-pulse loads) are the two datasets furthest
+from MIT's own chemistry/protocol characteristics - a model trained on
+an even MORE MIT-dominated pool becoming MORE specialized toward
+MIT-like behavior, not more broadly generalizable, is a physically
+sensible explanation for exactly this split. Not confirmed by a
+dedicated ablation (out of this already-large pass's scope) - a
+reasoned hypothesis with supporting compositional evidence, not a
+proven mechanism.
+
+Saved models (`xgb_soh_fusion_pool204.json` and its 3 supporting
+artifacts) remain **experimental only** - kept on disk for reference,
+not wired into `live_inference.py` or `app.py`.
+
+### Part B - NASA Randomized Battery Usage dataset: acquisition
+
+**Availability checked directly, not assumed**: NASA's own PCoE
+repository page currently HAS a working direct-download link
+(`https://phm-datasets.s3.amazonaws.com/NASA/11.+Randomized+Battery+
+Usage+Data+Set.zip`, verified with a live HEAD request - 200 OK,
+Content-Length 1,065,821,095 bytes, same S3 hosting infrastructure
+already used for this project's existing NASA data) - contradicting
+the "may be unavailable" framing in the original brief; separately
+cross-confirmed via an official NASA Zenodo deposit (DOI
+10.5281/zenodo.15277374, "National Aeronautics and Space
+Administration" as depositor, not a third-party reupload). Downloaded
+directly from NASA's own host at the exact expected byte count.
+
+**Framing confirmed explicitly, per instruction**: this is being
+treated as a TRAINING dataset candidate (same general kind of data as
+what's already in the training pool), NOT a held-out generalization
+test like CALCE/Oxford/HUST/XJTU - no retraining performed on it in
+this same pass, per the explicit instruction not to combine this with
+Part A's regeneration in one attributable step.
+
+**Adapter written** (`iterate_nasa_randomized_cycles`,
+`data_adapters.py`): 28 LG Chem 18650 cells (RW1-RW28, 2.1 Ah nominal),
+7 sub-experiments spanning uniform-random-walk discharge, variable
+recharge, and skewed-high/low load at room temp and 40degC. Unlike
+every other adapter in this project, cells are NOT organized into
+discrete numbered cycles - each is one long stream of `step` records
+(rest/charge/discharge segments of a continuous randomized-current
+profile) with periodic REFERENCE charge/discharge checkpoints
+interspersed (the SAME structural pattern as XJTU's Sim_satellite
+"[test capacity]" checkpoints, handled the same way: only the
+reference pairs are yielded, not the randomized-load steps between
+them).
+
+**3 real data-quality issues found and fixed while building/verifying
+this adapter, all disclosed with the exact mechanism, not silently
+patched**:
+1. **Sign convention inverted** relative to this project's own
+   convention - verified directly on RW1 (charge current logged
+   NEGATIVE, discharge POSITIVE, the opposite of charge>0/discharge<0)
+   and flipped to match.
+2. **A second discharge-step type** (`"reference power discharge"`,
+   constant-POWER rather than constant-current) used by the 4 "Skewed"
+   sub-datasets instead of the plain `"reference discharge"` the other
+   3 sub-datasets use - found when the first adapter draft returned 0
+   cycles for those cells; root-caused via direct step-sequence
+   inspection (confirmed RW13 has ZERO `"reference discharge"` steps,
+   only `"reference power discharge"`) before accepting both as valid
+   pairing targets - the capacity computation (trapz of `|I|dt`) is
+   agnostic to which control mode produced the current trace.
+3. **A temperature sensor-failure sentinel** (~-4093.9/-4099.4degC on
+   RW2 - every cycle; smaller scattered glitch values like
+   -54.9/-98.7/-79.2degC on RW2/RW3/RW18's individual cycles) -
+   confirmed physically impossible (every other cell/cycle in this
+   dataset stays within [18,60]degC) and NaN'd out at a -50degC
+   threshold, matching this project's existing convention for a
+   missing/unusable T channel.
+
+**Verified against raw physical values before trusting it, exactly as
+done for Oxford/HUST/XJTU**:
+
+| | cells | ref. cycles | capacity range (Ah) | voltage range (V) | notes |
+|---|---|---|---|---|---|
+| RW1-12 (room temp, ~0.5C reference) | 12 | 653 | 0.69-2.10 | 3.20-4.12 | clean, gradual fade |
+| RW13-20 (Skewed, ~2.2C power-discharge reference) | 8 | 210 | 0.02-1.89 | " | see note below |
+| RW21-28 (Skewed, 40degC + high stress) | 8 | 84 | 0.19-1.32 | " | most severe fade |
+| **TOTAL** | **28** | **947** | 0.02-2.10 | 3.20-4.12 | |
+
+**Investigated rather than assumed benign**: the "Skewed" cells' sharp,
+near-total capacity collapse under their own fixed-power reference test
+(e.g. RW13: 1.86 -> 1.06 -> **0.11** Ah between checkpoints 7 and 8,
+then staying near-0 for the rest of its life) looked suspicious at
+first glance - checked directly whether this reflects a real
+phenomenon or a computation artifact. Confirmed the SAME
+reference-power-discharge protocol is used consistently at every
+checkpoint for a given cell (not a changing/inconsistent test, unlike
+Sim_satellite's actual problem), so the labeled trend is a real,
+comparably-measured signal, not a protocol-consistency bug. Most
+likely a genuine electrochemical effect (rate-capability collapse
+under a fixed high-power/current test as internal resistance rises
+near end-of-life, well past what a low-rate capacity check would show)
+- flagged honestly as a characteristic worth accounting for in any
+future training-integration decision, not resolved further here (out
+of this pass's acquisition-only scope).
+
+**No retraining performed on this data in this pass**, per explicit
+instruction. `nasa_randomized_data_available()`/`nasa_randomized_cell_
+ids()`/`iterate_nasa_randomized_cycles()` are ready for a future,
+separate integration pass.
+
+### Files
+
+Part A: `src/run_pool204_step1_feature_regen.py`, `src/pool204_
+tensors.py`, `src/run_pool204_step2_retrain_eval.py`, `src/run_
+pool204_step2_resume.py`, `src/run_pool204_step3_finish.py`, `src/rul_
+labels.py` (NaN-guard fix), `data/processed/{hi_table_pool204.parquet,
+channel_norm_stats_pool204.json, fusion_embeddings_pool204.csv}`,
+`models/{ica_encoder_pool204.pt, xgb_soh_fusion_pool204.json}`,
+`outputs/pool204_*.csv`. Part B: `src/data_adapters.py` (NASA
+Randomized adapter, additive), `outputs/nasa_randomized_adapter_
+verification.csv`. Raw data under `data/raw/nasa_randomized/`
+(gitignored, same convention as every other raw dataset).
+
+### What's deployed - unchanged
+
+`app.py`, `live_inference.py`, and every model file the live app loads
+remain byte-for-byte untouched - verified via `git diff` before
+committing. Neither Part A's 204-battery model nor Part B's new
+dataset are wired into anything deployed.
+
+Not proceeding to Stage 6. Reporting back with both parts' full
+findings.

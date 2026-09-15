@@ -1,0 +1,56 @@
+=== Resuming Part A Step 2/3 from saved artifacts ===
+[pool204-resume] === building HI-reformulated + fusion merged frame ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[pool204-resume] merged: 153244 rows
+
+[pool204-resume] === retraining XGBoost-fusion (canonical 1.1+1.5 config) ===
+[pool204-resume] IN-DOMAIN (fixed split): R2=0.9966 RMSE=0.4214 (Stage 4 42-battery: R2=0.9740 RMSE=0.7805)
+
+[pool204-resume] === GroupKFold(5) CV ===
+[pool204-resume] fold 0: R2=0.9936 RMSE=0.6739 n=29894
+[pool204-resume] fold 1: R2=0.9961 RMSE=0.4566 n=29736
+[pool204-resume] fold 2: R2=0.9842 RMSE=0.8706 n=31783
+[pool204-resume] fold 3: R2=0.9251 RMSE=1.7890 n=31028
+[pool204-resume] fold 4: R2=0.9970 RMSE=0.4558 n=30803
+[pool204-resume] GroupKFold mean R2=0.9792 (std 0.0307) mean RMSE=0.8491 (std 0.5530)
+[pool204-resume] vs. Stage 4 42-battery GroupKFold: R2=0.9658 (std 0.0207) RMSE=1.1388 (std 0.5673)
+
+=== Part A, Step 3: zero-retrain eval on all 4 held-out datasets ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 2943 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 2943 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 2943 rows)
+Traceback (most recent call last):
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\run_pool204_step2_resume.py", line 136, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\run_pool204_step2_resume.py", line 109, in main
+    results = {"CALCE": eval_xgb_local(model, medians, feature_cols, fcols, calce_merged)}
+                        ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\run_pool204_step2_retrain_eval.py", line 129, in eval_xgb_local
+    return {"rmse": float(np.sqrt(mean_squared_error(y_true, pred))),
+                                  ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\utils\_param_validation.py", line 218, in wrapper
+    return func(*args, **kwargs)
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\metrics\_regression.py", line 579, in mean_squared_error
+    _check_reg_targets_with_floating_dtype(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        y_true, y_pred, sample_weight, multioutput, xp=xp
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\metrics\_regression.py", line 208, in _check_reg_targets_with_floating_dtype
+    y_type, y_true, y_pred, sample_weight, multioutput = _check_reg_targets(
+                                                         ~~~~~~~~~~~~~~~~~~^
+        y_true, y_pred, sample_weight, multioutput, dtype=dtype_name, xp=xp
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\metrics\_regression.py", line 114, in _check_reg_targets
+    y_true = check_array(y_true, ensure_2d=False, dtype=dtype)
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\sklearn\utils\validation.py", line 1097, in check_array
+    raise ValueError(
+    ...<3 lines>...
+    )
+ValueError: Found array with 0 sample(s) (shape=(0,)) while a minimum of 1 is required.

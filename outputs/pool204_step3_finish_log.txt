@@ -1,0 +1,43 @@
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\health_indicators.py:155: RuntimeWarning: divide by zero encountered in divide
+  out["VDEDT"] = float(np.mean(np.diff(Vd[-tail_n:]) / np.diff(td[-tail_n:]))) if tail_n > 1 else np.nan
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\_core\_methods.py:132: RuntimeWarning: invalid value encountered in reduce
+  ret = umr_sum(arr, axis, dtype, out, keepdims, where=where)
+=== Finishing Part A Step 3 (CALCE eval bug fixed) ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[pool204-finish] IN-DOMAIN (fixed split): R2=0.9966 RMSE=0.4214 (sanity check - must match the resume run's own 0.9966/0.4214)
+[pool204-finish] GroupKFold (already completed): mean R2=0.9792 (std 0.0307) mean RMSE=0.8491 (std 0.5530)
+
+=== zero-retrain eval on all 4 held-out datasets (CALCE included correctly this time) ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 2943 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 2943 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 2943 rows)
+[pool204-finish] CALCE: R2=0.8491 RMSE=8.3648 n=2941 (3 cells)
+[stage1-duration] WARNING: 8 batteries have no cycle_idx==10 row at all: ['Cell1', 'Cell2', 'Cell3', 'Cell4', 'Cell5', 'Cell6', 'Cell7', 'Cell8'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 519 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 519 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 519 rows)
+[pool204-finish] Oxford: R2=-5.6854 RMSE=17.6700 n=519 (8 cells)
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 146122 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 146122 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 146122 rows)
+[pool204-finish] HUST: R2=0.3682 RMSE=5.8642 n=146122 (77 cells)
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 19238 rows)
+[stage1-duration] near-zero/non-finite cycle-10 baseline for Batch-5/RW_battery-1/TEVD (0.0) - falling back to this battery's own median TEVD (114.3600) as the denominator.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for Batch-5/RW_battery-5/TEVD (0.0) - falling back to this battery's own median TEVD (120.8400) as the denominator.
+[stage1-duration] TEVD -> TEVD_rel: 2 batteries used median-fallback baseline, 0 non-finite output values (of 19238 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 19238 rows)
+[pool204-finish] XJTU: R2=-3.0059 RMSE=12.0356 n=19238 (47 cells)
+
+=== FINAL SUMMARY (204-battery pool, vs. Stage 4's 42-battery deployed model) ===
+                dataset  n_cycles        r2      rmse
+in-domain (fixed split)     29621  0.996643  0.421384
+                  CALCE      2941  0.849104  8.364791
+                 Oxford       519 -5.685364 17.670001
+                   HUST    146122  0.368188  5.864179
+                   XJTU     19238 -3.005876 12.035573
+
+Stage 4 (42-battery, deployed) reference: in-domain R2=0.9740(fixed)/0.9658(CV), CALCE=0.568, Oxford=-2.694, HUST=-0.152, XJTU=-1.059
+
+[pool204-finish] TOTAL TIME: 23.7 minutes

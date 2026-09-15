@@ -31,6 +31,7 @@ MIT_DIR = ROOT / "data" / "raw" / "mit"
 OXFORD_DIR = ROOT / "data" / "raw" / "oxford"
 HUST_DIR = ROOT / "data" / "raw" / "hust" / "extracted" / "our_data"
 XJTU_DIR = ROOT / "data" / "raw" / "xjtu" / "extracted"
+NASA_RANDOMIZED_DIR = ROOT / "data" / "raw" / "nasa_randomized" / "extracted2"
 
 
 # --------------------------------------------------------------------------
@@ -65,6 +66,10 @@ def hust_data_available() -> bool:
 
 def xjtu_data_available() -> bool:
     return XJTU_DIR.is_dir() and any(XJTU_DIR.rglob("*.mat"))
+
+
+def nasa_randomized_data_available() -> bool:
+    return NASA_RANDOMIZED_DIR.is_dir() and any(NASA_RANDOMIZED_DIR.rglob("RW*.mat"))
 
 
 # --------------------------------------------------------------------------
@@ -472,3 +477,135 @@ def iterate_hust_cycles(cell_id: str):
                 "T": None,
             },
         }
+
+
+# --------------------------------------------------------------------------
+# NASA PCoE Randomized Battery Usage Data Set (Part B, data-expansion pass)
+#
+# Source: NASA's own S3-hosted repository, https://phm-datasets.s3.
+# amazonaws.com/NASA/11.+Randomized+Battery+Usage+Data+Set.zip (1.07 GB,
+# verified currently downloadable directly - NASA's PCoE listing page
+# was checked live before assuming otherwise). 28 LG Chem 18650 cells
+# (RW1-RW28, 2.1 Ah nominal), 7 sub-experiments (uniform-random-walk
+# discharge, variable recharge, skewed-high/low load at room temp and
+# 40degC) - a genuinely different NASA collection from the B00XX cells
+# already in this project (different chemistry/vendor, randomized-load
+# protocol vs. B00XX's fixed CC/CV cycling).
+#
+# Each cell's .mat is NOT organized into discrete numbered cycles like
+# every other adapter in this project - it's one long stream of `step`
+# records (rest/charge/discharge segments of a continuous randomized-
+# current profile), with periodic REFERENCE charge/discharge steps
+# (exact `comment` fields "reference charge"/"reference discharge",
+# confirmed by direct inspection - NOT the same string as "rest post
+# reference charge/discharge", which are separate rest-type steps
+# filtered out here) interspersed roughly every ~900-1000 steps to
+# provide comparable capacity-fade checkpoints - the SAME structural
+# pattern as XJTU's Sim_satellite "[test capacity]" checkpoints (Stage
+# 5 follow-on), handled the same way: only the reference charge/
+# discharge PAIRS are yielded as cycle records, not the randomized-
+# load steps in between (which have no fixed, comparable depth and
+# would break this project's SOH convention the same way Sim_
+# satellite's regular cycles did).
+#
+# Sign convention VERIFIED, not assumed, and found to need a flip: this
+# dataset logs reference-charge current NEGATIVE and reference-discharge
+# current POSITIVE (checked directly on RW1: charge I in [-2.008,-0.01],
+# discharge I in [0.999,1.005]) - the OPPOSITE of this project's
+# convention (charge>0, discharge<0) and of the OTHER NASA dataset's own
+# convention. Flipped here (negated) to match every other adapter.
+#
+# No direct capacity field on a `step` - discharge_capacity computed by
+# trapezoidal integration of |I| dt over the reference-discharge step,
+# the same convention already documented in ica_dv_dc.py's own
+# docstring for computing capacity uniformly from raw current.
+# --------------------------------------------------------------------------
+
+def nasa_randomized_cell_ids():
+    return [f"RW{i}" for i in range(1, 29)]
+
+
+def iterate_nasa_randomized_cycles(cell_id: str):
+    matches = list(NASA_RANDOMIZED_DIR.rglob(f"{cell_id}.mat"))
+    if not matches:
+        raise FileNotFoundError(f"{cell_id}.mat not found under {NASA_RANDOMIZED_DIR}")
+    mat = sio.loadmat(matches[0], simplify_cells=True)
+    steps = mat["data"]["step"]
+
+    cycle_idx = 0
+    i = 0
+    n = len(steps)
+    while i < n:
+        s = steps[i]
+        if s.get("comment") != "reference charge":
+            i += 1
+            continue
+        # look forward (skipping any REST step whose own comment also
+        # says "reference" - e.g. "rest post reference charge", "rest
+        # prior reference discharge" - both forms seen across the 7
+        # sub-datasets, confirmed by direct inspection of RW1 and RW25)
+        # for the matching discharge. The 4 "Skewed" sub-datasets
+        # (RW13/17/21/25 and neighbors) use "reference power discharge"
+        # (constant-POWER, not constant-current) instead of "reference
+        # discharge" as their own capacity-check step - confirmed by
+        # direct inspection (RW25 has zero "reference discharge" steps
+        # at all, only "reference power discharge") before accepting
+        # both as valid closing matches. Either is a legitimate, full,
+        # comparable reference test - the capacity computation below
+        # (trapz of |I|dt) is agnostic to whether the step was current-
+        # or power-controlled.
+        DISCHARGE_MATCH = ("reference discharge", "reference power discharge")
+        j = i + 1
+        while j < n and steps[j].get("comment") not in DISCHARGE_MATCH:
+            if "reference" not in str(steps[j].get("comment", "")).lower():
+                break  # not a reference block - abandon this pairing attempt
+            j += 1
+        if j >= n or steps[j].get("comment") not in DISCHARGE_MATCH:
+            i += 1
+            continue
+
+        ch, dc = s, steps[j]
+        tc = np.atleast_1d(ch["relativeTime"]).astype(float)
+        Vc = np.atleast_1d(ch["voltage"]).astype(float)
+        Ic = -np.atleast_1d(ch["current"]).astype(float)  # sign flip, see module docstring
+        Tc = np.atleast_1d(ch["temperature"]).astype(float)
+
+        td = np.atleast_1d(dc["relativeTime"]).astype(float)
+        Vd = np.atleast_1d(dc["voltage"]).astype(float)
+        Id = -np.atleast_1d(dc["current"]).astype(float)
+        Td = np.atleast_1d(dc["temperature"]).astype(float)
+
+        # sensor-failure sentinel found and handled, not silently
+        # passed through: RW2 (every cycle) logs temperature around
+        # -4093.9degC, a physically-impossible value confirmed by
+        # direct inspection, not a rare one-off; RW2/RW3/RW18 also
+        # have a handful of isolated transient glitch points per
+        # affected cycle (a few points of several hundred, values like
+        # -54.9/-98.7/-79.2degC - scattered, not one fixed sentinel,
+        # but equally impossible for a battery test with no genuinely
+        # sub-freezing protocol anywhere else in this dataset - checked
+        # directly: every other cell's T stays within [18,60]degC).
+        # NaN'd out at a -50degC threshold (matching this project's
+        # existing convention for a missing/unusable T channel, e.g.
+        # CALCE's/HUST's T=None) rather than feeding a garbage value
+        # into MATC/MATD/etc.
+        Tc = np.where(Tc < -50, np.nan, Tc)
+        Td = np.where(Td < -50, np.nan, Td)
+
+        if len(tc) < 2 or len(td) < 2:
+            i = j + 1
+            continue
+
+        discharge_capacity = float(np.trapezoid(np.abs(Id), td)) / 3600.0
+        if discharge_capacity <= 0:
+            i = j + 1
+            continue
+
+        cycle_idx += 1
+        yield {
+            "cycle_idx": cycle_idx,
+            "discharge_capacity": discharge_capacity,
+            "charge": {"t": tc, "V": Vc, "I": Ic, "T": Tc},
+            "discharge": {"t": td, "V": Vd, "I": Id, "T": Td},
+        }
+        i = j + 1

@@ -111,7 +111,20 @@ def compute_eol_and_rul_severson_aware(cycle_records: list[dict], global_id: str
     if global_id is not None and (global_id.startswith("b1c") or global_id.startswith("b3c")):
         cl_map = _load_severson_cycle_life()
         published_cl = cl_map.get(global_id)
-        if published_cl is not None:
+        # BUG FOUND AND FIXED (204-battery pool regeneration - never
+        # triggered by the smaller 42-battery pool, which doesn't
+        # include either affected cell): `published_cl is not None`
+        # only guards a MISSING dict key, not a PRESENT key holding
+        # NaN - b3c23/b3c32 (already flagged in Stage 2.2's EOL
+        # convention reconciliation as the 2 cells with no resolvable
+        # Severson match) have a real entry in cl_map whose value IS
+        # NaN, so `int(published_cl)` crashed with "cannot convert
+        # float NaN to integer" instead of falling through to the
+        # manual convention as the docstring says it should. Fixed by
+        # also checking np.isfinite - both cells now correctly fall
+        # through to compute_eol_and_rul, matching every other MIT
+        # batch-1/3 cell without a resolvable cycle_life.
+        if published_cl is not None and np.isfinite(published_cl):
             idxs = np.array([c["cycle_idx"] for c in cycle_records], dtype=int)
             eol_cycle = int(published_cl) - _SEVERSON_CYCLE_LIFE_OFFSET
             rul_per_cycle = {int(i): max(eol_cycle - int(i), 0) for i in idxs}

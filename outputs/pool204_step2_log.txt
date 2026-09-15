@@ -1,0 +1,297 @@
+=== Part A, Step 2: retrain on the 204-battery pool ===
+[pool204-tensors] loaded NASA/B0005: (168, 200, 6)
+[pool204-tensors] loaded NASA/B0006: (168, 200, 6)
+[pool204-tensors] loaded NASA/B0007: (168, 200, 6)
+[pool204-tensors] loaded NASA/B0018: (132, 200, 6)
+[pool204-tensors] loaded NASA/B0025: (28, 200, 6)
+[pool204-tensors] loaded NASA/B0026: (28, 200, 6)
+[pool204-tensors] loaded NASA/B0027: (28, 200, 6)
+[pool204-tensors] loaded NASA/B0028: (28, 200, 6)
+[pool204-tensors] loaded NASA/B0029: (39, 200, 6)
+[pool204-tensors] loaded NASA/B0030: (39, 200, 6)
+[pool204-tensors] loaded NASA/B0031: (39, 200, 6)
+[pool204-tensors] loaded NASA/B0032: (39, 200, 6)
+[pool204-tensors] loaded NASA/B0042: (106, 200, 6)
+[pool204-tensors] loaded NASA/B0043: (106, 200, 6)
+[pool204-tensors] loaded NASA/B0044: (106, 200, 6)
+[pool204-tensors] loaded NASA/B0045: (71, 200, 6)
+[pool204-tensors] loaded NASA/B0046: (71, 200, 6)
+[pool204-tensors] loaded NASA/B0047: (71, 200, 6)
+[pool204-tensors] loaded NASA/B0048: (71, 200, 6)
+[pool204-tensors] loaded NASA/B0053: (54, 200, 6)
+[pool204-tensors] loaded NASA/B0054: (101, 200, 6)
+[pool204-tensors] loaded NASA/B0055: (101, 200, 6)
+[pool204-tensors] loaded NASA/B0056: (101, 200, 6)
+[pool204-tensors] loaded MIT/b1c1: (1177, 200, 6)
+[pool204-tensors] loaded MIT/b1c10: (904, 200, 6)
+[pool204-tensors] loaded MIT/b1c11: (786, 200, 6)
+[pool204-tensors] loaded MIT/b1c12: (900, 200, 6)
+[pool204-tensors] loaded MIT/b1c13: (895, 200, 6)
+[pool204-tensors] loaded MIT/b1c14: (878, 200, 6)
+[pool204-tensors] loaded MIT/b1c15: (717, 200, 6)
+[pool204-tensors] loaded MIT/b1c16: (860, 200, 6)
+[pool204-tensors] loaded MIT/b1c17: (855, 200, 6)
+[pool204-tensors] loaded MIT/b1c19: (786, 200, 6)
+[pool204-tensors] loaded MIT/b1c2: (1175, 200, 6)
+[pool204-tensors] loaded MIT/b1c20: (532, 200, 6)
+[pool204-tensors] loaded MIT/b1c21: (557, 200, 6)
+[pool204-tensors] loaded MIT/b1c22: (889, 200, 6)
+[pool204-tensors] loaded MIT/b1c23: (1012, 200, 6)
+[pool204-tensors] loaded MIT/b1c24: (1015, 200, 6)
+[pool204-tensors] loaded MIT/b1c25: (852, 200, 6)
+[pool204-tensors] loaded MIT/b1c26: (868, 200, 6)
+[pool204-tensors] loaded MIT/b1c27: (840, 200, 6)
+[pool204-tensors] loaded MIT/b1c28: (858, 200, 6)
+[pool204-tensors] loaded MIT/b1c29: (915, 200, 6)
+[pool204-tensors] loaded MIT/b1c3: (1224, 200, 6)
+[pool204-tensors] loaded MIT/b1c30: (707, 200, 6)
+[pool204-tensors] loaded MIT/b1c31: (874, 200, 6)
+[pool204-tensors] loaded MIT/b1c32: (729, 200, 6)
+[pool204-tensors] loaded MIT/b1c33: (755, 200, 6)
+[pool204-tensors] loaded MIT/b1c34: (740, 200, 6)
+[pool204-tensors] loaded MIT/b1c35: (701, 200, 6)
+[pool204-tensors] loaded MIT/b1c36: (702, 200, 6)
+[pool204-tensors] loaded MIT/b1c37: (646, 200, 6)
+[pool204-tensors] loaded MIT/b1c38: (615, 200, 6)
+[pool204-tensors] loaded MIT/b1c39: (623, 200, 6)
+[pool204-tensors] loaded MIT/b1c4: (1225, 200, 6)
+[pool204-tensors] loaded MIT/b1c40: (964, 200, 6)
+[pool204-tensors] loaded MIT/b1c41: (1049, 200, 6)
+[pool204-tensors] loaded MIT/b1c42: (700, 200, 6)
+[pool204-tensors] loaded MIT/b1c43: (649, 200, 6)
+[pool204-tensors] loaded MIT/b1c44: (614, 200, 6)
+[pool204-tensors] loaded MIT/b1c45: (597, 200, 6)
+[pool204-tensors] loaded MIT/b1c5: (1072, 200, 6)
+[pool204-tensors] loaded MIT/b1c6: (634, 200, 6)
+[pool204-tensors] loaded MIT/b1c7: (868, 200, 6)
+[pool204-tensors] loaded MIT/b1c8: (877, 200, 6)
+[pool204-tensors] loaded MIT/b1c9: (1052, 200, 6)
+[pool204-tensors] loaded MIT/b2c0: (325, 200, 6)
+[pool204-tensors] loaded MIT/b2c1: (169, 200, 6)
+[pool204-tensors] loaded MIT/b2c10: (595, 200, 6)
+[pool204-tensors] loaded MIT/b2c11: (504, 200, 6)
+[pool204-tensors] loaded MIT/b2c13: (519, 200, 6)
+[pool204-tensors] loaded MIT/b2c14: (508, 200, 6)
+[pool204-tensors] loaded MIT/b2c15: (207, 200, 6)
+[pool204-tensors] loaded MIT/b2c16: (481, 200, 6)
+[pool204-tensors] loaded MIT/b2c17: (524, 200, 6)
+[pool204-tensors] loaded MIT/b2c18: (522, 200, 6)
+[pool204-tensors] loaded MIT/b2c19: (488, 200, 6)
+[pool204-tensors] loaded MIT/b2c2: (463, 200, 6)
+[pool204-tensors] loaded MIT/b2c20: (530, 200, 6)
+[pool204-tensors] loaded MIT/b2c21: (519, 200, 6)
+[pool204-tensors] loaded MIT/b2c22: (539, 200, 6)
+[pool204-tensors] loaded MIT/b2c23: (561, 200, 6)
+[pool204-tensors] loaded MIT/b2c24: (523, 200, 6)
+[pool204-tensors] loaded MIT/b2c25: (486, 200, 6)
+[pool204-tensors] loaded MIT/b2c26: (497, 200, 6)
+[pool204-tensors] loaded MIT/b2c27: (494, 200, 6)
+[pool204-tensors] loaded MIT/b2c28: (540, 200, 6)
+[pool204-tensors] loaded MIT/b2c29: (521, 200, 6)
+[pool204-tensors] loaded MIT/b2c3: (360, 200, 6)
+[pool204-tensors] loaded MIT/b2c30: (506, 200, 6)
+[pool204-tensors] loaded MIT/b2c31: (518, 200, 6)
+[pool204-tensors] loaded MIT/b2c32: (543, 200, 6)
+[pool204-tensors] loaded MIT/b2c33: (545, 200, 6)
+[pool204-tensors] loaded MIT/b2c34: (525, 200, 6)
+[pool204-tensors] loaded MIT/b2c35: (485, 200, 6)
+[pool204-tensors] loaded MIT/b2c36: (559, 200, 6)
+[pool204-tensors] loaded MIT/b2c37: (501, 200, 6)
+[pool204-tensors] loaded MIT/b2c38: (486, 200, 6)
+[pool204-tensors] loaded MIT/b2c39: (479, 200, 6)
+[pool204-tensors] loaded MIT/b2c4: (470, 200, 6)
+[pool204-tensors] loaded MIT/b2c40: (529, 200, 6)
+[pool204-tensors] loaded MIT/b2c41: (451, 200, 6)
+[pool204-tensors] loaded MIT/b2c42: (491, 200, 6)
+[pool204-tensors] loaded MIT/b2c43: (486, 200, 6)
+[pool204-tensors] loaded MIT/b2c45: (513, 200, 6)
+[pool204-tensors] loaded MIT/b2c46: (448, 200, 6)
+[pool204-tensors] loaded MIT/b2c47: (744, 200, 6)
+[pool204-tensors] loaded MIT/b2c5: (506, 200, 6)
+[pool204-tensors] loaded MIT/b2c6: (544, 200, 6)
+[pool204-tensors] loaded MIT/b2c7: (661, 200, 6)
+[pool204-tensors] loaded MIT/b2c8: (980, 200, 6)
+[pool204-tensors] loaded MIT/b2c9: (1059, 200, 6)
+[pool204-tensors] loaded MIT/b3c0: (1007, 200, 6)
+[pool204-tensors] loaded MIT/b3c1: (1061, 200, 6)
+[pool204-tensors] loaded MIT/b3c10: (1076, 200, 6)
+[pool204-tensors] loaded MIT/b3c11: (815, 200, 6)
+[pool204-tensors] loaded MIT/b3c12: (930, 200, 6)
+[pool204-tensors] loaded MIT/b3c13: (814, 200, 6)
+[pool204-tensors] loaded MIT/b3c14: (856, 200, 6)
+[pool204-tensors] loaded MIT/b3c15: (874, 200, 6)
+[pool204-tensors] loaded MIT/b3c16: (1636, 200, 6)
+[pool204-tensors] loaded MIT/b3c17: (1313, 200, 6)
+[pool204-tensors] loaded MIT/b3c18: (1144, 200, 6)
+[pool204-tensors] loaded MIT/b3c19: (1153, 200, 6)
+[pool204-tensors] loaded MIT/b3c2: (1265, 200, 6)
+[pool204-tensors] loaded MIT/b3c20: (811, 200, 6)
+[pool204-tensors] loaded MIT/b3c21: (770, 200, 6)
+[pool204-tensors] loaded MIT/b3c22: (1000, 200, 6)
+[pool204-tensors] loaded MIT/b3c23: (2188, 200, 6)
+[pool204-tensors] loaded MIT/b3c24: (823, 200, 6)
+[pool204-tensors] loaded MIT/b3c25: (987, 200, 6)
+[pool204-tensors] loaded MIT/b3c26: (1026, 200, 6)
+[pool204-tensors] loaded MIT/b3c27: (848, 200, 6)
+[pool204-tensors] loaded MIT/b3c28: (539, 200, 6)
+[pool204-tensors] loaded MIT/b3c29: (856, 200, 6)
+[pool204-tensors] loaded MIT/b3c3: (1113, 200, 6)
+[pool204-tensors] loaded MIT/b3c30: (933, 200, 6)
+[pool204-tensors] loaded MIT/b3c31: (729, 200, 6)
+[pool204-tensors] loaded MIT/b3c32: (2236, 200, 6)
+[pool204-tensors] loaded MIT/b3c33: (1282, 200, 6)
+[pool204-tensors] loaded MIT/b3c34: (1156, 200, 6)
+[pool204-tensors] loaded MIT/b3c35: (1091, 200, 6)
+[pool204-tensors] loaded MIT/b3c36: (921, 200, 6)
+[pool204-tensors] loaded MIT/b3c37: (1388, 200, 6)
+[pool204-tensors] loaded MIT/b3c38: (1933, 200, 6)
+[pool204-tensors] loaded MIT/b3c39: (1154, 200, 6)
+[pool204-tensors] loaded MIT/b3c4: (1046, 200, 6)
+[pool204-tensors] loaded MIT/b3c40: (794, 200, 6)
+[pool204-tensors] loaded MIT/b3c41: (784, 200, 6)
+[pool204-tensors] loaded MIT/b3c42: (1640, 200, 6)
+[pool204-tensors] loaded MIT/b3c43: (1044, 200, 6)
+[pool204-tensors] loaded MIT/b3c44: (938, 200, 6)
+[pool204-tensors] loaded MIT/b3c45: (1799, 200, 6)
+[pool204-tensors] loaded MIT/b3c5: (826, 200, 6)
+[pool204-tensors] loaded MIT/b3c6: (665, 200, 6)
+[pool204-tensors] loaded MIT/b3c7: (1834, 200, 6)
+[pool204-tensors] loaded MIT/b3c8: (826, 200, 6)
+[pool204-tensors] loaded MIT/b3c9: (1037, 200, 6)
+[pool204-tensors] loaded MIT/b4c0: (982, 200, 6)
+[pool204-tensors] loaded MIT/b4c1: (861, 200, 6)
+[pool204-tensors] loaded MIT/b4c10: (1082, 200, 6)
+[pool204-tensors] loaded MIT/b4c11: (930, 200, 6)
+[pool204-tensors] loaded MIT/b4c12: (898, 200, 6)
+[pool204-tensors] loaded MIT/b4c13: (869, 200, 6)
+[pool204-tensors] loaded MIT/b4c14: (767, 200, 6)
+[pool204-tensors] loaded MIT/b4c15: (871, 200, 6)
+[pool204-tensors] loaded MIT/b4c16: (983, 200, 6)
+[pool204-tensors] loaded MIT/b4c17: (930, 200, 6)
+[pool204-tensors] loaded MIT/b4c18: (1057, 200, 6)
+[pool204-tensors] loaded MIT/b4c19: (1111, 200, 6)
+[pool204-tensors] loaded MIT/b4c2: (784, 200, 6)
+[pool204-tensors] loaded MIT/b4c20: (804, 200, 6)
+[pool204-tensors] loaded MIT/b4c21: (903, 200, 6)
+[pool204-tensors] loaded MIT/b4c22: (745, 200, 6)
+[pool204-tensors] loaded MIT/b4c23: (1094, 200, 6)
+[pool204-tensors] loaded MIT/b4c24: (1115, 200, 6)
+[pool204-tensors] loaded MIT/b4c25: (567, 200, 6)
+[pool204-tensors] loaded MIT/b4c26: (579, 200, 6)
+[pool204-tensors] loaded MIT/b4c27: (563, 200, 6)
+[pool204-tensors] loaded MIT/b4c28: (882, 200, 6)
+[pool204-tensors] loaded MIT/b4c29: (956, 200, 6)
+[pool204-tensors] loaded MIT/b4c3: (911, 200, 6)
+[pool204-tensors] loaded MIT/b4c30: (719, 200, 6)
+[pool204-tensors] loaded MIT/b4c31: (832, 200, 6)
+[pool204-tensors] loaded MIT/b4c32: (839, 200, 6)
+[pool204-tensors] loaded MIT/b4c33: (530, 200, 6)
+[pool204-tensors] loaded MIT/b4c34: (997, 200, 6)
+[pool204-tensors] loaded MIT/b4c35: (1131, 200, 6)
+[pool204-tensors] loaded MIT/b4c36: (713, 200, 6)
+[pool204-tensors] loaded MIT/b4c37: (1005, 200, 6)
+[pool204-tensors] loaded MIT/b4c38: (1230, 200, 6)
+[pool204-tensors] loaded MIT/b4c39: (761, 200, 6)
+[pool204-tensors] loaded MIT/b4c4: (912, 200, 6)
+[pool204-tensors] loaded MIT/b4c40: (1122, 200, 6)
+[pool204-tensors] loaded MIT/b4c41: (997, 200, 6)
+[pool204-tensors] loaded MIT/b4c42: (915, 200, 6)
+[pool204-tensors] loaded MIT/b4c43: (951, 200, 6)
+[pool204-tensors] loaded MIT/b4c44: (1077, 200, 6)
+[pool204-tensors] loaded MIT/b4c5: (1067, 200, 6)
+[pool204-tensors] loaded MIT/b4c6: (777, 200, 6)
+[pool204-tensors] loaded MIT/b4c7: (562, 200, 6)
+[pool204-tensors] loaded MIT/b4c8: (718, 200, 6)
+[pool204-tensors] loaded MIT/b4c9: (529, 200, 6)
+[pool204-2] fit=131 val=32 test=41 batteries (204 total loaded)
+
+[pool204-2] === refitting channel_norm_stats (own file, NOT the deployed one) ===
+
+[pool204-2] === training ICA fusion encoder (own file) ===
+[pool204-2] encoder epoch   0 train_mse=0.7901 val_mse=2.1738
+[pool204-2] encoder epoch   1 train_mse=0.5962 val_mse=1.7320
+[pool204-2] encoder epoch   2 train_mse=0.5394 val_mse=1.5615
+[pool204-2] encoder epoch   3 train_mse=0.4973 val_mse=1.3112
+[pool204-2] encoder epoch   4 train_mse=0.4638 val_mse=1.2067
+[pool204-2] encoder epoch   5 train_mse=0.4382 val_mse=1.0611
+[pool204-2] encoder epoch   6 train_mse=0.4178 val_mse=1.0984
+[pool204-2] encoder epoch   7 train_mse=0.3974 val_mse=0.9259
+[pool204-2] encoder epoch   8 train_mse=0.3786 val_mse=0.9021
+[pool204-2] encoder epoch   9 train_mse=0.3610 val_mse=0.8453
+[pool204-2] encoder epoch  10 train_mse=0.3391 val_mse=0.7318
+[pool204-2] encoder epoch  11 train_mse=0.3189 val_mse=0.6025
+[pool204-2] encoder epoch  12 train_mse=0.3002 val_mse=0.6059
+[pool204-2] encoder epoch  13 train_mse=0.2810 val_mse=0.5559
+[pool204-2] encoder epoch  14 train_mse=0.2693 val_mse=0.5913
+[pool204-2] encoder epoch  15 train_mse=0.2512 val_mse=0.4930
+[pool204-2] encoder epoch  16 train_mse=0.2390 val_mse=0.5590
+[pool204-2] encoder epoch  17 train_mse=0.2286 val_mse=0.5442
+[pool204-2] encoder epoch  18 train_mse=0.2174 val_mse=0.4994
+[pool204-2] encoder epoch  19 train_mse=0.2076 val_mse=0.4407
+[pool204-2] encoder epoch  20 train_mse=0.1966 val_mse=0.3603
+[pool204-2] encoder epoch  21 train_mse=0.1949 val_mse=0.3087
+[pool204-2] encoder epoch  22 train_mse=0.1850 val_mse=0.3586
+[pool204-2] encoder epoch  23 train_mse=0.1811 val_mse=0.3899
+[pool204-2] encoder epoch  24 train_mse=0.1821 val_mse=0.3489
+
+[pool204-2] === generating fusion embeddings for the full pool ===
+
+[pool204-2] === building HI-reformulated + fusion merged frame ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 156207 rows)
+[pool204-2] merged: 153244 rows (153264 HI rows, 20 lost to merge)
+
+[pool204-2] === retraining XGBoost-fusion (canonical 1.1+1.5 config) ===
+Traceback (most recent call last):
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\run_pool204_step2_retrain_eval.py", line 289, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\run_pool204_step2_retrain_eval.py", line 220, in main
+    model, medians, cols = fit_xgb_local(merged, train_mask, feature_cols, fcols,
+                           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                          xgb_extra_kwargs={"monotone_constraints": monotone})
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\run_pool204_step2_retrain_eval.py", line 111, in fit_xgb_local
+    model.fit(X[train_mask], y[train_mask])
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\xgboost\core.py", line 751, in inner_f
+    return func(**kwargs)
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\xgboost\sklearn.py", line 1343, in fit
+    train_dmatrix, evals = _wrap_evaluation_matrices(
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        missing=self.missing,
+        ^^^^^^^^^^^^^^^^^^^^^
+    ...<14 lines>...
+        feature_types=feature_types,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\xgboost\sklearn.py", line 700, in _wrap_evaluation_matrices
+    train_dmatrix = create_dmatrix(
+        data=X,
+    ...<9 lines>...
+        ref=None,
+    )
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\xgboost\sklearn.py", line 1257, in _create_dmatrix
+    return QuantileDMatrix(
+        **kwargs, ref=ref, nthread=self.n_jobs, max_bin=self.max_bin
+    )
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\xgboost\core.py", line 751, in inner_f
+    return func(**kwargs)
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\xgboost\core.py", line 1719, in __init__
+    self._init(
+    ~~~~~~~~~~^
+        data,
+        ^^^^^
+    ...<12 lines>...
+        max_quantile_blocks=max_quantile_batches,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\xgboost\core.py", line 1785, in _init
+    _check_call(ret)
+    ~~~~~~~~~~~^^^^^
+  File "C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\xgboost\core.py", line 324, in _check_call
+    raise XGBoostError(py_str(_LIB.XGBGetLastError()))
+xgboost.core.XGBoostError: [23:00:46] C:\actions-runner\_work\xgboost\xgboost\src\data\gradient_index.h:99: Check failed: valid: Input data contains `inf` or a value too large, while `missing` is not set to `inf`
