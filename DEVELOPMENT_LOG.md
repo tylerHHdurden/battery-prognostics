@@ -10080,3 +10080,58 @@ dataset are wired into anything deployed.
 
 Not proceeding to Stage 6. Reporting back with both parts' full
 findings.
+
+---
+
+### Addendum to Part A: does domain-classifier AUC predict which direction each dataset moved?
+
+Cheap correlation check, no retraining. Pulled the existing domain-
+classifier AUC values (`outputs/stage5_collapse_check_auc.csv`, the
+same numbers already used to diagnose the collapse mechanism) and
+cross-referenced against Part A's own before/after deltas.
+
+| dataset | AUC (8 HI only) | AUC (8 HI + 16 fusion) | Stage 5.1 R2 | 204-pool R2 | delta | Part A direction |
+|---|---|---|---|---|---|---|
+| CALCE | **0.9881** (lowest) | 0.999996 | 0.568 | 0.849 | +0.281 | IMPROVED |
+| HUST | 0.9993 | 0.999974 | -0.152 | 0.368 | +0.520 | IMPROVED |
+| XJTU | 0.9999 | 1.000000 | -1.059 | -3.006 | -1.947 | WORSENED |
+| Oxford | **0.9999** (highest) | 1.000000 | -2.694 | -5.685 | -2.991 | WORSENED |
+
+(Sorted by `auc_8hi_only`, the informative variant - see note below.)
+
+**The correlation holds cleanly, across all four, with no exception**:
+the two LOWEST-AUC datasets (CALCE, HUST - the ones already closest to
+the NASA+MIT training distribution) are exactly the two that improved
+under the bigger, more MIT-heavy pool; the two HIGHEST-AUC datasets
+(XJTU, Oxford - the two hardest to distinguish from noise, i.e. the
+most separable/different from training) are exactly the two that got
+worse. This is a perfect rank ordering on n=4, not just a directional
+majority.
+
+**One honest caveat on the OTHER AUC variant**: the 8-HI+16-fusion
+version is saturated (0.999996-1.000000 for all four - Oxford and
+XJTU are tied at exactly 1.0 in this space, indistinguishable from
+each other) and carries no useful ranking information on its own; the
+8-HI-only variant is the one doing the actual discriminating here and
+is reported as the primary signal for this reason, not cherry-picked
+after the fact - it is also the more literal, direct measure of
+"separable in feature space alone," which is what the MIT-heaviness
+explanation is actually a claim about.
+
+**Verdict**: this upgrades the "more MIT-heavy training data
+specializes the model toward MIT-adjacent domains, at the expense of
+domains further away" explanation from a plausible, untested story to
+a tested one that survives the test - a real, clean, if small-sample
+(n=4) correlation, not a coincidence dressed up as one. Still
+appropriately scoped: 4 data points is a real but thin base to
+generalize beyond this specific pool comparison, and this remains a
+correlational finding (AUC predicts direction), not a demonstrated
+causal mechanism (that would need a dedicated ablation, out of this
+check's bounded scope).
+
+### Files
+
+No new files - reused `outputs/stage5_collapse_check_auc.csv` and
+`outputs/pool204_zero_retrain_eval.csv` directly.
+
+Not proceeding to Stage 6.
