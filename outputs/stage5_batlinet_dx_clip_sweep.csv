@@ -1,0 +1,21 @@
+eval_set,dx_clip,alpha,r2,rmse
+CALCE,None,1.0,-2.6352,41.0566
+CALCE,None,0.5,-1892.8741,937.1123
+CALCE,None,0.0,-7260.6641,1834.992
+CALCE,8.0,1.0,-2.6352,41.0566
+CALCE,8.0,0.5,-3.4341,45.3438
+CALCE,8.0,0.0,-33.0509,125.6552
+CALCE,4.0,1.0,-2.6352,41.0566
+CALCE,4.0,0.5,0.2686,18.4161
+CALCE,4.0,0.0,-7.9959,64.5859
+CALCE,2.0,1.0,-2.6352,41.0566
+CALCE,2.0,0.5,0.5059,15.1361
+CALCE,2.0,0.0,-0.9629,30.1691
+CALCE,1.0,1.0,-2.6352,41.0566
+CALCE,1.0,0.5,-0.1331,22.9219
+CALCE,1.0,0.0,0.3473,17.3968
+"in-domain (held-out, fresh diagnostic model)",None,0.5,0.55,4.3633
+"in-domain (held-out, fresh diagnostic model)",8.0,0.5,0.5577,4.3259
+"in-domain (held-out, fresh diagnostic model)",4.0,0.5,0.6273,3.971
+"in-domain (held-out, fresh diagnostic model)",2.0,0.5,0.6903,3.6199
+"in-domain (held-out, fresh diagnostic model)",1.0,0.5,0.6572,3.8087

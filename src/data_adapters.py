@@ -91,13 +91,39 @@ def xjtu_cell_ids():
     return ids
 
 
-def iterate_xjtu_cycles(cell_id: str):
+def iterate_xjtu_cycles(cell_id: str, test_capacity_only: bool = False):
+    """
+    test_capacity_only=True (Stage 5 follow-on, recovering Batch-6/
+    Sim_satellite rather than excluding it): XJTU's per-cycle
+    `description` field distinguishes periodic full-capacity-check
+    cycles (e.g. "0.5C charge and 0.2C discharge [test capacity]",
+    confirmed present in EVERY batch, ~1 in 6 cycles) from the batch's
+    own regular cycling protocol. For batches 1-5, the regular cycles
+    are themselves consistent-depth full discharges, so both cycle
+    types are usable and this flag changes nothing meaningful if set.
+    For Batch-6 (Sim_satellite), the regular cycles are a genuinely
+    variable, PARTIAL depth-of-discharge (simulating real satellite
+    load - verified directly: cell battery-1's regular-cycle discharge
+    deltas swing 1.991/0.111/0.445 Ah in its first 3 cycles alone),
+    incompatible with this project's constant-depth SOH convention
+    (rul_labels.soh_per_cycle) - only the "[test capacity]" checkpoints
+    represent genuine, comparable full-discharge tests for that batch.
+    Restricting to those checkpoints recovers physically sensible SOH
+    (82-104%, smooth degradation) where using every cycle gave up to
+    457% (see DEVELOPMENT_LOG.md for the root-cause and the recovery
+    verification). Cycle_idx keeps the SAME sequential-usable-cycle
+    convention as every other cycle_idx in this project (increments
+    only for cycles that pass every filter, not a raw file position).
+    """
     path = XJTU_DIR / "Battery Dataset" / f"{cell_id}.mat"
     mat = sio.loadmat(path, simplify_cells=True)
     cycles = mat["data"]
 
     cycle_idx = 0
     for c in cycles:
+        if test_capacity_only and "test capacity" not in str(c.get("description", "")).lower():
+            continue
+
         t = np.atleast_1d(c["relative_time_min"]).astype(float) * 60.0  # min -> s
         V = np.atleast_1d(c["voltage_V"]).astype(float)
         I = np.atleast_1d(c["current_A"]).astype(float)

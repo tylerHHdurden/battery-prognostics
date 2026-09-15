@@ -1,0 +1,4 @@
+config,n_cells,n_cycles,r2,rmse
+"XJTU original (47 cells, satellite excluded)",47,19238,-1.058788,8.628272
+XJTU with satellite recovered (55 cells),55,20699,-0.987874,8.365027
+"satellite-only subset (recovered, n=8 cells)",8,1461,0.496908,3.32708

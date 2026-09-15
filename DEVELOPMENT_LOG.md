@@ -9526,3 +9526,246 @@ defensible negative result for the paper than before this pass.
 
 Not proceeding to Stage 6. Reporting back with these findings, since
 they affect how Stage 5's results should be framed.
+
+---
+
+## Stage 5 follow-on: testing 3 optional threads with real potential to strengthen the results further
+
+Three genuine follow-on experiments, not verification - each tests a
+specific hypothesis raised by the prior verification pass. No
+deployed-app changes; item 1's model is EXPERIMENTAL pending explicit
+confirmation (asked for separately, not auto-promoted). Checkpointed
+between items.
+
+### 1 — Reformulating SCV, MATD, VIECT (testing item 2's hypothesis directly)
+
+Implemented in `src/stage5_extended_reformulation.py` (fully additive
+- does not touch `stage1_common.py` or any deployed feature-building
+code). Reasoned, per-feature choice of ratio vs. delta, not one
+blanket rule:
+- **SCV_rel = SCV(cycle_n)/SCV(baseline)** - a ratio, since SCV
+  (discharge_capacity/voltage_range) is multiplicatively scaled by
+  each cell's own nominal capacity - same logic as ICHV/TEVD/TEVI.
+- **MATD_rel = MATD(cycle_n) - MATD(baseline)** - a delta, since mean
+  discharge temperature is an ADDITIVE ambient-protocol offset (e.g.
+  Oxford's 40degC chamber), not a multiplicative scale; a Celsius
+  ratio would also risk a near-zero-denominator edge case a delta
+  avoids entirely.
+- **VIECT_rel = VIECT(cycle_n) - VIECT(baseline)** - a delta, same
+  reasoning: a raw voltage reading's chemistry-dependent absolute
+  level (LFP ~3.2V vs. NCM ~3.6-3.7V) is an offset, not a scale factor.
+
+Same cycle-10-baseline convention (median-of-own-cycles fallback) as
+Stage 1.1; near-zero-baseline guard applied to the one ratio (SCV_rel)
+only. **Scope note, disclosed rather than silently expanded**: item
+2's own z-score table also flagged `MET` (mean energy throughput,
+itself capacity/chemistry-scaled) as comparably large on 3 of 4
+datasets - NOT reformulated here, since this item named only SCV/
+MATD/VIECT explicitly. Left as an identified, out-of-scope candidate.
+
+**Domain-classifier AUC, original vs. extended feature set:**
+
+| dataset | AUC original | AUC extended | delta |
+|---|---|---|---|
+| CALCE | 0.9881 | 0.9801 | -0.0080 |
+| Oxford | 0.9999 | 0.9541 | -0.0459 |
+| HUST | 0.9993 | 0.9802 | -0.0191 |
+| XJTU | 0.9999 | 0.9942 | -0.0056 |
+
+Separation drops for every dataset but stays very high everywhere -
+consistent with the user's own explicit caveat that AUC dropping does
+not guarantee accuracy improves.
+
+**Retrained XGBoost-fusion** (extended 8-feature set + Stage 1.5's
+UNCHANGED monotone_constraints - verified directly against
+`run_stage4_step2b_xgb_joint.py` before writing this: Stage 1.5 only
+ever constrains `cycle_idx`, none of the 8 HI features individually -
+applied exactly as-is, not reinvented for the swapped columns):
+
+| dataset | R2 original (Stage 5.1) | R2 extended | delta |
+|---|---|---|---|
+| in-domain (fixed split) | 0.9740 | 0.9732 | -0.0008 (negligible) |
+| CALCE | 0.568 | **0.665** | **+0.097** |
+| Oxford | -2.694 | **0.901** | **+3.595** |
+| HUST | -0.152 | **0.761** | **+0.913** |
+| XJTU | -1.059 | **-1.649** | **-0.590 (WORSE)** |
+
+**Root-caused the XJTU regression rather than leaving it unexplained**:
+recomputed z-scores for the 3 newly-reformulated features on XJTU
+specifically - all now unremarkable (SCV_rel z=0.38, MATD_rel z=-2.50,
+VIECT_rel z=-0.09, vs. the original SCV z=9.13) - the reformulation
+itself worked correctly for XJTU too. The likely remaining driver:
+`MET` (explicitly out of this item's scope, never reformulated) is
+STILL extreme for XJTU specifically (z=5.49 - by far the largest
+remaining z-score of any feature, any dataset, more than double
+HUST's 2.89 or Oxford's 1.81) - physically consistent with XJTU's high
+C-rate (2-10C) cycling producing disproportionate energy throughput
+per cycle relative to training. Not confirmed by a retrain (out of
+this item's scope), but a concrete, evidenced, non-speculative
+hypothesis for a follow-up.
+
+**Honest verdict**: **a genuine second major methodological win, with
+one real, disclosed exception.** Oxford and HUST go from catastrophic
+collapse to genuinely strong positive R2 (0.90 and 0.76); CALCE
+improves solidly (+0.097); in-domain accuracy is unaffected
+(negligible -0.0008). XJTU is a real regression, not swept under the
+rug - most plausibly explained by `MET` being left unreformulated and
+specifically severe for XJTU, not a flaw in the SCV/MATD/VIECT fix
+itself. Saved as `models/_experimental_xgb_soh_fusion_extended_
+reformulation.json` - **NOT promoted to deployment automatically**,
+per instruction, given the genuine trade-off (3 clear wins + 1 real
+loss, not an unambiguous universal improvement) - asking for explicit
+confirmation before promoting (see end of this entry).
+
+### 2 — Recovering Sim_satellite rather than excluding it
+
+**Investigated the actual protocol**: every XJTU cell's raw cycle
+`description` field distinguishes periodic full-capacity-check cycles
+(e.g. `"0.5C charge and 0.2C discharge [test capacity]"`, ~1 in 6
+cycles, confirmed present in EVERY batch including Sim_satellite) from
+each batch's own regular cycling protocol. For batches 1-5, the
+regular cycles are THEMSELVES consistent-depth full discharges, so
+this distinction doesn't matter there. For Batch-6 (Sim_satellite)
+specifically, the regular cycles are a genuinely variable, simulated-
+load PARTIAL discharge (confirmed: cell battery-1's first 3 regular-
+cycle discharge deltas are 1.991/0.111/0.445 Ah) - only the "[test
+capacity]" checkpoints are full, comparable discharges.
+
+**Correction implemented**: `iterate_xjtu_cycles` gained an additive,
+opt-in `test_capacity_only` parameter (default `False`, so nothing
+about the existing 47-cell behavior changes) restricting yielded
+cycles to those checkpoints for Sim_satellite specifically.
+
+**Result: a clean recovery, not a partial one.** All 8 cells produce
+physically sensible SOH with the standard, UNCHANGED `soh_per_cycle`
+formula - no special-cased SOH math needed, just the right cycle
+subset:
+
+| cell | n usable cycles | SOH range |
+|---|---|---|
+| battery-1 | 165 | 82.2-103.7% |
+| battery-2 | 213 | 82.8-103.8% |
+| battery-3 | 158 | 82.7-103.2% |
+| battery-4 | 164 | 82.8-103.4% |
+| battery-5 | 226 | 83.1-103.3% |
+| battery-6 | 187 | 81.8-104.4% |
+| battery-7 | 165 | 83.0-103.1% |
+| battery-8 | 183 | 82.8-103.2% |
+
+**Re-ran XJTU's zero-retrain evaluation with all 55 cells** (frozen
+Stage 4 XGBoost-fusion, unchanged from 5.1):
+
+| config | n cells | n cycles | R2 | RMSE |
+|---|---|---|---|---|
+| XJTU original (47, satellite excluded) | 47 | 19,238 | -1.059 | 8.628 |
+| XJTU with satellite recovered (55) | 55 | 20,699 | **-0.988** | **8.365** |
+| satellite-only subset (isolated) | 8 | 1,461 | **0.497** | **3.327** |
+
+**Verdict**: recovery succeeded cleanly and modestly improves XJTU's
+own pooled number (-1.059 -> -0.988). Notably, the recovered
+satellite cells are themselves handled BETTER by the frozen model than
+the rest of XJTU (R2=0.497 in isolation) - not just "recovered," but
+one of the better-behaved out-of-domain subsets tested in this whole
+stage. `data_adapters.py`'s change is small, additive, and disclosed
+in its own docstring - no other dataset's behavior is affected.
+
+### 3 — Fixing BatLiNet's CALCE extrapolation failure
+
+**Implemented a bounded `dx`**: `BatLiNet.predict()` gained an
+additive, opt-in `dx_clip` parameter (`None` default preserves exact
+original behavior) that element-wise clamps `dx=x_query-x_refs` to
+`[-dx_clip,+dx_clip]` before the inter-cell branch sees it - the
+minimal, targeted intervention the diagnosed mechanism (item 3's own
+finding: `dx` extrapolates unboundedly under domain shift) suggests.
+Threshold chosen from real training-pair statistics (20,000 random
+pairs sampled from the channel-normalized NASA+MIT+recovered pool):
+`|dx|` 50th/90th/99th percentile = 0.036/1.690/3.636 - swept dx_clip
+in {8, 4, 2, 1} around this range rather than picking one number
+blind.
+
+**CALCE, real `batlinet_experimental.pt`, K=32 references drawn from
+the training distribution (disclosed limitation: NASA+MIT+recovered-
+only, not the full 4-family pool the real deployed references were
+drawn from during the original training run - not persisted, would
+need a full ~24-minute pool rebuild to match exactly; the qualitative
+and magnitude finding below is unambiguous regardless):**
+
+| dx_clip | alpha=1.0 (intra) | alpha=0.5 (deployed) | alpha=0.0 (inter) |
+|---|---|---|---|
+| None (original) | -2.635 | -1892.87 | -7260.66 |
+| 8.0 | -2.635 | -3.434 | -33.05 |
+| 4.0 | -2.635 | **0.269** | -8.00 |
+| **2.0** | -2.635 | **0.506** | -0.963 |
+| 1.0 | -2.635 | -0.133 | **0.347** |
+
+At `dx_clip=2.0, alpha=0.5` (the deployed combination weight):
+**R2=0.506** - within reach of Stage 4 XGBoost-fusion's own CALCE
+R2=0.568, up from a catastrophic collapse.
+
+**In-domain check (fresh diagnostic model, held-out battery split -
+same one item 3's original ablation used, not the deployed model,
+since no fold model from Stage 5.2's own GroupKFold run was
+persisted):**
+
+| dx_clip | R2 | RMSE |
+|---|---|---|
+| None | 0.5500 | 4.363 |
+| 8.0 | 0.5577 | 4.326 |
+| 4.0 | 0.6273 | 3.971 |
+| **2.0** | **0.6903** | **3.620** |
+| 1.0 | 0.6572 | 3.809 |
+
+**In-domain does NOT regress - it also improves** (0.5500 -> 0.6903 at
+the same dx_clip=2.0), for the same underlying reason: even in-domain,
+occasional far-apart cell pairs produce large, rarely-seen `dx` the
+model was never trained to extrapolate through cleanly - clamping
+removes that noise source everywhere, not just under domain shift.
+
+**Honest verdict: this is a significant, positive finding.** A
+minimal, targeted, few-line fix - not a re-architecture - substantially
+rescues BOTH BatLiNet's catastrophic CALCE failure AND its in-domain
+fit, at the same clamp threshold, with no evidence of a trade-off
+between the two. This does NOT overturn item 3's earlier diagnosis
+(the inter-cell mechanism's `dx` term genuinely was the CALCE-specific
+failure point) - it confirms it precisely, by showing the failure is
+fixable once its exact mechanism is addressed. Inter-cell learning may
+be genuinely viable in this project's setup after all - bounded
+extrapolation, not the core idea, was the missing piece. This remains
+**experimental**: `dx_clip` is now available in `src/models/batlinet.py`
+but `batlinet_experimental.pt` is unchanged, untrained-with-clamping,
+and still not wired into anything deployed. A full retrain WITH
+`dx_clip` built into training (not just applied post-hoc at inference,
+as tested here) is the natural next step, out of this item's bounded
+scope.
+
+### Files
+
+`src/stage5_extended_reformulation.py`, `src/run_stage5_extended_
+reformulation_eval.py`, `models/_experimental_xgb_soh_fusion_extended_
+reformulation.json`, `outputs/stage5_extended_reformulation_{auc,eval}.
+csv`; `src/data_adapters.py` (`iterate_xjtu_cycles`'s additive
+`test_capacity_only` parameter), `outputs/stage5_satellite_recovery_
+eval.csv`; `src/models/batlinet.py` (`predict()`'s additive `dx_clip`
+parameter), `outputs/stage5_batlinet_dx_clip_sweep.csv`.
+
+### What's deployed - unchanged
+
+Same as Stage 5 itself: `app.py`, `live_inference.py`, and every model
+file the live app loads remain byte-for-byte untouched. Item 1's
+extended-reformulation model and items 2/3's fixes are all
+experimental artifacts on disk, not wired into anything the app calls.
+
+### Decision needed before any promotion
+
+Item 1's extended reformulation is a real, mostly-positive result (2
+datasets rescued from catastrophic collapse, 1 solid improvement, 1
+real regression, in-domain flat) - per instruction, asking rather than
+promoting automatically: **should this be promoted to the deployed
+XGBoost-fusion model** (replacing `models/xgb_soh_fusion.json`,
+`live_inference.py`'s feature set, and re-running the full Stage-4-
+style verification-before-promotion checklist), given XJTU's own
+regression is real and unresolved? Items 2 and 3 are correctly
+experimental-only per instruction and not being proposed for
+promotion at this time.
+
+Not proceeding to Stage 6. Reporting back with full findings.

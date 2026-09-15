@@ -88,16 +88,28 @@ class BatLiNet(nn.Module):
         return self.w(self.h_phi(dx)).squeeze(-1)
 
     def predict(self, x_query: torch.Tensor, x_refs: torch.Tensor, y_refs: torch.Tensor,
-                alpha: float = 0.5) -> torch.Tensor:
+                alpha: float = 0.5, dx_clip: float | None = None) -> torch.Tensor:
         """Inference per the paper's combination rule: alpha*intra +
         (1-alpha)*median-over-references(inter-cell diff + reference's
         own known SOH). x_query: (B, T, C). x_refs/y_refs: (K, T, C)/(K,)
         - K sampled reference (cycle-tensor, SOH) pairs from the
-        training pool, shared across the batch."""
+        training pool, shared across the batch.
+
+        dx_clip (Stage 5 follow-on, item 3 - diagnosed CALCE-extrapolation
+        fix): optional scalar bound - if given, dx=x_query-x_refs is
+        element-wise clamped to [-dx_clip, +dx_clip] BEFORE being fed to
+        the inter-cell branch, so an out-of-training-range query cell
+        cannot produce an unboundedly extreme difference input (the
+        diagnosed mechanism behind CALCE's R2=-7260 collapse at full
+        inter-cell weight). None (default) preserves the original,
+        unclamped behavior exactly - existing callers/results
+        unaffected unless they opt in."""
         y_intra = self.forward_intra(x_query)  # (B,)
         B = x_query.shape[0]
         K = x_refs.shape[0]
         dx = x_query.unsqueeze(1) - x_refs.unsqueeze(0)  # (B, K, T, C)
+        if dx_clip is not None:
+            dx = torch.clamp(dx, min=-dx_clip, max=dx_clip)
         dx_flat = dx.reshape(B * K, *dx.shape[2:])
         diff_pred = self.forward_inter(dx_flat).reshape(B, K)
         y_cross = diff_pred + y_refs.unsqueeze(0)  # (B, K)
