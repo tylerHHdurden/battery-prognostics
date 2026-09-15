@@ -10135,3 +10135,149 @@ No new files - reused `outputs/stage5_collapse_check_auc.csv` and
 `outputs/pool204_zero_retrain_eval.csv` directly.
 
 Not proceeding to Stage 6.
+
+---
+
+## Closing out the data-expansion work: NASA-heavy pool test, dataset destination decision, OC-SVM dependency note
+
+Four items before Stage 6. CALCE/Oxford/HUST/XJTU remained untouched,
+held-out throughout. No deployed-app changes - confirmed explicitly at
+the end.
+
+### 1 - NASA-heavy pool: the designed test of the specialization mechanism
+
+**Composition, reasoned and disclosed**: 57 NASA-family batteries (23
+"clean" 204-pool NASA + 6 recovered NASA via the established
+`stage4_recovered_batteries` loader + 28 NASA Randomized cells from
+Part B) + 28 MIT batteries, held EXACTLY at the original 42-battery
+pool's own MIT subset (deliberately unchanged, isolating "more/
+different NASA data" as the only compositional lever). **85 batteries
+total, NASA:MIT = 67.1%:32.9%** - a large, deliberate swing in the
+OPPOSITE direction from the 204-pool's 11.3% NASA and the 42-pool's
+23.8%. Checkpointed before the full run: verified the NASA Randomized
+adapter integrates cleanly into the tensor pipeline first (934 of 947
+cycles usable, the 13 dropped are the very-short near-end-of-life
+"Skewed" cycles already flagged in Part B, filtered by the same
+minimum-length guard used everywhere else - not a new problem).
+
+Ran through the same pipeline as the 204-battery retrain (its own
+`fit_xgb_local`/`eval_xgb_local`/`build_new_dataset_merged` functions
+reused directly, both bugs found and fixed during that run inherited
+already-fixed here - no repeat of either).
+
+**Three-way comparison, full numbers:**
+
+| dataset | Stage 4 (42-battery, DEPLOYED) | 204-battery pool | NASA-heavy pool (85 batt.) |
+|---|---|---|---|
+| in-domain (fixed split) | 0.9740 | 0.9966 | 0.9571 |
+| in-domain (GroupKFold mean) | 0.9658 (std 0.0207) | 0.9792 (std 0.0307) | 0.8972 (std 0.1851) |
+| CALCE | 0.568 | 0.849 | 0.805 |
+| Oxford | -2.694 | -5.685 | **-12.048** |
+| HUST | -0.152 | 0.368 | -0.012 |
+| XJTU | -1.059 | -3.006 | -5.564 |
+
+**The predicted reversal does NOT occur. This REFUTES the
+specialization mechanism in its tested form - reported plainly, not
+softened.** The hypothesis specifically predicted Oxford/XJTU (high
+domain-classifier AUC, dissimilar from training) would improve or hold
+steady under a NASA-heavier pool, while CALCE/HUST (low AUC, similar)
+would worsen or stay flat. Instead, **all four datasets got worse**,
+Oxford and XJTU - the two the mechanism specifically predicted would
+improve - by far the most (Oxford collapsed to R2=-12.048, the single
+worst zero-retrain result found anywhere in this entire project;
+GroupKFold in-domain also degraded sharply, 0.9792->0.8972, driven by
+one very hard fold at R2=0.5666).
+
+**A genuine, non-trivial complication worth reporting rather than
+discarding**: even though the DIRECTIONAL prediction failed
+completely, the MAGNITUDE of each dataset's decline (204-pool ->
+NASA-heavy pool) still tracks domain-classifier AUC exactly:
+
+| dataset | AUC (8 HI only) | 204-pool R2 | NASA-heavy R2 | delta |
+|---|---|---|---|---|
+| CALCE | 0.9881 (lowest) | 0.849 | 0.805 | -0.044 (smallest decline) |
+| HUST | 0.9993 | 0.368 | -0.012 | -0.381 |
+| XJTU | 0.9999 | -3.006 | -5.564 | -2.558 |
+| Oxford | 0.9999 (highest) | -5.685 | -12.048 | -6.363 (largest decline) |
+
+**Revised, more parsimonious explanation, offered honestly as a
+hypothesis for future testing, NOT confirmed here**: the 204-pool's
+earlier CALCE/HUST improvement was likely never really about "MIT-
+similarity being specifically rewarded" - more plausibly, it reflects
+that the 204-pool is simply a much LARGER, more informationally rich
+training set (153,244 merged rows vs. the NASA-heavy pool's 26,498 -
+nearly 6x fewer, plus the NASA-heavy pool's own NASA-Randomized
+contribution is 28 batteries but only ~934 usable cycles, ~33/battery,
+far sparser than a typical NASA B00XX or MIT cell's cycle count).
+Bigger, richer pools help every domain, but help the MORE-distant
+(higher-AUC) domains disproportionately (they need more data/diversity
+to extrapolate reliably); a SMALLER pool - regardless of which family
+shrank to get there - hurts every domain, and hurts the most-distant
+domains hardest. This reframes "domain-classifier AUC predicts
+direction" (REFUTED as a controllable, reversible dial) into
+"domain-classifier AUC predicts SENSITIVITY to overall pool size/
+richness" (consistent with everything observed across both pool
+comparisons) - a real, evidenced, but NOT independently re-tested
+revision, stated as a hypothesis, not a confirmed finding.
+
+**Not a deployment candidate, regardless of outcome, stated
+explicitly**: this pool (`xgb_soh_fusion_nasaheavy.json` and its
+supporting artifacts) is a scientific test of a mechanism, kept on
+disk for reference only, never wired into `live_inference.py` or
+`app.py`.
+
+### 2 - Decision: what happens to the acquired NASA Randomized dataset
+
+**Recommendation: (b) - kept as a standing available resource for
+future experiments, NOT folded into any deployed-model pool at this
+time.** Reasoning: no pool from this entire data-expansion effort (204-
+battery, now also the NASA-heavy pool) has met a clear promotion bar -
+the 204-battery pool's result was a genuine trade-off (2 improved, 2
+worsened); the NASA-heavy pool, the ONLY pool that meaningfully used
+this dataset, performed WORSE than the 204-pool across every single
+held-out dataset AND in-domain. There is currently no pool this
+dataset would improve by joining. Its adapter (`iterate_nasa_
+randomized_cycles`) and verification are complete and reusable
+(`nasa_randomized_data_available()` etc., `src/data_adapters.py`) for
+any future, differently-scoped experiment - kept as infrastructure,
+not deployed data.
+
+**Stated plainly, per instruction**: NO pool beyond Stage 4's original
+42-battery deployment has been promoted at any point in this entire
+data-expansion effort. **The 42-battery Stage 4 model remains the
+deployed model as of this pass**, regardless of item 1's outcome.
+
+### 3 - OC-SVM dependency: documented, no action needed now
+
+**Standing requirement, recorded explicitly so it is not forgotten**:
+any future promotion of a different training pool (204-battery, NASA-
+heavy, or any other pool from a future pass) **MUST include retraining
+the OC-SVM anomaly detector (`src/train_ocsvm.py`) on that same pool**,
+per Stage 4's own established precedent (Stage 4 retrained
+`ocsvm_model.pkl`/`ocsvm_scaler.pkl` on the newly-promoted 42-battery
+pool at the time - see that stage's own entry). This is NOT optional
+for any future deployment change, and is independent of whichever pool
+(if any) eventually gets promoted. No retraining performed now -
+documentation only, since no pool is being promoted in this pass.
+
+### Files
+
+`src/nasaheavy_tensors.py`, `src/run_nasaheavy_full_pipeline.py`,
+`data/processed/{hi_table_nasaheavy.parquet, channel_norm_stats_
+nasaheavy.json, fusion_embeddings_nasaheavy.csv, battery_split_
+nasaheavy.json}`, `models/{ica_encoder_nasaheavy.pt, xgb_soh_fusion_
+nasaheavy.json}`, `outputs/nasaheavy_{groupkfold,zero_retrain_eval}.csv`,
+`outputs/nasaheavy_run_log.txt`.
+
+### What's deployed - unchanged, confirmed explicitly
+
+`app.py`, `live_inference.py`, and every model file the live app loads
+remain byte-for-byte untouched throughout this entire data-expansion
+effort (Part A, Part B, and this closing pass). **No pool has met the
+promotion bar - the Stage 4 42-battery model is, and remains, the
+deployed model.**
+
+Not proceeding to Stage 6. Reporting back with the full findings -
+item 1's refutation (and the AUC-sensitivity reframing it points
+toward) is a real, citable negative result in its own right, on top of
+the earlier 204-pool/AUC-correlation finding.

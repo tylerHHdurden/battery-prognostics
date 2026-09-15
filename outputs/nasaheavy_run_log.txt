@@ -1,0 +1,246 @@
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\health_indicators.py:155: RuntimeWarning: divide by zero encountered in divide
+  out["VDEDT"] = float(np.mean(np.diff(Vd[-tail_n:]) / np.diff(td[-tail_n:]))) if tail_n > 1 else np.nan
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\_core\_methods.py:132: RuntimeWarning: invalid value encountered in reduce
+  ret = umr_sum(arr, axis, dtype, out, keepdims, where=where)
+=== NASA-heavy pool: feature regeneration ===
+[nasaheavy-hi] DONE NASA/B0005: 168 cycles, EOL=102 censored=False
+[nasaheavy-hi] DONE NASA/B0006: 168 cycles, EOL=61 censored=False
+[nasaheavy-hi] DONE NASA/B0007: 168 cycles, EOL=125 censored=False
+[nasaheavy-hi] DONE NASA/B0018: 132 cycles, EOL=77 censored=False
+[nasaheavy-hi] DONE NASA/B0025: 28 cycles, EOL=29 censored=True
+[nasaheavy-hi] DONE NASA/B0026: 28 cycles, EOL=6 censored=False
+[nasaheavy-hi] DONE NASA/B0027: 28 cycles, EOL=29 censored=True
+[nasaheavy-hi] DONE NASA/B0028: 28 cycles, EOL=29 censored=True
+[nasaheavy-hi] DONE NASA/B0029: 39 cycles, EOL=40 censored=True
+[nasaheavy-hi] DONE NASA/B0030: 39 cycles, EOL=40 censored=True
+[nasaheavy-hi] DONE NASA/B0031: 39 cycles, EOL=40 censored=True
+[nasaheavy-hi] DONE NASA/B0032: 39 cycles, EOL=40 censored=True
+[nasaheavy-hi] DONE NASA/B0042: 112 cycles, EOL=6 censored=False
+[nasaheavy-hi] DONE NASA/B0043: 112 cycles, EOL=6 censored=False
+[nasaheavy-hi] DONE NASA/B0044: 112 cycles, EOL=6 censored=False
+[nasaheavy-hi] DONE NASA/B0045: 71 cycles, EOL=19 censored=False
+[nasaheavy-hi] DONE NASA/B0046: 71 cycles, EOL=19 censored=False
+[nasaheavy-hi] DONE NASA/B0047: 71 cycles, EOL=19 censored=False
+[nasaheavy-hi] DONE NASA/B0048: 71 cycles, EOL=19 censored=False
+[nasaheavy-hi] DONE NASA/B0053: 55 cycles, EOL=55 censored=False
+[nasaheavy-hi] DONE NASA/B0054: 102 cycles, EOL=73 censored=False
+[nasaheavy-hi] DONE NASA/B0055: 101 cycles, EOL=62 censored=False
+[nasaheavy-hi] DONE NASA/B0056: 101 cycles, EOL=102 censored=True
+[nasaheavy-hi] DONE RECOVERED NASA/B0036: 194 cycles
+[nasaheavy-hi] DONE RECOVERED NASA/B0038: 35 cycles
+[nasaheavy-hi] DONE RECOVERED NASA/B0039: 35 cycles
+[nasaheavy-hi] DONE RECOVERED NASA/B0040: 35 cycles
+[nasaheavy-hi] DONE RECOVERED NASA/B0041: 25 cycles
+[nasaheavy-hi] DONE RECOVERED NASA/B0051: 22 cycles
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW1: 48 cycles, EOL=23 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW2: 52 cycles, EOL=17 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW3: 44 cycles, EOL=17 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW4: 38 cycles, EOL=19 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW5: 42 cycles, EOL=21 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW6: 22 cycles, EOL=17 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW7: 49 cycles, EOL=21 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW8: 48 cycles, EOL=13 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW9: 80 cycles, EOL=15 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW10: 77 cycles, EOL=15 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW11: 77 cycles, EOL=14 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW12: 76 cycles, EOL=35 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW13: 23 cycles, EOL=4 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW14: 24 cycles, EOL=4 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW15: 24 cycles, EOL=4 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW16: 19 cycles, EOL=5 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW17: 28 cycles, EOL=4 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW18: 27 cycles, EOL=6 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW19: 26 cycles, EOL=6 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW20: 29 cycles, EOL=6 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW21: 11 cycles, EOL=5 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW22: 10 cycles, EOL=5 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW23: 11 cycles, EOL=6 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW24: 11 cycles, EOL=1 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW25: 13 cycles, EOL=7 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW26: 14 cycles, EOL=4 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW27: 12 cycles, EOL=1 censored=False
+[nasaheavy-hi] DONE NASA_RANDOMIZED/RW28: 12 cycles, EOL=1 censored=False
+[nasaheavy-hi] DONE MIT/b1c20: 532 cycles, EOL=532 censored=False
+[nasaheavy-hi] DONE MIT/b1c43: 649 cycles, EOL=649 censored=False
+[nasaheavy-hi] DONE MIT/b1c32: 729 cycles, EOL=729 censored=False
+[nasaheavy-hi] DONE MIT/b1c17: 855 cycles, EOL=855 censored=False
+[nasaheavy-hi] DONE MIT/b1c22: 889 cycles, EOL=889 censored=False
+[nasaheavy-hi] DONE MIT/b1c41: 1049 cycles, EOL=1049 censored=False
+[nasaheavy-hi] DONE MIT/b1c4: 1225 cycles, EOL=1225 censored=False
+[nasaheavy-hi] DONE MIT/b2c1: 169 cycles, EOL=157 censored=False
+[nasaheavy-hi] DONE MIT/b2c44: 478 cycles, EOL=466 censored=False
+[nasaheavy-hi] DONE MIT/b2c42: 491 cycles, EOL=473 censored=False
+[nasaheavy-hi] DONE MIT/b2c13: 519 cycles, EOL=492 censored=False
+[nasaheavy-hi] DONE MIT/b2c24: 523 cycles, EOL=508 censored=False
+[nasaheavy-hi] DONE MIT/b2c32: 543 cycles, EOL=528 censored=False
+[nasaheavy-hi] DONE MIT/b2c9: 1059 cycles, EOL=1060 censored=True
+[nasaheavy-hi] DONE MIT/b3c28: 539 cycles, EOL=539 censored=False
+[nasaheavy-hi] DONE MIT/b3c13: 814 cycles, EOL=814 censored=False
+[nasaheavy-hi] DONE MIT/b3c14: 856 cycles, EOL=856 censored=False
+[nasaheavy-hi] DONE MIT/b3c0: 1007 cycles, EOL=1007 censored=False
+[nasaheavy-hi] DONE MIT/b3c35: 1091 cycles, EOL=1091 censored=False
+[nasaheavy-hi] DONE MIT/b3c33: 1282 cycles, EOL=1282 censored=False
+[nasaheavy-hi] DONE MIT/b3c38: 1933 cycles, EOL=1933 censored=False
+[nasaheavy-hi] DONE MIT/b4c9: 529 cycles, EOL=454 censored=False
+[nasaheavy-hi] DONE MIT/b4c36: 713 cycles, EOL=610 censored=False
+[nasaheavy-hi] DONE MIT/b4c39: 761 cycles, EOL=758 censored=False
+[nasaheavy-hi] DONE MIT/b4c21: 903 cycles, EOL=792 censored=False
+[nasaheavy-hi] DONE MIT/b4c0: 982 cycles, EOL=887 censored=False
+[nasaheavy-hi] DONE MIT/b4c5: 1067 cycles, EOL=946 censored=False
+[nasaheavy-hi] DONE MIT/b4c38: 1230 cycles, EOL=1096 censored=False
+[nasaheavy-hi] DONE CALCE/CS2_35: 932 cycles, EOL=126 censored=False
+[nasaheavy-hi] DONE CALCE/CS2_36: 973 cycles, EOL=97 censored=False
+[nasaheavy-hi] DONE CALCE/CS2_37: 1038 cycles, EOL=98 censored=False
+[nasaheavy] duplicate rows: 0
+[nasaheavy] pool composition: {'CALCE': 3, 'MIT': 28, 'NASA': 29, 'NASA_RANDOMIZED': 28}, 29536 total cycles
+
+=== NASA-heavy pool: tensor loading + retrain ===
+[nasaheavy-tensors] loaded NASA/B0005: (168, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0006: (168, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0007: (168, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0018: (132, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0025: (28, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0026: (28, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0027: (28, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0028: (28, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0029: (39, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0030: (39, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0031: (39, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0032: (39, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0042: (106, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0043: (106, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0044: (106, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0045: (71, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0046: (71, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0047: (71, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0048: (71, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0053: (54, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0054: (101, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0055: (101, 200, 6)
+[nasaheavy-tensors] loaded NASA/B0056: (101, 200, 6)
+[nasaheavy-tensors] loaded RECOVERED NASA/B0036: (194, 200, 6)
+[nasaheavy-tensors] loaded RECOVERED NASA/B0038: (35, 200, 6)
+[nasaheavy-tensors] loaded RECOVERED NASA/B0039: (35, 200, 6)
+[nasaheavy-tensors] loaded RECOVERED NASA/B0040: (35, 200, 6)
+[nasaheavy-tensors] loaded RECOVERED NASA/B0041: (25, 200, 6)
+[nasaheavy-tensors] loaded RECOVERED NASA/B0051: (22, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW1: (48, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW2: (52, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW3: (44, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW4: (38, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW5: (42, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW6: (22, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW7: (49, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW8: (48, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW9: (80, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW10: (77, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW11: (77, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW12: (76, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW13: (23, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW14: (19, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW15: (20, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW16: (15, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW17: (28, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW18: (27, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW19: (26, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW20: (29, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW21: (11, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW22: (10, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW23: (11, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW24: (11, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW25: (13, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW26: (14, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW27: (12, 200, 6)
+[nasaheavy-tensors] loaded NASA_RANDOMIZED/RW28: (12, 200, 6)
+[nasaheavy-tensors] loaded MIT/b1c20: (532, 200, 6)
+[nasaheavy-tensors] loaded MIT/b1c43: (649, 200, 6)
+[nasaheavy-tensors] loaded MIT/b1c32: (729, 200, 6)
+[nasaheavy-tensors] loaded MIT/b1c17: (855, 200, 6)
+[nasaheavy-tensors] loaded MIT/b1c22: (889, 200, 6)
+[nasaheavy-tensors] loaded MIT/b1c41: (1049, 200, 6)
+[nasaheavy-tensors] loaded MIT/b1c4: (1225, 200, 6)
+[nasaheavy-tensors] loaded MIT/b2c1: (169, 200, 6)
+[nasaheavy-tensors] loaded MIT/b2c44: (478, 200, 6)
+[nasaheavy-tensors] loaded MIT/b2c42: (491, 200, 6)
+[nasaheavy-tensors] loaded MIT/b2c13: (519, 200, 6)
+[nasaheavy-tensors] loaded MIT/b2c24: (523, 200, 6)
+[nasaheavy-tensors] loaded MIT/b2c32: (543, 200, 6)
+[nasaheavy-tensors] loaded MIT/b2c9: (1059, 200, 6)
+[nasaheavy-tensors] loaded MIT/b3c28: (539, 200, 6)
+[nasaheavy-tensors] loaded MIT/b3c13: (814, 200, 6)
+[nasaheavy-tensors] loaded MIT/b3c14: (856, 200, 6)
+[nasaheavy-tensors] loaded MIT/b3c0: (1007, 200, 6)
+[nasaheavy-tensors] loaded MIT/b3c35: (1091, 200, 6)
+[nasaheavy-tensors] loaded MIT/b3c33: (1282, 200, 6)
+[nasaheavy-tensors] loaded MIT/b3c38: (1933, 200, 6)
+[nasaheavy-tensors] loaded MIT/b4c9: (529, 200, 6)
+[nasaheavy-tensors] loaded MIT/b4c36: (713, 200, 6)
+[nasaheavy-tensors] loaded MIT/b4c39: (761, 200, 6)
+[nasaheavy-tensors] loaded MIT/b4c21: (903, 200, 6)
+[nasaheavy-tensors] loaded MIT/b4c0: (982, 200, 6)
+[nasaheavy-tensors] loaded MIT/b4c5: (1067, 200, 6)
+[nasaheavy-tensors] loaded MIT/b4c38: (1230, 200, 6)
+[nasaheavy] fit=55 val=13 test=17 (85 total batteries)
+
+[nasaheavy] === refitting channel_norm_stats (own file) ===
+
+[nasaheavy] === training ICA fusion encoder (own file) ===
+[pool204-2] encoder epoch   0 train_mse=0.8515 val_mse=0.1433
+[pool204-2] encoder epoch   1 train_mse=0.5921 val_mse=0.1900
+[pool204-2] encoder epoch   2 train_mse=0.4582 val_mse=0.1788
+[pool204-2] encoder epoch   3 train_mse=0.4149 val_mse=0.1704
+[pool204-2] encoder epoch   4 train_mse=0.3789 val_mse=0.2242
+[pool204-2] encoder epoch   5 train_mse=0.3533 val_mse=0.1837
+[pool204-2] encoder epoch   6 train_mse=0.3331 val_mse=0.1671
+[pool204-2] encoder early stopping at epoch 6
+
+[nasaheavy] === generating fusion embeddings for the full pool ===
+
+[nasaheavy] === building HI-reformulated + fusion merged frame ===
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29536 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29536 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29536 rows)
+[nasaheavy] merged: 26498 rows (26593 HI rows, 95 lost)
+
+[nasaheavy] === retraining XGBoost-fusion (canonical 1.1+1.5 config) ===
+[nasaheavy] IN-DOMAIN (fixed 80/20 split): R2=0.9571 RMSE=2.5046
+
+[nasaheavy] === GroupKFold(5) CV ===
+[nasaheavy] fold 0: R2=0.9798 RMSE=2.1690 n=3993
+[nasaheavy] fold 1: R2=0.9909 RMSE=1.3038 n=5337
+[nasaheavy] fold 2: R2=0.9852 RMSE=1.4209 n=6639
+[nasaheavy] fold 3: R2=0.9638 RMSE=2.0259 n=5759
+[nasaheavy] fold 4: R2=0.5666 RMSE=6.9169 n=4770
+[nasaheavy] GroupKFold mean R2=0.8972 (std 0.1851) mean RMSE=2.7673 (std 2.3496)
+
+=== zero-retrain eval on all 4 held-out datasets ===
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 2943 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 2943 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 2943 rows)
+[nasaheavy] CALCE: R2=0.8050 RMSE=9.5100 n=2941 (3 cells)
+[stage1-duration] WARNING: 8 batteries have no cycle_idx==10 row at all: ['Cell1', 'Cell2', 'Cell3', 'Cell4', 'Cell5', 'Cell6', 'Cell7', 'Cell8'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 519 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 519 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 519 rows)
+[nasaheavy] Oxford: R2=-12.0480 RMSE=24.6858 n=519 (8 cells)
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 146122 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 146122 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 146122 rows)
+[nasaheavy] HUST: R2=-0.0124 RMSE=7.4233 n=146122 (77 cells)
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 19238 rows)
+[stage1-duration] near-zero/non-finite cycle-10 baseline for Batch-5/RW_battery-1/TEVD (0.0) - falling back to this battery's own median TEVD (114.3600) as the denominator.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for Batch-5/RW_battery-5/TEVD (0.0) - falling back to this battery's own median TEVD (120.8400) as the denominator.
+[stage1-duration] TEVD -> TEVD_rel: 2 batteries used median-fallback baseline, 0 non-finite output values (of 19238 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 19238 rows)
+[nasaheavy] XJTU: R2=-5.5640 RMSE=15.4064 n=19238 (47 cells)
+
+=== FINAL SUMMARY (NASA-heavy pool) ===
+                      dataset  n_cycles         r2      rmse
+in-domain (fixed 80/20 split)      4110   0.957122  2.504562
+                        CALCE      2941   0.804957  9.510006
+                       Oxford       519 -12.048024 24.685754
+                         HUST    146122  -0.012433  7.423290
+                         XJTU     19238  -5.564002 15.406443
+
+[nasaheavy] TOTAL TIME: 16.8 minutes
