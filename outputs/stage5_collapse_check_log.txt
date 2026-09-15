@@ -1,0 +1,63 @@
+=== Stage 5 collapse-mechanism check ===
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[collapse-check] NASA+MIT+recovered TRAIN pool: 21488 cycles, 34 batteries
+
+--- CALCE ---
+dataset  feature  train_mean     train_std  target_mean    zscore  train_pctile_of_target_mean
+  CALCE    VIECT    3.474911      0.116401     3.841192  3.146712                    96.630678
+  CALCE      MET    0.276488      1.157467     3.228785  2.550652                    96.370067
+  CALCE      SCV    0.652927      0.078502     0.591707 -0.779848                    10.401154
+  CALCE TEVI_rel    0.928775      0.404659     0.759446 -0.418450                     5.212211
+  CALCE TEVD_rel    0.911330      0.506695     0.712707 -0.391999                    22.970961
+  CALCE ICHV_rel    0.889119      0.356263     0.848198 -0.114861                    25.116344
+  CALCE    VDEDT -723.922765 372019.282489    -0.002101  0.001946                     0.660834
+  CALCE     MATD   34.211983      2.010254          NaN       NaN                     0.000000
+[collapse-check] CALCE: domain-classifier AUC (8 HI only)=0.9881, (8 HI + 16 fusion)=1.0000, max|z|=3.15
+
+--- Oxford ---
+dataset  feature  train_mean     train_std  target_mean    zscore  train_pctile_of_target_mean
+ Oxford     MATD   34.211983      2.010254    40.775895  3.265216                    99.664929
+ Oxford      SCV    0.652927      0.078502     0.427959 -2.865753                     0.721333
+ Oxford      MET    0.276488      1.157467     2.372813  1.811131                    96.337491
+ Oxford    VIECT    3.474911      0.116401     3.599485  1.070217                    85.484922
+ Oxford TEVI_rel    0.928775      0.404659     0.859671 -0.170772                    15.520290
+ Oxford TEVD_rel    0.911330      0.506695     0.880753 -0.060346                    47.561430
+ Oxford ICHV_rel    0.889119      0.356263     0.880214 -0.024996                    32.930007
+ Oxford    VDEDT -723.922765 372019.282489    -0.002498  0.001946                     0.502606
+[collapse-check] Oxford: domain-classifier AUC (8 HI only)=0.9999, (8 HI + 16 fusion)=1.0000, max|z|=3.27
+
+--- HUST ---
+dataset  feature  train_mean     train_std  target_mean    zscore  train_pctile_of_target_mean
+   HUST      MET    0.276488      1.157467     3.615931  2.885129                    96.411951
+   HUST      SCV    0.652927      0.078502     0.754197  1.290023                    96.891288
+   HUST TEVI_rel    0.928775      0.404659     1.272313  0.848957                    99.972077
+   HUST    VIECT    3.474911      0.116401     3.503670  0.247074                    82.120253
+   HUST TEVD_rel    0.911330      0.506695     0.883390 -0.055142                    48.171072
+   HUST ICHV_rel    0.889119      0.356263     0.891175  0.005770                    36.094564
+   HUST    VDEDT -723.922765 372019.282489    -0.008235  0.001946                     0.046538
+   HUST     MATD   34.211983      2.010254          NaN       NaN                     0.000000
+[collapse-check] HUST: domain-classifier AUC (8 HI only)=0.9993, (8 HI + 16 fusion)=1.0000, max|z|=2.89
+
+--- XJTU ---
+dataset  feature  train_mean     train_std  target_mean    zscore  train_pctile_of_target_mean
+   XJTU      SCV    0.652927      0.078502     1.369428  9.127127                   100.000000
+   XJTU      MET    0.276488      1.157467     6.627766  5.487220                    98.701601
+   XJTU     MATD   34.211983      2.010254    25.895947 -4.136809                     0.172189
+   XJTU    VIECT    3.474911      0.116401     3.778240  2.605892                    96.281646
+   XJTU TEVD_rel    0.911330      0.506695     1.934473  2.019250                    93.065897
+   XJTU TEVI_rel    0.928775      0.404659     1.534612  1.497155                    99.981385
+   XJTU ICHV_rel    0.889119      0.356263     1.007857  0.333288                    95.434661
+   XJTU    VDEDT -723.922765 372019.282489    -0.002513  0.001946                     0.497952
+[collapse-check] XJTU: domain-classifier AUC (8 HI only)=0.9999, (8 HI + 16 fusion)=1.0000, max|z|=9.13
+
+=== SUMMARY ===
+dataset  n_cycles  n_cells  auc_8hi_only  auc_8hi_plus_16fusion  max_abs_zscore
+  CALCE      2941        3      0.988067               0.999996        3.146712
+ Oxford       519        8      0.999948               1.000000        3.265216
+   HUST    146122       77      0.999306               0.999974        2.885129
+   XJTU     19238       47      0.999884               1.000000        9.127127
+
+[collapse-check] historical reference (pre-Stage-5): B0018 raw-feature z-scores were 854.7/185.5/419.9 (ICHV/TEVD/TEVI) pre-reformulation, collapsed to |z|<0.25 post-reformulation. CALCE's own historical domain-classifier AUC (full feature space, original 6-battery test set): 1.0000; expanded-pool version: 0.936.

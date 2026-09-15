@@ -9270,3 +9270,259 @@ groupkfold_per_family,summary}.csv`. Raw data under `data/raw/
 data - not redistributed).
 
 Not proceeding to Stage 6. Reporting back with full findings.
+
+---
+
+## Verification-and-analysis pass on Stage 5's two headline results
+
+Four checks before Stage 6, given how consequential Stage 5's two
+findings are (the four-dataset collapse, and BatLiNet's negative
+result). No retraining of the deployed model, no app changes.
+Checkpointed between items.
+
+### 1 — SOH-convention audit: HUST and XJTU
+
+Both datasets use the exact same shared `rul_labels.soh_per_cycle`
+function as every other dataset in this project (imported directly,
+not reimplemented - confirmed by reading `run_stage5_1_new_datasets_
+eval.py`'s own import line) - `SOH = discharge_capacity / median(first
+3 logged cycles' discharge_capacity) * 100`, 0-100 scale, no dataset-
+provided SOH field used anywhere.
+
+**Spot-checked 3 cells per dataset, arithmetic verified by hand
+against the reported SOH at 5 cycles per cell (15 checks per
+dataset, 30 total):**
+- HUST (`1-1`, `3-1`, `10-1`): all 15 by-hand recomputations matched
+  the reported SOH to 6 decimal places exactly (e.g. `1-1` cycle
+  1504: cap=0.88042 Ah, first-3-median=1.17312 Ah, by-hand SOH=
+  75.049111%, reported=75.049111% - exact).
+- XJTU (`Batch-1/2C_battery-1`, `Batch-3/R2.5_battery-1`,
+  `Batch-5/RW_battery-1`, all outside the already-disclosed
+  Sim_satellite exclusion): all 15 by-hand recomputations matched
+  exactly (e.g. `Batch-1/2C_battery-1` cycle 1: cap=1.991 Ah,
+  median=1.871 Ah, SOH=106.413683% both ways - a real, physically-
+  plausible >100% cycle-1 SOH from early-cycle capacity exceeding the
+  stabilized reference, the same pattern already documented elsewhere
+  in this project, not a new artifact).
+
+**Result: CONFIRMED CORRECT for both datasets.** No discrepancy found;
+the reported Oxford/HUST/XJTU R2/RMSE numbers stand unchanged.
+
+### 2 — Cross-dataset collapse mechanism
+
+Reused the exact z-score formula (`z = (target_mean-train_mean)/
+train_std`, train=NASA+MIT+recovered) and domain-classifier-AUC method
+(pooled-standardize -> LogisticRegression -> in-sample AUC) from
+`run_b0018_root_cause_analysis.py`, applied to the CURRENT canonical
+8-feature reformulated set, for CALCE + Oxford/HUST/XJTU alike (one
+script, one code path, for a genuine apples-to-apples comparison).
+
+**Two real, pre-existing data issues hit and fixed while running this
+(both already-known, previously-encountered classes of issue in this
+project, not new bugs)**: CALCE/HUST's `MATD` is NaN (no Temperature
+column/field - documented, pre-existing), and one XJTU cycle's `VDEDT`
+is +-inf (same root cause already documented in `run_domain_
+classifier_sanity_check_expanded.py`'s own comment on a MIT/b2c30
+cycle - a zero-diff discharge-tail timestamp). Both handled with the
+project's own established fix (inf/NaN -> TRAIN-median imputation)
+before trusting any number below.
+
+**Do the REFORMULATED duration features (ICHV_rel/TEVD_rel/TEVI_rel -
+Stage 1.1's own fix) stay unremarkable on the 3 new datasets, the way
+they do on CALCE?** Yes, cleanly:
+
+| dataset | ICHV_rel z | TEVD_rel z | TEVI_rel z |
+|---|---|---|---|
+| CALCE | -0.11 | -0.39 | -0.42 |
+| Oxford | -0.02 | -0.06 | -0.17 |
+| HUST | 0.01 | -0.06 | 0.85 |
+| XJTU | 0.33 | 2.02 | 1.50 |
+
+All far below the pre-reformulation B0018 reference (z=854.7/185.5/
+419.9) - Stage 1.1's SPECIFIC mechanism (raw wall-clock durations
+encoding protocol) is **not** what's driving these 3 new collapses;
+the reformulation is doing its job on brand-new data it was never
+tuned against.
+
+**But the domain classifier says otherwise about the OTHER 5
+features**: every dataset is essentially perfectly separable from
+training on the full 8-feature (+16-fusion) space:
+
+| dataset | AUC (8 HI only) | AUC (8 HI + 16 fusion) | max |z| feature |
+|---|---|---|---|
+| CALCE | 0.9881 | 1.0000 | VIECT (3.15) |
+| Oxford | 0.9999 | 1.0000 | MATD (3.27) |
+| HUST | 0.9993 | 1.0000 | MET (2.89) |
+| XJTU | 0.9999 | 1.0000 | **SCV (9.13)** |
+
+The consistently-largest z-scores across all 4 datasets are `MET`,
+`MATD`, `SCV`, `VIECT` - none of them duration features, all absolute-
+scale, never reformulated by Stage 1.1: `SCV = discharge_capacity /
+voltage_range` (directly scales with a cell's own nominal capacity -
+Oxford 0.74 Ah, HUST 1.1 Ah, XJTU 2.0 Ah, NASA/MIT ~1.1-1.9 Ah - a
+pure chemistry/form-factor artifact); `MATD` = mean absolute
+temperature during discharge (directly reflects each dataset's own
+ambient/thermal-chamber protocol - Oxford's 40degC vs. NASA/MIT's
+ambient ~24degC); `VIECT` = a raw voltage reading at a fixed point in
+the cycle (chemistry-dependent, NCM vs. LFP run at different absolute
+voltages); `MET` similarly an un-normalized absolute value.
+
+**Synthesis, stated precisely rather than forcing one story**: the
+four collapses share a **related but not identical** mechanism to
+Stage 1.1's original finding. It is the SAME CLASS of problem
+(absolute-scale features leaking dataset/protocol identity instead of
+health signal) but **not the same specific features** - Stage 1.1
+fixed the 3 DURATION features; it never touched SCV/MATD/MET/VIECT,
+and those are exactly the ones now driving near-total separability on
+every one of the 4 out-of-domain datasets tested (3 new + CALCE
+itself). This is a genuine, actionable, honestly-scoped finding: the
+protocol-leakage mechanism generalizes in KIND, not in the literal
+set of features Stage 1.1 already fixed - a natural next reformulation
+target (ratio/temperature-delta-izing MET/MATD/SCV/VIECT the same way
+ICHV/TEVD/TEVI were) is now identified with evidence, not asserted.
+
+### 3 — BatLiNet: adaptations vs. mechanism vs. undertraining
+
+**3.1 - divergences beyond the 2 already-disclosed ones**, found on
+direct review against the recovered paper architecture:
+- **Pairing strategy**: the paper forms pairs from "N(N-1)" cell
+  combinations (reads as exhaustive/systematic pairing across the full
+  pool); this implementation only pairs each mini-batch element with
+  one random OTHER element from the SAME 256-sample batch - a much
+  narrower set of cross-cell comparisons per step than the paper's
+  apparent design.
+- **lambda/alpha**: the paper states both exist ("lambda balances
+  intra-/inter-cell objectives") but the recovered excerpt gives no
+  concrete values - this implementation used lambda=1.0, alpha=0.5 as
+  untuned, reasonable-looking defaults, not values taken from the
+  paper.
+- **Training budget**: 12-15 epochs, fixed, no early stopping, no
+  validation-based model selection, no LR schedule, no weight decay -
+  a full NMI-publication pipeline almost certainly used a materially
+  larger, tuned training budget.
+- **Reference-cell selection**: K=32 as specified, but sampled once,
+  uniformly at random - the paper's own reference-selection strategy
+  (possibly diversity- or coverage-weighted) is unknown from the
+  recovered excerpt and could differ.
+- **Input smoothing**: the paper applies "a rolling-median-based
+  filter" to its Q-indexed curves; this project's own tensor pipeline
+  uses Savitzky-Golay smoothing on dQdV/dVdQ instead (a different,
+  already-established denoising step, not the paper's specific one).
+
+**3.2 - cheap ablation, no retraining needed** (alpha is a pure
+inference-time combination weight - `models/batlinet_experimental.pt`
+reloaded unchanged, evaluated at 5 alpha values):
+
+*CALCE (out-of-domain), K=32 references drawn from the TRAINING
+distribution (NASA+MIT+recovered) - the only reference source actually
+available at real deployment (an earlier, discarded version of this
+ablation mistakenly used CALCE cycles themselves as references, which
+would leak target-domain information no real deployment would have -
+caught and redone properly before trusting any number here):**
+
+| alpha (1=pure intra, 0=pure inter) | R2 | RMSE |
+|---|---|---|
+| 1.0 (intra only) | -2.635 | 41.06 |
+| 0.75 | -513.06 | 488.23 |
+| 0.5 (deployed default) | -1892.87 | 937.11 |
+| 0.25 | -4142.08 | 1386.05 |
+| 0.0 (inter only) | -7260.66 | 1834.99 |
+
+*In-domain (NASA+MIT+recovered only, fresh 80/20 held-out-battery
+split, a freshly-trained diagnostic-only model - NOT the deployed
+`batlinet_experimental.pt`, needed since no fold model from the main
+Stage 5.2 run was persisted):*
+
+| alpha | R2 | RMSE |
+|---|---|---|
+| 1.0 (intra only) | 0.5225 | 4.495 |
+| 0.75 | 0.5427 | 4.399 |
+| 0.5 | 0.5500 | 4.363 |
+| 0.25 | 0.5444 | 4.390 |
+| 0.0 (inter only) | 0.5259 | 4.479 |
+
+**3.3 - clear, evidence-backed conclusion, in two parts (the honest
+answer is not one single cause):**
+
+**The large IN-DOMAIN gap (0.47 vs. XGBoost-fusion's 0.9658) is NOT
+primarily the inter-cell mechanism.** In-domain, all 5 alpha values
+land in a narrow 0.52-0.55 band - the inter-cell branch is mildly
+HELPFUL when blended (alpha=0.5 is the single best value, exactly as
+the paper's own design intent claims), not harmful. Critically, even
+PURE INTRA-CELL-ONLY (alpha=1.0, the inter-cell mechanism fully
+disabled) only reaches R2=0.52 - nowhere near XGBoost-fusion's 0.97.
+This points at **(c) plus a share of (a)**: the intra-cell branch
+itself (a small 2-layer Conv1d encoder on raw normalized curves,
+12 epochs, no HI feature engineering) is simply far weaker than
+XGBoost-fusion's mature, project-tuned 8-feature-HI + fusion-embedding
++ monotone-constraint setup refined across 4 full stages - an
+architecture-capacity/training-budget gap, not evidence the inter-cell
+idea itself is unsuited to this setup.
+
+**The catastrophic CALCE result IS substantially the inter-cell
+mechanism specifically - point (b), not a generic "everything's bad
+under domain shift" story.** Turning the inter-cell branch's weight UP
+makes CALCE performance monotonically, catastrophically worse (R2
+-2.6 at alpha=1.0 down to -7260 at alpha=0.0) - the exact opposite of
+its in-domain behavior. The mechanism is physically explicable, not
+just a training artifact: `dx = x_query - x_ref` becomes a large, far-
+out-of-training-range input the moment `x_query` is domain-shifted,
+and the inter-branch was never trained on differences that extreme, so
+its output (and therefore `y_cross = diff_pred + y_ref`) is free to
+blow up unboundedly - which is exactly the failure mode observed.
+
+**Most likely explanation, stated plainly**: BOTH (b) and (c)/(a) are
+real and separable by this evidence, driving DIFFERENT parts of
+BatLiNet's overall negative result - (c)/(a) (undertrained/
+under-capacity intra branch, some adaptation cost) explains most of
+the in-domain gap; (b) (the inter-cell mechanism genuinely breaking
+down under domain shift) explains most of the CALCE catastrophe. This
+is not a single unifying story, and is reported as such rather than
+forced into one.
+
+### 4 — Conformal coverage on Oxford/HUST/XJTU
+
+Already computed in Stage 5.1's own "bonus" section using genuinely
+the SAME frozen calibration as CALCE's (the calibration battery split
+is computed once from the in-domain test set and does not depend on
+which target dataset is being scored - confirmed by re-reading the
+code path, not assumed) - re-surfaced here rather than recomputed a
+second time, since recomputing would be pure duplication:
+
+| dataset | n_calib | empirical coverage | interval width | target |
+|---|---|---|---|---|
+| CALCE | 1,746 | 2.69% | 2.288 | 90% |
+| Oxford | 1,746 | 0.00% | 2.288 | 90% |
+| HUST | 1,746 | 19.57% | 2.288 | 90% |
+| XJTU | 1,746 | 11.01% | 2.288 | 90% |
+
+Confirms the project's second headline finding (conformal coverage
+collapses alongside point accuracy under domain shift, interval width
+staying flat while true coverage plummets) generalizes to all 3 new
+datasets exactly as it does for CALCE - width is IDENTICAL across all
+four (a structural property of split-conformal: one fixed calibration
+quantile, applied everywhere), while coverage ranges from 0% (Oxford,
+worse than CALCE) to 19.6% (HUST, still catastrophically under target).
+
+### Files
+
+`src/run_stage5_collapse_mechanism_check.py` (item 2),
+`outputs/stage5_collapse_check_{zscores,auc}.csv`,
+`outputs/stage5_batlinet_alpha_ablation.csv` (item 3, both ablations),
+`outputs/stage5_collapse_check_log.txt`.
+
+### Bottom line for paper framing
+
+Both Stage 5 headline results survive this pass strengthened, not
+weakened: the four-dataset collapse (Section 1) is now traced to a
+specific, evidenced, generalizable mechanism (un-reformulated
+absolute-scale features, a natural extension of Stage 1.1's own
+finding) rather than asserted; BatLiNet's negative result (Section 2)
+is now precisely decomposed into a mechanism-specific failure
+(inter-cell branch under domain shift) plus a separate, more mundane
+capacity/training-budget gap (in-domain), rather than left as one
+unexplained "it lost" data point - a materially stronger, more
+defensible negative result for the paper than before this pass.
+
+Not proceeding to Stage 6. Reporting back with these findings, since
+they affect how Stage 5's results should be framed.

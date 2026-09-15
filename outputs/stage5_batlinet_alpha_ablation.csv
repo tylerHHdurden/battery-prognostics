@@ -1,0 +1,11 @@
+eval_set,alpha,r2,rmse
+CALCE,1.0,-2.6352,41.0566
+CALCE,0.75,-513.0608,488.2287
+CALCE,0.5,-1892.8741,937.1123
+CALCE,0.25,-4142.0757,1386.0456
+CALCE,0.0,-7260.6641,1834.992
+in-domain (NASA+MIT+recovered holdout),1.0,0.5225,4.4951
+in-domain (NASA+MIT+recovered holdout),0.75,0.5427,4.3987
+in-domain (NASA+MIT+recovered holdout),0.5,0.55,4.3633
+in-domain (NASA+MIT+recovered holdout),0.25,0.5444,4.3904
+in-domain (NASA+MIT+recovered holdout),0.0,0.5259,4.4788
