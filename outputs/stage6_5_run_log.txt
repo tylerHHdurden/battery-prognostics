@@ -1,0 +1,78 @@
+=== Stage 6.5: symbolic regression ===
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2943 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[symbolic] training subsample: 2000 rows, 34 batteries
+
+[symbolic] fitting SymbolicRegressor against: deployed model's own predictions
+    |   Population Average    |             Best Individual              |
+---- ------------------------- ------------------------------------------ ----------
+ Gen   Length          Fitness   Length          Fitness      OOB Fitness  Time Left
+   0    11.83      1.38333e+14       66          38.2687          40.5131      4.17m
+   1    15.26          8169.58       30          31.9658          30.4112      1.89m
+   2    28.38           5736.7       48          15.7738          18.7532      2.34m
+   3    46.10          54874.7       50          15.2362          15.6991      2.48m
+   4    39.46            20920       25          14.9288          15.1899      2.52m
+   5    45.49          6136.32       46          14.2127          14.9099      2.57m
+   6    48.64           116.65       43          13.9065           14.371      2.56m
+   7    50.25          102.779       42          13.1357          13.4147      2.50m
+   8    54.20          99.3238       46          12.5929          11.3924      2.38m
+   9    57.55          230.939       64          12.0483          10.2671      2.28m
+  10    61.41          69.8168       65          10.4927          9.69802      2.21m
+  11    61.52          208.693       59          9.96701          11.3896      2.13m
+  12    68.25          63.8076       97          9.52119          11.6543      2.00m
+  13    72.83          69.3873       79          9.34418          10.5622      1.91m
+  14    78.84          123.463      103          9.24987          10.7071      1.83m
+  15    86.59          120.361      108           8.5419          10.3617      1.77m
+  16    95.75          305.841       92          8.44219          9.64201      1.63m
+  17   104.80          81.9478      149          7.79625          8.55065      1.52m
+  18   112.26          58.9232      298          7.68031          8.49264      1.36m
+  19   129.08          72.8155      252          7.55757          7.69227      1.18m
+  20   174.28           62.286      145          7.42136          8.64987      1.04m
+  21   187.67          45.3361      150          7.24418          9.46385     53.28s
+  22   178.42          91.7577      292          6.99159          8.62742     40.23s
+  23   165.24          242.326      293          7.00239          7.95816     19.76s
+  24   169.01          36.3162      278          6.95865          8.01691      0.00s
+[symbolic] discovered equation (vs. deployed model's own predictions):
+    add(sqrt(mul(div(0.229, ICHV_rel), sub(log(cycle_idx), sub(mul(cycle_idx, VIECT_rel), mul(div(MET_rel, log(TEVI_rel)), div(MET_rel, MET_rel)))))), abs(add(sub(add(sqrt(mul(div(0.229, ICHV_rel), sub(div(mul(0.298, sqrt(div(MET_rel, MET_rel))), log(SCV_rel)), sub(mul(cycle_idx, VIECT_rel), sqrt(abs(sqrt(cycle_idx))))))), abs(add(sub(add(sqrt(mul(div(MET_rel, log(TEVI_rel)), div(MET_rel, MET_rel))), abs(add(sub(abs(add(sub(div(div(log(cycle_idx), div(0.229, ICHV_rel)), div(0.229, SCV_rel)), sqrt(mul(SCV_rel, -0.497))), sqrt(div(0.229, ICHV_rel)))), sqrt(abs(sqrt(cycle_idx)))), sqrt(div(0.229, ICHV_rel))))), sqrt(mul(sqrt(div(0.229, ICHV_rel)), -0.497))), sqrt(sqrt(sqrt(VIECT_rel)))))), sqrt(mul(sqrt(add(abs(sqrt(cycle_idx)), sqrt(mul(abs(sub(TEVI_rel, cycle_idx)), sub(sub(add(sqrt(mul(div(MET_rel, log(TEVI_rel)), div(MET_rel, MET_rel))), abs(add(sub(abs(add(sub(div(div(log(cycle_idx), div(0.229, ICHV_rel)), div(0.229, SCV_rel)), sqrt(mul(SCV_rel, -0.497))), sqrt(div(0.229, ICHV_rel)))), sqrt(abs(sqrt(cycle_idx)))), sqrt(div(0.229, ICHV_rel))))), sqrt(mul(sqrt(add(abs(sqrt(cycle_idx)), sqrt(mul(sqrt(log(SCV_rel)), abs(add(sub(add(sqrt(mul(div(0.229, ICHV_rel), sub(div(mul(0.298, MATD_rel), div(MET_rel, MET_rel)), sub(mul(cycle_idx, VIECT_rel), sqrt(div(MET_rel, MET_rel)))))), abs(add(sub(div(div(log(cycle_idx), div(0.229, ICHV_rel)), div(0.229, SCV_rel)), sqrt(mul(sqrt(add(abs(sqrt(cycle_idx)), sqrt(mul(sqrt(div(MET_rel, MET_rel)), sub(add(VIECT_rel, 0.374), log(sub(cycle_idx, SCV_rel))))))), -0.497))), sqrt(sqrt(sqrt(VIECT_rel)))))), sqrt(mul(sqrt(add(abs(sqrt(cycle_idx)), sqrt(mul(abs(sub(TEVI_rel, cycle_idx)), sub(add(VIECT_rel, 0.374), log(sub(cycle_idx, SCV_rel))))))), log(cycle_idx)))), div(MET_rel, MET_rel))))))), -0.497))), log(sub(cycle_idx, SCV_rel))))))), log(cycle_idx)))), sqrt(sqrt(div(sqrt(div(MET_rel, MET_rel)), MET_rel))))))
+[symbolic] R2 vs. deployed model's own predictions: -1.9195  |  R2 vs. true SOH: -1.9116  |  expression length: 1868 chars
+
+[symbolic] fitting SymbolicRegressor against: true SOH
+    |   Population Average    |             Best Individual              |
+---- ------------------------- ------------------------------------------ ----------
+ Gen   Length          Fitness   Length          Fitness      OOB Fitness  Time Left
+   0    11.83      1.38333e+14       66          38.2646          40.5231     16.64s
+   1    15.26          8169.58       30          31.9609          30.4084      1.15m
+   2    28.38           5736.7       48          15.7728          18.7502      1.23m
+   3    46.11          54874.7       50          15.2346          15.7069      1.38m
+   4    39.54          20882.6       25          14.9277          15.2009      1.42m
+   5    45.51          6430.58       46          14.2148          14.9151      1.39m
+   6    48.63          116.682       43          13.9071          14.3764      1.36m
+   7    50.22          101.941       42          13.1367           13.424      1.32m
+   8    54.04          98.5412       42           12.081          12.0886      1.31m
+   9    57.58          232.359       24          11.7255          10.1945      1.24m
+  10    58.26           72.358       65          10.4884          9.69039      1.22m
+  11    55.16          78.1125       83          9.36978          10.3115      1.11m
+  12    65.76          64.1618       74          8.66058          8.62045     59.65s
+  13    71.11           75.928       71          8.47239          10.4412      1.03m
+  14    85.43          87.7327      155           8.3466          8.02416      1.01m
+  15    98.54          74.7703       81          7.87237          7.52029     59.72s
+  16    99.73          69.9516       79          7.71257          8.96132     56.49s
+  17   117.52          184.248       87          7.71817          9.01497     52.84s
+  18   118.22          59.0945      155          7.56764          7.32712     46.78s
+  19    98.01          250.635      153          7.41658          8.37109     40.36s
+  20   100.67          89.7794      154          7.10343          7.48372     32.49s
+  21   120.25          62.3029      154          7.05761          7.89609     25.64s
+  22   137.81          44.2313      172          6.82197          7.79638     17.70s
+  23   154.60          60.0268      210          6.83145          8.19493     10.16s
+  24   164.88          71.6663      206          6.74254          8.54825      0.00s
+[symbolic] discovered equation (vs. true SOH):
+    add(sqrt(mul(div(0.229, ICHV_rel), sub(div(mul(0.298, MATD_rel), 0.229), sub(mul(cycle_idx, VIECT_rel), sqrt(div(MET_rel, MET_rel)))))), abs(add(sub(add(sqrt(mul(div(0.229, ICHV_rel), sub(div(mul(SCV_rel, -0.497), log(SCV_rel)), sub(mul(cycle_idx, VIECT_rel), div(MET_rel, log(TEVI_rel)))))), abs(add(sub(div(div(log(cycle_idx), div(0.229, ICHV_rel)), div(0.229, SCV_rel)), sqrt(add(sqrt(mul(log(TEVI_rel), sub(div(mul(0.298, MATD_rel), log(SCV_rel)), sub(div(0.229, ICHV_rel), sqrt(sub(add(VIECT_rel, 0.374), log(sub(cycle_idx, SCV_rel)))))))), abs(add(sub(div(div(mul(mul(div(0.229, ICHV_rel), sub(div(mul(0.298, MATD_rel), sqrt(mul(cycle_idx, VIECT_rel))), sqrt(add(mul(SCV_rel, -0.497), sqrt(mul(abs(sub(TEVI_rel, cycle_idx)), sub(add(VIECT_rel, 0.374), log(sub(cycle_idx, SCV_rel))))))))), log(sub(cycle_idx, SCV_rel))), div(0.229, ICHV_rel)), div(0.229, SCV_rel)), sqrt(mul(SCV_rel, mul(sqrt(mul(SCV_rel, -0.497)), div(mul(mul(div(0.229, ICHV_rel), sub(div(mul(0.298, MATD_rel), sqrt(mul(cycle_idx, VIECT_rel))), sqrt(add(abs(sqrt(div(MET_rel, MET_rel))), sqrt(mul(abs(sub(TEVI_rel, cycle_idx)), sub(add(VIECT_rel, 0.374), log(sub(cycle_idx, SCV_rel))))))))), log(sub(cycle_idx, SCV_rel))), div(0.229, ICHV_rel)))))), sqrt(sqrt(div(sqrt(div(MET_rel, MET_rel)), MET_rel)))))))), sqrt(sqrt(div(div(MET_rel, log(TEVI_rel)), MET_rel)))))), div(0.229, SCV_rel)), sqrt(div(MET_rel, log(TEVI_rel))))))
+[symbolic] R2 vs. true SOH: -1.9484  |  R2 vs. true SOH: -1.9484  |  expression length: 1400 chars
+
+[symbolic] TOTAL TIME: 7.3 minutes

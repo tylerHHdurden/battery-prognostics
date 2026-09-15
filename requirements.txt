@@ -67,3 +67,7 @@ urllib3==2.7.0
 watchtower==3.4.0
 xgboost==3.3.0
 xmltodict==1.0.4
+river==0.26.1
+dice_ml==0.12
+gplearn==0.4.3
+tabpfn==9.0.0

@@ -1,0 +1,24 @@
+
+[dt-river-test] === NASA/B0018 ===
+[dt-river-test] corrector genuineness: 130 corrected cycles, 130 DISTINCT correction values (CHANGED - genuinely updating)
+[dt-river-test] FINAL cycle 132: raw_pred=97.33, corrected_pred=74.14, true_soh=72.76 (raw error=24.57, corrected error=1.38)
+[dt-river-test] RAW pipeline MAE: first half=6.968, second half=20.598
+[dt-river-test] RIVER-CORRECTED MAE: first half=3.193, second half=2.524
+[dt-river-test] overall MAE: raw=13.783, corrected=2.858 (IMPROVED vs. frozen pipeline alone)
+[dt-river-test] EMPIRICAL COVERAGE (ACI): 78.9% (target 90%) over 128 streamed cycles
+[dt-river-test] ADWIN drift events flagged: 2 at cycles [64, 128]
+
+[dt-river-test] === MIT/b3c35 ===
+[dt-river-test] corrector genuineness: 1089 corrected cycles, 1060 DISTINCT correction values (CHANGED - genuinely updating)
+[dt-river-test] FINAL cycle 1091: raw_pred=82.06, corrected_pred=80.72, true_soh=82.73 (raw error=0.67, corrected error=2.02)
+[dt-river-test] RAW pipeline MAE: first half=0.634, second half=1.999
+[dt-river-test] RIVER-CORRECTED MAE: first half=0.046, second half=0.654
+[dt-river-test] overall MAE: raw=1.317, corrected=0.350 (IMPROVED vs. frozen pipeline alone)
+[dt-river-test] EMPIRICAL COVERAGE (ACI): 86.8% (target 90%) over 1087 streamed cycles
+[dt-river-test] ADWIN drift events flagged: 7 at cycles [192, 384, 576, 736, 864, 960, 1024]
+
+[dt-river-test] === head-to-head vs. session 28's SGDRegressor (same batteries) ===
+    NASA/B0018: SGD (linear) corrected MAE=4.4258, River (Hoeffding Adaptive Tree) corrected MAE=2.8584 (River better)
+    MIT/b3c35: SGD (linear) corrected MAE=0.1328, River (Hoeffding Adaptive Tree) corrected MAE=0.3501 (SGD better)
+
+[dt-river-test] DONE

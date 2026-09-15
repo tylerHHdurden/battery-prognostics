@@ -1,0 +1,41 @@
+=== Stage 6.6: counterfactual explanations (DiCE) ===
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2943 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+
+[dice] battery=b4c38 cycle=51: current predicted SOH=100.17, seeking a counterfactual near 85.17
+  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  1.19it/s]100%|##########| 1/1 [00:00<00:00,  1.19it/s]
+    CF 0: predicted SOH=82.49, changed features: {'SCV_rel': (0.9992240841638612, 0.8), 'VDEDT': (-4.146243714378322e-05, 6609443.45926618), 'MET_rel': (0.9995811138829085, 23.0)}
+    CF 1: predicted SOH=82.27, changed features: {'SCV_rel': (0.9992240841638612, 0.8), 'VDEDT': (-4.146243714378322e-05, 21841678.70688844)}
+    CF 2: predicted SOH=82.27, changed features: {'SCV_rel': (0.9992240841638612, 0.8), 'VDEDT': (-4.146243714378322e-05, 21828104.6668147)}
+
+[dice] battery=b3c0 cycle=406: current predicted SOH=98.84, seeking a counterfactual near 83.84
+  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  1.20it/s]100%|##########| 1/1 [00:00<00:00,  1.20it/s]
+    CF 0: predicted SOH=81.84, changed features: {'ICHV_rel': (0.9200779477500013, 35.5), 'SCV_rel': (0.9860885771610945, 0.8)}
+    CF 1: predicted SOH=83.00, changed features: {'SCV_rel': (0.9860885771610945, 0.8), 'MATD_rel': (1.39309390929769, 2.9)}
+    CF 2: predicted SOH=82.72, changed features: {'SCV_rel': (0.9860885771610945, 0.8), 'VIECT_rel': (0.0019445000000000157, 1.8)}
+
+[dice] battery=b3c35 cycle=521: current predicted SOH=98.08, seeking a counterfactual near 83.08
+  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  1.23it/s]100%|##########| 1/1 [00:00<00:00,  1.22it/s]
+    CF 0: predicted SOH=81.82, changed features: {'ICHV_rel': (0.8716243905784135, 9.3), 'SCV_rel': (0.9792557524157015, 0.8)}
+    CF 1: predicted SOH=82.87, changed features: {'SCV_rel': (0.9792557524157015, 0.8), 'TEVI_rel': (0.9588593658904982, 19.7)}
+    CF 2: predicted SOH=82.77, changed features: {'SCV_rel': (0.9792557524157015, 0.8), 'MET_rel': (0.973064962974773, 14.9)}
+
+[dice] battery=b1c4 cycle=333: current predicted SOH=99.55, seeking a counterfactual near 84.55
+  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  1.27it/s]100%|##########| 1/1 [00:00<00:00,  1.27it/s]
+    CF 0: predicted SOH=81.95, changed features: {'SCV_rel': (0.9934309121352868, 0.8), 'VDEDT': (0.05307072172754475, 10707633.94532258)}
+    CF 1: predicted SOH=82.09, changed features: {'SCV_rel': (0.9934309121352868, 0.8), 'MATD_rel': (-0.20946684674762395, 8.2)}
+    CF 2: predicted SOH=81.94, changed features: {'SCV_rel': (0.9934309121352868, 0.8), 'MATD_rel': (-0.20946684674762395, -5.5)}
+
+[dice] battery=b3c0 cycle=376: current predicted SOH=99.04, seeking a counterfactual near 84.04
+  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  1.38it/s]100%|##########| 1/1 [00:00<00:00,  1.38it/s]
+    CF 0: predicted SOH=82.91, changed features: {'SCV_rel': (0.9883873299273916, 0.8)}
+    CF 1: predicted SOH=81.43, changed features: {'ICHV_rel': (0.920540554217309, 14.5), 'SCV_rel': (0.9883873299273916, 0.8)}
+    CF 2: predicted SOH=82.82, changed features: {'SCV_rel': (0.9883873299273916, 0.8), 'MATD_rel': (1.3236044524287607, -5.6)}
+
+[dice] TOTAL TIME: 0.1 minutes

@@ -1,0 +1,11 @@
+method,eval_set,r2,rmse,n,n_cells
+TabPFN alone,"in-domain (fixed split, subsampled)",0.6815383134242534,4.009350026966437,300,6
+TabPFN-DeepHPM (+physics residual),"in-domain (fixed split, subsampled)",0.5749021763310032,4.632226837073122,300,6
+TabPFN alone,CALCE (subsampled),0.003992418806884723,21.624630323085974,300,3
+TabPFN alone,Oxford (subsampled),0.45895829968214574,5.042513392991455,296,8
+TabPFN alone,HUST (subsampled),-0.1961498125888097,11.992260667407239,231,77
+TabPFN alone,XJTU (subsampled),-0.23575193108650505,8.05104960006558,282,47
+TabPFN-DeepHPM (+physics residual),CALCE (subsampled),0.22447371325232401,19.081637066427035,300,3
+TabPFN-DeepHPM (+physics residual),Oxford (subsampled),-9.775373956943092,22.50338582650215,296,8
+TabPFN-DeepHPM (+physics residual),HUST (subsampled),0.6843109738926945,6.160812822533861,231,77
+TabPFN-DeepHPM (+physics residual),XJTU (subsampled),-0.19204867383317925,7.907402538069792,282,47

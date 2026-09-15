@@ -1,0 +1,13 @@
+method,eval_set,r2,rmse,n,n_cells,r2_std,rmse_std
+Severson variance model (1 feat),in-domain (fixed split),0.5653375515397216,3.1885880892013394,5208.0,6.0,,
+Severson variance model (1 feat),in-domain (GroupKFold mean),0.45681638475693764,4.812255373676237,,,0.08245093607597176,1.0904952946378597
+Severson variance model (1 feat),CALCE,0.07740046961113867,20.743284235983932,2943.0,3.0,,
+Severson variance model (1 feat),Oxford,0.16928175205254603,6.228750087306301,519.0,8.0,,
+Severson variance model (1 feat),HUST,-1.7901680760181686,12.323337614831612,146122.0,77.0,,
+Severson variance model (1 feat),XJTU,-7.835449275756023,17.874436144026973,19238.0,47.0,,
+Attia-style rich model (4 feat),in-domain (fixed split),0.5828642870559018,3.1236405004526087,5208.0,6.0,,
+Attia-style rich model (4 feat),in-domain (GroupKFold mean),0.4687065612807597,4.758364839270839,,,0.08082858524810342,1.0741874447199262
+Attia-style rich model (4 feat),CALCE,0.07764666029463951,20.740516434851347,2943.0,3.0,,
+Attia-style rich model (4 feat),Oxford,0.1953454021559916,6.130258379268203,519.0,8.0,,
+Attia-style rich model (4 feat),HUST,-1.4365220088225796,11.515911890437064,146122.0,77.0,,
+Attia-style rich model (4 feat),XJTU,-7.409684473070545,17.438450083194613,19238.0,47.0,,

@@ -1,0 +1,95 @@
+=== Stage 6.1: building Severson-style features for the 42-battery pool ===
+[severson-feat] NASA/B0005: 168 cycles
+[severson-feat] NASA/B0006: 168 cycles
+[severson-feat] NASA/B0007: 168 cycles
+[severson-feat] NASA/B0018: 132 cycles
+[severson-feat] MIT/b1c20: 532 cycles
+[severson-feat] MIT/b1c43: 649 cycles
+[severson-feat] MIT/b1c32: 729 cycles
+[severson-feat] MIT/b1c17: 855 cycles
+[severson-feat] MIT/b1c22: 889 cycles
+[severson-feat] MIT/b1c41: 1049 cycles
+[severson-feat] MIT/b1c4: 1225 cycles
+[severson-feat] MIT/b2c1: 169 cycles
+[severson-feat] MIT/b2c42: 491 cycles
+[severson-feat] MIT/b2c13: 519 cycles
+[severson-feat] MIT/b2c24: 523 cycles
+[severson-feat] MIT/b2c32: 543 cycles
+[severson-feat] MIT/b2c9: 1059 cycles
+[severson-feat] MIT/b3c28: 539 cycles
+[severson-feat] MIT/b3c13: 814 cycles
+[severson-feat] MIT/b3c14: 856 cycles
+[severson-feat] MIT/b3c0: 1007 cycles
+[severson-feat] MIT/b3c35: 1091 cycles
+[severson-feat] MIT/b3c33: 1282 cycles
+[severson-feat] MIT/b3c38: 1933 cycles
+[severson-feat] MIT/b4c9: 529 cycles
+[severson-feat] MIT/b4c36: 713 cycles
+[severson-feat] MIT/b4c39: 761 cycles
+[severson-feat] MIT/b4c21: 903 cycles
+[severson-feat] MIT/b4c0: 982 cycles
+[severson-feat] MIT/b4c5: 1067 cycles
+[severson-feat] MIT/b4c38: 1230 cycles
+[severson-feat] RECOVERED NASA/B0036: 194 cycles
+[severson-feat] RECOVERED NASA/B0038: 35 cycles
+[severson-feat] RECOVERED NASA/B0039: 35 cycles
+[severson-feat] RECOVERED NASA/B0040: 35 cycles
+[severson-feat] RECOVERED NASA/B0041: 25 cycles
+[severson-feat] RECOVERED NASA/B0051: 22 cycles
+[severson-feat] RECOVERED MIT/b1c0: 1187 cycles
+[severson-feat] RECOVERED MIT/b1c18: 688 cycles
+[severson-feat] RECOVERED MIT/b2c12: 489 cycles
+[severson-feat] RECOVERED MIT/b2c44: 477 cycles
+[severson] pool: 26762 rows, 41 batteries, NaN log_var_dq rows: 41
+[severson] fixed split: train=21554 rows/35 batt, test=5208 rows/6 batt
+
+=== held-out datasets: building Severson-style features ===
+[severson] CALCE: 2943 rows, 3 cells
+[severson] Oxford: 519 rows, 8 cells
+[severson] HUST: 146122 rows, 77 cells
+[severson] XJTU: 19238 rows, 47 cells
+
+=== Severson variance model (1 feat) ===
+[severson] in-domain (fixed split): R2=0.5653 RMSE=3.1886
+[severson] === GroupKFold(5) for Severson variance model (1 feat) ===
+    fold 0: R2=0.4025 RMSE=5.7442 n=5056
+    fold 1: R2=0.3334 RMSE=6.1869 n=4670
+    fold 2: R2=0.5723 RMSE=3.3832 n=5389
+    fold 3: R2=0.4714 RMSE=3.7569 n=5791
+    fold 4: R2=0.5044 RMSE=4.9901 n=5856
+[severson] GroupKFold mean R2=0.4568 (std 0.0825) mean RMSE=4.8123 (std 1.0905)
+[severson] CALCE: R2=0.0774 RMSE=20.7433 n=2943
+[severson] Oxford: R2=0.1693 RMSE=6.2288 n=519
+[severson] HUST: R2=-1.7902 RMSE=12.3233 n=146122
+[severson] XJTU: R2=-7.8354 RMSE=17.8744 n=19238
+
+=== Attia-style rich model (4 feat) ===
+[severson] in-domain (fixed split): R2=0.5829 RMSE=3.1236
+[severson] === GroupKFold(5) for Attia-style rich model (4 feat) ===
+    fold 0: R2=0.4209 RMSE=5.6553 n=5056
+    fold 1: R2=0.3505 RMSE=6.1073 n=4670
+    fold 2: R2=0.5900 RMSE=3.3124 n=5389
+    fold 3: R2=0.4726 RMSE=3.7524 n=5791
+    fold 4: R2=0.5095 RMSE=4.9645 n=5856
+[severson] GroupKFold mean R2=0.4687 (std 0.0808) mean RMSE=4.7584 (std 1.0742)
+[severson] CALCE: R2=0.0776 RMSE=20.7405 n=2943
+[severson] Oxford: R2=0.1953 RMSE=6.1303 n=519
+[severson] HUST: R2=-1.4365 RMSE=11.5159 n=146122
+[severson] XJTU: R2=-7.4097 RMSE=17.4385 n=19238
+
+=== FULL RESULTS ===
+                          method                    eval_set        r2      rmse        n  n_cells   r2_std  rmse_std
+Severson variance model (1 feat)     in-domain (fixed split)  0.565338  3.188588   5208.0      6.0      NaN       NaN
+Severson variance model (1 feat) in-domain (GroupKFold mean)  0.456816  4.812255      NaN      NaN 0.082451  1.090495
+Severson variance model (1 feat)                       CALCE  0.077400 20.743284   2943.0      3.0      NaN       NaN
+Severson variance model (1 feat)                      Oxford  0.169282  6.228750    519.0      8.0      NaN       NaN
+Severson variance model (1 feat)                        HUST -1.790168 12.323338 146122.0     77.0      NaN       NaN
+Severson variance model (1 feat)                        XJTU -7.835449 17.874436  19238.0     47.0      NaN       NaN
+ Attia-style rich model (4 feat)     in-domain (fixed split)  0.582864  3.123641   5208.0      6.0      NaN       NaN
+ Attia-style rich model (4 feat) in-domain (GroupKFold mean)  0.468707  4.758365      NaN      NaN 0.080829  1.074187
+ Attia-style rich model (4 feat)                       CALCE  0.077647 20.740516   2943.0      3.0      NaN       NaN
+ Attia-style rich model (4 feat)                      Oxford  0.195345  6.130258    519.0      8.0      NaN       NaN
+ Attia-style rich model (4 feat)                        HUST -1.436522 11.515912 146122.0     77.0      NaN       NaN
+ Attia-style rich model (4 feat)                        XJTU -7.409684 17.438450  19238.0     47.0      NaN       NaN
+
+[severson] TOTAL TIME: 30.1 minutes

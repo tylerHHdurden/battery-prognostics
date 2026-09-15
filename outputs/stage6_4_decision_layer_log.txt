@@ -1,0 +1,40 @@
+
+=== B0018 (known second-life mis-certification case) ===
+Inputs: SOH=81.5, RUL=2, grade='Primary EV use', mode='mixed LLI+LAM-leaning signature'
+Expected: Monitor closely  |  Got: Monitor closely  |  MATCH
+Why expected: Grade alone says 'Primary EV use' (SOH>=80), but this project's own research repeatedly found B0018's predicted SOH overstates its true condition (documented +8-9pp bias) alongside this exact degradation-mode signature - the decision layer should NOT simply pass through the raw grade unflagged.
+Reasoning chain:
+  SOH=81.5%, RUL=2 cycles, second-life grade='Primary EV use', degradation mode='mixed LLI+LAM-leaning signature'
+  SOH 81.5% is in the 'Primary EV use' band (>= 80%, session 25's grading agrees: 'Primary EV use').
+  However, the following risk flag(s) fired despite the high SOH grade:
+    - RUL=2 cycles is low (< 50) despite the high SOH grade - a real risk of near-term rapid decline, not visible from SOH alone.
+    - degradation-mode signature ('mixed LLI+LAM-leaning signature') indicates an active LAM-leaning mechanism - this project's own history (B0018 specifically) has an established, documented case of a battery graded 'Primary EV use' on predicted SOH alone that was ACTUALLY already in the second-life band on its true SOH - this exact combination (high predicted SOH + LAM-leaning signature) is the known failure signature, not a hypothetical one.
+  Recommendation downgraded to closer monitoring rather than trusting the SOH grade alone, given this project's own documented precedent for exactly this combination of signals being unreliable.
+
+=== Clean healthy battery, early life ===
+Inputs: SOH=96.5, RUL=850, grade='Primary EV use', mode='minimal peak-shape change over the observed test-set window'
+Expected: Continue normal use  |  Got: Continue normal use  |  MATCH
+Why expected: High SOH, high RUL, no degradation signature of concern - no risk flag should fire.
+Reasoning chain:
+  SOH=96.5%, RUL=850 cycles, second-life grade='Primary EV use', degradation mode='minimal peak-shape change over the observed test-set window'
+  SOH 96.5% is in the 'Primary EV use' band (>= 80%, session 25's grading agrees: 'Primary EV use').
+  No risk flags fired - SOH grade, RUL, and degradation mode are all consistent with continued normal use.
+
+=== Fast-fading battery, already second-life range ===
+Inputs: SOH=54.0, RUL=40, grade='Second-life candidate', mode='LAM-leaning signature (peak height collapsed, position relatively stable)'
+Expected: Candidate for second-life  |  Got: Candidate for second-life  |  MATCH
+Why expected: SOH is already in the second-life band per session 25's own thresholds - the LAM-leaning signature should appear as an explicit CAVEAT (tighter monitoring within second-life use), not override the second-life recommendation itself (the battery is genuinely too degraded for primary use, degradation mode doesn't change that).
+Reasoning chain:
+  SOH=54.0%, RUL=40 cycles, second-life grade='Second-life candidate', degradation mode='LAM-leaning signature (peak height collapsed, position relatively stable)'
+  SOH 54.0% falls in the second-life band [50%, 80%) and/or session 25's grading already labels it 'Second-life candidate' - candidate for second-life redeployment rather than continued primary use.
+  CAVEAT: degradation-mode signature ('LAM-leaning signature (peak height collapsed, position relatively stable)') indicates an active LAM-leaning (loss-of-active-material) mechanism, which this project's own research (B0018/B0044/B0045) has repeatedly found associated with FASTER, harder-to-predict further fade than a pure-LLI signature would suggest - flag for tighter-than-usual second-life monitoring, not a blanket 'safe as-is' second-life certification.
+
+=== Severely degraded battery ===
+Inputs: SOH=42.0, RUL=5, grade='Recycle only', mode='LAM-leaning signature (peak height collapsed, position relatively stable)'
+Expected: Recommend retirement  |  Got: Recommend retirement  |  MATCH
+Why expected: Below the 50% second-life floor - retirement regardless of any other signal.
+Reasoning chain:
+  SOH=42.0%, RUL=5 cycles, second-life grade='Recycle only', degradation mode='LAM-leaning signature (peak height collapsed, position relatively stable)'
+  SOH 42.0% is below the 50% second-life floor (session 25's own 'Recycle only' threshold) - retirement is the only safe recommendation regardless of any other signal.
+
+=== SUMMARY: 4/4 cases matched expected recommendation ===
