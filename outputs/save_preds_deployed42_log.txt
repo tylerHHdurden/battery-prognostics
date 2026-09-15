@@ -1,0 +1,31 @@
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\health_indicators.py:155: RuntimeWarning: divide by zero encountered in divide
+  out["VDEDT"] = float(np.mean(np.diff(Vd[-tail_n:]) / np.diff(td[-tail_n:]))) if tail_n > 1 else np.nan
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\_core\_methods.py:132: RuntimeWarning: invalid value encountered in reduce
+  ret = umr_sum(arr, axis, dtype, out, keepdims, where=where)
+=== Saving per-cycle predictions for pool: deployed42 (suffix='') ===
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[save-preds] building Oxford/HUST/XJTU under this pool's own norm_stats/encoder...
+[stage1-duration] WARNING: 8 batteries have no cycle_idx==10 row at all: ['Cell1', 'Cell2', 'Cell3', 'Cell4', 'Cell5', 'Cell6', 'Cell7', 'Cell8'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 519 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 519 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 519 rows)
+[save-preds] Oxford: 519 rows, 8 cells
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 146122 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 146122 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 146122 rows)
+[save-preds] HUST: 146122 rows, 77 cells
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 19238 rows)
+[stage1-duration] near-zero/non-finite cycle-10 baseline for Batch-5/RW_battery-1/TEVD (0.0) - falling back to this battery's own median TEVD (114.3600) as the denominator.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for Batch-5/RW_battery-5/TEVD (0.0) - falling back to this battery's own median TEVD (120.8400) as the denominator.
+[stage1-duration] TEVD -> TEVD_rel: 2 batteries used median-fallback baseline, 0 non-finite output values (of 19238 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 19238 rows)
+[save-preds] XJTU: 19238 rows, 47 cells
+[save-preds] CALCE: R2=0.5679 RMSE=14.1553 n=2941 -> saved percycle_calce_deployed.csv
+[save-preds] Oxford: R2=-2.6939 RMSE=13.1346 n=519 -> saved percycle_oxford_deployed.csv
+[save-preds] HUST: R2=-0.1523 RMSE=7.9193 n=146122 -> saved percycle_hust_deployed.csv
+[save-preds] XJTU: R2=-1.0620 RMSE=8.6350 n=19238 -> saved percycle_xjtu_deployed.csv
+
+[save-preds] TOTAL TIME: 12.9 minutes

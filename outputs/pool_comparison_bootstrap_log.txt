@@ -1,0 +1,67 @@
+
+=== CALCE ===
+[bootstrap] CALCE: 3 batteries, 2941 cycles, 7 distinct nonempty battery subsets exist (before replacement)
+    42-battery (deployed): point R2=+0.5679  95% CI=[+0.4678, +0.6552]  width=0.1874
+    204-battery: point R2=+0.8491  95% CI=[+0.8050, +0.8920]  width=0.0870
+    NASA-heavy: point R2=+0.8050  95% CI=[+0.7596, +0.8728]  width=0.1132
+    delta[204-battery - 42-battery (deployed)]: point=+0.2812  95% CI=[+0.1830, +0.3372]  -> SIGNIFICANT (CI excludes 0)
+    delta[NASA-heavy - 42-battery (deployed)]: point=+0.2371  95% CI=[+0.2055, +0.2918]  -> SIGNIFICANT (CI excludes 0)
+    delta[NASA-heavy - 204-battery]: point=-0.0441  95% CI=[-0.0941, +0.0346]  -> NOT significant (CI includes 0)
+
+=== Oxford ===
+[bootstrap] Oxford: 8 batteries, 519 cycles, 255 distinct nonempty battery subsets exist (before replacement)
+    42-battery (deployed): point R2=-2.6939  95% CI=[-3.4840, -2.2031]  width=1.2809
+    204-battery: point R2=-5.6854  95% CI=[-6.3977, -4.9442]  width=1.4535
+    NASA-heavy: point R2=-12.0480  95% CI=[-14.8225, -10.4016]  width=4.4209
+    delta[204-battery - 42-battery (deployed)]: point=-2.9915  95% CI=[-3.6146, -2.1629]  -> SIGNIFICANT (CI excludes 0)
+    delta[NASA-heavy - 42-battery (deployed)]: point=-9.3541  95% CI=[-11.3338, -8.1539]  -> SIGNIFICANT (CI excludes 0)
+    delta[NASA-heavy - 204-battery]: point=-6.3627  95% CI=[-8.9971, -4.9040]  -> SIGNIFICANT (CI excludes 0)
+
+=== HUST ===
+[bootstrap] HUST: 77 batteries, 146122 cycles, 151115727451828646838271 distinct nonempty battery subsets exist (before replacement)
+    42-battery (deployed): point R2=-0.1523  95% CI=[-0.2974, -0.0135]  width=0.2840
+    204-battery: point R2=+0.3682  95% CI=[+0.3078, +0.4351]  width=0.1273
+    NASA-heavy: point R2=-0.0124  95% CI=[-0.1587, +0.1239]  width=0.2826
+    delta[204-battery - 42-battery (deployed)]: point=+0.5204  95% CI=[+0.4219, +0.6287]  -> SIGNIFICANT (CI excludes 0)
+    delta[NASA-heavy - 42-battery (deployed)]: point=+0.1398  95% CI=[-0.0459, +0.3282]  -> NOT significant (CI includes 0)
+    delta[NASA-heavy - 204-battery]: point=-0.3806  95% CI=[-0.5280, -0.2445]  -> SIGNIFICANT (CI excludes 0)
+
+=== XJTU ===
+[bootstrap] XJTU: 47 batteries, 19238 cycles, 140737488355327 distinct nonempty battery subsets exist (before replacement)
+    42-battery (deployed): point R2=-1.0620  95% CI=[-1.6033, -0.6487]  width=0.9546
+    204-battery: point R2=-3.0059  95% CI=[-3.8408, -2.4295]  width=1.4113
+    NASA-heavy: point R2=-5.5640  95% CI=[-6.6494, -4.6138]  width=2.0356
+    delta[204-battery - 42-battery (deployed)]: point=-1.9439  95% CI=[-2.2777, -1.7231]  -> SIGNIFICANT (CI excludes 0)
+    delta[NASA-heavy - 42-battery (deployed)]: point=-4.5020  95% CI=[-5.0925, -3.9245]  -> SIGNIFICANT (CI excludes 0)
+    delta[NASA-heavy - 204-battery]: point=-2.5581  95% CI=[-3.0905, -1.9998]  -> SIGNIFICANT (CI excludes 0)
+
+
+=== FULL SUMMARY: R2 CI per pool/dataset ===
+dataset                  pool  n_batteries   point_r2      ci_lo      ci_hi  ci_width
+  CALCE 42-battery (deployed)            3   0.567876   0.467805   0.655161  0.187357
+  CALCE           204-battery            3   0.849104   0.805010   0.892021  0.087011
+  CALCE            NASA-heavy            3   0.804957   0.759563   0.872807  0.113245
+ Oxford 42-battery (deployed)            8  -2.693906  -3.484040  -2.203106  1.280934
+ Oxford           204-battery            8  -5.685364  -6.397746  -4.944230  1.453516
+ Oxford            NASA-heavy            8 -12.048024 -14.822533 -10.401612  4.420921
+   HUST 42-battery (deployed)           77  -0.152262  -0.297432  -0.013454  0.283978
+   HUST           204-battery           77   0.368188   0.307794   0.435134  0.127339
+   HUST            NASA-heavy           77  -0.012433  -0.158696   0.123875  0.282571
+   XJTU 42-battery (deployed)           47  -1.061987  -1.603310  -0.648668  0.954642
+   XJTU           204-battery           47  -3.005876  -3.840788  -2.429495  1.411292
+   XJTU            NASA-heavy           47  -5.564002  -6.649418  -4.613799  2.035620
+
+=== FULL SUMMARY: pairwise deltas ===
+dataset                pool_a      pool_b  point_delta      ci_lo     ci_hi  significant  n_batteries
+  CALCE 42-battery (deployed) 204-battery     0.281227   0.183011  0.337205         True            3
+  CALCE 42-battery (deployed)  NASA-heavy     0.237081   0.205546  0.291758         True            3
+  CALCE           204-battery  NASA-heavy    -0.044146  -0.094136  0.034635        False            3
+ Oxford 42-battery (deployed) 204-battery    -2.991458  -3.614598 -2.162884         True            8
+ Oxford 42-battery (deployed)  NASA-heavy    -9.354118 -11.333799 -8.153864         True            8
+ Oxford           204-battery  NASA-heavy    -6.362660  -8.997072 -4.904045         True            8
+   HUST 42-battery (deployed) 204-battery     0.520450   0.421911  0.628678         True           77
+   HUST 42-battery (deployed)  NASA-heavy     0.139829  -0.045937  0.328186        False           77
+   HUST           204-battery  NASA-heavy    -0.380621  -0.528017 -0.244525         True           77
+   XJTU 42-battery (deployed) 204-battery    -1.943889  -2.277685 -1.723071         True           47
+   XJTU 42-battery (deployed)  NASA-heavy    -4.502015  -5.092499 -3.924456         True           47
+   XJTU           204-battery  NASA-heavy    -2.558126  -3.090516 -1.999786         True           47

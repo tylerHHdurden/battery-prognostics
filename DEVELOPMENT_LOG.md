@@ -10281,3 +10281,174 @@ Not proceeding to Stage 6. Reporting back with the full findings -
 item 1's refutation (and the AUC-sensitivity reframing it points
 toward) is a real, citable negative result in its own right, on top of
 the earlier 204-pool/AUC-correlation finding.
+
+---
+
+## Battery-level bootstrap significance check on the three-way pool comparison
+
+Closes the one remaining gap in the data-expansion work: every large
+difference reported across the last three sessions (42 vs. 204 vs.
+NASA-heavy, on CALCE/Oxford/HUST/XJTU) was a point estimate only,
+never checked for statistical robustness. Same methodology as session
+21/Stage 0.4 (`battery_bootstrap_row_indices` - resample whole
+BATTERIES with replacement, not cycles; N=2000 resamples; 95%
+percentile CI; a CI excluding 0 = significant). No retraining, no
+deployed-app changes.
+
+**Method note**: required full per-cycle (battery_id, y_true, pred)
+triplets, which the prior sessions only ever summarized to point R2/
+RMSE - regenerated via each pool's own already-trained, already-saved
+model (`run_save_percycle_predictions.py`, pure inference, no
+retraining). Row-level alignment across all 3 pools verified exact
+(identical battery_id order, identical y_true) for all 4 datasets
+before trusting any paired delta - a paired bootstrap is only valid
+when both models are scored on the literal same rows.
+
+### 1 - Full results, all pairwise comparisons, all four datasets
+
+| dataset (n batteries) | pool | point R2 | 95% CI |
+|---|---|---|---|
+| CALCE (3) | 42-battery | 0.568 | [0.468, 0.655] |
+| CALCE (3) | 204-battery | 0.849 | [0.805, 0.892] |
+| CALCE (3) | NASA-heavy | 0.805 | [0.760, 0.873] |
+| Oxford (8) | 42-battery | -2.694 | [-3.484, -2.203] |
+| Oxford (8) | 204-battery | -5.685 | [-6.398, -4.944] |
+| Oxford (8) | NASA-heavy | -12.048 | **[-14.823, -10.402]** |
+| HUST (77) | 42-battery | -0.152 | [-0.297, -0.013] |
+| HUST (77) | 204-battery | 0.368 | [0.308, 0.435] |
+| HUST (77) | NASA-heavy | -0.012 | [-0.159, 0.124] |
+| XJTU (47) | 42-battery | -1.062 | [-1.603, -0.649] |
+| XJTU (47) | 204-battery | -3.006 | [-3.841, -2.430] |
+| XJTU (47) | NASA-heavy | -5.564 | [-6.649, -4.614] |
+
+| dataset | comparison | point delta | 95% CI | verdict |
+|---|---|---|---|---|
+| CALCE | 42 vs. 204 | +0.281 | [0.183, 0.337] | **SIGNIFICANT** |
+| CALCE | 42 vs. NASA-heavy | +0.237 | [0.206, 0.292] | **SIGNIFICANT** |
+| CALCE | **204 vs. NASA-heavy** | -0.044 | [-0.094, +0.035] | **NOT significant** |
+| Oxford | 42 vs. 204 | -2.991 | [-3.615, -2.163] | **SIGNIFICANT** |
+| Oxford | 42 vs. NASA-heavy | -9.354 | [-11.334, -8.154] | **SIGNIFICANT** |
+| Oxford | **204 vs. NASA-heavy** | -6.363 | [-8.997, -4.904] | **SIGNIFICANT** |
+| HUST | 42 vs. 204 | +0.520 | [0.422, 0.629] | **SIGNIFICANT** |
+| HUST | 42 vs. NASA-heavy | +0.140 | [-0.046, +0.328] | **NOT significant** |
+| HUST | **204 vs. NASA-heavy** | -0.381 | [-0.528, -0.245] | **SIGNIFICANT** |
+| XJTU | 42 vs. 204 | -1.944 | [-2.278, -1.723] | **SIGNIFICANT** |
+| XJTU | 42 vs. NASA-heavy | -4.502 | [-5.092, -3.924] | **SIGNIFICANT** |
+| XJTU | **204 vs. NASA-heavy** | -2.558 | [-3.091, -2.000] | **SIGNIFICANT** |
+
+### 2 - Sample-size reliability (item 3): CALCE and Oxford checked explicitly
+
+**CALCE (n=3 batteries, 7 distinct nonempty battery subsets)**: a real
+methodological limit, stated plainly rather than glossed over. With
+only 3 clusters, the bootstrap resamples from an extremely coarse
+underlying space (27 possible ordered with-replacement draws of 3
+items). The LARGE effects (both 42-vs-x comparisons, +0.24 to +0.28,
+CIs clear of zero by a wide margin) are big enough to survive even
+this coarse resampling and can be trusted. The SMALL 204-vs-NASA-heavy
+effect (-0.044) cannot be reliably distinguished from zero at this
+sample size - this is genuinely ambiguous (category (c)), not
+evidence the true effect IS zero, just that n=3 cannot resolve an
+effect this small either way.
+
+**Oxford (n=8 batteries, 255 distinct nonempty subsets)**: on firmer
+footing than CALCE, but still a real, honestly-narrow evidence base.
+All three Oxford comparisons ARE significant (CIs well clear of zero
+in every case), so the DIRECTION and the fact of a real difference are
+well-supported - see item 2 below for the specific NASA-heavy point
+estimate's own precision.
+
+**HUST (n=77) and XJTU (n=47)** are both large enough for the bootstrap
+to be fully reliable in the ordinary sense - no sample-size caveat
+needed for either.
+
+### 3 - Classification per comparison, per instruction's (a)/(b)/(c)
+
+- **(a) Clearly significant, robust**: CALCE 42-vs-204, CALCE
+  42-vs-NASA-heavy, Oxford (all 3), HUST 42-vs-204, HUST
+  204-vs-NASA-heavy, XJTU (all 3). **10 of 12 comparisons.**
+- **(b) Directionally consistent but not reaching significance -
+  real uncertainty**: HUST 42-vs-NASA-heavy (point +0.140, a real-
+  looking apparent improvement that is NOT statistically distinguishable
+  from no change at n=77 - a genuine, reportable null result, not
+  softened away).
+- **(c) Genuinely ambiguous / sample size limits the test itself**:
+  CALCE 204-vs-NASA-heavy (n=3 is too thin to resolve this specific,
+  small effect either way - stated as a real limitation of THIS test,
+  not a failure of the underlying pool-comparison work).
+
+### 4 - Does the refutation-defining comparison (204 vs. NASA-heavy) hold up?
+
+**Yes, for 3 of 4 datasets, on firm statistical ground - the
+refutation finding stands.** HUST (-0.381, CI clear of zero), XJTU
+(-2.558, CI clear of zero), and Oxford (-6.363, CI clear of zero) all
+show a STATISTICALLY SIGNIFICANT decline from the 204-battery pool to
+the NASA-heavy pool - exactly the "worse, not better" direction that
+refuted the original specialization-mechanism hypothesis for Oxford/
+XJTU specifically (the two datasets predicted to IMPROVE). CALCE's
+own 204-vs-NASA-heavy comparison is NOT significant - but this is
+consistent with, not a complication of, the original hypothesis (CALCE
+was predicted to "possibly worsen slightly, or stay flat" - a
+non-significant small decline is squarely within "stayed flat").
+
+**The magnitude-ordering-by-AUC observation from the prior entry is
+strengthened, not just repeated**: the 204-vs-NASA-heavy CIs for HUST
+[-0.528,-0.245], XJTU [-3.091,-2.000], and Oxford [-8.997,-4.904] are
+**mutually non-overlapping** - a genuinely robust, significantly-
+ordered progression (not just three point estimates that happen to
+line up), with CALCE anchoring the bottom at "no significant change."
+Still reported as a suggestive, small-n (4 datasets) pattern consistent
+with the "AUC predicts sensitivity to pool size/richness" hypothesis,
+not as a formally-tested ordering claim in its own right - that would
+need a dedicated test (e.g. a trend test across datasets), not
+attempted here.
+
+### 5 - Oxford's -12.048, specifically (item 2)
+
+**The direction and significance are solid; the specific third-
+decimal-place framing is not, and should be softened.** Oxford's
+NASA-heavy 95% CI is **[-14.823, -10.402]** - a width of 4.42 R2 units,
+by far the widest of any (dataset, pool) CI in this whole comparison
+(next-widest is XJTU/NASA-heavy at 2.04). This CI does not overlap
+ANY other (dataset, pool) combination's CI anywhere in this table, so
+the qualitative claim - Oxford under the NASA-heavy pool is
+dramatically, significantly worse than every other result reported in
+this entire data-expansion effort - is fully supported and should NOT
+be softened. **What should be softened is citing "-12.048" as if it
+were a precise measurement.** The honest framing is: "Oxford's R2
+under the NASA-heavy pool is approximately -10 to -15 (point estimate
+-12.048), significantly and dramatically worse than any other result
+in this comparison" - not a bare, precise superlative. The phrase
+"the worst zero-retrain result in this entire project" (used in the
+prior entry) is statistically well-supported as a DIRECTIONAL/
+SIGNIFICANCE claim and is not being retracted - only the implied
+precision of "-12.048" specifically is being caveated here.
+
+### Corrections to the prior two entries' language, stated explicitly
+
+1. The NASA-heavy-pool entry's per-dataset delta table (204-pool ->
+   NASA-heavy) listed CALCE's -0.044 alongside HUST/XJTU/Oxford's
+   declines without distinguishing it as statistically different in
+   kind - it is: CALCE's decline is NOT significant (indistinguishable
+   from no change), while the other three are. Future citations of
+   this table should note this explicitly rather than implying all
+   four "declined" uniformly.
+2. Oxford's "-12.048" should be cited with its 95% CI ([-14.823,
+   -10.402]) alongside the point estimate wherever the exact number is
+   quoted as a headline figure, not as a bare point value.
+
+Nothing else in the prior two entries' qualitative conclusions changes
+- every OTHER significant finding cited there (the 204-pool's mixed
+result, the specialization-mechanism refutation, the AUC-magnitude
+pattern) is now on FIRMER ground than before, not weaker.
+
+### Files
+
+`src/run_save_percycle_predictions.py`, `src/run_pool_comparison_
+bootstrap.py`, `data/processed/predictions/percycle_{calce,oxford,
+hust,xjtu}_{deployed,pool204,nasaheavy}.csv` (12 files),
+`outputs/pool_comparison_bootstrap_{r2_ci,deltas}.csv`,
+`outputs/save_preds_*_log.txt`, `outputs/pool_comparison_bootstrap_
+log.txt`.
+
+No deployed-app changes. Not proceeding to Stage 6. Reporting back
+with the full significance picture.
