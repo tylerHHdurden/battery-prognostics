@@ -28,6 +28,9 @@ ROOT = Path(__file__).resolve().parents[1]
 NASA_DIR = ROOT / "data" / "raw" / "nasa" / "B0005_B0006_B0007_B0018"
 CALCE_DIR = ROOT / "data" / "raw" / "calce"
 MIT_DIR = ROOT / "data" / "raw" / "mit"
+OXFORD_DIR = ROOT / "data" / "raw" / "oxford"
+HUST_DIR = ROOT / "data" / "raw" / "hust" / "extracted" / "our_data"
+XJTU_DIR = ROOT / "data" / "raw" / "xjtu" / "extracted"
 
 
 # --------------------------------------------------------------------------
@@ -50,6 +53,80 @@ def calce_data_available() -> bool:
 
 def mit_data_available() -> bool:
     return MIT_DIR.is_dir() and any((MIT_DIR / bf).exists() for bf in MIT_BATCH_FILES)
+
+
+def oxford_data_available() -> bool:
+    return (OXFORD_DIR / "Oxford_Battery_Degradation_Dataset_1.mat").exists()
+
+
+def hust_data_available() -> bool:
+    return HUST_DIR.is_dir() and any(HUST_DIR.glob("*.pkl"))
+
+
+def xjtu_data_available() -> bool:
+    return XJTU_DIR.is_dir() and any(XJTU_DIR.rglob("*.mat"))
+
+
+# --------------------------------------------------------------------------
+# XJTU (Wang et al., Zenodo 10963339) (Stage 5.1)
+#
+# Source: https://zenodo.org/records/10963339 (2.44 GB zip, "Battery
+# Dataset/Batch-{1..6}/{policy}_battery-{n}.mat", 55 LISHEN NCM 18650
+# cells, 2000 mAh nominal, 6 charge/discharge protocols, 1 Hz). One
+# extra top-level file (Temperature_Compensation_Data.mat) is not a
+# battery cell and is excluded. Each cell's .mat has `data` (list of
+# per-cycle dicts with combined charge+discharge current/voltage/
+# capacity/temperature/time - already in our sign convention,
+# verified directly: I>0 charge, I<0 discharge, capacity_Ah resets to
+# 0 at each charge/discharge phase transition) and `summary` (per-
+# cycle aggregates, not used here - recomputed from `data` instead for
+# consistency with every other adapter in this project).
+# --------------------------------------------------------------------------
+
+def xjtu_cell_ids():
+    ids = []
+    for batch_dir in sorted(XJTU_DIR.glob("Battery Dataset/Batch-*")):
+        for f in sorted(batch_dir.glob("*.mat")):
+            ids.append(f"{batch_dir.name}/{f.stem}")
+    return ids
+
+
+def iterate_xjtu_cycles(cell_id: str):
+    path = XJTU_DIR / "Battery Dataset" / f"{cell_id}.mat"
+    mat = sio.loadmat(path, simplify_cells=True)
+    cycles = mat["data"]
+
+    cycle_idx = 0
+    for c in cycles:
+        t = np.atleast_1d(c["relative_time_min"]).astype(float) * 60.0  # min -> s
+        V = np.atleast_1d(c["voltage_V"]).astype(float)
+        I = np.atleast_1d(c["current_A"]).astype(float)
+        cap = np.atleast_1d(c["capacity_Ah"]).astype(float)
+        T = np.atleast_1d(c["temperature_C"]).astype(float)
+
+        charge_mask = I > 0.01
+        discharge_mask = I < -0.01
+        if charge_mask.sum() < 2 or discharge_mask.sum() < 2:
+            continue
+
+        dis_cap = cap[discharge_mask]
+        discharge_capacity = float(dis_cap.max() - dis_cap.min())
+        if discharge_capacity <= 0:
+            continue
+
+        cycle_idx += 1
+        yield {
+            "cycle_idx": cycle_idx,
+            "discharge_capacity": discharge_capacity,
+            "charge": {
+                "t": t[charge_mask], "V": V[charge_mask],
+                "I": I[charge_mask], "T": T[charge_mask],
+            },
+            "discharge": {
+                "t": t[discharge_mask], "V": V[discharge_mask],
+                "I": I[discharge_mask], "T": T[discharge_mask],
+            },
+        }
 
 
 # --------------------------------------------------------------------------
@@ -235,3 +312,137 @@ def iterate_mit_cycles(batch_file: str, cell_index: int, max_cycles: int | None 
                     "I": I[discharge_mask], "T": T[discharge_mask],
                 },
             }
+
+
+# --------------------------------------------------------------------------
+# Oxford Battery Degradation Dataset 1 (Stage 5.1)
+#
+# Source: https://ora.ox.ac.uk/objects/uuid:03ba4b01-cfed-46d3-9b1a-7d4a7bdf6fac
+# (254 MB single .mat). 8 Kokam 740 mAh pouch cells, thermal chamber at
+# 40degC, Artemis urban drive-cycle aging with a full C1 constant-current
+# charge/discharge characterization test saved every ~100 real cycles
+# (cyc0000, cyc0100, ...) - NOT every cycle. cycle_idx below is the actual
+# aging-protocol cycle number at each checkpoint (parsed from the key), not
+# an ordinal reindex - this keeps RUL/EOL cycle-count units comparable to
+# every other dataset in this project, at the cost of a much coarser
+# per-battery time resolution than NASA/MIT/CALCE (tens of checkpoints per
+# cell life, not hundreds-to-thousands of cycles).
+#
+# No current channel is logged directly - only cumulative charge/discharge
+# capacity q (mAh) vs. time t (MATLAB datenum, days). Current is
+# reconstructed via I = dq/dt (converted to A), the same numerical-
+# differentiation approach already used elsewhere in this project whenever
+# a dataset logs cumulative capacity instead of raw current (e.g. CALCE's
+# per-cycle capacity, MIT's Qd). Verified sign convention needs no flip:
+# C1ch's q rises (I>0 already); C1dc's q is already negative (I<0 already).
+# --------------------------------------------------------------------------
+
+def oxford_cell_ids():
+    return [f"Cell{i}" for i in range(1, 9)]
+
+
+def iterate_oxford_cycles(cell_id: str):
+    mat = sio.loadmat(OXFORD_DIR / "Oxford_Battery_Degradation_Dataset_1.mat", simplify_cells=True)
+    cell = mat[cell_id]
+    checkpoint_keys = sorted(
+        (k for k in cell.keys() if k.startswith("cyc")),
+        key=lambda k: int(k[3:]),
+    )
+
+    for key in checkpoint_keys:
+        cyc_num = int(key[3:])
+        checkpoint = cell[key]
+        if "C1ch" not in checkpoint or "C1dc" not in checkpoint:
+            continue
+        ch_raw, dc_raw = checkpoint["C1ch"], checkpoint["C1dc"]
+
+        def _build(raw):
+            t_days = np.atleast_1d(raw["t"]).astype(float)
+            v = np.atleast_1d(raw["v"]).astype(float)
+            q_mah = np.atleast_1d(raw["q"]).astype(float)
+            T = np.atleast_1d(raw["T"]).astype(float)
+            if t_days.size < 3:
+                return None
+            t_s = (t_days - t_days[0]) * 86400.0  # datenum days -> seconds, zeroed
+            t_hours = t_days * 24.0
+            i_ma = np.gradient(q_mah, t_hours)  # dq/dt, mA (q in mAh, t in hours)
+            i_a = i_ma / 1000.0
+            return {"t": t_s, "V": v, "I": i_a, "T": T}, q_mah
+
+        charge, q_ch = _build(ch_raw)
+        discharge, q_dc = _build(dc_raw)
+        if charge is None or discharge is None:
+            continue
+
+        cap = float(abs(q_dc[-1] - q_dc[0])) / 1000.0  # mAh -> Ah
+        if cap <= 0:
+            continue
+
+        yield {
+            "cycle_idx": cyc_num if cyc_num > 0 else 1,  # cyc0000 -> treat as cycle 1
+            "discharge_capacity": cap,
+            "charge": charge,
+            "discharge": discharge,
+        }
+
+
+# --------------------------------------------------------------------------
+# HUST (Ma et al. 2022, Mendeley Data nsc7hnsg4s) (Stage 5.1)
+#
+# Source: https://data.mendeley.com/datasets/nsc7hnsg4s/2 (1.19 GB zip,
+# 77 pickled dicts, one per A123 APR18650M1A LFP cell, 30degC). Each pickle
+# is {cell_id: {"rul": {cycle: rul_at_cycle}, "dq": ..., "data": {cycle:
+# DataFrame}}}; every cycle's DataFrame has clean columns Status/
+# `Current (mA)`/`Voltage (V)`/`Capacity (mAh)`/`Time (s)`, charge/discharge
+# split by the Status string (discharge is itself multi-stage - "Constant
+# current discharge_0..3" - hence the .str.contains("discharge") match
+# rather than an exact string). Current sign verified already matches this
+# project's convention (charge>0, discharge<0) - no flip needed. Discharge
+# `Capacity (mAh)` counts DOWN from the cycle's full discharged capacity to
+# ~0 (remaining-to-discharge, not cumulative-discharged) - true per-cycle
+# discharge capacity is (max-min) within the discharge rows, same pattern
+# already used for CALCE's cumulative-within-file capacity column.
+# --------------------------------------------------------------------------
+
+def hust_cell_ids():
+    return sorted(p.stem for p in HUST_DIR.glob("*.pkl"))
+
+
+def iterate_hust_cycles(cell_id: str):
+    import pickle
+
+    with open(HUST_DIR / f"{cell_id}.pkl", "rb") as f:
+        raw = pickle.load(f)[cell_id]
+    data = raw["data"]
+
+    for cyc_num in sorted(data.keys()):
+        df = data[cyc_num]
+        status = df["Status"].astype(str)
+        charge_mask = status.str.contains("charge") & ~status.str.contains("discharge")
+        discharge_mask = status.str.contains("discharge")
+        if charge_mask.sum() < 2 or discharge_mask.sum() < 2:
+            continue
+
+        gc = df[charge_mask]
+        gd = df[discharge_mask]
+        cap_series = gd["Capacity (mAh)"].to_numpy(float)
+        cap = float(abs(cap_series.max() - cap_series.min())) / 1000.0  # mAh -> Ah
+        if cap <= 0:
+            continue
+
+        yield {
+            "cycle_idx": int(cyc_num),
+            "discharge_capacity": cap,
+            "charge": {
+                "t": gc["Time (s)"].to_numpy(float),
+                "V": gc["Voltage (V)"].to_numpy(float),
+                "I": gc["Current (mA)"].to_numpy(float) / 1000.0,  # mA -> A
+                "T": None,  # not logged in this dataset
+            },
+            "discharge": {
+                "t": gd["Time (s)"].to_numpy(float),
+                "V": gd["Voltage (V)"].to_numpy(float),
+                "I": gd["Current (mA)"].to_numpy(float) / 1000.0,
+                "T": None,
+            },
+        }

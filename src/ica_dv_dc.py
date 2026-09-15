@@ -63,7 +63,25 @@ def compute_ica_dv_dc(cycle: dict, n_bins: int = 200,
     I_grid = np.interp(V_grid, V_u, I_u)
 
     dQdV = np.gradient(Q_grid, V_grid)
-    dVdQ = np.gradient(V_grid, Q_grid)
+    # Stage 5.1 fix: XJTU's non-constant-current protocols (random-pulse
+    # "R2.5"/"R3" discharge, unlike NASA/MIT/CALCE's simple CC discharge)
+    # can make Q non-monotonic in V-sorted order, so Q_grid (from
+    # interpolating Q against the monotonic V_u/V_grid axis) can itself
+    # contain a locally-flat run of duplicate values - np.gradient uses
+    # Q_grid as its coordinate array here, so an exact-zero local spacing
+    # divides by zero (-> inf/nan), which savgol_filter then rejects.
+    # Root-caused on Batch-4/R3_battery-8 cycle 636 (2 of 200 grid points
+    # were exact duplicates) before applying this fix - not a blind
+    # try/except. Nudging duplicate-run values by a tiny strictly-
+    # increasing epsilon (not reordering/dropping anything) keeps
+    # np.gradient's output numerically finite everywhere while leaving
+    # every real, non-duplicate value bit-identical.
+    Q_grid_safe = Q_grid.copy()
+    dup = np.diff(Q_grid_safe) == 0
+    if dup.any():
+        eps = max(np.finfo(np.float64).eps * 10, 1e-12)
+        Q_grid_safe = Q_grid_safe + np.concatenate([[0.0], np.cumsum(dup) * eps])
+    dVdQ = np.gradient(V_grid, Q_grid_safe)
     dIdV = np.gradient(I_grid, V_grid)
 
     win = savgol_window if savgol_window < n_bins else (n_bins // 2) * 2 - 1

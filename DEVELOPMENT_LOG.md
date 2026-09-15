@@ -8985,3 +8985,288 @@ both axes that matter: the METHOD was checked and found sound
 throughout, and every recorded NUMBER has now been checked against its
 source, with all discrepancies found corrected in place rather than
 left standing. Stage 5 can begin.
+
+---
+
+## Stage 5 — structural scale expansion: 4 new datasets + inter-cell deep learning (BatLiNet)
+
+Two items: 5.1 (Oxford/HUST/XJTU/MIT-FC integration + zero-retrain
+generalization test of the domain-shift finding) and 5.2 (BatLiNet,
+Zhang et al. 2025 Nature Machine Intelligence). No deployed-app
+changes in this stage - both items are new experimental results.
+
+### 5.1 — Dataset Expansion Phase 2
+
+**Reconnaissance finding, before any download**: "MIT Fast-Charging
+Optimization Dataset (Attia et al. 2020, ~233-240 cells)" is **already
+fully integrated**, not new. Verified via `microsoft/BatteryML`'s
+dataset manifest (an actively-maintained third-party catalogue) and
+this project's own `STATUS.md`: the existing `MATR_batch_20190124.mat`
+(45 cells, the `b4c*` battery IDs already used throughout this
+project's entire history - `b4c38` appears as a standard eval battery
+back to session 4) IS Attia et al.'s public data release, mixed
+unlabeled into the "MIT" pool since the very first session. The
+"~233-240 cells" figure does not match any verifiable public release -
+data.matr.io's own API has been non-functional since project start
+(confirmed again here: `window.API_URL` ships as the unreplaced
+template literal `"%REACT_APP_API_URL%"`, a dead build). Nothing added
+for this item - reporting the correction rather than forcing a
+non-existent task.
+
+**Genuinely new datasets - sizes confirmed before downloading anything**
+(via each host's own API: ORA's file metadata, Mendeley's
+`public-api/datasets/.../files`, Zenodo's `/api/records`):
+
+| dataset | cells | size | host |
+|---|---|---|---|
+| Oxford Battery Degradation Dataset 1 | 8 | 254 MB (1 .mat) | ora.ox.ac.uk |
+| HUST (Ma et al. 2022) | 77 | 1.19 GB (1 zip, 77 .pkl) | Mendeley Data |
+| XJTU (Wang et al.) | 55 | 2.44 GB (1 zip, 55 .mat + 1 non-cell aux file) | Zenodo |
+
+All three confirmed small relative to this project's existing 690 GB
+of free disk and the 11.6 GB already-processed MIT data - no hardware
+risk, explicitly checked before committing to full downloads. All 3
+downloaded at their exact expected byte counts (one interrupted
+XJTU download, resumed with `curl -C -`, final size verified exact).
+
+**Adapters written** (`src/data_adapters.py`, following the existing
+`iterate_X_cycles()` pattern): `iterate_oxford_cycles`,
+`iterate_hust_cycles`, `iterate_xjtu_cycles`. Each verified against raw
+values before trusting it at scale:
+- Oxford: 8 cells, cap range 0.56-0.74 Ah (740 mAh nominal Kokam pouch
+  cells), ~0.74A discharge (~1C), 40degC thermal chamber - matches the
+  dataset's own documentation. Current not directly logged (only
+  cumulative charge q(mAh) vs. time) - reconstructed via I=dq/dt, sign
+  convention verified to need no flip.
+- HUST: 77 cells, cap range 0.88-1.17 Ah (1.1 Ah nominal A123 LFP),
+  charge current up to 5.5A (5C, matches "fast charging" framing),
+  sign convention verified to need no flip.
+- XJTU: 55 cells, cap range 1.59-1.99 Ah (2000 mAh nominal LISHEN
+  NCM), voltage/current/temperature all physically sane.
+
+**Real issue #1 found and root-caused, not worked around**: the shared
+`ica_dv_dc.compute_ica_dv_dc` (used by every dataset's tensor pipeline)
+crashed with `ValueError: array must not contain infs or NaNs` on
+XJTU. Root-caused (not just caught) to `Batch-4/R3_battery-8` cycle
+636: XJTU's random-pulse "R2.5"/"R3" discharge protocols (unlike every
+other protocol in this whole project's history, which are simple
+constant-current) can make discharge capacity Q non-monotonic in
+voltage-sorted order, producing 2 of 200 exact-duplicate points in the
+V-sorted capacity grid - `np.gradient`'s coordinate-array divides by
+that zero spacing. Fixed in `src/ica_dv_dc.py` by nudging duplicate-run
+grid points with a strictly-increasing epsilon before computing dV/dQ
+(comment explains the mechanism in place, not just "fixed a crash").
+Verified: the exact failing cycle now produces all-finite output;
+60 spot-checked NASA/CALCE cycles are unaffected (the guard is a
+verified no-op when no duplicates exist).
+
+**Real issue #2 found and root-caused**: XJTU's `Batch-6/Sim_satellite`
+cells (8 of 55) produced SOH values up to 457% - all 8 sharing an
+identical, suspicious minimum of 24.9438202247191%, a clear labeling-
+artifact signature, not real physical variance. Root-caused to this
+project's project-wide `soh_per_cycle` convention (nominal capacity =
+median of a battery's own first 3 cycles) silently breaking on a
+variable-depth-of-discharge protocol: directly verified `Batch-6/
+Sim_satellite_battery-1`'s raw per-cycle discharge_capacity swings
+1.991 -> 0.111 -> 0.445 Ah in its first 3 cycles (simulating a real
+satellite's variable power draw, unlike every constant-depth protocol
+this convention was built for) - locking the "100% SOH" reference to
+an atypically shallow early cycle. This is a genuine dataset/protocol
+incompatibility, not a code bug: the adapter correctly extracts real
+per-cycle capacity; the SOH-ratio convention's implicit assumption
+(roughly-constant discharge depth) just doesn't hold for this one
+protocol. Excluded from every SOH-based comparison in both 5.1 and 5.2
+(`run_stage5_1_new_datasets_eval.xjtu_cell_ids_soh_valid()`), disclosed
+in code and here rather than silently dropped - these 8 cells' raw
+cycling data remain on disk and usable for a future non-SOH-ratio
+analysis.
+
+**Zero-retrain generalization table** (frozen Stage 4 XGBoost-fusion
+model, same `channel_norm_stats.json` clip bounds fit on NASA+MIT+
+recovered only - never refit per dataset, same convention CALCE has
+always been evaluated under):
+
+| dataset | cells | cycles | R2 | RMSE | MAE |
+|---|---|---|---|---|---|
+| CALCE | 3 | 2,941 | **0.568** | 14.155 | 10.441 |
+| Oxford | 8 | 519 | **-2.694** | 13.135 | 12.510 |
+| HUST | 77 | 146,122 | **-0.152** | 7.919 | 5.715 |
+| XJTU (47 of 55 - 8 excluded, see above) | 47 | 19,238 | **-1.059** | 8.628 | 6.444 |
+
+Sanity check performed before trusting any of these: reconstructing
+Stage 4's exact train-column medians and re-evaluating the frozen model
+on the frozen in-domain test split reproduced Stage 4's own numbers to
+full float precision (R2=0.9739568832487542, exact) before this
+script's CALCE/Oxford/HUST/XJTU numbers were trusted.
+
+**Bonus, per item 5 ("if time permits")**: plain split-conformal
+coverage (90% target, same convention/calibration split as CALCE's):
+CALCE 2.69% (width 2.288), Oxford 0.00% (width 2.288), HUST 19.57%
+(width 2.288), XJTU 11.01% (width 2.288) - all catastrophically
+under-covered, consistent with the R2 collapse.
+
+**Outcome, stated plainly**: **(a), and more severe than hoped/feared**.
+All four datasets collapse - not just "similarly to CALCE" but WORSE:
+three of the four (Oxford, HUST, XJTU) have NEGATIVE R2, meaning the
+frozen model does worse than simply predicting the training pool's
+mean SOH. CALCE, this project's whole prior domain-shift case study,
+is actually the LEAST-bad of the four out-of-domain datasets tested.
+This is strong evidence the domain-shift finding is general, not
+CALCE-specific - if anything, CALCE understated how severe zero-retrain
+domain shift can get. A brief, honest mechanistic read (not a full
+4-angle investigation - not needed, since outcome (a) held cleanly,
+no split pattern to explain): each of these three represents a
+genuinely different chemistry/form-factor/protocol combination never
+seen in training (Oxford: Kokam pouch cells, Artemis urban drive-cycle
+aging; HUST: A123 cylindrical LFP, multi-stage discharge; XJTU: LISHEN
+NCM, six distinct charge/discharge protocols including random-pulse
+loads) - none share NASA/MIT's specific chemistry+protocol combination
+the way CALCE at least partially does (also a cylindrical
+commercial-cell CC-cycling protocol, just a different chemistry).
+
+No conformal-coverage retraining/recalibration performed on these
+datasets per instruction (item 5's coverage numbers are a bonus,
+plain-split, not a full recalibration exercise) - not proceeding to
+that scope.
+
+### 5.2 — Inter-cell deep learning (BatLiNet)
+
+Implemented `BatLiNet` (`src/models/batlinet.py`) - Zhang et al. 2025,
+*Nature Machine Intelligence* 7:270-277, recovered from its arXiv
+preprint (2310.05052, no public code repository was found for the
+published version - searched directly before concluding this).
+
+**Two disclosed adaptations from the source paper, not a byte-exact
+replication**:
+1. **Feature representation**: the paper uses a Q-indexed (capacity-
+   domain) 6-channel 2D image (Vc(Q), Vd(Q), Ic(Q), Id(Q), deltaV(Q),
+   R(Q)) fed to a 2D CNN. Reused this project's own established,
+   already-verified 6-channel TIME-indexed tensor (V_t, I_t, T_t,
+   dQdV, dVdQ, dIdV) via a Conv1d encoder instead (matching
+   `ica_encoder.py`'s own existing pattern) - keeps BatLiNet on the
+   same feature pipeline as every other model in this project rather
+   than introducing a second, parallel, unverified one.
+2. **Target variable**: the paper predicts one scalar (total cycle
+   life) per cell. Generalized to this project's actual per-cycle SOH
+   regression setting (needed for a direct, apples-to-apples
+   comparison against Stage 4's own R2=0.9658 headline number): intra-
+   cell branch predicts a cycle's own SOH; inter-cell branch predicts
+   the SOH DIFFERENCE between two cycles' tensors (same intra/inter
+   duality the paper uses, on this project's actual target).
+
+Architecture faithfully reproduces the paper's recovered structure:
+shared-final-linear-layer coupling (`f_theta(x)=w^T h_theta(x)`,
+`g_phi(dx)=w^T h_phi(dx)`, ONE shared `w` across both heads - the
+actual coupling mechanism, not just two independent heads), joint loss
+(intra MSE + lambda * inter MSE), inference via `alpha*intra +
+(1-alpha)*median-over-K-reference-cells(inter-diff + reference's own
+SOH)`, K=32 references as the paper specifies.
+
+**Training-pool scope decision, disclosed**: HUST alone contributes
+146,122 cycles vs. 26,762 for the entire NASA+MIT+recovered pool and
+519/19,238 for Oxford/XJTU - training on every raw cycle would let
+HUST's sheer row-count dominate the learned representation by cycle-
+count imbalance alone (adjacent cycles are also highly autocorrelated,
+so this is mostly redundant signal). Fixed via a per-battery,
+training-only, evenly-spaced subsampling cap (150 cycles/battery) -
+every evaluation (GroupKFold CV, CALCE zero-retrain) still uses every
+real cycle, unaffected.
+
+**Train/eval protocol, disclosed**: the task's own item 2 ("train on
+Oxford/HUST/XJTU") and item 3 ("zero-retrain on ... 5.1's new held-out
+datasets") are in tension - both cannot be literally true for the same
+datasets. Resolved as: item 2 followed literally (Oxford/HUST/XJTU ARE
+in the training pool; CALCE is the one dataset "held out exactly as
+always," its own long-established, unambiguous role in this project).
+In-domain performance measured via GroupKFold(5) (Stage 2.3's
+protocol, directly comparable to Stage 4's own GroupKFold number),
+reported both pooled and broken down per dataset-family so Oxford/
+HUST/XJTU's in-domain fit (now real training data) is visible
+separately from NASA/MIT/recovered's.
+
+Trained on: 41 NASA/MIT/recovered batteries (26,762 cycles) + 8 Oxford
++ 77 HUST + 47 SOH-valid XJTU (Batch-6 excluded, same reason as 5.1) =
+173 batteries, 192,641 cycles total (before the training-only cap).
+Fresh `channel_norm_stats_batlinet.json` fit on this pool (disclosed:
+does NOT touch the deployed `channel_norm_stats.json` - reusing Stage
+4's NASA+MIT-only clip bounds here would badly saturate Oxford/HUST/
+XJTU's channels for a model that's actually trained on them).
+
+**GroupKFold(5) in-domain CV**:
+
+| model | mean R2 (std) | mean RMSE (std) |
+|---|---|---|
+| **Stage 4 XGBoost-fusion** (current deployed) | **0.9658 (0.0207)** | **1.1388 (0.5673)** |
+| BatLiNet | 0.4697 (0.0821) | 5.4652 (0.5851) |
+
+Per-family breakdown (each battery scored only in its own held-out
+fold):
+
+| family | n cycles | R2 | RMSE |
+|---|---|---|---|
+| NASA_MIT | 26,762 | 0.255 | 5.641 |
+| Oxford | 519 | -0.975 | 9.604 |
+| HUST | 146,122 | 0.452 | 5.463 |
+| XJTU | 19,238 | 0.168 | 5.486 |
+
+**CALCE zero-retrain** (final model trained on the full 173-battery
+pool, 24,631 cycles after the training cap):
+
+| model | R2 | RMSE |
+|---|---|---|
+| **Stage 4 XGBoost-fusion** (current deployed) | **0.568** | **14.155** |
+| BatLiNet | -1.562 | 34.464 |
+
+**Verdict, stated with the same directness as every other honest
+negative in this project's history: BatLiNet loses on BOTH axes -
+neither in-domain accuracy nor cross-dataset (CALCE) generalization
+improves over the current deployed model. This is a clean NEITHER,
+not a mixed result.** Even on NASA/MIT data specifically (where
+XGBoost-fusion gets R2=0.97+), BatLiNet's in-domain fit is only 0.26 -
+a large, unambiguous gap, not a close call. CALCE generalization is
+actively worse (R2 goes negative), not better - the inter-cell
+mechanism did not rescue cross-dataset performance the way its own
+paper's central claim would predict.
+
+**Why, reasoned but not over-claimed**: this is a first, single-pass,
+disclosed-scope implementation (12-15 epochs vs. XGBoost's 500
+boosting rounds' worth of effective capacity; a small 2-layer Conv1d
+encoder learning purely from raw normalized curves vs. XGBoost-fusion's
+hand-engineered, project-tuned 8-feature HI set + ICA fusion embeddings
++ Stage 1.5's monotone constraints, refined over 4 full stages of this
+project's own iteration). This result should be read as "this specific,
+CPU-budget-scoped implementation of the inter-cell mechanism does not
+beat the current deployed model," not as "inter-cell learning cannot
+work here" - a fairer test would need the kind of dedicated tuning
+budget XGBoost-fusion itself received across Stages 0-4, which is
+explicitly out of scope for what this single stage could responsibly
+attempt.
+
+Saved as `models/batlinet_experimental.pt` - **explicitly experimental,
+not wired into `live_inference.py` or `app.py`**, consistent with a
+clean negative result. Nothing about the deployed model changes.
+
+### What's deployed - unchanged
+
+Stage 5 introduces new datasets, 3 new adapters, 1 new architecture,
+and their evaluation results - **zero deployment changes**. The
+Streamlit app (`app.py`), `live_inference.py`, and every file under
+`models/` that the live app actually loads are byte-for-byte untouched
+by this stage. `models/batlinet_experimental.pt` exists on disk,
+unused by anything the app calls.
+
+### Files
+
+New: `src/data_adapters.py` (+Oxford/HUST/XJTU adapters),
+`src/ica_dv_dc.py` (dV/dQ duplicate-grid-point fix), `src/models/
+batlinet.py`, `src/run_stage5_1_new_datasets_eval.py`, `src/
+run_stage5_2_batlinet.py`, `models/batlinet_experimental.pt`,
+`data/processed/channel_norm_stats_batlinet.json`, `data/processed/
+stage5_1_{oxford,hust,xjtu}_merged.parquet`, `outputs/stage5_1_
+zero_retrain_generalization.csv`, `outputs/stage5_1_conformal_
+coverage.csv`, `outputs/stage5_2_batlinet_{groupkfold,
+groupkfold_per_family,summary}.csv`. Raw data under `data/raw/
+{oxford,hust,xjtu}/` (gitignored, same convention as existing raw
+data - not redistributed).
+
+Not proceeding to Stage 6. Reporting back with full findings.

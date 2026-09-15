@@ -1,0 +1,59 @@
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\src\health_indicators.py:155: RuntimeWarning: divide by zero encountered in divide
+  out["VDEDT"] = float(np.mean(np.diff(Vd[-tail_n:]) / np.diff(td[-tail_n:]))) if tail_n > 1 else np.nan
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\_core\_methods.py:132: RuntimeWarning: invalid value encountered in reduce
+  ret = umr_sum(arr, axis, dtype, out, keepdims, where=where)
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+=== Stage 5.1: loading frozen Stage 4 resources (NOT retraining anything) ===
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage5-1] sanity check - reproduced in-domain R2=0.9739568832 (must match Stage 4's 0.9739568832487542)
+[stage5-1] CALCE (reproduced) R2=0.5679 RMSE=14.1553 (Stage 4 reported R2=0.5679 RMSE=14.155)
+
+=== Oxford ===
+[stage5-1] Oxford: 8 cells, 519 HI rows, 519 tensor-valid cycles (0 dropped by get_cycle_tensor)
+[stage1-duration] WARNING: 8 batteries have no cycle_idx==10 row at all: ['Cell1', 'Cell2', 'Cell3', 'Cell4', 'Cell5', 'Cell6', 'Cell7', 'Cell8'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 519 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 519 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 519 rows)
+[stage5-1] Oxford: 519 rows after HI/fusion-embedding merge (0 lost to the merge)
+[stage5-1] Oxford: R2=-2.6939 RMSE=13.1346 MAE=12.5100 (n=519, 8 cells)
+
+=== HUST ===
+[stage5-1] HUST: 77 cells, 146122 HI rows, 146122 tensor-valid cycles (0 dropped by get_cycle_tensor)
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 146122 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 146122 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 146122 rows)
+[stage5-1] HUST: 146122 rows after HI/fusion-embedding merge (0 lost to the merge)
+[stage5-1] HUST: R2=-0.1523 RMSE=7.9193 MAE=5.7154 (n=146122, 77 cells)
+
+=== XJTU ===
+[stage5-1] XJTU: 47 cells, 19238 HI rows, 19238 tensor-valid cycles (0 dropped by get_cycle_tensor)
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 19238 rows)
+[stage1-duration] near-zero/non-finite cycle-10 baseline for Batch-5/RW_battery-1/TEVD (0.0) - falling back to this battery's own median TEVD (114.3600) as the denominator.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for Batch-5/RW_battery-5/TEVD (0.0) - falling back to this battery's own median TEVD (120.8400) as the denominator.
+[stage1-duration] TEVD -> TEVD_rel: 2 batteries used median-fallback baseline, 0 non-finite output values (of 19238 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 19238 rows)
+[stage5-1] XJTU: 19238 rows after HI/fusion-embedding merge (0 lost to the merge)
+[stage5-1] XJTU: R2=-1.0588 RMSE=8.6283 MAE=6.4441 (n=19238, 47 cells)
+
+=== SUMMARY (zero-retrain generalization, individually per dataset) ===
+dataset  n_cells  n_cycles        r2      rmse       mae
+  CALCE        3      2941  0.567876 14.155332 10.441496
+ Oxford        8       519 -2.693906 13.134602 12.509956
+   HUST       77    146122 -0.152262  7.919337  5.715445
+   XJTU       47     19238 -1.058788  8.628272  6.444061
+
+=== bonus: conformal coverage (plain split-conformal, same convention as CALCE's) ===
+[stage5-1] CALCE coverage=2.69% width=2.288 (target 90%)
+[stage5-1] Oxford coverage=0.00% width=2.288 (target 90%)
+[stage5-1] HUST coverage=19.57% width=2.288 (target 90%)
+[stage5-1] XJTU coverage=11.01% width=2.288 (target 90%)

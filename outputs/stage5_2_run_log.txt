@@ -1,0 +1,173 @@
+=== Stage 5.2: BatLiNet - inter-cell deep learning ===
+[stage5-2] loading NASA+MIT+recovered (Stage 4 pool)...
+[stage4-pool] loaded NASA/B0005: (168, 200, 6)
+[stage4-pool] loaded NASA/B0006: (168, 200, 6)
+[stage4-pool] loaded NASA/B0007: (168, 200, 6)
+[stage4-pool] loaded NASA/B0018: (132, 200, 6)
+[stage4-pool] loaded MIT/b1c20: (532, 200, 6)
+[stage4-pool] loaded MIT/b1c43: (649, 200, 6)
+[stage4-pool] loaded MIT/b1c32: (729, 200, 6)
+[stage4-pool] loaded MIT/b1c17: (855, 200, 6)
+[stage4-pool] loaded MIT/b1c22: (889, 200, 6)
+[stage4-pool] loaded MIT/b1c41: (1049, 200, 6)
+[stage4-pool] loaded MIT/b1c4: (1225, 200, 6)
+[stage4-pool] loaded MIT/b2c1: (169, 200, 6)
+[stage4-pool] loaded MIT/b2c44: (478, 200, 6)
+[stage4-pool] loaded MIT/b2c42: (491, 200, 6)
+[stage4-pool] loaded MIT/b2c13: (519, 200, 6)
+[stage4-pool] loaded MIT/b2c24: (523, 200, 6)
+[stage4-pool] loaded MIT/b2c32: (543, 200, 6)
+[stage4-pool] loaded MIT/b2c9: (1059, 200, 6)
+[stage4-pool] loaded MIT/b3c28: (539, 200, 6)
+[stage4-pool] loaded MIT/b3c13: (814, 200, 6)
+[stage4-pool] loaded MIT/b3c14: (856, 200, 6)
+[stage4-pool] loaded MIT/b3c0: (1007, 200, 6)
+[stage4-pool] loaded MIT/b3c35: (1091, 200, 6)
+[stage4-pool] loaded MIT/b3c33: (1282, 200, 6)
+[stage4-pool] loaded MIT/b3c38: (1933, 200, 6)
+[stage4-pool] loaded MIT/b4c9: (529, 200, 6)
+[stage4-pool] loaded MIT/b4c36: (713, 200, 6)
+[stage4-pool] loaded MIT/b4c39: (761, 200, 6)
+[stage4-pool] loaded MIT/b4c21: (903, 200, 6)
+[stage4-pool] loaded MIT/b4c0: (982, 200, 6)
+[stage4-pool] loaded MIT/b4c5: (1067, 200, 6)
+[stage4-pool] loaded MIT/b4c38: (1230, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0036: (194, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0038: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0039: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0040: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0041: (25, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0051: (22, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c0: (1187, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c18: (688, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c12: (489, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c44: (477, 200, 6)
+[stage5-2] NASA+MIT+recovered: 41 batteries, 26762 cycles
+[stage5-2] Oxford: 8 cells, 519 cycles (13.1s)
+[stage5-2] HUST: 77 cells, 146122 cycles (292.0s)
+[stage5-2] XJTU: 47 cells, 19238 cycles (358.7s)
+[stage5-2] FULL POOL (no CALCE): 192641 cycles, 173 batteries, families={np.str_('HUST'): np.int64(146122), np.str_('NASA_MIT'): np.int64(26762), np.str_('Oxford'): np.int64(519), np.str_('XJTU'): np.int64(19238)}
+
+[stage5-2] fitting FRESH channel_norm_stats on this new, larger, more diverse pool (own file, does NOT touch the deployed data/processed/channel_norm_stats.json - disclosed reasoning in module docstring: reusing Stage 4's NASA+MIT-only clip bounds here would badly saturate Oxford/HUST/XJTU's channels).
+
+[stage5-2] 173 unique batteries across the full non-CALCE pool
+
+=== GroupKFold(5) in-domain CV ===
+
+[stage5-2] fold 0: 138 train batteries (19672 training cycles after cap), 35 test batteries (39234 eval cycles)
+[stage5-2 fold0] epoch 1/12: intra_mse=3386.3724 inter_mse=108.8952
+[stage5-2 fold0] epoch 2/12: intra_mse=198.7995 inter_mse=99.7253
+[stage5-2 fold0] epoch 3/12: intra_mse=126.3747 inter_mse=87.2427
+[stage5-2 fold0] epoch 4/12: intra_mse=99.6612 inter_mse=78.4346
+[stage5-2 fold0] epoch 5/12: intra_mse=87.0790 inter_mse=73.2578
+[stage5-2 fold0] epoch 6/12: intra_mse=78.3359 inter_mse=70.3390
+[stage5-2 fold0] epoch 7/12: intra_mse=72.4585 inter_mse=66.0945
+[stage5-2 fold0] epoch 8/12: intra_mse=67.9747 inter_mse=64.3216
+[stage5-2 fold0] epoch 9/12: intra_mse=64.2810 inter_mse=64.4379
+[stage5-2 fold0] epoch 10/12: intra_mse=60.8644 inter_mse=63.2404
+[stage5-2 fold0] epoch 11/12: intra_mse=58.8848 inter_mse=61.8186
+[stage5-2 fold0] epoch 12/12: intra_mse=57.1662 inter_mse=60.9136
+[stage5-2] fold 0: R2=0.3758 RMSE=6.1890
+
+[stage5-2] fold 1: 138 train batteries (19600 training cycles after cap), 35 test batteries (41327 eval cycles)
+[stage5-2 fold1] epoch 1/12: intra_mse=3395.8211 inter_mse=104.7606
+[stage5-2 fold1] epoch 2/12: intra_mse=201.1856 inter_mse=95.4575
+[stage5-2 fold1] epoch 3/12: intra_mse=125.8786 inter_mse=83.5921
+[stage5-2 fold1] epoch 4/12: intra_mse=98.8480 inter_mse=75.2407
+[stage5-2 fold1] epoch 5/12: intra_mse=85.4892 inter_mse=70.0969
+[stage5-2 fold1] epoch 6/12: intra_mse=76.1776 inter_mse=67.6055
+[stage5-2 fold1] epoch 7/12: intra_mse=69.2591 inter_mse=65.6911
+[stage5-2 fold1] epoch 8/12: intra_mse=64.2864 inter_mse=62.3558
+[stage5-2 fold1] epoch 9/12: intra_mse=61.2122 inter_mse=61.2490
+[stage5-2 fold1] epoch 10/12: intra_mse=58.4944 inter_mse=58.2389
+[stage5-2 fold1] epoch 11/12: intra_mse=56.7529 inter_mse=59.0269
+[stage5-2 fold1] epoch 12/12: intra_mse=54.8860 inter_mse=56.2981
+[stage5-2] fold 1: R2=0.3942 RMSE=5.9700
+
+[stage5-2] fold 2: 138 train batteries (19618 training cycles after cap), 35 test batteries (36845 eval cycles)
+[stage5-2 fold2] epoch 1/12: intra_mse=3407.0624 inter_mse=114.1863
+[stage5-2 fold2] epoch 2/12: intra_mse=209.0451 inter_mse=102.7242
+[stage5-2 fold2] epoch 3/12: intra_mse=127.2947 inter_mse=91.1476
+[stage5-2 fold2] epoch 4/12: intra_mse=100.5899 inter_mse=80.4105
+[stage5-2 fold2] epoch 5/12: intra_mse=88.8264 inter_mse=74.4641
+[stage5-2 fold2] epoch 6/12: intra_mse=80.8310 inter_mse=70.1920
+[stage5-2 fold2] epoch 7/12: intra_mse=74.8914 inter_mse=69.8593
+[stage5-2 fold2] epoch 8/12: intra_mse=70.5165 inter_mse=65.3863
+[stage5-2 fold2] epoch 9/12: intra_mse=67.2959 inter_mse=64.4034
+[stage5-2 fold2] epoch 10/12: intra_mse=63.8148 inter_mse=64.7245
+[stage5-2 fold2] epoch 11/12: intra_mse=61.4619 inter_mse=62.9874
+[stage5-2 fold2] epoch 12/12: intra_mse=59.7423 inter_mse=61.5543
+[stage5-2] fold 2: R2=0.4932 RMSE=5.1456
+
+[stage5-2] fold 3: 139 train batteries (19807 training cycles after cap), 34 test batteries (38408 eval cycles)
+[stage5-2 fold3] epoch 1/12: intra_mse=3333.2473 inter_mse=109.2865
+[stage5-2 fold3] epoch 2/12: intra_mse=202.7583 inter_mse=101.3098
+[stage5-2 fold3] epoch 3/12: intra_mse=129.0143 inter_mse=88.0501
+[stage5-2 fold3] epoch 4/12: intra_mse=102.7366 inter_mse=76.8365
+[stage5-2 fold3] epoch 5/12: intra_mse=89.8098 inter_mse=72.8007
+[stage5-2 fold3] epoch 6/12: intra_mse=80.8971 inter_mse=68.4245
+[stage5-2 fold3] epoch 7/12: intra_mse=74.4598 inter_mse=67.4230
+[stage5-2 fold3] epoch 8/12: intra_mse=69.2987 inter_mse=65.5043
+[stage5-2 fold3] epoch 9/12: intra_mse=66.1640 inter_mse=64.1760
+[stage5-2 fold3] epoch 10/12: intra_mse=63.3851 inter_mse=62.9333
+[stage5-2 fold3] epoch 11/12: intra_mse=60.9785 inter_mse=60.9738
+[stage5-2 fold3] epoch 12/12: intra_mse=59.3022 inter_mse=61.1213
+[stage5-2] fold 3: R2=0.5678 RMSE=4.8169
+
+[stage5-2] fold 4: 139 train batteries (19827 training cycles after cap), 34 test batteries (36827 eval cycles)
+[stage5-2 fold4] epoch 1/12: intra_mse=3326.7940 inter_mse=108.9853
+[stage5-2 fold4] epoch 2/12: intra_mse=200.4326 inter_mse=100.6941
+[stage5-2 fold4] epoch 3/12: intra_mse=127.6982 inter_mse=90.7808
+[stage5-2 fold4] epoch 4/12: intra_mse=102.9519 inter_mse=81.6821
+[stage5-2 fold4] epoch 5/12: intra_mse=90.3146 inter_mse=76.0645
+[stage5-2 fold4] epoch 6/12: intra_mse=82.3694 inter_mse=71.7801
+[stage5-2 fold4] epoch 7/12: intra_mse=75.4017 inter_mse=68.5778
+[stage5-2 fold4] epoch 8/12: intra_mse=70.5008 inter_mse=67.1602
+[stage5-2 fold4] epoch 9/12: intra_mse=66.7959 inter_mse=65.7545
+[stage5-2 fold4] epoch 10/12: intra_mse=63.9227 inter_mse=63.7540
+[stage5-2 fold4] epoch 11/12: intra_mse=61.1219 inter_mse=63.2878
+[stage5-2 fold4] epoch 12/12: intra_mse=58.9524 inter_mse=61.9338
+[stage5-2] fold 4: R2=0.5172 RMSE=5.2043
+
+[stage5-2] GroupKFold summary:
+ fold       r2     rmse  n_test
+    0 0.375822 6.188992   39234
+    1 0.394239 5.970039   41327
+    2 0.493190 5.145573   36845
+    3 0.567836 4.816898   38408
+    4 0.517169 5.204263   36827
+[stage5-2] mean R2=0.4697 (std 0.0821) mean RMSE=5.4652 (std 0.5851)
+[stage5-2] vs. Stage 4 XGBoost-fusion GroupKFold: R2=0.9658 (std 0.0207) RMSE=1.1388 (std 0.5673)
+
+[stage5-2] per-family in-domain GroupKFold breakdown (each battery only in its OWN held-out fold):
+  family      n        r2     rmse
+NASA_MIT  26762  0.255322 5.640841
+  Oxford    519 -0.975140 9.604460
+    HUST 146122  0.451603 5.463371
+    XJTU  19238  0.167745 5.485880
+
+=== training FINAL model (full non-CALCE pool) for the CALCE zero-retrain check ===
+[stage5-2] final training set: 24631 cycles (of 192641 total)
+[stage5-2 FINAL] epoch 1/15: intra_mse=2735.8086 inter_mse=107.8527
+[stage5-2 FINAL] epoch 2/15: intra_mse=167.2896 inter_mse=94.0091
+[stage5-2 FINAL] epoch 3/15: intra_mse=108.6868 inter_mse=84.1748
+[stage5-2 FINAL] epoch 4/15: intra_mse=87.9304 inter_mse=76.6426
+[stage5-2 FINAL] epoch 5/15: intra_mse=77.3278 inter_mse=71.9315
+[stage5-2 FINAL] epoch 6/15: intra_mse=70.5044 inter_mse=68.7614
+[stage5-2 FINAL] epoch 7/15: intra_mse=65.3744 inter_mse=66.5070
+[stage5-2 FINAL] epoch 8/15: intra_mse=61.3254 inter_mse=64.6781
+[stage5-2 FINAL] epoch 9/15: intra_mse=58.6366 inter_mse=63.7806
+[stage5-2 FINAL] epoch 10/15: intra_mse=56.6970 inter_mse=62.5633
+[stage5-2 FINAL] epoch 11/15: intra_mse=54.4747 inter_mse=59.9039
+[stage5-2 FINAL] epoch 12/15: intra_mse=52.3727 inter_mse=59.2766
+[stage5-2 FINAL] epoch 13/15: intra_mse=50.1627 inter_mse=58.9934
+[stage5-2 FINAL] epoch 14/15: intra_mse=46.2728 inter_mse=58.1177
+[stage5-2 FINAL] epoch 15/15: intra_mse=40.1391 inter_mse=57.1479
+[stage5-2] saved models/batlinet_experimental.pt (EXPERIMENTAL - not wired into live_inference.py/app.py)
+
+=== CALCE zero-retrain eval ===
+[stage5-2] CALCE: R2=-1.5616 RMSE=34.4644 (n=2941, 3 cells)
+[stage5-2] vs. Stage 4 XGBoost-fusion CALCE: R2=0.5679 RMSE=14.155
+
+[stage5-2] summary saved to outputs/stage5_2_batlinet_summary.csv
+[stage5-2] TOTAL WALL TIME: 24.4 minutes

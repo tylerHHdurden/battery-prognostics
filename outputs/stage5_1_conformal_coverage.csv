@@ -1,0 +1,5 @@
+dataset,method,target_coverage,empirical_coverage,avg_interval_width,n_calib,n_calce
+CALCE,MAPIE.SplitConformalRegressor,0.9,0.0268616116967018,2.2875144032204844,1746,2941
+Oxford,MAPIE.SplitConformalRegressor,0.9,0.0,2.2875144032204844,1746,519
+HUST,MAPIE.SplitConformalRegressor,0.9,0.1956652660105939,2.2875144032204844,1746,146122
+XJTU,MAPIE.SplitConformalRegressor,0.9,0.11014658488408359,2.2875144032204844,1746,19238
