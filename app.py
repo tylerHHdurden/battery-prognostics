@@ -2182,16 +2182,15 @@ def _showcase_verdict(dataset: str, df: pd.DataFrame) -> str:
             f"**{raw_mae:.2f}pp** (frozen pipeline) to **{corr_mae:.2f}pp** (digital twin) "
             f"over the whole stream. Final-cycle error: {final['raw_abs_err']:.2f}pp (frozen) "
             f"vs. {final['corrected_abs_err']:.2f}pp (twin). Empirical ACI coverage: "
-            f"{coverage:.1f}% (target 90%). — Session 28/29, DEVELOPMENT_LOG.md."
+            f"{coverage:.1f}% (target 90%)."
         )
     max_hw, old_max_hw = df["half_width"].max(), df["old_half_width"].max()
     return (
         f"⚠️ **Hard case — reported honestly, not softened**: accuracy improved sharply "
-        f"(MAE **{raw_mae:.2f}pp → {corr_mae:.2f}pp**), but the ACI conformal interval "
-        f"itself got **more volatile, not smoother**, than the original sliding-window "
-        f"mechanism it replaced (max half-width **{max_hw:.2f}pp vs. {old_max_hw:.2f}pp**). "
-        f"Empirical coverage: {coverage:.1f}% (target 90%). — Session 29's own documented "
-        f"limitation, unchanged here."
+        f"(MAE **{raw_mae:.2f}pp → {corr_mae:.2f}pp**), but the confidence interval itself "
+        f"got **more volatile, not smoother** (max half-width **{max_hw:.2f}pp vs. "
+        f"{old_max_hw:.2f}pp**). Empirical coverage: {coverage:.1f}% (target 90%) - a known, "
+        f"disclosed limitation on this harder battery, not hidden."
     )
 
 
@@ -2367,9 +2366,9 @@ def render_streaming_twin_tab(res: dict):
         "incremental model, not a lookup table replaying precomputed numbers. "
         "**What's frozen**: the XGBoost-fusion SOH model, the ICA fusion encoder, the "
         "RUL model, and the anomaly detector - none of these are retrained here. "
-        "**What updates online**: a lightweight residual-correction term (see "
-        "`src/digital_twin_streaming.py` and DEVELOPMENT_LOG.md session 28 for exactly "
-        "how, and an honest report of whether it actually helps)."
+        "**What updates online**: a lightweight residual-correction term that learns as "
+        "each new cycle's true outcome is revealed - see the Full Results Archive for "
+        "exactly how it works, and an honest report of whether it actually helps."
     )
 
     choice = st.selectbox(
@@ -2398,8 +2397,8 @@ def render_streaming_twin_tab(res: dict):
                 f"NASA/CALCE/MIT research datasets aren't bundled with this app (size + "
                 f"third-party redistribution terms), so this replay-free streaming demo only "
                 f"works where they've been downloaded locally (see README). Try the 🎬 "
-                f"Showcase tab instead - it replays session 28/29's already-recorded results "
-                f"for these same batteries and needs no raw data at all."
+                f"Showcase tab instead - it replays this same battery's already-recorded "
+                f"result and needs no raw data at all."
             )
             return
         try:
@@ -2509,9 +2508,8 @@ def render_streaming_twin_tab(res: dict):
             "Compare the final streamed cycle's numbers above against this SAME battery/cycle "
             "in the 🔮 Prediction tab (the frozen one-shot pipeline, computed independently) to "
             "see how closely the online-updating twin converges to it. Whether online updating "
-            "helps, and by how much, is reported honestly (both directions, not cherry-picked) "
-            "in DEVELOPMENT_LOG.md session 28 - it is NOT assumed to always improve on the "
-            "frozen pipeline."
+            "helps, and by how much, is reported honestly here (both directions, not "
+            "cherry-picked) - it is NOT assumed to always improve on the frozen pipeline."
         )
         st.caption(
             "⚠️ Reminder: this is a SIMULATION of streaming, replaying already-recorded test "
