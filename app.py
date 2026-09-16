@@ -328,6 +328,50 @@ def soh_band(soh_pred: float) -> tuple[str, str, str]:
         return "🔴", "red", "Critical"
 
 
+_SOH_HEX = {"green": "#2e8b47", "orange": "#d99a1b", "red": "#c0392b"}
+
+
+def battery_icon_svg(soh_pct: float, width: int = 220, height: int = 100) -> str:
+    """A real visual representation of the battery itself, not just a
+    number - a body + terminal nub, with an internal fill level and
+    color that directly mirror the current SOH, the way a fuel gauge
+    mirrors a tank level. Pure inline SVG (no JS, no animation-timing
+    dependency) - it just redraws correctly every time this function is
+    called with a new soh_pct, including on every iteration of the
+    Streaming Digital Twin's own per-cycle loop, which is what makes it
+    visibly change cycle by cycle during a replay."""
+    soh_pct = max(0.0, min(100.0, soh_pct))
+    _, color, label = soh_band(soh_pct)
+    hexcolor = _SOH_HEX[color]
+    body_x, body_y = 8, 8
+    body_w, body_h = width - 28, height - 16
+    fill_w = max(2, (body_w - 8) * soh_pct / 100.0)
+    return f'''
+    <svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">
+      <rect x="{body_x}" y="{body_y}" width="{body_w}" height="{body_h}" rx="10"
+            fill="none" stroke="#888" stroke-width="4"/>
+      <rect x="{body_x + width - 24}" y="{body_y + body_h/2 - 14}" width="14" height="28" rx="3" fill="#888"/>
+      <rect x="{body_x + 4}" y="{body_y + 4}" width="{fill_w:.1f}" height="{body_h - 8}" rx="6"
+            fill="{hexcolor}" style="transition: width 0.6s ease, fill 0.6s ease;"/>
+      <text x="{body_x + body_w/2}" y="{body_y + body_h/2 + 8}" text-anchor="middle"
+            font-size="26" font-weight="700" font-family="sans-serif"
+            fill="{'#ffffff' if soh_pct > 30 else '#1a1a2e'}">{soh_pct:.0f}%</text>
+    </svg>'''
+
+
+def battery_physical_framing(soh_pct: float, rul_cycles: int | None) -> str:
+    """The direct, physical, plain-language answer a visitor shouldn't
+    have to infer from a chart themselves."""
+    used_pct = max(0.0, 100.0 - soh_pct)
+    if rul_cycles is not None:
+        return (f"This battery has used about **{used_pct:.0f}%** of its usable life. "
+                f"At its current fade rate, approximately **{rul_cycles} cycles** remain "
+                f"before it reaches end-of-life.")
+    return (f"This battery has used about **{used_pct:.0f}%** of its usable life. "
+            f"A specific cycles-remaining estimate isn't available for this view (see the "
+            f"note above) - the health percentage itself is still a real, live prediction.")
+
+
 def render_about_section():
     st.markdown(
         f"**About this dashboard**: this tool estimates a lithium-ion battery's current "
@@ -378,6 +422,13 @@ def _compute_degradation_mode(dataset: str, battery_id: str, cycles: list[dict] 
 def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_id: str, cycles: list[dict] | None):
     st.caption("Live predictions for the currently-selected cycle, computed fresh from "
                "trained model weights (no retraining happens in this app).")
+
+    icon_col, framing_col = st.columns([1, 2])
+    with icon_col:
+        st.markdown(battery_icon_svg(ctx["soh_pred"]), unsafe_allow_html=True)
+    with framing_col:
+        st.markdown(battery_physical_framing(ctx["soh_pred"], ctx["rul_pred"]))
+    st.divider()
 
     col1, col2 = st.columns(2)
     with col1:
@@ -2439,6 +2490,8 @@ def render_streaming_twin_tab(res: dict):
         n_stream = min(max_cycles, max(0, len(cycles) - 5))
         stream_cycles = cycles[:5 + n_stream]
 
+        st.markdown("**Watch the battery itself, not just a chart:**")
+        icon_placeholder = st.empty()
         chart_placeholder = st.empty()
         status_placeholder = st.empty()
         rows = []
@@ -2451,6 +2504,19 @@ def render_streaming_twin_tab(res: dict):
 
             if i >= 5:  # only the genuinely "streamed" portion gets the simulated-arrival delay - the first 5 are already-available warm-start history, shown instantly
                 time.sleep(delay)
+
+            # NOTE, disclosed rather than faked: the streaming twin predicts
+            # SOH only (see digital_twin_streaming.py's own step() output) -
+            # it has no RUL model wired in, so the physical framing here
+            # correctly shows "not available" for cycles-remaining rather
+            # than inventing one from how much replay data happens to be
+            # left in this demo window (which is not the same thing as
+            # true remaining useful life).
+            icon_col, framing_col = icon_placeholder.columns([1, 2])
+            with icon_col:
+                st.markdown(battery_icon_svg(result["corrected_pred"]), unsafe_allow_html=True)
+            with framing_col:
+                st.markdown(battery_physical_framing(result["corrected_pred"], None))
 
             df_so_far = pd.DataFrame(rows)
             fig, ax = plt.subplots(figsize=(9, 4))
