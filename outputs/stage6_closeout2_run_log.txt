@@ -1,0 +1,34 @@
+=== Stage 6 closeout, item 2: baseline-fairness re-run (Severson/Attia features -> XGBoost) ===
+
+=== Severson variance model, XGBoost (fairness re-run) ===
+[fairness] in-domain (fixed split): R2=0.9119 RMSE=1.4358
+[fairness] GroupKFold mean R2=0.8553 (std 0.0495)
+[fairness] CALCE: R2=0.1581 RMSE=19.8156 n=2943
+[fairness] Oxford: R2=-2.6518 RMSE=13.0595 n=519
+[fairness] HUST: R2=0.3144 RMSE=6.1088 n=146122
+[fairness] XJTU: R2=-3.5525 RMSE=12.8305 n=19238
+
+=== Attia-style rich model, XGBoost (fairness re-run) ===
+[fairness] in-domain (fixed split): R2=0.9638 RMSE=0.9200
+[fairness] GroupKFold mean R2=0.8918 (std 0.0802)
+[fairness] CALCE: R2=0.3229 RMSE=17.7698 n=2943
+[fairness] Oxford: R2=-1.0096 RMSE=9.6879 n=519
+[fairness] HUST: R2=0.4368 RMSE=5.5368 n=146122
+[fairness] XJTU: R2=-1.4686 RMSE=9.4481 n=19238
+
+=== FULL RESULTS ===
+                                            method                    eval_set        r2      rmse        n  n_cells   r2_std  rmse_std
+Severson variance model, XGBoost (fairness re-run)     in-domain (fixed split)  0.911861  1.435838   5208.0      6.0      NaN       NaN
+Severson variance model, XGBoost (fairness re-run) in-domain (GroupKFold mean)  0.855338  2.414348      NaN      NaN 0.049514  0.511374
+Severson variance model, XGBoost (fairness re-run)                       CALCE  0.158072 19.815650   2943.0      3.0      NaN       NaN
+Severson variance model, XGBoost (fairness re-run)                      Oxford -2.651805 13.059539    519.0      8.0      NaN       NaN
+Severson variance model, XGBoost (fairness re-run)                        HUST  0.314380  6.108785 146122.0     77.0      NaN       NaN
+Severson variance model, XGBoost (fairness re-run)                        XJTU -3.552531 12.830527  19238.0     47.0      NaN       NaN
+ Attia-style rich model, XGBoost (fairness re-run)     in-domain (fixed split)  0.963817  0.919967   5208.0      6.0      NaN       NaN
+ Attia-style rich model, XGBoost (fairness re-run) in-domain (GroupKFold mean)  0.891804  2.055475      NaN      NaN 0.080230  0.886001
+ Attia-style rich model, XGBoost (fairness re-run)                       CALCE  0.322947 17.769793   2943.0      3.0      NaN       NaN
+ Attia-style rich model, XGBoost (fairness re-run)                      Oxford -1.009593  9.687864    519.0      8.0      NaN       NaN
+ Attia-style rich model, XGBoost (fairness re-run)                        HUST  0.436763  5.536800 146122.0     77.0      NaN       NaN
+ Attia-style rich model, XGBoost (fairness re-run)                        XJTU -1.468592  9.448061  19238.0     47.0      NaN       NaN
+
+[fairness] TOTAL TIME: 0.3 minutes

@@ -1,0 +1,56 @@
+=== Stage 6 closeout, item 1: VDEDT counterfactual check ===
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2943 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+
+[closeout1] VDEDT training-data range: min=-2.8384e+07, max=3.87083e+07
+    p1: -0.00199689
+    p5: -0.000270203
+    p25: -4.07743e-06
+    p50: 0.000114537
+    p75: 0.049808
+    p95: 0.0655008
+    p99: 0.221144
+    3 of 21488 rows have |VDEDT| > 1000 (0.0140% of the training pool)
+    extreme rows: [{'dataset': 'MIT', 'battery_id': 'b1c32', 'cycle_idx': 102, 'VDEDT': 38708264.29175198}, {'dataset': 'MIT', 'battery_id': 'b1c17', 'cycle_idx': 753, 'VDEDT': -28384031.047501132}, {'dataset': 'MIT', 'battery_id': 'b1c0', 'cycle_idx': 712, 'VDEDT': -25880370.75242908}]
+
+[closeout1] DiCE's own default bounding behavior (from its own source, PublicData.get_features_range): unless an explicit permitted_range is given, continuous-feature bounds = [training_data.min(), training_data.max()] - i.e. 6.6's run WAS already bounded to the observed training range by default. The ~21 million counterfactual values are NOT a DiCE search-space bug - they fall inside VDEDT's own genuine training-data range (up to 3.87e7), which itself contains this handful of extreme outlier rows.
+
+[closeout1] re-running with VDEDT explicitly bounded to its 1st-99th percentile range [-0.00199689, 0.221144] (excludes the 3 known outlier rows) - does a sensible counterfactual still exist?
+
+[closeout1] battery=b4c38 cycle=51: current predicted SOH=100.17, seeking a bounded counterfactual near 85.17
+  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  1.86it/s]100%|##########| 1/1 [00:00<00:00,  1.85it/s]
+    CF 0: predicted SOH=82.26, VDEDT change: (-4.146243714378322e-05, 0.10249787), all changed: {'SCV_rel': (0.9992240841638612, 0.8), 'VDEDT': (-4.146243714378322e-05, 0.10249787)}
+    CF 1: predicted SOH=82.27, VDEDT change: (-4.146243714378322e-05, 0.12959576), all changed: {'SCV_rel': (0.9992240841638612, 0.8), 'VDEDT': (-4.146243714378322e-05, 0.12959576)}
+    CF 2: predicted SOH=82.27, VDEDT change: (-4.146243714378322e-05, 0.20646635), all changed: {'SCV_rel': (0.9992240841638612, 0.8), 'VDEDT': (-4.146243714378322e-05, 0.20646635)}
+
+[closeout1] battery=b3c0 cycle=406: current predicted SOH=98.84, seeking a bounded counterfactual near 83.84
+  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  2.07it/s]100%|##########| 1/1 [00:00<00:00,  2.07it/s]
+    CF 0: predicted SOH=82.72, VDEDT change: None, all changed: {'SCV_rel': (0.9860885771610945, 0.8), 'VIECT_rel': (0.0019445000000000157, 1.7)}
+    CF 1: predicted SOH=82.60, VDEDT change: None, all changed: {'SCV_rel': (0.9860885771610945, 0.8), 'cycle_idx': (406.0, 898.9)}
+    CF 2: predicted SOH=82.62, VDEDT change: None, all changed: {'SCV_rel': (0.9860885771610945, 0.8), 'cycle_idx': (406.0, 814.5)}
+
+[closeout1] battery=b3c35 cycle=521: current predicted SOH=98.08, seeking a bounded counterfactual near 83.08
+  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  2.37it/s]100%|##########| 1/1 [00:00<00:00,  2.36it/s]
+    CF 0: predicted SOH=82.46, VDEDT change: None, all changed: {'SCV_rel': (0.9792557524157015, 0.8), 'cycle_idx': (521.0, 1149.6)}
+    CF 1: predicted SOH=82.62, VDEDT change: None, all changed: {'SCV_rel': (0.9792557524157015, 0.8), 'MATD_rel': (1.0006711480980286, 0.4)}
+    CF 2: predicted SOH=82.45, VDEDT change: None, all changed: {'SCV_rel': (0.9792557524157015, 0.8), 'cycle_idx': (521.0, 1883.7)}
+
+[closeout1] battery=b1c4 cycle=333: current predicted SOH=99.55, seeking a bounded counterfactual near 84.55
+  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  1.98it/s]100%|##########| 1/1 [00:00<00:00,  1.98it/s]
+    CF 0: predicted SOH=82.95, VDEDT change: None, all changed: {'ICHV_rel': (0.9997602513278546, 0.7), 'SCV_rel': (0.9934309121352868, 0.8)}
+    CF 1: predicted SOH=81.97, VDEDT change: None, all changed: {'SCV_rel': (0.9934309121352868, 0.8), 'TEVD_rel': (0.9835521955526954, 8.5)}
+    CF 2: predicted SOH=81.64, VDEDT change: None, all changed: {'SCV_rel': (0.9934309121352868, 0.8), 'cycle_idx': (333.0, 1788.4)}
+
+[closeout1] battery=b3c0 cycle=376: current predicted SOH=99.04, seeking a bounded counterfactual near 84.04
+  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  2.24it/s]100%|##########| 1/1 [00:00<00:00,  2.24it/s]
+    CF 0: predicted SOH=82.86, VDEDT change: (-4.1386916134141706e-05, 0.05955543), all changed: {'SCV_rel': (0.9883873299273916, 0.8), 'VDEDT': (-4.1386916134141706e-05, 0.05955543)}
+    CF 1: predicted SOH=82.45, VDEDT change: None, all changed: {'SCV_rel': (0.9883873299273916, 0.8), 'MET_rel': (0.9831545466714837, 0.4)}
+    CF 2: predicted SOH=82.74, VDEDT change: None, all changed: {'SCV_rel': (0.9883873299273916, 0.8), 'VIECT_rel': (0.0008745000000001113, 1.4)}
+
+[closeout1] TOTAL TIME: 0.1 minutes

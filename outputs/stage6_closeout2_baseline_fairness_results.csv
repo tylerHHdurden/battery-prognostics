@@ -1,0 +1,13 @@
+method,eval_set,r2,rmse,n,n_cells,r2_std,rmse_std
+"Severson variance model, XGBoost (fairness re-run)",in-domain (fixed split),0.9118613388259679,1.435838463448802,5208.0,6.0,,
+"Severson variance model, XGBoost (fairness re-run)",in-domain (GroupKFold mean),0.8553380735359106,2.414347916082299,,,0.04951373710475588,0.5113742890695844
+"Severson variance model, XGBoost (fairness re-run)",CALCE,0.15807225859716667,19.815649579768056,2943.0,3.0,,
+"Severson variance model, XGBoost (fairness re-run)",Oxford,-2.65180537055453,13.059538875007506,519.0,8.0,,
+"Severson variance model, XGBoost (fairness re-run)",HUST,0.31438013321605174,6.108785287302104,146122.0,77.0,,
+"Severson variance model, XGBoost (fairness re-run)",XJTU,-3.5525308244650002,12.83052653683437,19238.0,47.0,,
+"Attia-style rich model, XGBoost (fairness re-run)",in-domain (fixed split),0.9638173731849735,0.9199673300317258,5208.0,6.0,,
+"Attia-style rich model, XGBoost (fairness re-run)",in-domain (GroupKFold mean),0.8918035258070323,2.0554749412989617,,,0.08023047655690817,0.8860010035751538
+"Attia-style rich model, XGBoost (fairness re-run)",CALCE,0.3229465677715512,17.769793286164408,2943.0,3.0,,
+"Attia-style rich model, XGBoost (fairness re-run)",Oxford,-1.0095925400254613,9.687864055549733,519.0,8.0,,
+"Attia-style rich model, XGBoost (fairness re-run)",HUST,0.4367627963961246,5.536799931416242,146122.0,77.0,,
+"Attia-style rich model, XGBoost (fairness re-run)",XJTU,-1.4685922393960018,9.448061496761074,19238.0,47.0,,

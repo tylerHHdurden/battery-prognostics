@@ -10761,3 +10761,200 @@ inaccurate). Mixed: 6.6 (one genuinely useful new insight pattern,
 one genuine physical-plausibility red flag, both reported).
 
 Not proceeding to Stage 7. Reporting back with full findings.
+---
+
+## Stage 6 closeout: VDEDT counterfactual root-cause, and a real, substantive correction to 6.1's baseline comparison
+
+Two checks on Stage 6's two most consequential results. No retraining
+beyond what's cheaply needed (item 2's re-run reuses already-computed
+features), no deployed-app changes.
+
+### 1 - VDEDT counterfactual anomaly: root-caused, not a DiCE bug
+
+**Checked DiCE's own search-bounding behavior directly** (its
+`PublicData.get_features_range` source, not assumed): unless an
+explicit `permitted_range` is given, DiCE's "random" method already
+bounds every continuous feature's search to `[training_data.min(),
+training_data.max()]` - i.e. 6.6's original run WAS already bounded to
+the observed training range by default. **The ~21 million VDEDT
+counterfactual values were never unbounded search - they fall inside
+VDEDT's own genuine training-data range.**
+
+**VDEDT's real observed range, checked directly**: min=-2.838e7,
+max=+3.871e7 across the 42-battery training pool (21,488 rows) - vs.
+a typical/normal range of roughly [-0.002, 0.22] (1st-99th
+percentile). Exactly **3 of 21,488 rows (0.014%)** have |VDEDT| >
+1000: `MIT/b1c32` cycle 102 (+3.87e7), `MIT/b1c17` cycle 753
+(-2.84e7), `MIT/b1c0` cycle 712 (-2.59e7) - three isolated single-
+cycle outliers in three different batteries, not a systematic per-
+battery issue. Root cause: the already-documented, previously-
+observed `RuntimeWarning: divide by zero encountered in divide` in
+`health_indicators.py`'s own VDEDT computation (`np.diff(Vd[-tail_n:])
+/ np.diff(td[-tail_n:])`) - a rare, pre-existing numerical instability
+in one of the model's own INPUT features, not introduced by DiCE and
+not new to this check (the warning has surfaced multiple times
+elsewhere in this project's own run logs).
+
+**Verdict: (a), confirmed by direct test, not assumed** - re-ran the
+exact same 5 counterfactual cases with VDEDT's search EXPLICITLY
+bounded to its 1st-99th percentile range (excluding just the 3 known-
+bad rows). Result: **all 5 cases still find valid, sensible
+counterfactuals achieving the same target SOH shift**, with the SAME
+`SCV_rel`-centric finding from 6.6 unchanged (still the dominant lever
+in all 5 cases). Where VDEDT changes at all under the bounded search
+(2 of 5 cases), it moves to genuinely sane values (0.10-0.21), not
+absurd ones. **This is a search-space artifact inherited from a real
+but rare, already-known data-quality issue - NOT evidence of a deeper
+model instability that a bounded search would also reveal at smaller
+scale.** No coverage was lost by bounding the search (all 5 cases
+still succeed), which is itself the strongest evidence against
+option (b).
+
+**Fix applied** (disclosed, not silently patched): `run_stage6_6_
+counterfactuals.py` now bounds every continuous feature's DiCE search
+range to its 1st-99th percentile (not just VDEDT specifically - the
+same fix generalizes to any feature with a handful of outlier rows),
+rather than relying on DiCE's own raw-min/max default. **The
+underlying VDEDT computation bug itself in `health_indicators.py` is
+NOT fixed here** - doing so would require retraining every downstream
+model in this project that depends on `hi_table.parquet`, explicitly
+out of this closeout's scope ("no retraining beyond what's cheaply
+needed"). Flagged as a real, known, still-open item for a future
+stage.
+
+**Does this change how 6.6 should be described in the paper?** The
+core reported finding (SCV_rel as a consistent, real lever; DiCE
+finding real, non-overlapping insight vs. SHAP/LIME) is UNCHANGED and
+now on firmer ground (confirmed robust to the VDEDT bounding fix). The
+ORIGINAL "genuine red flag ... not hiding" framing should be corrected
+to: not a fundamental model-stability concern, but confirmation of a
+narrow, already-documented, rare data-quality issue in one feature's
+own computation - correctly caught by the counterfactual search
+precisely because it searches the full observed data range, exactly
+as it's supposed to.
+
+### 2 - 6.1 baseline-fairness self-audit: a real correction, not a clean pass
+
+**Every judgment call in 6.1's Severson/Attia implementation, listed
+explicitly:**
+1. Per-cycle re-anchoring of Severson's variance feature (cycle-10
+   baseline, every cycle, not a fixed cycles-1-100 snapshot) - a
+   NECESSARY adaptation applied identically to both baselines and
+   this project's own model (same SOH-per-cycle target, same units) -
+   does not favor either side.
+2. A fixed, wide global voltage grid (2.0-4.3V) vs. Severson's own
+   single-chemistry paper's implicit narrower range - necessary given
+   this project's multi-chemistry pool, does not favor either side.
+3. **Feature count: 1-4 hand-computed features (Severson/Attia) vs.
+   this project's 8 domain-engineered HI ratios + 16 NEURAL-ENCODER-
+   LEARNED fusion embeddings (25 total).** Faithful to the source
+   papers (their own stated contribution WAS "a few physics-motivated
+   features + a simple model") - not an unfair reduction introduced
+   here.
+4. **Model class: ElasticNetCV (linear) for both baselines vs.
+   XGBoost (gradient-boosted trees, 500 estimators) for this
+   project's own model.** ALSO faithful to the source papers (both
+   are published as linear/elastic-net methods) - but this is the
+   one place items 3 and 4 TOGETHER genuinely confound two different
+   sources of advantage (richer features AND a more flexible model
+   class) into one number, making "our model wins" ambiguous about
+   WHY.
+5. ElasticNetCV's own hyperparameter search (l1_ratio grid x 5-fold
+   CV, ~100 alphas per l1_ratio - not "untuned," a real if modest
+   automatic search) vs. this project's own model's hyperparameters,
+   which on direct check were NOT themselves extensively grid-
+   searched either (the same `n_estimators=500, max_depth=6,
+   learning_rate=0.03...` settings recur unchanged across many
+   sessions) - the "vastly more tuning effort" concern is REAL for
+   the overall multi-stage pipeline (feature engineering, encoder
+   pretraining, monotone constraints, calibration - many sessions of
+   work) but NOT specifically about XGBoost's own hyperparameters
+   being hand-tuned against ElasticNet's defaults - corrected here
+   rather than left as an unchecked assumption.
+
+**Bounded, cheap re-run performed** (item 3): re-ran Severson's and
+Attia's OWN feature sets through XGBoost with the SAME hyperparameters
+as this project's deployed model - isolating model class from feature
+richness. Reused the already-computed feature parquets from 6.1 - no
+feature recomputation, no full retraining of anything else.
+
+**Full three-way comparison:**
+
+| method | in-domain (fixed) | in-domain (GroupKFold) | CALCE | Oxford | HUST | XJTU |
+|---|---|---|---|---|---|---|
+| Severson, ElasticNet (6.1 original) | 0.565 | 0.457 | 0.077 | 0.169 | -1.790 | -7.835 |
+| Severson, XGBoost (fairness re-run) | 0.912 | 0.855 | 0.158 | -2.652 | 0.314 | -3.553 |
+| Attia-style, ElasticNet (6.1 original) | 0.583 | 0.469 | 0.078 | 0.195 | -1.437 | -7.410 |
+| Attia-style, XGBoost (fairness re-run) | 0.964 | 0.892 | 0.323 | -1.010 | 0.437 | -1.469 |
+| This project's XGBoost-fusion (canonical) | 0.973 | n/a | 0.740 | 0.953 | 0.800 | -1.775 |
+
+**Honest verdict, stated plainly, not softened: 6.1's original "wins
+decisively on every single metric" framing was OVERSTATED and needs a
+real caveat in the paper** - model class alone (same features,
+ElasticNet -> XGBoost) closed most of the in-domain gap (0.565->0.912
+and 0.583->0.964, essentially matching this project's own 0.973) and a
+large fraction of the CALCE/HUST gap. This project's own feature
+engineering is NOT doing as much of the total work on those 3 metrics
+as the original framing implied.
+
+However, self-scrutiny does not overturn the finding - it REFINES it,
+and the refined picture is still a real, substantial, mostly-favorable
+result:
+- **Oxford**: the fairer baseline gets WORSE, not better (0.169/0.195
+  -> -2.652/-1.010) - XGBoost with only 1-4 raw features clearly
+  OVERFITS this small (8-cell), chemically-distant dataset far more
+  than the more conservative linear model did. This project's own
+  model still wins by an enormous, undiminished margin here (0.953 vs.
+  -1.0 to -2.7) - if anything this comparison is now MORE convincingly
+  in this project's favor, not less.
+- **CALCE, HUST**: this project's own model still wins clearly even
+  against the fairer baselines (CALCE 0.740 vs. 0.323 best baseline;
+  HUST 0.800 vs. 0.437 best baseline) - a real, meaningful margin,
+  just a smaller one than originally reported.
+- **In-domain**: the gap nearly closes (0.973 vs. 0.964, Attia-style
+  XGBoost) - this project's own model is still ahead but by a margin
+  small enough that it should NOT be described as a decisive win on
+  this specific metric without a significance check (not performed
+  here - out of this closeout's scope, flagged as a real open
+  question for the paper rather than asserted either way).
+- **XJTU: the fairer baseline actually WINS**, modestly (-1.469 vs.
+  this project's own -1.775) - a genuine exception to the "our model
+  wins everywhere" claim, not explained away. On this one dataset, a
+  much simpler model (4 hand-computed features, no neural fusion
+  embeddings) generalizes slightly better than this project's full
+  pipeline.
+
+**Final verdict for the paper, stated once, plainly**: this project's
+own model does NOT win decisively and universally against a genuinely
+fair (same model class) comparison - it wins clearly and substantially
+on 3 of 5 metrics (Oxford by a large margin, CALCE and HUST by a real
+one), is essentially tied on in-domain accuracy, and LOSES on XJTU.
+The correct, defensible claim for the paper is a REVISED one: "this
+project's full pipeline (rich domain-engineered + learned features)
+provides a real, substantial advantage over both the field's published
+methods AND a same-architecture ablation using only their minimal
+feature sets, particularly on the datasets most different from the
+training distribution (Oxford) - with one honest exception (XJTU)
+where feature richness does not help and may mildly hurt." This is a
+MORE credible, more specific, more defensible claim for peer review
+than the original "wins everywhere" framing, and should replace it in
+any paper draft.
+
+### Files
+
+`src/run_stage6_closeout1_vdedt_check.py`, `outputs/stage6_closeout1_
+vdedt_bounded_cf_results.csv`, `outputs/stage6_closeout1_vdedt_log.txt`;
+`src/run_stage6_closeout2_baseline_fairness.py`, `outputs/stage6_
+closeout2_baseline_fairness_results.csv`, `outputs/stage6_closeout2_
+run_log.txt`; `src/run_stage6_6_counterfactuals.py` (permitted_range
+fix, disclosed above).
+
+### What's deployed - unchanged
+
+`app.py` and every deployed file remain byte-for-byte untouched -
+verified via `git diff --stat` before committing. Neither closeout
+item touches anything the live app loads.
+
+Not proceeding to Stage 7 or a paper draft yet - reporting back with
+both findings first, since item 2 materially changes how Stage 6's
+headline result should be framed.

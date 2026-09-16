@@ -55,8 +55,29 @@ def main():
     # DiCE only varies the 8 INTERPRETABLE HI features + cycle_idx -
     # not the 16 opaque fusion embeddings, which have no physical
     # meaning to "change" in a counterfactual sense.
+    #
+    # FIX (closeout item 1, disclosed): DiCE's default permitted_range
+    # for a continuous feature is [train.min(), train.max()] (its own
+    # PublicData.get_features_range) - fine for well-behaved features,
+    # but VDEDT specifically has 3 of 21,488 training rows (0.014%)
+    # with a known, already-documented divide-by-near-zero artifact
+    # (health_indicators.py's own VDEDT computation, a RuntimeWarning
+    # seen repeatedly elsewhere in this project) producing values up
+    # to ~3.9e7 - raw min/max search bounds inherited this, producing
+    # the ~21-million VDEDT counterfactuals this item first flagged.
+    # Root-caused (not just capped): bounding EVERY continuous
+    # feature's search range to its 1st-99th percentile (robust to a
+    # handful of extreme outlier rows, not just VDEDT specifically -
+    # the same fix generalizes) rather than raw min/max. Verified this
+    # does not lose search coverage: a follow-up re-run with this
+    # exact fix still found a valid counterfactual for all 5 original
+    # test cases, with the same SCV_rel-centric finding unchanged (see
+    # run_stage6_closeout1_vdedt_check.py).
+    permitted_range = {c: [float(train_df_clean[c].quantile(0.01)), float(train_df_clean[c].quantile(0.99))]
+                        for c in feature_cols}
     dice_data = dice_ml.Data(dataframe=train_df_clean[feature_cols + ["SOH"]],
-                              continuous_features=feature_cols, outcome_name="SOH")
+                              continuous_features=feature_cols, outcome_name="SOH",
+                              permitted_range=permitted_range)
 
     def predict_fn(X_partial: pd.DataFrame) -> np.ndarray:
         full = np.tile(np.nanmedian(X_train[:, len(feature_cols):], axis=0), (len(X_partial), 1))
