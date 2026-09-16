@@ -34,6 +34,7 @@ scoped that decision; session 28 revisits it as a new, separate, opt-in
 mode rather than changing the existing one-shot tabs' behavior).
 """
 
+import ast
 import json
 import subprocess
 import sys
@@ -53,7 +54,11 @@ from data_adapters import (
 )
 from live_inference import load_resources, predict_and_explain
 from generate_health_report import build_prompt, call_llm
-from digital_twin_streaming import StreamingDigitalTwin
+from digital_twin_streaming_river import StreamingDigitalTwinRiver
+from prescriptive_decision_layer import recommend
+from run_second_life_grading import grade as second_life_grade
+from run_degradation_mode_analysis import analyze_battery, classify_degradation_mode
+from ica_dv_dc import compute_ica_dv_dc
 
 ROOT = Path(__file__).resolve().parent
 PROC_DIR = ROOT / "data" / "processed"
@@ -336,7 +341,37 @@ def render_about_section():
     st.divider()
 
 
-def render_prediction_tab(ctx: dict, true_soh, true_rul):
+def _compute_degradation_mode(dataset: str, battery_id: str, cycles: list[dict] | None) -> str | None:
+    """Stage 6.4's Prescriptive Decision Layer needs a degradation-mode
+    signature (session 23's peak-tracking method) as one of its inputs.
+    Computed LIVE here (same "no lookup tables" convention as every other
+    prediction in this app) from the battery's own already-loaded raw
+    cycles - genuinely cheap (numpy peak-finding per cycle, no model
+    inference), but wrapped defensively: a short or unusual cycle list
+    (e.g. a small user upload) can legitimately fail to track any peaks,
+    which should degrade to "unknown" (matching prescriptive_decision_
+    layer.py's own None-handling), not crash the Prediction tab.
+    """
+    if not cycles or len(cycles) < 3:
+        return None
+    try:
+        first_r = None
+        for c in cycles:
+            first_r = compute_ica_dv_dc(c)
+            if first_r is not None:
+                break
+        if first_r is None:
+            return None
+        v_window = float(first_r["V_grid"].max() - first_r["V_grid"].min())
+        peak_df = analyze_battery(dataset, battery_id, cycles)
+        result = classify_degradation_mode(peak_df, v_window)
+        sig = result.get("signature")
+        return None if sig == "insufficient tracked cycles to classify" else sig
+    except Exception:
+        return None
+
+
+def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_id: str, cycles: list[dict] | None):
     st.caption("Live predictions for the currently-selected cycle, computed fresh from "
                "trained model weights (no retraining happens in this app).")
 
@@ -369,6 +404,34 @@ def render_prediction_tab(ctx: dict, true_soh, true_rul):
     st.caption("The anomaly detector is trained only on NASA+MIT data, so it doubles as an "
                "early signal of out-of-domain data alongside the missing-temperature check.")
 
+    st.divider()
+    st.subheader("📋 Recommendation (Prescriptive Decision Layer)")
+    st.caption("A plain-language recommendation from a small, fixed set - built from signals "
+               "this app already computes (SOH, RUL, a second-life grade, and a degradation-"
+               "mode signature), combined by explicit rules, not a black-box model. Every rule "
+               "that fired is listed below, not hidden.")
+    grade = second_life_grade(ctx["soh_pred"])
+    deg_mode = _compute_degradation_mode(dataset, battery_id, cycles)
+    rec = recommend(ctx["soh_pred"], ctx["rul_pred"], grade, deg_mode)
+    _REC_STYLE = {
+        "Continue normal use": (st.success, "🟢"),
+        "Monitor closely": (st.info, "🟡"),
+        "Candidate for second-life": (st.warning, "🔵"),
+        "Recommend retirement": (st.error, "🔴"),
+    }
+    widget, icon = _REC_STYLE.get(rec.action, (st.info, "ℹ️"))
+    widget(f"{icon} **{rec.action}**")
+    with st.expander("Why - the specific rules that fired"):
+        for line in rec.reasoning:
+            st.markdown(f"- {line}")
+    if ctx["out_of_domain"]:
+        st.caption("⚠️ This battery was flagged out-of-domain above - treat this "
+                   "recommendation with the same reduced confidence as the predictions "
+                   "it's built from.")
+    if deg_mode is None:
+        st.caption("_Degradation-mode signature unavailable for this battery (too few "
+                   "trackable cycles) - the recommendation above used SOH/RUL/grade only._")
+
 
 def render_explainability_tab(ctx: dict):
     st.caption("Per-instance explanation for THIS specific cycle's prediction - not an "
@@ -391,6 +454,52 @@ def render_explainability_tab(ctx: dict):
                    "specific cycle's SOH - computed fresh per cycle, not a fixed constant.")
     elif ctx["voltage_region_error"]:
         st.caption(f"(voltage-region explanation unavailable: {ctx['voltage_region_error']})")
+
+    st.subheader("🔄 What would need to change? (Counterfactual explanations)")
+    st.caption("A third, genuinely different lens from SHAP/LIME above: not \"what mattered "
+               "for this prediction\" but \"what's the SMALLEST realistic change to this "
+               "battery's own features that would flip the prediction by 15 points?\"")
+    cf_df = _load_counterfactuals()
+    if cf_df is None:
+        st.info("Counterfactual examples aren't available on this deploy.")
+    else:
+        st.markdown(
+            "Generating a counterfactual (via DiCE) takes real search time per battery - too "
+            "slow to run live for an arbitrary selection here - so this shows 5 representative "
+            "example cases, precomputed once from this project's own held-out test batteries, "
+            "each with the same bounded search a later closeout fixed (an earlier version of "
+            "this search let one rarely-glitchy feature wander to physically absurd values; "
+            "now bounded to the sane, observed range - see the Full Results Archive's Stage 6.6 "
+            "entry for the full story)."
+        )
+        cf_df["case"] = cf_df["battery_id"] + " · cycle " + cf_df["cycle_idx"].astype(str)
+        cases = list(dict.fromkeys(cf_df["case"]))
+        choice = st.selectbox("Example case", cases, key="cf_case_picker")
+        case_rows = cf_df[cf_df["case"] == choice]
+        first = case_rows.iloc[0]
+        st.write(f"Current predicted SOH: **{first['current_pred']:.1f}%** → "
+                 f"target (a meaningful ~15-point drop, an \"early-retirement\" scenario): "
+                 f"**{first['target']:.1f}%**")
+        for i, (_, row) in enumerate(case_rows.iterrows()):
+            changed = ast.literal_eval(row["changed_features"])
+            parts = [f"**{feat}**: {frm:.3g} → {to:.3g}" for feat, (frm, to) in changed.items()]
+            st.markdown(f"- Counterfactual {i+1} (predicted SOH {row['cf_pred']:.1f}%): " + ", ".join(parts))
+        st.success(
+            "**The consistent finding across every one of these cases**: `SCV_rel` (a "
+            "voltage-curve-slope ratio) is the cheapest, most consistent lever DiCE finds to "
+            "flip the prediction - it appears in all 5 example cases above, always moving "
+            "toward the same value (≈0.8). SHAP and LIME rank feature IMPORTANCE; this is a "
+            "different, complementary question - which feature is easiest to imagine changing "
+            "to get a meaningfully different outcome."
+        )
+
+
+@st.cache_data
+def _load_counterfactuals() -> pd.DataFrame | None:
+    path = OUT_DIR / "stage6_closeout1_vdedt_bounded_cf_results.csv"
+    if not path.exists():
+        return None
+    return pd.read_csv(path)
 
 
 def render_health_report_tab(ctx: dict, dataset: str, battery_id: str):
@@ -2278,7 +2387,15 @@ def render_streaming_twin_tab(res: dict):
         baseline_cycle = next((c for c in cycles if c["cycle_idx"] == _BASELINE_CYCLE), cycles[0])
         baseline_his = _compute_his(baseline_cycle)
 
-        twin = StreamingDigitalTwin(
+        # Stage 6.3: River-based non-linear online corrector (HoeffdingAdaptiveTreeRegressor)
+        # + standalone ADWIN drift detection, replacing the original linear
+        # SGDRegressor corrector - a genuine capability upgrade, same
+        # interface (subclasses the original, only the corrector internals
+        # differ), see digital_twin_streaming_river.py's own docstring for
+        # the model-choice reasoning and DEVELOPMENT_LOG.md's Stage 6.3
+        # entry for the honest, mixed accuracy result (wins the hard case,
+        # loses the easy one - not a strict upgrade on every battery).
+        twin = StreamingDigitalTwinRiver(
             res["xgb_fusion"], res["encoder"], res["ocsvm"], res["ocsvm_scaler"],
             res["ocsvm_feature_cols"], res["bfa_selected"], res["train_medians"],
             res["norm_stats"], res["constants"]["soh_conformal_half_width"],
@@ -2316,6 +2433,11 @@ def render_streaming_twin_tab(res: dict):
             if len(anomalies):
                 ax.scatter(anomalies["cycle_idx"], anomalies["corrected_pred"], color="red",
                            marker="x", s=70, zorder=5, label="anomaly flagged")
+            if "drift_detected" in df_so_far.columns:
+                drifted = df_so_far[df_so_far["drift_detected"]]
+                if len(drifted):
+                    ax.scatter(drifted["cycle_idx"], drifted["corrected_pred"], color="darkorange",
+                               marker="^", s=90, zorder=6, label="concept drift flagged (ADWIN)")
             ax.set_xlabel("cycle"); ax.set_ylabel("SOH (%)")
             ax.set_title(f"{dataset}/{battery_id} — streaming twin "
                          f"(cycle {c['cycle_idx']} of {stream_cycles[-1]['cycle_idx']})")
@@ -2329,6 +2451,8 @@ def render_streaming_twin_tab(res: dict):
                     f"revealed history: {last['n_revealed_so_far']} cycles"]
             if last["anomaly"]:
                 bits.append("🚨 **ANOMALY FLAGGED**")
+            if last.get("drift_detected"):
+                bits.append("🔶 **CONCEPT DRIFT FLAGGED**")
             status_placeholder.markdown(" | ".join(bits))
 
         df_final = pd.DataFrame(rows)
@@ -2358,6 +2482,16 @@ def render_streaming_twin_tab(res: dict):
             "⚠️ Reminder: this is a SIMULATION of streaming, replaying already-recorded test "
             "data with an artificial delay - not a connection to live hardware or a real BMS."
         )
+        n_drift = len(twin.drift_events) if hasattr(twin, "drift_events") else 0
+        if n_drift:
+            drift_cycles = ", ".join(str(e["cycle_idx"]) for e in twin.drift_events)
+            st.warning(f"🔶 **{n_drift} concept-drift event(s) flagged** by the standalone ADWIN "
+                       f"detector (monitoring the raw pipeline's own prediction residual stream) "
+                       f"at cycle(s): {drift_cycles}. This is a genuine signal that the raw "
+                       f"pipeline's error behavior shifted noticeably at that point - not "
+                       f"necessarily a problem with the battery itself.")
+        else:
+            st.caption("No concept-drift events flagged by ADWIN during this replay.")
 
 
 def main():
@@ -2524,7 +2658,7 @@ def main():
     # (including the "data unavailable" case Priority 1 fixed above).
     with tab_prediction:
         if ctx is not None:
-            render_prediction_tab(ctx, true_soh, true_rul)
+            render_prediction_tab(ctx, true_soh, true_rul, dataset, battery_id, cycles)
     with tab_explain:
         if ctx is not None:
             render_explainability_tab(ctx)
