@@ -2592,6 +2592,22 @@ def render_streaming_twin_tab(res: dict):
         else:
             st.caption("No concept-drift events flagged by ADWIN during this replay.")
 
+        st.markdown("---")
+        st.subheader("🔮 What might happen next?")
+        st.markdown(
+            "This Twin shows what **is** happening right now, cycle by cycle. Its companion, "
+            "the **World Model** (in the Full Results Archive's Stage 7 section), tries to "
+            "answer a different question: what **might** happen several cycles from now - a "
+            "genuine multi-step forecast, not just the next single point."
+        )
+        st.info(
+            "**Reported honestly, not oversold**: against a naive \"assume nothing changes\" "
+            "baseline, the World Model ties or loses on 4 of 5 test sets and wins clearly on "
+            "only 1 (Oxford) - it does not yet forecast reliably in general. See the Full "
+            "Results Archive's World Model section for the full comparison, including a "
+            "branching-future-trajectories visualization."
+        )
+
 
 def main():
     st.title("🔋 CellSense")
