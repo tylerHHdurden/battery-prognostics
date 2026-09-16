@@ -622,7 +622,7 @@ def _comparison_picker(label_prefix: str, key_prefix: str):
                  "CALCE": calce_data_available}[dataset]()
     if not available:
         st.warning(f"{dataset} raw data isn't available in this environment.")
-        return None, None, None
+        return None, None, None, None
     if dataset == "NASA":
         battery_id = st.selectbox(f"{label_prefix} battery", NASA_CELLS, key=f"{key_prefix}_battery")
     elif dataset == "MIT":
