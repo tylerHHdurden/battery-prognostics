@@ -38,7 +38,6 @@ from __future__ import annotations
 
 import ast
 import json
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -139,45 +138,82 @@ h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
     color: inherit;
 }
 
-/* Last-updated badge (Part D #14) */
-.last-updated-badge {
-    display: inline-block;
-    font-size: 0.78rem;
-    color: #666;
-    background: rgba(33,102,172,0.08);
-    border: 1px solid rgba(33,102,172,0.25);
-    border-radius: 999px;
-    padding: 0.15rem 0.7rem;
-    margin-bottom: 0.5rem;
+/* --------------------------------------------------------------------
+   Website rebuild Phase 10: a real, deliberate design system - a
+   defined palette (not default Streamlit dark-blue-on-white), tab
+   styling, sidebar styling, and consistent card/spacing treatment, on
+   top of the font pairing and alert/button restyle already above.
+   -------------------------------------------------------------------- */
+:root {
+    --accent: #2166ac;
+    --accent-dark: #14528a;
+    --accent-light: rgba(33,102,172,0.08);
+    --ink: #1a1a2e;
+    --ink-soft: #555b6e;
+    --surface: #ffffff;
+    --surface-soft: #f7f8fb;
+    --border-soft: rgba(26,26,46,0.09);
+    --good: #2e8b47;
+    --warn: #d99a1b;
+    --bad: #c0392b;
 }
 
-/* Count-up target numbers (Part D #11) - the JS below animates the
-   displayed digits; this just gives them a stable, consistent look
-   while animating. */
-.countup-number {
-    font-variant-numeric: tabular-nums;
+/* Tabs - default Streamlit tabs are a thin underline with no visual
+   weight; this gives the active tab a real, obvious pill/card state so
+   the page reads as a designed app, not a default widget list. */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 4px;
+    border-bottom: 1px solid var(--border-soft);
 }
+.stTabs [data-baseweb="tab"] {
+    border-radius: 8px 8px 0 0;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    color: var(--ink-soft);
+}
+.stTabs [aria-selected="true"] {
+    background-color: var(--accent-light) !important;
+    color: var(--accent) !important;
+    font-weight: 600 !important;
+}
+
+/* Sidebar - a soft, distinct surface instead of blending into the main
+   page, with tighter, more deliberate heading spacing. */
+[data-testid="stSidebar"] {
+    background-color: var(--surface-soft);
+    border-right: 1px solid var(--border-soft);
+}
+[data-testid="stSidebar"] h2 {
+    font-size: 1.1rem !important;
+    color: var(--ink);
+}
+
+/* st.metric cards - a subtle card treatment so headline numbers read as
+   deliberate UI elements, not bare text sitting on the page. */
+[data-testid="stMetric"] {
+    background-color: var(--surface-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 0.8rem 1rem 0.6rem 1rem;
+}
+[data-testid="stMetricValue"] {
+    color: var(--accent);
+}
+
+/* Expanders (the Full Results Archive's own building block) - a
+   slightly raised card look instead of a flat default list item. */
+[data-testid="stExpander"] {
+    border: 1px solid var(--border-soft) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 3px rgba(26,26,46,0.06);
+}
+
+/* Headings get a touch more breathing room - default Streamlit spacing
+   is cramped enough to read as unstyled. */
+h1, h2, h3 { margin-top: 0.6em; }
+.stMarkdown p { line-height: 1.55; }
 </style>
 """, unsafe_allow_html=True)
-
-
-@st.cache_data(show_spinner=False)
-def get_last_commit_info() -> tuple[str, str, str]:
-    """(short_hash, iso_date, subject) of the latest git commit - Part D
-    #14's "last updated" badge. Returns ("unknown", "", "") if this isn't
-    a git checkout (e.g. a zipped deployment) rather than raising -
-    informational only, never worth crashing the app over."""
-    try:
-        out = subprocess.run(
-            ["git", "log", "-1", "--format=%h|%ad|%s", "--date=format:%Y-%m-%d"],
-            cwd=str(ROOT), capture_output=True, text=True, timeout=5,
-        )
-        if out.returncode == 0 and out.stdout.strip():
-            h, d, s = out.stdout.strip().split("|", 2)
-            return h, d, s
-    except Exception:
-        pass
-    return "unknown", "", ""
 
 
 @st.cache_data(show_spinner=False)
