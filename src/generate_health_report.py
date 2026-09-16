@@ -61,7 +61,33 @@ def _load_dotenv(path: Path = ENV_PATH) -> None:
             os.environ[key] = value
 
 
+def _load_streamlit_secrets() -> None:
+    """Streamlit Cloud does NOT read .env files - it has its own Secrets
+    manager (share.streamlit.io -> app -> Settings -> Secrets, TOML
+    format), exposed to the running app as `st.secrets`, not
+    automatically as `os.environ`. Without this, every live deployment
+    would silently fall through to the "NO_API_KEY" path even with keys
+    correctly configured in the dashboard - confirmed as the actual,
+    live cause of the AI features being completely dead in production
+    (worked in every local test, where a real .env exists; never
+    worked on Streamlit Cloud, which has no .env at all). Bridges
+    st.secrets into os.environ so call_gemini/call_groq's existing
+    os.environ.get(...) calls work unchanged regardless of which
+    mechanism actually supplied the key. Safe to call even outside a
+    Streamlit run (e.g. this module's own CLI usage) - streamlit import
+    or secrets access failing for any reason is silently skipped, not
+    fatal."""
+    try:
+        import streamlit as st
+        for key in ("GEMINI_API_KEY", "GROQ_API_KEY"):
+            if key not in os.environ and key in st.secrets:
+                os.environ[key] = st.secrets[key]
+    except Exception:
+        pass
+
+
 _load_dotenv()
+_load_streamlit_secrets()
 
 PROMPT_TEMPLATE = """You are writing a short, plain-English battery health report for a non-expert reader (e.g. a fleet operator or equipment owner), based on structured predictions from a trained machine-learning pipeline. Do not invent any numbers - use only the figures given below. If a figure is stated as unavailable, say so plainly rather than guessing a value. Keep the report to 2-3 sentences, in the style of a concise diagnostic summary.
 

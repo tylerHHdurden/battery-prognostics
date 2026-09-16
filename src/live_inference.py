@@ -267,6 +267,100 @@ def available_precomputed_cycles(dataset: str) -> dict[str, list[int]]:
     return {}
 
 
+def load_precomputed_battery_series(dataset: str, battery_id: str, res: dict) -> list[dict]:
+    """Full per-cycle series for ONE battery, sorted by cycle_idx, built
+    from the SAME precomputed artifacts predict_and_explain_precomputed
+    uses for a single cycle - {"cycle_idx", "his", "fusion_emb",
+    "true_soh"} per entry. This is what makes a Streaming Digital Twin
+    replay possible without raw cycle data (Priority 2, "Start
+    streaming simulation" was previously raw-data-only with no
+    fallback - see PrecomputedStreamingTwin below, which consumes this
+    series cycle by cycle through the SAME online-correction/ACI/drift
+    machinery the raw-data twin uses, unchanged)."""
+    out = []
+    if dataset in ("NASA", "MIT"):
+        hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
+        fusion_df = pd.read_csv(PROC_DIR / "fusion_embeddings.csv")
+        sub = hi_df[(hi_df["dataset"] == dataset) & (hi_df["battery_id"] == battery_id)].sort_values("cycle_idx")
+        femb = fusion_df[fusion_df["battery_id"] == battery_id].set_index("cycle_idx")
+        for _, row in sub.iterrows():
+            cyc = int(row["cycle_idx"])
+            if cyc not in femb.index:
+                continue
+            frow = femb.loc[cyc]
+            out.append({"cycle_idx": cyc, "his": row.to_dict(), "true_soh": float(row["SOH"]),
+                        "fusion_emb": frow[[f"fusion_{i}" for i in range(16)]].to_numpy(dtype=float)})
+    elif dataset == "CALCE":
+        hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
+        sub = hi_df[(hi_df["dataset"] == "CALCE") & (hi_df["battery_id"] == battery_id)].sort_values("cycle_idx").reset_index(drop=True)
+        all_emb = _calce_fusion_embeddings(battery_id, res["encoder"])
+        if all_emb is None:
+            return []
+        for pos, row in sub.iterrows():
+            if pos >= len(all_emb):
+                break
+            out.append({"cycle_idx": int(row["cycle_idx"]), "his": row.to_dict(),
+                        "true_soh": float(row["SOH"]), "fusion_emb": all_emb[pos]})
+    elif dataset in PRECOMPUTED_HELDOUT_PARQUETS:
+        df = pd.read_parquet(PROC_DIR / PRECOMPUTED_HELDOUT_PARQUETS[dataset])
+        sub = df[df["battery_id"] == battery_id].sort_values("cycle_idx")
+        for _, row in sub.iterrows():
+            out.append({"cycle_idx": int(row["cycle_idx"]), "his": row.to_dict(),
+                        "true_soh": float(row["SOH"]),
+                        "fusion_emb": row[[f"fusion_{i}" for i in range(16)]].to_numpy(dtype=float)})
+    return out
+
+
+class PrecomputedStreamingTwin:
+    """Same online-correction/ACI/drift-detection behavior as
+    StreamingDigitalTwinRiver, but consuming a precomputed per-cycle
+    series (see load_precomputed_battery_series) instead of raw cycle
+    curves - built by composition (wraps a real StreamingDigitalTwinRiver
+    and overrides only its raw-prediction step), not by duplicating the
+    online-learning logic, so a fix to the real corrector automatically
+    applies here too.
+
+    "cycle" arguments to .step() here are plain {"cycle_idx": N} dicts,
+    not real cycle records - the wrapped twin's own _raw_predict is
+    replaced (not called) precisely because that is the ONE method that
+    needs a raw curve; every other piece of StreamingDigitalTwinRiver
+    (the online corrector, ACI, OC-SVM check, drift detector) only ever
+    consumes the (raw_pred, feat) pair _raw_predict returns, so
+    substituting that pair from precomputed data is a correct, narrow
+    substitution, not a reimplementation."""
+
+    def __init__(self, series: list[dict], res: dict, train_medians: dict):
+        from digital_twin_streaming_river import StreamingDigitalTwinRiver
+        self._twin = StreamingDigitalTwinRiver(
+            res["xgb_fusion"], res["encoder"], res["ocsvm"], res["ocsvm_scaler"],
+            res["ocsvm_feature_cols"], res["bfa_selected"], train_medians, res["norm_stats"],
+            res["constants"]["soh_conformal_half_width"],
+        )
+        self._by_cycle = {e["cycle_idx"]: e for e in series}
+        self.train_medians = train_medians
+        baseline_entry = self._by_cycle.get(BASELINE_CYCLE)
+        self._baseline_his = baseline_entry["his"] if baseline_entry else (series[0]["his"] if series else None)
+
+        def _precomputed_raw_predict(cycle: dict):
+            entry = self._by_cycle.get(cycle["cycle_idx"])
+            if entry is None:
+                return None, None
+            hi_rel_vec = build_reformulated_hi_vector(entry["his"], self.train_medians, self._baseline_his)
+            hi_vec = np.concatenate([hi_rel_vec, [float(cycle["cycle_idx"])]])
+            feat = np.concatenate([hi_vec, entry["fusion_emb"]])
+            raw_pred = float(res["xgb_fusion"].predict(feat.reshape(1, -1))[0])
+            return raw_pred, feat
+
+        self._twin._raw_predict = _precomputed_raw_predict
+
+    def step(self, cycle: dict, true_soh: float | None = None) -> dict:
+        return self._twin.step(cycle, true_soh=true_soh)
+
+    @property
+    def drift_events(self):
+        return self._twin.drift_events
+
+
 def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: int, res: dict) -> dict:
     """Same output CONTRACT as predict_and_explain (identical dict keys,
     so every existing render_*_tab function works unchanged regardless

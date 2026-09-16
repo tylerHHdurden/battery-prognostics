@@ -55,6 +55,7 @@ from data_adapters import (
 )
 from live_inference import (
     load_resources, predict_and_explain, predict_and_explain_precomputed, available_precomputed_cycles,
+    load_precomputed_battery_series, PrecomputedStreamingTwin,
 )
 from generate_health_report import build_prompt, build_qa_prompt, call_llm
 from digital_twin_streaming_river import StreamingDigitalTwinRiver
@@ -178,26 +179,48 @@ h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
 }
 
 /* Sidebar - a soft, distinct surface instead of blending into the main
-   page, with tighter, more deliberate heading spacing. */
+   page, with tighter, more deliberate heading spacing.
+   FIX (real live regression, found by direct screenshot review, not a
+   theoretical worry): setting a LIGHT background here without also
+   forcing a dark, explicit text color left every label using
+   Streamlit's own (light/theme-default) text color - invisible
+   against the new light surface. Every element under the sidebar that
+   carries visible text now gets an explicit, guaranteed-contrast
+   color, not just the container background. */
 [data-testid="stSidebar"] {
-    background-color: var(--surface-soft);
+    background-color: var(--surface-soft) !important;
     border-right: 1px solid var(--border-soft);
+}
+[data-testid="stSidebar"] * {
+    color: var(--ink) !important;
 }
 [data-testid="stSidebar"] h2 {
     font-size: 1.1rem !important;
-    color: var(--ink);
+}
+[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+    color: var(--ink-soft) !important;
 }
 
 /* st.metric cards - a subtle card treatment so headline numbers read as
-   deliberate UI elements, not bare text sitting on the page. */
+   deliberate UI elements, not bare text sitting on the page.
+   FIX, same class of bug as the sidebar above: the label text (e.g.
+   "Predicted RUL", "Ensemble R2") was left at Streamlit's own default
+   color against this new light card background - invisible. Every
+   text-bearing child now gets an explicit color. */
 [data-testid="stMetric"] {
     background-color: var(--surface-soft);
     border: 1px solid var(--border-soft);
     border-radius: 10px;
     padding: 0.8rem 1rem 0.6rem 1rem;
 }
+[data-testid="stMetric"] * {
+    color: var(--ink) !important;
+}
 [data-testid="stMetricValue"] {
-    color: var(--accent);
+    color: var(--accent) !important;
+}
+[data-testid="stMetricLabel"] {
+    color: var(--ink-soft) !important;
 }
 
 /* Expanders (the Full Results Archive's own building block) - a
@@ -711,34 +734,52 @@ def render_evaluation_protocol_section():
 # battery - this is a genuinely separate, independent pair of live
 # inference calls, not a mock/precomputed display.
 def _comparison_picker(label_prefix: str, key_prefix: str):
-    dataset = st.selectbox(f"{label_prefix} dataset", ["NASA", "MIT", "CALCE"],
-                            key=f"{key_prefix}_dataset")
+    """Returns (dataset, battery_id, cycle_ref, baseline_his, mode) where
+    mode is "live" (cycle_ref is a raw cycle dict) or "precomputed"
+    (cycle_ref is a plain cycle_idx int) - or all-None if nothing is
+    selected yet. FIX (Priority 2, found by direct live screenshot):
+    this previously had NO fallback at all when raw data was
+    unavailable - it just showed a dead-end warning and returned None,
+    even though the SAME precomputed-inference path Prediction/
+    Explainability/Health Report already use (since the Phase 0 fix)
+    is equally available here. Wired in now, not a separate mechanism."""
+    _dataset_options = ["NASA", "MIT", "CALCE", "Oxford", "HUST", "XJTU"]
+    dataset = st.selectbox(f"{label_prefix} dataset", _dataset_options, key=f"{key_prefix}_dataset")
     available = {"NASA": nasa_data_available, "MIT": mit_data_available,
-                 "CALCE": calce_data_available}[dataset]()
-    if not available:
-        st.warning(f"{dataset} raw data isn't available in this environment.")
-        return None, None, None, None
-    if dataset == "NASA":
-        battery_id = st.selectbox(f"{label_prefix} battery", NASA_CELLS, key=f"{key_prefix}_battery")
-    elif dataset == "MIT":
-        battery_id = st.selectbox(f"{label_prefix} battery", sorted(get_mit_subset().keys()),
-                                   key=f"{key_prefix}_battery")
-    else:
-        battery_id = st.selectbox(f"{label_prefix} battery", CALCE_CELLS, key=f"{key_prefix}_battery")
-    try:
-        cycles = load_battery_cycles(dataset, battery_id)
-    except (FileNotFoundError, OSError, KeyError) as e:
-        st.error(f"Could not load {dataset}/{battery_id}: {e}")
-        return None, None, None, None
-    idx = st.slider(f"{label_prefix} cycle", 1, len(cycles), value=len(cycles),
-                     key=f"{key_prefix}_cycle")
-    # Stage 4: this battery's own cycle-10 raw HI values, for the
-    # canonical 1.1-reformulated (_rel) feature set.
-    from health_indicators import compute_health_indicators as _compute_his
-    from stage1_common import BASELINE_CYCLE as _BASELINE_CYCLE
-    baseline_cycle = next((c for c in cycles if c["cycle_idx"] == _BASELINE_CYCLE), cycles[0])
-    baseline_his = _compute_his(baseline_cycle)
-    return dataset, battery_id, cycles[idx - 1], baseline_his
+                 "CALCE": calce_data_available}.get(dataset, lambda: False)()
+
+    if available:
+        if dataset == "NASA":
+            battery_id = st.selectbox(f"{label_prefix} battery", NASA_CELLS, key=f"{key_prefix}_battery")
+        elif dataset == "MIT":
+            battery_id = st.selectbox(f"{label_prefix} battery", sorted(get_mit_subset().keys()),
+                                       key=f"{key_prefix}_battery")
+        else:
+            battery_id = st.selectbox(f"{label_prefix} battery", CALCE_CELLS, key=f"{key_prefix}_battery")
+        try:
+            cycles = load_battery_cycles(dataset, battery_id)
+        except (FileNotFoundError, OSError, KeyError) as e:
+            st.error(f"Could not load {dataset}/{battery_id}: {e}")
+            return None, None, None, None, None
+        idx = st.slider(f"{label_prefix} cycle", 1, len(cycles), value=len(cycles),
+                         key=f"{key_prefix}_cycle")
+        from health_indicators import compute_health_indicators as _compute_his
+        from stage1_common import BASELINE_CYCLE as _BASELINE_CYCLE
+        baseline_cycle = next((c for c in cycles if c["cycle_idx"] == _BASELINE_CYCLE), cycles[0])
+        baseline_his = _compute_his(baseline_cycle)
+        return dataset, battery_id, cycles[idx - 1], baseline_his, "live"
+
+    cycle_map = available_precomputed_cycles(dataset)
+    if not cycle_map:
+        st.warning(f"No data available for {dataset} in this deployment.")
+        return None, None, None, None, None
+    battery_id = st.selectbox(f"{label_prefix} battery", sorted(cycle_map.keys()), key=f"{key_prefix}_battery")
+    cyc_options = cycle_map[battery_id]
+    cycle_idx = st.select_slider(f"{label_prefix} cycle", options=cyc_options, value=cyc_options[-1],
+                                  key=f"{key_prefix}_cycle")
+    st.caption("ℹ️ No raw curve for this cycle here - prediction still computed live from "
+               "precomputed features.")
+    return dataset, battery_id, cycle_idx, None, "precomputed"
 
 
 def render_battery_comparison_section():
@@ -748,10 +789,10 @@ def render_battery_comparison_section():
     col_a, col_b = st.columns(2)
     with col_a:
         st.markdown("### Battery A")
-        ds_a, bid_a, cyc_a, base_his_a = _comparison_picker("A", "cmp_a")
+        ds_a, bid_a, cyc_a, base_his_a, mode_a = _comparison_picker("A", "cmp_a")
     with col_b:
         st.markdown("### Battery B")
-        ds_b, bid_b, cyc_b, base_his_b = _comparison_picker("B", "cmp_b")
+        ds_b, bid_b, cyc_b, base_his_b, mode_b = _comparison_picker("B", "cmp_b")
 
     if cyc_a is None or cyc_b is None:
         st.info("Select both batteries above to compare.")
@@ -759,13 +800,17 @@ def render_battery_comparison_section():
 
     res = get_resources()
     with st.spinner("Running live inference for both batteries..."):
-        ctx_a = predict_and_explain(cyc_a, res, baseline_his=base_his_a)
-        ctx_b = predict_and_explain(cyc_b, res, baseline_his=base_his_b)
+        ctx_a = (predict_and_explain(cyc_a, res, baseline_his=base_his_a) if mode_a == "live"
+                  else predict_and_explain_precomputed(ds_a, bid_a, cyc_a, res))
+        ctx_b = (predict_and_explain(cyc_b, res, baseline_his=base_his_b) if mode_b == "live"
+                  else predict_and_explain_precomputed(ds_b, bid_b, cyc_b, res))
 
     col_a, col_b = st.columns(2)
-    for col, ds, bid, cyc, ctx in [(col_a, ds_a, bid_a, cyc_a, ctx_a), (col_b, ds_b, bid_b, cyc_b, ctx_b)]:
+    for col, ds, bid, cyc, ctx, mode in [(col_a, ds_a, bid_a, cyc_a, ctx_a, mode_a),
+                                          (col_b, ds_b, bid_b, cyc_b, ctx_b, mode_b)]:
         with col:
-            st.markdown(f"**{ds}/{bid}, cycle {cyc['cycle_idx']}**")
+            cyc_idx = cyc["cycle_idx"] if mode == "live" else cyc
+            st.markdown(f"**{ds}/{bid}, cycle {cyc_idx}**")
             if "error" in ctx:
                 st.error(ctx["error"])
                 continue
@@ -773,10 +818,14 @@ def render_battery_comparison_section():
             # an earlier version here literally showed raw <span> tags as
             # text) - uses st.metric's own native `help` tooltip parameter
             # instead of glossary_term()'s HTML span for this specific spot.
+            st.markdown(battery_icon_svg(ctx["soh_pred"], width=170, height=80), unsafe_allow_html=True)
             st.metric("SOH", f"{ctx['soh_pred']}%", help=GLOSSARY["SOH"])
             st.caption(f"90% interval: {ctx['soh_conformal_lo']}% – {ctx['soh_conformal_hi']}%")
-            st.metric("RUL", f"{ctx['rul_pred']} cycles", help=GLOSSARY["RUL"])
-            st.caption(f"90% interval: {ctx['rul_conformal_lo']} – {ctx['rul_conformal_hi']} cycles")
+            if ctx["rul_pred"] is None:
+                st.metric("RUL", "not available", help=GLOSSARY["RUL"])
+            else:
+                st.metric("RUL", f"{ctx['rul_pred']} cycles", help=GLOSSARY["RUL"])
+                st.caption(f"90% interval: {ctx['rul_conformal_lo']} – {ctx['rul_conformal_hi']} cycles")
             if ctx["out_of_domain"]:
                 st.warning("⚠️ Out-of-domain - conformal interval not reliable.")
             if ctx["anomaly_flag"]:
@@ -2477,54 +2526,53 @@ def render_streaming_twin_tab(res: dict):
         # existing battery" path (session 12): check availability FIRST
         # with a clear, specific reason, rather than attempting to load
         # and surfacing a raw scipy/h5py exception to the user.
+        # FIX (Priority 2, found by direct live screenshot - clicking
+        # "Start streaming simulation" dead-ended with a raw-data warning
+        # on every deployment without data/raw/, i.e. always on Streamlit
+        # Cloud): falls back to PrecomputedStreamingTwin (live_inference.py)
+        # when raw data isn't available - the SAME online-correction/ACI/
+        # drift machinery, fed a precomputed per-cycle feature series
+        # instead of raw curves. This is a REAL simulated stream (each
+        # cycle's true SOH is revealed one at a time, in order, updating
+        # the corrector as it goes) - not the Showcase tab's pre-baked
+        # replay of a fixed, already-computed trajectory.
         dataset_available = {"NASA": nasa_data_available, "MIT": mit_data_available}[dataset]()
-        if not dataset_available:
-            st.warning(
-                f"⚠️ {dataset}'s raw data isn't available in this environment - the "
-                f"NASA/CALCE/MIT research datasets aren't bundled with this app (size + "
-                f"third-party redistribution terms), so this replay-free streaming demo only "
-                f"works where they've been downloaded locally (see README). Try the 🎬 "
-                f"Showcase tab instead - it replays this same battery's already-recorded "
-                f"result and needs no raw data at all."
-            )
-            return
-        try:
+        if dataset_available:
             cycles = load_battery_cycles(dataset, battery_id)
-        except (FileNotFoundError, OSError, KeyError) as e:
-            st.error(f"Could not load {dataset}/{battery_id}'s raw data: {e}. It may be "
-                     f"missing or incomplete locally - try a different battery, or use the "
-                     f"🎬 Showcase tab instead (no raw data needed).")
-            return
-
-        hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
-        soh_lookup = hi_df[(hi_df["dataset"] == dataset) & (hi_df["battery_id"] == battery_id)] \
-            .set_index("cycle_idx")["SOH"].to_dict()
-
-        # Stage 4: this battery's own cycle-10 raw HI values, for the
-        # canonical 1.1-reformulated (_rel) feature set - computed once
-        # here (not per streamed cycle) from the already-loaded `cycles`.
-        from health_indicators import compute_health_indicators as _compute_his
-        from stage1_common import BASELINE_CYCLE as _BASELINE_CYCLE
-        baseline_cycle = next((c for c in cycles if c["cycle_idx"] == _BASELINE_CYCLE), cycles[0])
-        baseline_his = _compute_his(baseline_cycle)
-
-        # Stage 6.3: River-based non-linear online corrector (HoeffdingAdaptiveTreeRegressor)
-        # + standalone ADWIN drift detection, replacing the original linear
-        # SGDRegressor corrector - a genuine capability upgrade, same
-        # interface (subclasses the original, only the corrector internals
-        # differ), see digital_twin_streaming_river.py's own docstring for
-        # the model-choice reasoning and DEVELOPMENT_LOG.md's Stage 6.3
-        # entry for the honest, mixed accuracy result (wins the hard case,
-        # loses the easy one - not a strict upgrade on every battery).
-        twin = StreamingDigitalTwinRiver(
-            res["xgb_fusion"], res["encoder"], res["ocsvm"], res["ocsvm_scaler"],
-            res["ocsvm_feature_cols"], res["bfa_selected"], res["train_medians"],
-            res["norm_stats"], res["constants"]["soh_conformal_half_width"],
-            baseline_his=baseline_his,
-        )
-
-        n_stream = min(max_cycles, max(0, len(cycles) - 5))
-        stream_cycles = cycles[:5 + n_stream]
+            hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
+            soh_lookup = hi_df[(hi_df["dataset"] == dataset) & (hi_df["battery_id"] == battery_id)] \
+                .set_index("cycle_idx")["SOH"].to_dict()
+            from health_indicators import compute_health_indicators as _compute_his
+            from stage1_common import BASELINE_CYCLE as _BASELINE_CYCLE
+            baseline_cycle = next((c for c in cycles if c["cycle_idx"] == _BASELINE_CYCLE), cycles[0])
+            baseline_his = _compute_his(baseline_cycle)
+            # Stage 6.3: River-based non-linear online corrector
+            # (HoeffdingAdaptiveTreeRegressor) + standalone ADWIN drift
+            # detection, replacing the original linear SGDRegressor
+            # corrector - see digital_twin_streaming_river.py's own
+            # docstring for the model-choice reasoning and the Full
+            # Results Archive for the honest, mixed accuracy result.
+            twin = StreamingDigitalTwinRiver(
+                res["xgb_fusion"], res["encoder"], res["ocsvm"], res["ocsvm_scaler"],
+                res["ocsvm_feature_cols"], res["bfa_selected"], res["train_medians"],
+                res["norm_stats"], res["constants"]["soh_conformal_half_width"],
+                baseline_his=baseline_his,
+            )
+            n_stream = min(max_cycles, max(0, len(cycles) - 5))
+            stream_cycles = cycles[:5 + n_stream]
+        else:
+            st.info(f"ℹ️ {dataset}'s raw data isn't available in this deployment - streaming "
+                    f"from this project's own precomputed features instead (still a genuine "
+                    f"cycle-by-cycle simulated stream, not a replay).")
+            series = load_precomputed_battery_series(dataset, battery_id, res)
+            if not series:
+                st.error(f"No precomputed data available for {dataset}/{battery_id} either - "
+                         f"try a different battery, or the 🎬 Showcase tab.")
+                return
+            soh_lookup = {e["cycle_idx"]: e["true_soh"] for e in series}
+            twin = PrecomputedStreamingTwin(series, res, res["train_medians"])
+            n_stream = min(max_cycles, max(0, len(series) - 5))
+            stream_cycles = [{"cycle_idx": e["cycle_idx"]} for e in series[:5 + n_stream]]
 
         st.markdown("**Watch the battery itself, not just a chart:**")
         icon_placeholder = st.empty()
@@ -2554,32 +2602,66 @@ def render_streaming_twin_tab(res: dict):
             with framing_col:
                 st.markdown(battery_physical_framing(result["corrected_pred"], None))
 
+            # FIX (Priority 6, found by direct live viewing): st.pyplot
+            # sends a brand-new PNG image every single frame, fully
+            # replacing the previous one - visually a blink-out/blink-back
+            # flicker, not a smooth update. Switched to Plotly (already
+            # used successfully elsewhere in this app) with a FIXED x/y
+            # axis range computed once upfront - Plotly updates its own
+            # chart in place via its JS layer rather than swapping a
+            # raster image, and a fixed range means the axes themselves
+            # don't jump/rescale every frame either, which was part of
+            # what made the old version feel jarring even setting the
+            # image-swap aside.
             df_so_far = pd.DataFrame(rows)
-            fig, ax = plt.subplots(figsize=(9, 4))
-            ax.plot(df_so_far["cycle_idx"], df_so_far["true_soh"], "k--", linewidth=1, label="true SOH")
-            ax.plot(df_so_far["cycle_idx"], df_so_far["raw_pred"], color="tab:gray", alpha=0.7,
-                    label="frozen pipeline (raw, no correction)")
-            ax.plot(df_so_far["cycle_idx"], df_so_far["corrected_pred"], color="tab:blue",
-                    label="online-corrected twin")
-            ax.fill_between(df_so_far["cycle_idx"],
-                             df_so_far["corrected_pred"] - df_so_far["half_width"],
-                             df_so_far["corrected_pred"] + df_so_far["half_width"],
-                             color="tab:blue", alpha=0.15, label="online conformal band")
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=df_so_far["cycle_idx"], y=df_so_far["true_soh"],
+                                      mode="lines", line=dict(color="#1a1a2e", dash="dot", width=1.5),
+                                      name="true SOH"))
+            fig.add_trace(go.Scatter(x=df_so_far["cycle_idx"], y=df_so_far["raw_pred"],
+                                      mode="lines", line=dict(color="#999999", width=1.5),
+                                      name="frozen pipeline (raw)"))
+            band_x = pd.concat([df_so_far["cycle_idx"], df_so_far["cycle_idx"][::-1]])
+            band_y = pd.concat([df_so_far["corrected_pred"] + df_so_far["half_width"],
+                                 (df_so_far["corrected_pred"] - df_so_far["half_width"])[::-1]])
+            fig.add_trace(go.Scatter(x=band_x, y=band_y, fill="toself",
+                                      fillcolor="rgba(33,102,172,0.15)", line=dict(width=0),
+                                      name="online conformal band", showlegend=False))
+            fig.add_trace(go.Scatter(x=df_so_far["cycle_idx"], y=df_so_far["corrected_pred"],
+                                      mode="lines", line=dict(color="#2166ac", width=2.5),
+                                      name="online-corrected twin"))
             anomalies = df_so_far[df_so_far["anomaly"]]
             if len(anomalies):
-                ax.scatter(anomalies["cycle_idx"], anomalies["corrected_pred"], color="red",
-                           marker="x", s=70, zorder=5, label="anomaly flagged")
+                fig.add_trace(go.Scatter(x=anomalies["cycle_idx"], y=anomalies["corrected_pred"],
+                                          mode="markers", marker=dict(color="#c0392b", symbol="x", size=10),
+                                          name="anomaly flagged"))
             if "drift_detected" in df_so_far.columns:
                 drifted = df_so_far[df_so_far["drift_detected"]]
                 if len(drifted):
-                    ax.scatter(drifted["cycle_idx"], drifted["corrected_pred"], color="darkorange",
-                               marker="^", s=90, zorder=6, label="concept drift flagged (ADWIN)")
-            ax.set_xlabel("cycle"); ax.set_ylabel("SOH (%)")
-            ax.set_title(f"{dataset}/{battery_id} — streaming twin "
-                         f"(cycle {c['cycle_idx']} of {stream_cycles[-1]['cycle_idx']})")
-            ax.legend(fontsize=8, loc="lower left")
-            chart_placeholder.pyplot(fig)
-            plt.close(fig)
+                    fig.add_trace(go.Scatter(x=drifted["cycle_idx"], y=drifted["corrected_pred"],
+                                              mode="markers", marker=dict(color="#d99a1b", symbol="triangle-up", size=11),
+                                              name="concept drift (ADWIN)"))
+            y_all = pd.concat([df_so_far["true_soh"], df_so_far["raw_pred"], df_so_far["corrected_pred"]]).dropna()
+            y_lo = max(0, float(y_all.min()) - 8) if len(y_all) else 0
+            y_hi = min(110, float(y_all.max()) + 8) if len(y_all) else 105
+            fig.update_layout(
+                height=380, margin=dict(l=30, r=20, t=40, b=40),
+                title=f"{dataset}/{battery_id} — streaming twin "
+                      f"(cycle {c['cycle_idx']} of {stream_cycles[-1]['cycle_idx']})",
+                xaxis=dict(title="cycle", range=[stream_cycles[0]["cycle_idx"], stream_cycles[-1]["cycle_idx"]]),
+                yaxis=dict(title="SOH (%)", range=[y_lo, y_hi]),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, font=dict(size=10)),
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="#f7f8fb",
+            )
+            # FIX, caught by a real crash before trusting the "smooth
+            # update" assumption: Streamlit does NOT allow the same `key`
+            # to be reused across multiple element calls within one
+            # script execution (raises StreamlitDuplicateElementKey) -
+            # confirmed directly, not assumed. Each frame needs its own
+            # key; the flicker reduction here comes from Plotly's own
+            # rendering (no raster image swap) and the fixed axis
+            # range above, not from key-based continuity.
+            chart_placeholder.plotly_chart(fig, width="stretch", key=f"stream_chart_{i}")
 
             last = rows[-1]
             bits = [f"cycle **{last['cycle_idx']}**", f"raw={last['raw_pred']:.1f}%",
