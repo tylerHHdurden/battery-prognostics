@@ -52,7 +52,9 @@ from data_adapters import (
     iterate_nasa_cycles, iterate_mit_cycles, iterate_calce_cycles,
     nasa_data_available, mit_data_available, calce_data_available,
 )
-from live_inference import load_resources, predict_and_explain
+from live_inference import (
+    load_resources, predict_and_explain, predict_and_explain_precomputed, available_precomputed_cycles,
+)
 from generate_health_report import build_prompt, build_qa_prompt, call_llm
 from digital_twin_streaming_river import StreamingDigitalTwinRiver
 from prescriptive_decision_layer import recommend
@@ -386,13 +388,17 @@ def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_i
         st.caption(f"90% conformal interval: {ctx['soh_conformal_lo']}% – {ctx['soh_conformal_hi']}%"
                    + (" ⚠️ unreliable, see banner above" if ctx["out_of_domain"] else ""))
     with col2:
-        delta = None if true_rul is None else round(ctx["rul_pred"] - true_rul)
-        st.metric("Predicted RUL", f"{ctx['rul_pred']} cycles",
-                   delta=(f"{delta:+d} vs. true {true_rul}" if delta is not None else None))
-        st.caption(f"90% conformal interval: {ctx['rul_conformal_lo']} – {ctx['rul_conformal_hi']} cycles"
-                   + (" ⚠️ unreliable, see banner above" if ctx["out_of_domain"] else ""))
-        st.caption("_RUL comes from the Phase 4 joint-adaptive model, the only trained RUL "
-                   "predictor in this project - the fusion ensemble itself is SOH-only._")
+        if ctx["rul_pred"] is None:
+            st.metric("Predicted RUL", "not available")
+            st.caption(f"ℹ️ {ctx.get('rul_unavailable_reason') or 'RUL needs this cycle raw curve, which is not available here.'}")
+        else:
+            delta = None if true_rul is None else round(ctx["rul_pred"] - true_rul)
+            st.metric("Predicted RUL", f"{ctx['rul_pred']} cycles",
+                       delta=(f"{delta:+d} vs. true {true_rul}" if delta is not None else None))
+            st.caption(f"90% conformal interval: {ctx['rul_conformal_lo']} – {ctx['rul_conformal_hi']} cycles"
+                       + (" ⚠️ unreliable, see banner above" if ctx["out_of_domain"] else ""))
+            st.caption("_RUL comes from a separate joint SOH+RUL model - the deployed "
+                       "XGBoost-fusion model that predicts SOH does not predict RUL itself._")
 
     st.divider()
     if ctx["anomaly_flag"]:
@@ -2570,26 +2576,19 @@ def main():
 
         cycles = None
         dataset = battery_id = None
+        precomputed_cycle_map: dict[str, list[int]] = {}
+        selected_cycle_idx = None
 
         if mode == "Browse existing battery":
-            _dataset_options = ["NASA", "MIT", "CALCE"]
+            _dataset_options = ["NASA", "MIT", "CALCE", "Oxford", "HUST", "XJTU"]
             dataset = st.selectbox("Dataset", _dataset_options,
                                     index=_qp_index(_dataset_options, "dataset"))
             qp["dataset"] = dataset
             dataset_available = {
                 "NASA": nasa_data_available, "MIT": mit_data_available, "CALCE": calce_data_available,
-            }[dataset]()
+            }.get(dataset, lambda: False)()
 
-            if not dataset_available:
-                st.warning(
-                    f"⚠️ {dataset}'s raw data isn't available in this environment - the "
-                    f"NASA/CALCE/MIT research datasets aren't bundled with this app (size + "
-                    f"third-party redistribution terms), so pre-loaded browsing only works "
-                    f"where they've been downloaded locally (see README). Try a different "
-                    f"dataset, or use 'Upload your own cycle data' below - it works fully "
-                    f"without any of them."
-                )
-            else:
+            if dataset_available:
                 if dataset == "NASA":
                     battery_id = st.selectbox("Battery", NASA_CELLS,
                                                index=_qp_index(NASA_CELLS, "battery"))
@@ -2610,6 +2609,44 @@ def main():
                     st.error(f"Could not load {dataset}/{battery_id}'s raw data: {e}. "
                              f"It may be missing or incomplete locally - try a different "
                              f"battery, or use 'Upload your own cycle data' below.")
+            else:
+                # No raw cycle-level data for this dataset in this deployment
+                # (data/raw/ is gitignored - too large/not ours to redistribute,
+                # see README) - falls back to this project's own precomputed,
+                # git-tracked Health-Indicator + fusion-embedding data instead
+                # of a dead end. This still runs a REAL, live XGBoost-fusion +
+                # SHAP prediction (see live_inference.predict_and_explain_
+                # precomputed) - just without the raw voltage/current curve,
+                # so RUL and the voltage-region explanation aren't available.
+                precomputed_cycle_map = available_precomputed_cycles(dataset)
+                if not precomputed_cycle_map:
+                    st.warning(f"No data available for {dataset} in this deployment. Try a "
+                               f"different dataset, or use 'Upload your own cycle data' below.")
+                else:
+                    _battery_options = sorted(precomputed_cycle_map.keys())
+                    battery_id = st.selectbox("Battery", _battery_options,
+                                               index=_qp_index(_battery_options, "battery"))
+                    qp["battery"] = battery_id
+                    if dataset not in ("NASA", "MIT"):
+                        st.caption(f"ℹ️ {dataset} was never part of this model's training data - "
+                                   f"every prediction shown is a genuine zero-retrain evaluation.")
+                    st.caption("ℹ️ This deployment doesn't have this battery's raw cycling data, "
+                               "only its precomputed features - predictions and SHAP explanations "
+                               "below are still computed live from real model weights; RUL and the "
+                               "voltage-region explanation need the raw curve and aren't available "
+                               "here.")
+                    _cyc_options = precomputed_cycle_map[battery_id]
+                    _qp_cycle = qp.get("cycle")
+                    _cycle_default_idx = (
+                        _cyc_options.index(int(_qp_cycle)) if _qp_cycle is not None
+                        and _qp_cycle.isdigit() and int(_qp_cycle) in _cyc_options
+                        else len(_cyc_options) - 1
+                    )
+                    selected_cycle_idx = st.select_slider(
+                        "Cycle", options=_cyc_options, value=_cyc_options[_cycle_default_idx],
+                        help="Defaults to the most recent available cycle (current battery state)."
+                    )
+                    qp["cycle"] = str(selected_cycle_idx)
         else:
             st.caption("CSV columns required: `cycle_idx, phase (charge/discharge), "
                        "time_s, voltage_v, current_a`. Optional: `temperature_c`.")
@@ -2637,34 +2674,47 @@ def main():
 
     ctx = None
     true_soh = true_rul = None
+    using_precomputed = selected_cycle is None and selected_cycle_idx is not None and battery_id is not None
 
-    if selected_cycle is None:
+    if selected_cycle is None and not using_precomputed:
         st.info("👈 Select a battery (or upload a CSV) in the sidebar to begin.")
     else:
-        st.header(f"{battery_id} — cycle {selected_cycle['cycle_idx']} of {len(cycles)}")
+        if using_precomputed:
+            st.header(f"{battery_id} — cycle {selected_cycle_idx}")
+            st.caption("No raw voltage/current curve to plot for this cycle in this deployment "
+                       "(see the sidebar note) - the prediction below is still computed live "
+                       "from real model weights on this battery's precomputed features.")
+            res = get_resources()
+            with st.spinner("Running XGBoost-fusion + SHAP explanation..."):
+                ctx = predict_and_explain_precomputed(dataset, battery_id, selected_cycle_idx, res)
+        else:
+            st.header(f"{battery_id} — cycle {selected_cycle['cycle_idx']} of {len(cycles)}")
 
-        fig, ax = plt.subplots(figsize=(8, 3))
-        ax.plot(selected_cycle["discharge"]["t"], selected_cycle["discharge"]["V"])
-        ax.set_xlabel("time (s)")
-        ax.set_ylabel("voltage (V)")
-        ax.set_title("Discharge voltage curve for this cycle")
-        st.pyplot(fig)
-        st.caption("Raw voltage-vs-time trace for the selected cycle's discharge phase - the "
-                   "signal every prediction below is ultimately derived from.")
+            fig, ax = plt.subplots(figsize=(8, 3))
+            ax.plot(selected_cycle["discharge"]["t"], selected_cycle["discharge"]["V"])
+            ax.set_xlabel("time (s)")
+            ax.set_ylabel("voltage (V)")
+            ax.set_title("Discharge voltage curve for this cycle")
+            st.pyplot(fig)
+            st.caption("Raw voltage-vs-time trace for the selected cycle's discharge phase - "
+                       "the signal every prediction below is ultimately derived from.")
 
-        res = get_resources()
-        with st.spinner("Running XGBoost-fusion + RUL joint model + SHAP explanation..."):
-            from health_indicators import compute_health_indicators as _compute_his
-            from stage1_common import BASELINE_CYCLE as _BASELINE_CYCLE
-            _baseline_cycle = next((c for c in cycles if c["cycle_idx"] == _BASELINE_CYCLE), cycles[0])
-            _baseline_his = _compute_his(_baseline_cycle)
-            ctx = predict_and_explain(selected_cycle, res, baseline_his=_baseline_his)
+            res = get_resources()
+            with st.spinner("Running XGBoost-fusion + RUL joint model + SHAP explanation..."):
+                from health_indicators import compute_health_indicators as _compute_his
+                from stage1_common import BASELINE_CYCLE as _BASELINE_CYCLE
+                _baseline_cycle = next((c for c in cycles if c["cycle_idx"] == _BASELINE_CYCLE), cycles[0])
+                _baseline_his = _compute_his(_baseline_cycle)
+                ctx = predict_and_explain(selected_cycle, res, baseline_his=_baseline_his)
 
         if "error" in ctx:
             st.error(ctx["error"])
             ctx = None
         else:
-            if dataset in ("NASA", "MIT", "CALCE"):
+            if using_precomputed:
+                true_soh = ctx.get("true_soh")
+                true_rul = None
+            elif dataset in ("NASA", "MIT", "CALCE"):
                 hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
                 row = hi_df[(hi_df["dataset"] == dataset) & (hi_df["battery_id"] == battery_id)
                             & (hi_df["cycle_idx"] == selected_cycle["cycle_idx"])]

@@ -61,20 +61,20 @@ def _load_dotenv(path: Path = ENV_PATH) -> None:
 
 _load_dotenv()
 
-PROMPT_TEMPLATE = """You are writing a short, plain-English battery health report for a non-expert reader (e.g. a fleet operator or equipment owner), based on structured predictions from a trained machine-learning pipeline. Do not invent any numbers - use only the figures given below. Keep the report to 2-3 sentences, in the style of a concise diagnostic summary.
+PROMPT_TEMPLATE = """You are writing a short, plain-English battery health report for a non-expert reader (e.g. a fleet operator or equipment owner), based on structured predictions from a trained machine-learning pipeline. Do not invent any numbers - use only the figures given below. If a figure is stated as unavailable, say so plainly rather than guessing a value. Keep the report to 2-3 sentences, in the style of a concise diagnostic summary.
 
 Battery: {battery_id} (dataset: {dataset}), cycle {cycle_idx}
 
 State of Health (SOH) prediction: {soh_pred}% (90% confidence interval: {soh_conformal_lo}% - {soh_conformal_hi}%)
 
-Remaining Useful Life (RUL) prediction: approximately {rul_pred} cycles remaining (90% confidence interval: {rul_conformal_lo} - {rul_conformal_hi} cycles)
+Remaining Useful Life (RUL) prediction: {rul_text}
 
 Top contributing factors to this SOH prediction, most important first:
 {top_features_text}
 
 Voltage region most associated with this cell's degradation signature: {v_lo}V - {v_hi}V (this region accounts for about {frac_pct}% of the model's attention in explaining this cell's discharge behavior)
 
-Write the report now. Mention the SOH percentage, the voltage region likely driving degradation, and the RUL estimate with its confidence range - in a natural, flowing style similar to this example: "This battery is at 84% health, likely due to degradation concentrated in the 3.6-3.8V region; expect approximately 120 cycles remaining, with 90% confidence between 95-145 cycles."
+Write the report now. Mention the SOH percentage and the voltage region likely driving degradation; mention the RUL estimate with its confidence range ONLY if one is given above (say plainly that RUL isn't available for this cycle if not) - in a natural, flowing style similar to this example: "This battery is at 84% health, likely due to degradation concentrated in the 3.6-3.8V region; expect approximately 120 cycles remaining, with 90% confidence between 95-145 cycles."
 """
 
 
@@ -83,12 +83,17 @@ def build_prompt(context: dict) -> str:
         f"  - {f['feature']}: {f['description']}" for f in context["top_features"]
     )
     vr = context["voltage_region"]
+    if context.get("rul_pred") is None:
+        rul_text = "not available for this cycle (" + (
+            context.get("rul_unavailable_reason") or "the raw cycle curve needed for RUL is not available here") + ")"
+    else:
+        rul_text = (f"approximately {context['rul_pred']} cycles remaining (90% confidence interval: "
+                    f"{context['rul_conformal_lo']} - {context['rul_conformal_hi']} cycles)")
     return PROMPT_TEMPLATE.format(
         battery_id=context["battery_id"], dataset=context["dataset"], cycle_idx=context["cycle_idx"],
         soh_pred=context["soh_pred"], soh_conformal_lo=context["soh_conformal_lo"],
         soh_conformal_hi=context["soh_conformal_hi"],
-        rul_pred=context["rul_pred"], rul_conformal_lo=context["rul_conformal_lo"],
-        rul_conformal_hi=context["rul_conformal_hi"],
+        rul_text=rul_text,
         top_features_text=top_features_text,
         v_lo=vr["v_lo"] if vr else "unknown", v_hi=vr["v_hi"] if vr else "unknown",
         frac_pct=round(vr["frac_of_attribution"] * 100) if vr else "unknown",
@@ -100,7 +105,7 @@ QA_PROMPT_TEMPLATE = """You are answering ONE specific question about ONE specif
 Battery: {battery_id} (dataset: {dataset}), cycle {cycle_idx}
 
 State of Health (SOH) prediction: {soh_pred}% (90% confidence interval: {soh_conformal_lo}% - {soh_conformal_hi}%)
-Remaining Useful Life (RUL) prediction: approximately {rul_pred} cycles remaining (90% confidence interval: {rul_conformal_lo} - {rul_conformal_hi} cycles)
+Remaining Useful Life (RUL) prediction: {rul_text}
 
 Top contributing factors to this SOH prediction, most important first:
 {top_features_text}
@@ -126,12 +131,17 @@ def build_qa_prompt(context: dict, question: str) -> str:
     vr = context.get("voltage_region")
     domain_status = "OUT-OF-DOMAIN - " + "; ".join(context.get("domain_reasons", [])) \
         if context.get("out_of_domain") else "in-domain (looks consistent with NASA/MIT training data)"
+    if context.get("rul_pred") is None:
+        rul_text = "not available for this cycle (" + (
+            context.get("rul_unavailable_reason") or "the raw cycle curve needed for RUL is not available here") + ")"
+    else:
+        rul_text = (f"approximately {context['rul_pred']} cycles remaining (90% confidence interval: "
+                    f"{context['rul_conformal_lo']} - {context['rul_conformal_hi']} cycles)")
     return QA_PROMPT_TEMPLATE.format(
         battery_id=context["battery_id"], dataset=context["dataset"], cycle_idx=context["cycle_idx"],
         soh_pred=context["soh_pred"], soh_conformal_lo=context["soh_conformal_lo"],
         soh_conformal_hi=context["soh_conformal_hi"],
-        rul_pred=context["rul_pred"], rul_conformal_lo=context["rul_conformal_lo"],
-        rul_conformal_hi=context["rul_conformal_hi"],
+        rul_text=rul_text,
         top_features_text=top_features_text,
         v_lo=vr["v_lo"] if vr else "unknown", v_hi=vr["v_hi"] if vr else "unknown",
         frac_pct=round(vr["frac_of_attribution"] * 100) if vr else "unknown",

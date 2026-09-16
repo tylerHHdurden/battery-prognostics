@@ -205,6 +205,193 @@ def build_reformulated_hi_vector(his: dict, train_medians: dict, baseline_his: d
     return vec
 
 
+PRECOMPUTED_HELDOUT_PARQUETS = {
+    "Oxford": "stage5_1_oxford_merged.parquet",
+    "HUST": "stage5_1_hust_merged.parquet",
+    "XJTU": "stage5_1_xjtu_merged.parquet",
+}
+
+
+def _calce_fusion_embeddings(battery_id: str, encoder) -> np.ndarray | None:
+    """CALCE has no precomputed fusion_embeddings.csv row (unlike NASA/
+    MIT/Oxford/HUST/XJTU), but DOES have its 3-channel ICA/DV/DC
+    differential tensor cached (data/processed/differential_tensors/
+    CALCE_{id}.npy, shape (n_cycles, 200, 3) - exactly the encoder's own
+    input) from earlier preprocessing - so the encoder can still run
+    live on this, genuinely computing fusion embeddings, without any
+    raw V/I/T curve. Row order verified (not assumed) to align 1:1 with
+    hi_table.parquet's own CALCE rows sorted by cycle_idx (same
+    original preprocessing pass built both, in the same cycle order)."""
+    path = PROC_DIR / "differential_tensors" / f"CALCE_{battery_id}.npy"
+    if not path.exists():
+        return None
+    tensor = np.load(path)  # (n_cycles, 200, 3)
+    with torch.no_grad():
+        return encoder.encode(torch.tensor(tensor, dtype=torch.float32)).numpy()
+
+
+def available_precomputed_cycles(dataset: str) -> dict[str, list[int]]:
+    """{battery_id: sorted [cycle_idx, ...]} of cycles this dataset can
+    serve WITHOUT any raw cycle data (data/raw/) - used to populate
+    battery/cycle selection whenever raw data isn't available locally
+    (e.g. this project's own Streamlit Cloud deploy, which never has
+    data/raw/ - see README's own documented reason). Covers every
+    dataset this dashboard supports, not just NASA/MIT."""
+    if dataset in ("NASA", "MIT"):
+        hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
+        fusion_df = pd.read_csv(PROC_DIR / "fusion_embeddings.csv")
+        have_fusion = set(zip(fusion_df["battery_id"], fusion_df["cycle_idx"]))
+        sub = hi_df[hi_df["dataset"] == dataset]
+        out: dict[str, list[int]] = {}
+        for bid, cyc in zip(sub["battery_id"], sub["cycle_idx"]):
+            if (bid, int(cyc)) in have_fusion:
+                out.setdefault(bid, []).append(int(cyc))
+        return {k: sorted(v) for k, v in out.items()}
+    if dataset == "CALCE":
+        hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
+        sub = hi_df[hi_df["dataset"] == "CALCE"]
+        out = {}
+        for bid, cyc in zip(sub["battery_id"], sub["cycle_idx"]):
+            tensor_path = PROC_DIR / "differential_tensors" / f"CALCE_{bid}.npy"
+            if tensor_path.exists():
+                out.setdefault(bid, []).append(int(cyc))
+        return {k: sorted(v) for k, v in out.items()}
+    if dataset in PRECOMPUTED_HELDOUT_PARQUETS:
+        df = pd.read_parquet(PROC_DIR / PRECOMPUTED_HELDOUT_PARQUETS[dataset])
+        out = {}
+        for bid, cyc in zip(df["battery_id"], df["cycle_idx"]):
+            out.setdefault(bid, []).append(int(cyc))
+        return {k: sorted(v) for k, v in out.items()}
+    return {}
+
+
+def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: int, res: dict) -> dict:
+    """Same output CONTRACT as predict_and_explain (identical dict keys,
+    so every existing render_*_tab function works unchanged regardless
+    of which path built ctx) - but sourced entirely from this project's
+    own precomputed, git-tracked artifacts instead of a raw per-cycle
+    V/I/T curve: hi_table.parquet + fusion_embeddings.csv (NASA/MIT),
+    hi_table.parquet + a cached ICA/DV/DC tensor (CALCE), or the
+    Stage 5.1 merged parquets that already carry HI + fusion columns
+    together (Oxford/HUST/XJTU). Runs XGBoost-fusion + TreeSHAP + the
+    OC-SVM check GENUINELY LIVE on this reconstructed 25-dim feature
+    vector - this is a real prediction, not a cached lookup of a saved
+    number, for every cycle these artifacts cover (the full 42-battery
+    pool, all of CALCE, and all of Oxford/HUST/XJTU).
+
+    RUL and the VLSTM voltage-region SHAP explanation are honestly
+    reported unavailable (not faked, not silently dropped) - both
+    genuinely need the raw per-cycle V/I/T curve, which isn't cached
+    anywhere for any dataset (only the derived ICA/DV/DC tensor is,
+    for CALCE)."""
+    train_medians = res["train_medians"]
+    unavailable_msg = ("this cycle's raw voltage/current curve isn't available in this "
+                        "deployment (see the note at the top of this page) - only "
+                        "precomputed Health-Indicator and fusion-embedding data is, which "
+                        "is enough for a real SOH prediction and SHAP explanation but not "
+                        "for RUL or the voltage-region explanation, which both need the "
+                        "raw curve directly")
+
+    if dataset in ("NASA", "MIT"):
+        hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
+        row = hi_df[(hi_df["dataset"] == dataset) & (hi_df["battery_id"] == battery_id)
+                     & (hi_df["cycle_idx"] == cycle_idx)]
+        if row.empty:
+            return {"error": f"No precomputed data for {dataset}/{battery_id} cycle {cycle_idx}."}
+        his = row.iloc[0].to_dict()
+        true_soh = float(his.get("SOH", float("nan")))
+
+        base_row = hi_df[(hi_df["dataset"] == dataset) & (hi_df["battery_id"] == battery_id)
+                          & (hi_df["cycle_idx"] == BASELINE_CYCLE)]
+        baseline_his = base_row.iloc[0].to_dict() if not base_row.empty else None
+
+        fusion_df = pd.read_csv(PROC_DIR / "fusion_embeddings.csv")
+        frow = fusion_df[(fusion_df["battery_id"] == battery_id) & (fusion_df["cycle_idx"] == cycle_idx)]
+        if frow.empty:
+            return {"error": f"No precomputed fusion embedding for {dataset}/{battery_id} cycle {cycle_idx}."}
+        fusion_emb = frow.iloc[0][[f"fusion_{i}" for i in range(16)]].to_numpy(dtype=float)
+        no_temperature = dataset == "CALCE"  # never true here, kept for symmetry
+
+    elif dataset == "CALCE":
+        hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
+        sub = hi_df[(hi_df["dataset"] == "CALCE") & (hi_df["battery_id"] == battery_id)].sort_values("cycle_idx").reset_index(drop=True)
+        match = sub[sub["cycle_idx"] == cycle_idx]
+        if match.empty:
+            return {"error": f"No precomputed data for CALCE/{battery_id} cycle {cycle_idx}."}
+        pos = match.index[0]
+        his = match.iloc[0].to_dict()
+        true_soh = float(his.get("SOH", float("nan")))
+        baseline_match = sub[sub["cycle_idx"] == BASELINE_CYCLE]
+        baseline_his = baseline_match.iloc[0].to_dict() if not baseline_match.empty else None
+
+        all_emb = _calce_fusion_embeddings(battery_id, res["encoder"])
+        if all_emb is None or pos >= len(all_emb):
+            return {"error": f"No cached ICA tensor available for CALCE/{battery_id}."}
+        fusion_emb = all_emb[pos]
+        no_temperature = True  # CALCE has no temperature channel - documented throughout this project
+
+    elif dataset in PRECOMPUTED_HELDOUT_PARQUETS:
+        df = pd.read_parquet(PROC_DIR / PRECOMPUTED_HELDOUT_PARQUETS[dataset])
+        row = df[(df["battery_id"] == battery_id) & (df["cycle_idx"] == cycle_idx)]
+        if row.empty:
+            return {"error": f"No precomputed data for {dataset}/{battery_id} cycle {cycle_idx}."}
+        r = row.iloc[0]
+        his = r.to_dict()
+        true_soh = float(his.get("SOH", float("nan")))
+        base_row = df[(df["battery_id"] == battery_id) & (df["cycle_idx"] == BASELINE_CYCLE)]
+        baseline_his = base_row.iloc[0].to_dict() if not base_row.empty else None
+        fusion_emb = r[[f"fusion_{i}" for i in range(16)]].to_numpy(dtype=float)
+        no_temperature = dataset != "HUST"  # HUST has a temperature channel; Oxford/XJTU's raw pipeline does not carry one into this table
+
+    else:
+        return {"error": f"Precomputed fallback not implemented for dataset {dataset}."}
+
+    hi_rel_vector = build_reformulated_hi_vector(his, train_medians, baseline_his)
+    hi_vector = np.concatenate([hi_rel_vector, [float(cycle_idx)]])
+    feat_vector = np.concatenate([hi_vector, fusion_emb])
+
+    pred_soh = float(res["xgb_fusion"].predict(feat_vector.reshape(1, -1))[0])
+    soh_half = res["constants"]["soh_conformal_half_width"]
+
+    ocsvm_feat = feat_vector.reshape(1, -1)
+    ocsvm_scaled = res["ocsvm_scaler"].transform(ocsvm_feat)
+    anomaly_flag = bool(res["ocsvm"].predict(ocsvm_scaled)[0] == -1)
+
+    out_of_domain = no_temperature or anomaly_flag or dataset not in ("NASA", "MIT")
+    domain_reasons = []
+    if dataset not in ("NASA", "MIT"):
+        domain_reasons.append(f"{dataset} was never part of this model's NASA/MIT training data - "
+                               f"this is a genuine zero-retrain (out-of-domain) evaluation")
+    if no_temperature:
+        domain_reasons.append("no temperature channel present in this dataset")
+    if anomaly_flag:
+        domain_reasons.append("the One-Class SVM flags this cycle's feature vector as unlike "
+                               "anything in the NASA+MIT training data")
+
+    top_features = _tree_shap_top_features(feat_vector, res["xgb_fusion"],
+                                            FEATURE_COLS + [f"fusion_{i}" for i in range(16)])
+
+    return {
+        "soh_pred": round(pred_soh, 1),
+        "soh_conformal_lo": round(pred_soh - soh_half, 1),
+        "soh_conformal_hi": round(pred_soh + soh_half, 1),
+        "rul_pred": None,
+        "rul_conformal_lo": None,
+        "rul_conformal_hi": None,
+        "rul_unavailable_reason": unavailable_msg,
+        "top_features": top_features,
+        "voltage_region": None,
+        "voltage_region_error": unavailable_msg,
+        "anomaly_flag": anomaly_flag,
+        "out_of_domain": out_of_domain,
+        "domain_reasons": domain_reasons,
+        "cycle_idx": int(cycle_idx),
+        "true_soh": round(true_soh, 1) if true_soh == true_soh else None,
+        "true_rul": None,
+        "precomputed_fallback": True,
+    }
+
+
 def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None) -> dict:
     """cycle: single cycle record (data_adapters convention). baseline_his:
     optional - this battery's own cycle-10 raw HI dict (see
@@ -283,6 +470,7 @@ def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None
         "rul_pred": max(0, round(pred_rul)),
         "rul_conformal_lo": max(0, round(pred_rul - rul_half)),
         "rul_conformal_hi": round(pred_rul + rul_half),
+        "rul_unavailable_reason": None,
         "top_features": top_features,
         "voltage_region": voltage_region,
         "voltage_region_error": voltage_region_error,
@@ -292,4 +480,5 @@ def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None
         "cycle_idx": cycle["cycle_idx"],
         "true_soh": None,  # filled in by the caller if ground truth is available
         "true_rul": None,
+        "precomputed_fallback": False,
     }
