@@ -1,0 +1,142 @@
+=== Stage 7.2: degradation-aligned self-supervised pretraining ===
+[stage4-pool] loaded NASA/B0005: (168, 200, 6)
+[stage4-pool] loaded NASA/B0006: (168, 200, 6)
+[stage4-pool] loaded NASA/B0007: (168, 200, 6)
+[stage4-pool] loaded NASA/B0018: (132, 200, 6)
+[stage4-pool] loaded MIT/b1c20: (532, 200, 6)
+[stage4-pool] loaded MIT/b1c43: (649, 200, 6)
+[stage4-pool] loaded MIT/b1c32: (729, 200, 6)
+[stage4-pool] loaded MIT/b1c17: (855, 200, 6)
+[stage4-pool] loaded MIT/b1c22: (889, 200, 6)
+[stage4-pool] loaded MIT/b1c41: (1049, 200, 6)
+[stage4-pool] loaded MIT/b1c4: (1225, 200, 6)
+[stage4-pool] loaded MIT/b2c1: (169, 200, 6)
+[stage4-pool] loaded MIT/b2c44: (478, 200, 6)
+[stage4-pool] loaded MIT/b2c42: (491, 200, 6)
+[stage4-pool] loaded MIT/b2c13: (519, 200, 6)
+[stage4-pool] loaded MIT/b2c24: (523, 200, 6)
+[stage4-pool] loaded MIT/b2c32: (543, 200, 6)
+[stage4-pool] loaded MIT/b2c9: (1059, 200, 6)
+[stage4-pool] loaded MIT/b3c28: (539, 200, 6)
+[stage4-pool] loaded MIT/b3c13: (814, 200, 6)
+[stage4-pool] loaded MIT/b3c14: (856, 200, 6)
+[stage4-pool] loaded MIT/b3c0: (1007, 200, 6)
+[stage4-pool] loaded MIT/b3c35: (1091, 200, 6)
+[stage4-pool] loaded MIT/b3c33: (1282, 200, 6)
+[stage4-pool] loaded MIT/b3c38: (1933, 200, 6)
+[stage4-pool] loaded MIT/b4c9: (529, 200, 6)
+[stage4-pool] loaded MIT/b4c36: (713, 200, 6)
+[stage4-pool] loaded MIT/b4c39: (761, 200, 6)
+[stage4-pool] loaded MIT/b4c21: (903, 200, 6)
+[stage4-pool] loaded MIT/b4c0: (982, 200, 6)
+[stage4-pool] loaded MIT/b4c5: (1067, 200, 6)
+[stage4-pool] loaded MIT/b4c38: (1230, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0036: (194, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0038: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0039: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0040: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0041: (25, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0051: (22, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c0: (1187, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c18: (688, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c12: (489, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c44: (477, 200, 6)
+[7.2] pool: 35 train batteries, 6 test batteries
+[ssl-pretrain] sampling order-ranking pairs from TRAIN battery pool only...
+[ssl-pretrain] 10366 pairs sampled from 35 batteries
+[ssl-pretrain] epoch 1/20: train_loss=5.6629 order_acc=0.553 | val_loss=2.0705 val_order_acc=0.554
+[ssl-pretrain] epoch 2/20: train_loss=1.9101 order_acc=0.606 | val_loss=2.0165 val_order_acc=0.629
+[ssl-pretrain] epoch 3/20: train_loss=1.7728 order_acc=0.719 | val_loss=1.7250 val_order_acc=0.764
+[ssl-pretrain] epoch 4/20: train_loss=1.5074 order_acc=0.780 | val_loss=1.3980 val_order_acc=0.835
+[ssl-pretrain] epoch 5/20: train_loss=1.2696 order_acc=0.837 | val_loss=1.2364 val_order_acc=0.847
+[ssl-pretrain] epoch 6/20: train_loss=1.1354 order_acc=0.858 | val_loss=1.1180 val_order_acc=0.860
+[ssl-pretrain] epoch 7/20: train_loss=1.0510 order_acc=0.875 | val_loss=1.0848 val_order_acc=0.878
+[ssl-pretrain] epoch 8/20: train_loss=1.0060 order_acc=0.882 | val_loss=1.0716 val_order_acc=0.878
+[ssl-pretrain] epoch 9/20: train_loss=0.9549 order_acc=0.887 | val_loss=1.0383 val_order_acc=0.893
+[ssl-pretrain] epoch 10/20: train_loss=0.9174 order_acc=0.892 | val_loss=0.9245 val_order_acc=0.905
+[ssl-pretrain] epoch 11/20: train_loss=0.8889 order_acc=0.897 | val_loss=0.8835 val_order_acc=0.918
+[ssl-pretrain] epoch 12/20: train_loss=0.8435 order_acc=0.909 | val_loss=0.8736 val_order_acc=0.918
+[ssl-pretrain] epoch 13/20: train_loss=0.8215 order_acc=0.913 | val_loss=0.8216 val_order_acc=0.920
+[ssl-pretrain] epoch 14/20: train_loss=0.7825 order_acc=0.915 | val_loss=0.8006 val_order_acc=0.912
+[ssl-pretrain] epoch 15/20: train_loss=0.7726 order_acc=0.920 | val_loss=0.7751 val_order_acc=0.927
+[ssl-pretrain] epoch 16/20: train_loss=0.7419 order_acc=0.924 | val_loss=0.7316 val_order_acc=0.929
+[ssl-pretrain] epoch 17/20: train_loss=0.7246 order_acc=0.927 | val_loss=0.7162 val_order_acc=0.935
+[ssl-pretrain] epoch 18/20: train_loss=0.7038 order_acc=0.928 | val_loss=0.7052 val_order_acc=0.932
+[ssl-pretrain] epoch 19/20: train_loss=0.6787 order_acc=0.930 | val_loss=0.6938 val_order_acc=0.934
+[ssl-pretrain] epoch 20/20: train_loss=0.6695 order_acc=0.930 | val_loss=0.7100 val_order_acc=0.934
+[ssl-pretrain] final val order-ranking accuracy: 0.934 (0.5=random guessing, 1.0=perfect - clearly above chance, encoder learned real degradation-order signal)
+
+--- fine-tuning: pretrained ---
+[ft:pretrained] epoch 1/20: train_mse=1441.2208 val_mse=30.2381
+[ft:pretrained] epoch 2/20: train_mse=25.7452 val_mse=23.5187
+[ft:pretrained] epoch 3/20: train_mse=22.6079 val_mse=21.1728
+[ft:pretrained] epoch 4/20: train_mse=20.7983 val_mse=19.3049
+[ft:pretrained] epoch 5/20: train_mse=19.3447 val_mse=18.1344
+[ft:pretrained] epoch 6/20: train_mse=18.4807 val_mse=17.4673
+[ft:pretrained] epoch 7/20: train_mse=17.7144 val_mse=16.6934
+[ft:pretrained] epoch 8/20: train_mse=17.0897 val_mse=16.5609
+[ft:pretrained] epoch 9/20: train_mse=16.6606 val_mse=15.7302
+[ft:pretrained] epoch 10/20: train_mse=16.3258 val_mse=15.0431
+[ft:pretrained] epoch 11/20: train_mse=15.8408 val_mse=14.3964
+[ft:pretrained] epoch 12/20: train_mse=15.2528 val_mse=14.5659
+[ft:pretrained] epoch 13/20: train_mse=14.9131 val_mse=14.0166
+[ft:pretrained] epoch 14/20: train_mse=14.5538 val_mse=13.5273
+[ft:pretrained] epoch 15/20: train_mse=14.0319 val_mse=13.3886
+[ft:pretrained] epoch 16/20: train_mse=13.7379 val_mse=13.1069
+[ft:pretrained] epoch 17/20: train_mse=13.6588 val_mse=11.7971
+[ft:pretrained] epoch 18/20: train_mse=13.1295 val_mse=11.5121
+[ft:pretrained] epoch 19/20: train_mse=12.7352 val_mse=12.4915
+[ft:pretrained] epoch 20/20: train_mse=12.4304 val_mse=10.8652
+[eval] in-domain (fixed split): R2=0.4930 RMSE=3.4437 n=5208
+[eval] CALCE: R2=-3.9140 RMSE=47.7345 n=2941
+[eval] Oxford: R2=0.0335 RMSE=6.7185 n=519
+[eval] HUST: R2=-5.3630 RMSE=18.6099 n=146122
+[eval] XJTU: R2=-256.0610 RMSE=96.4131 n=19238
+
+--- fine-tuning: random_init ---
+[ft:random_init] epoch 1/20: train_mse=1800.7531 val_mse=35.9825
+[ft:random_init] epoch 2/20: train_mse=27.0106 val_mse=22.8979
+[ft:random_init] epoch 3/20: train_mse=22.5409 val_mse=20.6577
+[ft:random_init] epoch 4/20: train_mse=20.8544 val_mse=18.9849
+[ft:random_init] epoch 5/20: train_mse=19.4627 val_mse=17.6377
+[ft:random_init] epoch 6/20: train_mse=18.2941 val_mse=16.6603
+[ft:random_init] epoch 7/20: train_mse=17.1815 val_mse=15.1397
+[ft:random_init] epoch 8/20: train_mse=15.8819 val_mse=14.2555
+[ft:random_init] epoch 9/20: train_mse=15.1531 val_mse=13.8102
+[ft:random_init] epoch 10/20: train_mse=14.7754 val_mse=13.3244
+[ft:random_init] epoch 11/20: train_mse=14.2357 val_mse=12.7133
+[ft:random_init] epoch 12/20: train_mse=13.5157 val_mse=12.4794
+[ft:random_init] epoch 13/20: train_mse=12.9994 val_mse=11.8148
+[ft:random_init] epoch 14/20: train_mse=12.4945 val_mse=11.1682
+[ft:random_init] epoch 15/20: train_mse=11.8259 val_mse=11.0490
+[ft:random_init] epoch 16/20: train_mse=11.2736 val_mse=11.6138
+[ft:random_init] epoch 17/20: train_mse=11.1195 val_mse=9.6944
+[ft:random_init] epoch 18/20: train_mse=10.4416 val_mse=8.7783
+[ft:random_init] epoch 19/20: train_mse=10.1212 val_mse=9.8678
+[ft:random_init] epoch 20/20: train_mse=9.7353 val_mse=8.8048
+[eval] in-domain (fixed split): R2=0.4525 RMSE=3.5787 n=5208
+[eval] CALCE: R2=-4.1626 RMSE=48.9273 n=2941
+[eval] Oxford: R2=-20.6184 RMSE=31.7750 n=519
+[eval] HUST: R2=-2.7676 RMSE=14.3200 n=146122
+[eval] XJTU: R2=-102.0838 RMSE=61.0539 n=19238
+
+=== FULL RESULTS ===
+                      variant                eval_set          r2      rmse        n
+                   pretrained in-domain (fixed split)    0.493008  3.443680   5208.0
+                   pretrained                   CALCE   -3.913969 47.734490   2941.0
+                   pretrained                  Oxford    0.033509  6.718509    519.0
+                   pretrained                    HUST   -5.362985 18.609880 146122.0
+                   pretrained                    XJTU -256.061005 96.413118  19238.0
+                  random_init in-domain (fixed split)    0.452465  3.578723   5208.0
+                  random_init                   CALCE   -4.162611 48.927252   2941.0
+                  random_init                  Oxford  -20.618378 31.775002    519.0
+                  random_init                    HUST   -2.767566 14.320019 146122.0
+                  random_init                    XJTU -102.083801 61.053877  19238.0
+deployed_xgb_fusion_REFERENCE in-domain (fixed split)    0.973000       NaN      NaN
+deployed_xgb_fusion_REFERENCE                   CALCE    0.740000       NaN      NaN
+deployed_xgb_fusion_REFERENCE                  Oxford    0.953000       NaN      NaN
+deployed_xgb_fusion_REFERENCE                    HUST    0.800000       NaN      NaN
+deployed_xgb_fusion_REFERENCE                    XJTU   -1.775000       NaN      NaN
+
+[7.2] pretext-task final order-ranking val accuracy: 0.934
+[7.2] TOTAL TIME: 45.3 minutes

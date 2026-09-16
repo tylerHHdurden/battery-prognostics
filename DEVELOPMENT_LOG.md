@@ -10958,3 +10958,220 @@ item touches anything the live app loads.
 Not proceeding to Stage 7 or a paper draft yet - reporting back with
 both findings first, since item 2 materially changes how Stage 6's
 headline result should be framed.
+---
+
+## Stage 7 — higher-risk, higher-ceiling capability additions (final stage)
+
+Three from-scratch architectures, none previously attempted in this
+codebase: a battery-specific World Model (7.1), degradation-aligned
+self-supervised pretraining (7.2), and a DeepONet neural-operator SPM
+surrogate (7.3). Per instruction, the explicit expectation going in was
+a real chance of negative/non-convergent results, same standing as
+BatLiNet and TabPFN-DeepHPM - reported here exactly that honestly.
+**Net result across all three: no item produced a clean, adoptable win
+on the project's primary in-domain/CALCE/HUST metrics. All three
+trained stably (no divergence, no NaN) but were mixed-to-negative on
+the metrics that matter most, with ONE striking, consistent exception -
+Oxford - that shows up as a real, substantial win in ALL THREE items
+independently, flagged explicitly below as a genuine, un-investigated-
+further pattern worth a future look.**
+
+Input representation, stated per item: all three use raw, less-
+processed per-cycle tensors (`sequence_features.py`'s established
+V_t/I_t/T_t/dQdV/dVdQ/dIdV 6-channel representation - the SAME one
+BatLiNet/VLSTM/CNN-LSTM/PiFormer already use), NOT the engineered HI
+features - the canonical Stage 6 HI+fusion feature pipeline is only
+reintroduced in 7.3's downstream XGBoost-ablation step, where it's the
+right tool for that specific question.
+
+### 7.1 — Battery-specific World Model
+
+Architecture (`src/models/world_model.py`): 1D-CNN cycle encoder ->
+PatchTST-lite transformer (patches the SEQUENCE of per-cycle CNN
+embeddings, not raw channels - a disclosed, necessary adaptation, see
+the module's own docstring) -> a GRUCell "residual dynamics equation"
+evolving a latent state -> a decoder reading off a per-step SOH DELTA.
+Iterative rollout happens ENTIRELY IN LATENT SPACE (no synthetic future
+raw curves needed) - the model conditions once on a real W=10-cycle
+window, then forecasts N=10 future cycles autoregressively from its own
+latent state, the physically correct behavior for a genuine forecaster.
+Full disclosed judgment-call list is in the module docstring (the
+paper's own code was unavailable, same standing as BatLiNet's own
+disclosed adaptation).
+
+Trained on the canonical 42-battery pool's raw cycles (2,937 train /
+518 val windows), evaluated in-domain (TEST battery split) and zero-
+retrain on all 4 held-out sets - and, added after the first pass
+specifically to make "plausible forecast" a decidable question rather
+than an eyeballed one, against a NAIVE PERSISTENCE BASELINE (predict
+the last-observed SOH, unchanged, for every future horizon).
+
+**Honest result: the World Model trains stably and never diverges, but
+mostly fails to beat a trivial do-nothing baseline:**
+
+| eval set | vs. persistence, horizons 1-10 |
+|---|---|
+| in-domain (test batteries) | roughly tied (wins 5/10 horizons, loses 5/10, tiny margins) |
+| CALCE | roughly tied (wins 9/10 horizons, but margins ~0.001-0.06, negligible) |
+| **Oxford** | **clearly, increasingly WINS - h1: 0.63 vs 0.74; h10: 1.54 vs 3.49 (persistence's error more than doubles the model's by h10)** |
+| HUST | consistently LOSES, growing worse with horizon (h10: model 0.327 vs persistence 0.166 - nearly 2x worse) |
+| XJTU | roughly tied (essentially a coin flip which "wins" each horizon, margins near-zero) |
+
+**Verdict: does NOT produce a genuinely useful new forecasting
+capability in general** - on 4 of 5 evaluation settings it is
+statistically indistinguishable from, or worse than, doing nothing.
+The ONE real exception is Oxford, where it clearly and increasingly
+outperforms persistence as the horizon grows - a genuine, substantial
+signal that the model captures real degradation-trend information
+Oxford's own SOH trajectories carry, that a naive baseline misses.
+Reported as a mixed/mostly-negative result, honestly, not a win.
+
+### 7.2 — Degradation-aligned self-supervised pretraining
+
+Pretext task (`src/models/degradation_pretrain.py`): cycle-order-
+ranking - given two raw cycle tensors from the SAME battery, predict
+which came first + how far apart (log-gap regression), using ONLY the
+35 TRAIN-pool batteries' own cycles (held-out sets never touched, even
+without labels, to preserve zero-retrain validity). Pretrained a small
+CNN encoder on 10,366 sampled pairs.
+
+**The pretext task itself clearly worked**: final validation order-
+ranking accuracy **93.4%** (vs. 50% chance) - the encoder demonstrably
+learned real degradation-order signal directly from raw curve shape,
+with no SOH label ever shown to it during pretraining.
+
+Fine-tuned TWO copies of the same small CNN+head architecture
+(identical hyperparameters/epochs/data) on the actual SOH regression
+task: one initialized from the pretrained encoder, one from scratch
+(random init) - isolating whether pretraining itself helps, not
+whether this small architecture is competitive with the deployed
+model (it is not, by design - see the reference row below, disclosed
+upfront as an intentionally unfair architecture comparison, not the
+point of this test).
+
+| eval set | pretrained R2 | random-init R2 | pretraining help? |
+|---|---|---|---|
+| in-domain (fixed split) | 0.493 | 0.453 | modest win |
+| CALCE | -3.914 | -4.163 | modest win (both poor) |
+| **Oxford** | **0.034** | **-20.618** | **large win** |
+| HUST | -5.363 | -2.768 | LOSS (both poor) |
+| XJTU | -256.061 | -102.084 | LOSS (both catastrophic) |
+| *deployed XGBoost-fusion (reference, different architecture)* | *0.973 / 0.740 / 0.953 / 0.800 / -1.775* | - | *not a fair comparison, shown for scale only* |
+
+**Verdict: a real, if inconsistent, benefit - not a clean win, not a
+clean failure.** Pretraining helps on 3/5 settings (dramatically on
+Oxford, modestly on in-domain/CALCE) and hurts on 2/5 (HUST, XJTU) -
+though on those 2 both variants are already far into unusable territory
+(R2 deeply negative for both), so the "loss" is of low practical
+consequence. The unambiguous, clean part of this result is the pretext
+task's own 93.4% accuracy - self-supervised degradation-order learning
+from raw curves genuinely works on this project's data, independent of
+whether it helps the downstream task everywhere. Also notable: THIS
+raw-CNN-only architecture (no hand-engineered ratio features at all)
+generalizes far worse to XJTU (R2 as low as -256) than the deployed
+feature-engineered pipeline does (-1.775) - a real, informative data
+point reinforcing why feature engineering (not just more data/deeper
+architectures) matters for this project's specific domain-shift
+problem.
+
+### 7.3 — DeepONet as a real SPM/SPMe surrogate
+
+`src/models/deeponet.py`: DeepONet chosen over FNO (disclosed reason:
+DeepONet's branch/trunk formulation fits this project's irregular,
+non-grid 1D per-cycle curves and arbitrary query points more naturally
+than FNO's spectral/grid-based mechanism - see module docstring).
+Learns the genuine electrochemical OPERATOR I(t) -> V(t) (discharge
+current -> voltage response) directly from raw curves - a real physics
+surrogate, not a repeat of session 4's shallow monotonicity-PENALTY
+attempt (a loss-term constraint on an existing model, not a learned
+operator).
+
+**Part 1 - does the operator itself work?**
+
+| eval set | R2 | RMSE (volts) |
+|---|---|---|
+| in-pool held-out cycles (val split) | 0.976 | 0.083 |
+| in-domain (TEST batteries) | 0.982 | 0.067 |
+| CALCE | -2.652 | 0.454 |
+| Oxford | -4.240 | 0.551 |
+| HUST | -9.176 | 0.544 |
+| XJTU | -5.541 | 0.758 |
+
+**Works excellently in-domain (R2=0.98, genuinely validates the
+operator-learning approach for this project's own training
+distribution), fails catastrophically zero-retrain on ALL FOUR held-out
+datasets** (R2 deeply negative everywhere) - a clean, well-diagnosed
+domain-shift failure: a current->voltage operator fit to one set of
+chemistries/protocols does not extrapolate to different ones, an
+honest, expected limitation of a narrowly-fit physics surrogate.
+
+**Part 2 - integration ablation (branch embedding added to the
+existing canonical XGBoost-fusion pipeline, same hyperparameters,
+with vs. without):**
+
+| eval set | without embedding | with embedding | effect |
+|---|---|---|---|
+| in-domain (fixed split) | R2=0.975, RMSE=0.760 | R2=0.961, RMSE=0.957 | HURTS |
+| CALCE | R2=0.723, RMSE=11.34 | R2=0.667, RMSE=12.43 | HURTS |
+| **Oxford** | **R2=0.924, RMSE=1.887** | **R2=0.990, RMSE=0.672** | **HELPS substantially** |
+| HUST | R2=0.800, RMSE=3.30 | R2=0.740, RMSE=3.76 | HURTS |
+| XJTU | R2=-1.645, RMSE=9.78 | R2=-1.478, RMSE=9.47 | marginal help (both poor) |
+
+**Verdict, directly against session 4's precedent**: session 4's
+shallow monotonicity PENALTY made all 3 tested models uniformly worse
+(VLSTM/CNN-LSTM/PiFormer RMSE all increased) - a clean, uniform
+negative. This deeper, genuine physics-OPERATOR surrogate is a
+DIFFERENT, more mixed failure mode, not a repeat: it hurts the 3
+metrics that matter most for this project's headline claims (in-domain,
+CALCE, HUST) but produces a LARGE, genuine win on Oxford and a small
+one on XJTU - a deeper physics embedding CAN help in at least one
+real setting the shallow constraint never touched, while still not
+clearing the bar for adoption into the canonical pipeline (net negative
+on more metrics than it helps, especially the primary ones). **Not
+adopted - the existing canonical pipeline (Stage 1.1 + Stage 5
+extended reformulation + Stage 1.5 monotone constraints) remains
+unchanged.**
+
+### Cross-cutting observation, flagged not root-caused
+
+**Oxford shows a real, substantial improvement in ALL THREE Stage 7
+items independently** - the World Model's only clear win over
+persistence, self-supervised pretraining's largest benefit over random
+init, and DeepONet-embedding's largest downstream gain. This is a
+striking, consistent pattern across three unrelated architectures and
+is flagged here honestly as a genuine, noticed signal - NOT
+investigated further in this already-large stage (a plausible but
+UNVERIFIED guess: Oxford is this project's smallest held-out set - 8
+cells, 519 rows - and its own baseline (canonical XGBoost-fusion)
+already achieves the pipeline's best held-out R2 of any dataset
+(0.953), so any well-behaved additional structured signal may simply
+have more relative room to help on a small, otherwise-well-fit set;
+this is a hypothesis for future work, not a conclusion drawn here).
+
+### Files
+
+`src/stage7_common.py` (shared raw-tensor loading for the canonical
+42-pool + 4 held-out sets, reused by all 3 items); `src/models/
+{world_model,degradation_pretrain,deeponet}.py`; `src/run_stage7_
+{1_world_model,2_selfsupervised_pretrain,3_neural_operator_spm}.py`;
+`outputs/stage7_{1,2,3}_*.csv` + run logs; experimental checkpoints
+`models/_experimental_{world_model,degradation_pretrained_encoder,
+ssl_soh_pretrained,ssl_soh_random_init,deeponet_spm_surrogate}.pt`.
+
+### What's deployed - unchanged
+
+`app.py` shows zero diff (`git diff --stat app.py`) - confirmed before
+committing. No item in this stage touches anything the live Streamlit
+app loads; all three are new, separate experimental artifacts.
+
+### Summary verdict
+
+Per instruction, "three honest, well-diagnosed negative results" was
+an accepted, complete outcome for this stage - what actually happened
+is closer to "three honest, well-diagnosed MIXED results, net-negative
+for adoption into the canonical pipeline, with one consistent,
+unexplained bright spot (Oxford) surfacing independently across all
+three." None of the three items is adopted into the canonical
+pipeline or the deployed app. This is explicitly the final stage of
+the improvement plan - not proceeding further. Reporting back with
+full findings and awaiting direction on the paper draft.
