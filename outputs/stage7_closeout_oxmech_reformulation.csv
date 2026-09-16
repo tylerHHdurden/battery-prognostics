@@ -1,0 +1,4 @@
+comparison,dataset,r2_before,r2_after,delta_r2,n_cells
+reformulation,"Oxford (full, 8 cells, ORIGINAL Stage 5 result)",-2.694,0.9533,3.6473,8
+reformulation,"HUST (full, 77 cells, ORIGINAL Stage 5 result)",-0.152,0.8,0.9520000000000001,77
+reformulation,"HUST (size-matched 8-cell subsample, THIS TEST)",-0.22623290966294474,0.8541431831784403,1.080376092841385,8

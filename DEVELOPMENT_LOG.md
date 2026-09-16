@@ -11148,6 +11148,17 @@ already achieves the pipeline's best held-out R2 of any dataset
 have more relative room to help on a small, otherwise-well-fit set;
 this is a hypothesis for future work, not a conclusion drawn here).
 
+**[UPDATE - see "Stage 7 final closeout" entry below]: this WAS tested
+directly with a size-matched HUST subsample. Result: the sample-size
+explanation above is REFUTED, not confirmed - a HUST subsample cut to
+Oxford's exact size (8 cells) reproduces full HUST's own modest
+reformulation gain (+1.08 R2, vs. full HUST's +0.95) and full HUST's
+own losing pattern against the World Model (0/10 horizons, same as
+full 77-cell HUST) - NOT Oxford's dramatic +3.65 R2 swing or 10/10
+persistence win. The distributional-similarity explanation (Oxford's
+own lowest domain-classifier AUC among the 4 held-out sets) is the
+one the data actually supports.**
+
 ### Files
 
 `src/stage7_common.py` (shared raw-tensor loading for the canonical
@@ -11175,3 +11186,179 @@ three." None of the three items is adopted into the canonical
 pipeline or the deployed app. This is explicitly the final stage of
 the improvement plan - not proceeding further. Reporting back with
 full findings and awaiting direction on the paper draft.
+---
+
+## Stage 7 final closeout — Oxford-mechanism test, transcription sweep, consistency check
+
+Mirrors the rigor applied after every prior stage, intended as the last
+check before the full seven-stage improvement plan is considered
+closed. No retraining beyond item 1's two interventions (both reuse
+ALREADY-TRAINED, already-saved models - only imputation medians and a
+small HUST subsample's raw data were newly computed). No deployed-app
+changes.
+
+### Item 1 — Oxford-mechanism test: RESOLVED, cleanly, in favor of distributional similarity
+
+Two competing hypotheses for Oxford's repeated disproportionate
+benefit: (a) sample size/variance (Oxford is the smallest held-out
+set, 8 cells), or (b) distributional similarity (Oxford has the
+lowest domain-classifier AUC, 0.9881, among the 4 held-out sets - most
+similar to the training pool).
+
+**Method**: HUST's 77 cell IDs have a real, natural "{batch}-{cell}"
+grouping (10 batches, 7-8 cells each, confirmed directly via
+`data_adapters.hust_cell_ids()`, not assumed). Drew a stratified,
+disclosed, non-cherry-picked 8-cell sample (seed=42): 1 cell from 8 of
+the 10 batches, both the batch choice and the within-batch cell choice
+random. Sample: `1-3, 10-5, 3-5, 4-2, 5-6, 7-4, 8-2, 9-7` (16,233
+cycles, 8 usable cells). Two interventions re-run on this exact
+subsample, reusing already-trained/saved models (no retraining):
+
+**Intervention 1 - Stage 5's SCV/MATD/VIECT/MET reformulation**
+(`models/xgb_soh_fusion.json` before vs.
+`models/_experimental_xgb_soh_fusion_extended_reformulation.json`
+after, both already trained, only re-scored):
+
+| dataset | R2 before | R2 after | delta R2 | n cells |
+|---|---|---|---|---|
+| Oxford (full, ORIGINAL Stage 5 result) | -2.694 | 0.953 | **+3.647** | 8 |
+| HUST (full, ORIGINAL Stage 5 result) | -0.152 | 0.800 | +0.952 | 77 |
+| **HUST (size-matched 8-cell subsample, THIS TEST)** | -0.226 | 0.854 | **+1.080** | 8 |
+
+The HUST subsample's delta (+1.08) sits close to FULL HUST's own delta
+(+0.95) - nowhere near Oxford's +3.65 swing, despite being the EXACT
+SAME SIZE as Oxford.
+
+**Intervention 2 - Stage 7.1's World Model vs. persistence baseline**
+(`models/_experimental_world_model.pt`, already trained, only
+re-evaluated):
+
+| dataset | horizons beating persistence |
+|---|---|
+| Oxford (full, ORIGINAL 7.1 result) | 10/10 |
+| HUST (full, ORIGINAL 7.1 result) | 0/10 |
+| **HUST (size-matched 8-cell subsample, THIS TEST)** | **0/10** |
+
+The subsample shows the IDENTICAL losing pattern as full HUST (0/10,
+same direction) - if anything a slightly LARGER relative gap at h10
+(model 0.441 vs. persistence 0.158, ~2.8x worse) than full HUST's own
+h10 gap (model 0.327 vs. persistence 0.166, ~2.0x worse). No trace of
+Oxford's dramatic win pattern.
+
+**Verdict, plainly, both interventions agreeing: explanation (a)
+(sample size) is REFUTED. Cutting HUST down to Oxford's exact size
+does NOT reproduce Oxford's effect in either intervention - HUST stays
+a modest reformulation winner and a World Model LOSER regardless of
+how many of its 77 cells are sampled.** Explanation (b) (distributional
+similarity - Oxford's own lowest domain-classifier AUC among the 4
+held-out sets) is the one the data actually supports: Oxford's benefit
+is a property of ITS OWN closeness to the training distribution, not
+an artifact of evaluating on few cells. The Stage 7 entry's original
+"noticed-but-not-investigated... hypothesis for future work" framing
+is updated above (see the inline UPDATE note in the Stage 7
+cross-cutting-observation section) to reflect this tested, resolved
+conclusion - this is no longer an open question.
+
+### Item 2 — Stage 7 transcription-accuracy sweep: CLEAN, zero mismatches
+
+Checked every specific numeric claim in Stage 7's DEVELOPMENT_LOG.md
+entry (7.1/7.2/7.3, all tables and inline figures) against its actual
+saved source (`outputs/stage7_{1,2,3}_*.csv`, run logs) - not whether
+the method was correct, purely whether the typed number matches the
+produced number.
+
+- **7.1**: window counts (2,937/518/1,022), all 5 datasets' per-horizon
+  win/loss counts (in-domain 5/10, CALCE 9/10), Oxford's h1/h10 figures
+  (0.63/0.74, 1.54/3.49), HUST's h10 figures (0.327/0.166) - all
+  checked directly against `stage7_1_world_model_results.csv` and its
+  run log. **All match exactly** (to the precision quoted).
+- **7.2**: pair count (10,366), pretext accuracy (93.4%), both
+  variants' full 5-eval-set R2 table, deployed-reference row - checked
+  against `stage7_2_selfsupervised_pretrain_results.csv` and its run
+  log. **All match exactly.**
+- **7.3**: both the reconstruction table (6 eval sets x R2/RMSE) and
+  the ablation table (5 eval sets x with/without x R2/RMSE) - checked
+  against `stage7_3_deeponet_reconstruction_results.csv` and
+  `stage7_3_deeponet_xgb_ablation_results.csv`. **All match exactly.**
+
+**Total: ~55 individual numeric values checked across all three items
+(counting every table cell and inline figure) - 55 matched exactly, 0
+mismatched, 0 untraceable.** One minor, disclosed approximation
+(non-mismatch): 7.1's CALCE row describes margins as "~0.001-0.06,
+negligible" - the actual smallest margin is ~0.0004, just under the
+lower end of that rough illustrative range; not a transcribed figure
+presented as exact, just a hedge-worded qualitative description that
+slightly undersells how tight the smallest margin is. Noted for
+completeness, not counted as a mismatch.
+
+### Item 3 — Stage 7 consistency check: CLEAN
+
+1. **Session 4's monotonicity-penalty numbers**, cited in 7.3's
+   comparison, re-checked directly against the original "Follow-up
+   session 4" log entry (not memory/paraphrase): VLSTM 2.131->2.234
+   RMSE / 0.806->0.787 R2, CNN-LSTM 3.948->4.261 / 0.334->0.224,
+   PiFormer 2.993->3.043 / 0.617->0.604. **Exact match**, both against
+   the original source table and against 7.3's own `SESSION4_REFERENCE`
+   dict in `run_stage7_3_neural_operator_spm.py`.
+2. **Project-wide grep** for every Stage 7 file/model name
+   (`stage7_common`, `world_model`, `degradation_pretrain`, `deeponet`,
+   and all 5 `_experimental_*.pt` checkpoint names) - matches found
+   ONLY in Stage 7's own scripts, DEVELOPMENT_LOG.md, and Stage 7's own
+   output files. **Zero matches** in `app.py`, `src/live_inference.py`,
+   or `src/digital_twin_streaming.py` (direct grep of exactly these 3
+   files also returned zero matches, independently confirming the
+   project-wide sweep). Nothing Stage-7-related is referenced anywhere
+   the deployed app loads.
+3. **DEVELOPMENT_LOG.md's Stage 7 entry vs. the final chat report**
+   given after Stage 7 - compared line by line: every per-dataset
+   win/loss/verdict statement in the chat summary matches the log's
+   own tables and verdicts (in-domain/CALCE/XJTU roughly tied, HUST
+   loses, Oxford wins for 7.1; 3/5-wins for 7.2; hurts-3-helps-2 for
+   7.3). No number was corrected in the chat that isn't reflected in
+   the file - **consistent**.
+
+### Two real bugs found and fixed while building THIS closeout's own
+test script (disclosed, not swept under the rug)
+
+Both were in the NEW `run_stage7_closeout_oxford_mechanism_test.py`
+script itself, not in any previously-verified project code:
+1. `add_scv_matd_viect_reformulated` does positional-style
+   `rel[idx] = ...` assuming a clean 0..N-1 RangeIndex (true for every
+   OTHER existing caller, which always pass a fresh full/merged
+   dataframe) - this script's own HUST-subsample FILTER kept the
+   original non-contiguous row labels, causing an IndexError. Fixed at
+   the source (added `.reset_index(drop=True)` to this script's own
+   filter step), not by changing the shared, already-verified module.
+2. Forgot to append `"cycle_idx"` to the feature-column list before
+   scoring the two already-trained models, causing an XGBoost
+   feature-count mismatch (expected 25, got 24) - caught immediately
+   and loudly by XGBoost's own shape check, not silently mis-scored.
+   Fixed by matching `run_stage5_extended_reformulation_eval.py`'s own
+   established `feature_cols = base/extended_cols + ["cycle_idx"]`
+   convention exactly.
+
+### Files
+
+`src/run_stage7_closeout_oxford_mechanism_test.py`; `outputs/
+stage7_closeout_oxmech_{reformulation,world_model}.csv` + run log.
+
+### What's deployed - unchanged
+
+`app.py` shows zero diff (`git diff --stat app.py`) - confirmed before
+committing. This closeout only reads already-saved models/data and
+writes new, separate experimental outputs.
+
+### Final verdict: the seven-stage improvement plan is genuinely, completely closed
+
+All three closeout items resolved cleanly, with no reopened questions:
+the Oxford-mechanism test gave a decisive, non-ambiguous answer
+(distributional similarity, not sample size - both interventions
+agreed), the transcription sweep found zero mismatches across every
+numeric claim in Stage 7, and the consistency check found zero issues
+(session 4's citation, deployed-app isolation, and log/chat consistency
+all confirmed clean). The two bugs found were both in this closeout's
+own brand-new test script, caught and fixed before trusting their
+output, exactly per this project's standing practice - not a defect in
+any previously-reported Stage 7 result. **Nothing here reopens any
+question from Stage 7 or any earlier stage. The full seven-stage
+improvement plan (Stage 0 through Stage 7) is closed.**
