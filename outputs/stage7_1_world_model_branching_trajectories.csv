@@ -1,0 +1,206 @@
+battery_id,rel_cycle,soh,series,trajectory_id
+b4c38,-9,98.89461517333984,observed history,-1
+b4c38,-8,98.88716125488281,observed history,-1
+b4c38,-7,98.88795471191406,observed history,-1
+b4c38,-6,98.8892822265625,observed history,-1
+b4c38,-5,98.88997650146484,observed history,-1
+b4c38,-4,98.88308715820312,observed history,-1
+b4c38,-3,98.88534545898438,observed history,-1
+b4c38,-2,98.87698364257812,observed history,-1
+b4c38,-1,98.86766052246094,observed history,-1
+b4c38,0,98.87409210205078,observed history,-1
+b4c38,1,98.86078643798828,"true future (for comparison, not used by the model)",-1
+b4c38,2,98.86529541015625,"true future (for comparison, not used by the model)",-1
+b4c38,3,98.87281036376953,"true future (for comparison, not used by the model)",-1
+b4c38,4,98.85897064208984,"true future (for comparison, not used by the model)",-1
+b4c38,5,98.8622055053711,"true future (for comparison, not used by the model)",-1
+b4c38,6,98.86116790771484,"true future (for comparison, not used by the model)",-1
+b4c38,7,98.85786437988281,"true future (for comparison, not used by the model)",-1
+b4c38,8,98.85128021240234,"true future (for comparison, not used by the model)",-1
+b4c38,9,98.83857727050781,"true future (for comparison, not used by the model)",-1
+b4c38,10,98.83586120605469,"true future (for comparison, not used by the model)",-1
+b4c38,11,98.83206939697266,"true future (for comparison, not used by the model)",-1
+b4c38,12,98.81446075439453,"true future (for comparison, not used by the model)",-1
+b4c38,13,98.81596374511719,"true future (for comparison, not used by the model)",-1
+b4c38,14,98.80062866210938,"true future (for comparison, not used by the model)",-1
+b4c38,15,98.79483795166016,"true future (for comparison, not used by the model)",-1
+b4c38,1,98.86067199707031,forecast branch 1,0
+b4c38,2,98.85501098632812,forecast branch 1,0
+b4c38,3,98.85652923583984,forecast branch 1,0
+b4c38,4,98.85552215576172,forecast branch 1,0
+b4c38,5,98.84996032714844,forecast branch 1,0
+b4c38,6,98.84101867675781,forecast branch 1,0
+b4c38,7,98.83003997802734,forecast branch 1,0
+b4c38,8,98.81759643554688,forecast branch 1,0
+b4c38,9,98.8021240234375,forecast branch 1,0
+b4c38,10,98.78194427490234,forecast branch 1,0
+b4c38,11,98.75113677978516,forecast branch 1,0
+b4c38,12,98.70321655273438,forecast branch 1,0
+b4c38,13,98.63842010498047,forecast branch 1,0
+b4c38,14,98.55889129638672,forecast branch 1,0
+b4c38,15,98.46651458740234,forecast branch 1,0
+b4c38,1,98.84613037109375,forecast branch 2,1
+b4c38,2,98.84278869628906,forecast branch 2,1
+b4c38,3,98.83687591552734,forecast branch 2,1
+b4c38,4,98.82466125488281,forecast branch 2,1
+b4c38,5,98.80940246582031,forecast branch 2,1
+b4c38,6,98.79324340820312,forecast branch 2,1
+b4c38,7,98.77588653564453,forecast branch 2,1
+b4c38,8,98.75654602050781,forecast branch 2,1
+b4c38,9,98.73338317871094,forecast branch 2,1
+b4c38,10,98.69888305664062,forecast branch 2,1
+b4c38,11,98.64788055419922,forecast branch 2,1
+b4c38,12,98.58056640625,forecast branch 2,1
+b4c38,13,98.49893951416016,forecast branch 2,1
+b4c38,14,98.40479278564453,forecast branch 2,1
+b4c38,15,98.29974365234375,forecast branch 2,1
+b4c38,1,98.84475708007812,forecast branch 3,2
+b4c38,2,98.83597564697266,forecast branch 3,2
+b4c38,3,98.83160400390625,forecast branch 3,2
+b4c38,4,98.82225799560547,forecast branch 3,2
+b4c38,5,98.8091049194336,forecast branch 3,2
+b4c38,6,98.79387664794922,forecast branch 3,2
+b4c38,7,98.77729797363281,forecast branch 3,2
+b4c38,8,98.75875091552734,forecast branch 3,2
+b4c38,9,98.73788452148438,forecast branch 3,2
+b4c38,10,98.71125793457031,forecast branch 3,2
+b4c38,11,98.66938781738281,forecast branch 3,2
+b4c38,12,98.6103515625,forecast branch 3,2
+b4c38,13,98.53585052490234,forecast branch 3,2
+b4c38,14,98.44783782958984,forecast branch 3,2
+b4c38,15,98.34806060791016,forecast branch 3,2
+b4c38,1,98.83879852294922,forecast branch 4,3
+b4c38,2,98.81948852539062,forecast branch 4,3
+b4c38,3,98.814208984375,forecast branch 4,3
+b4c38,4,98.81210327148438,forecast branch 4,3
+b4c38,5,98.8058853149414,forecast branch 4,3
+b4c38,6,98.79644012451172,forecast branch 4,3
+b4c38,7,98.78498840332031,forecast branch 4,3
+b4c38,8,98.77237701416016,forecast branch 4,3
+b4c38,9,98.75827026367188,forecast branch 4,3
+b4c38,10,98.74053192138672,forecast branch 4,3
+b4c38,11,98.71598052978516,forecast branch 4,3
+b4c38,12,98.67524719238281,forecast branch 4,3
+b4c38,13,98.61697387695312,forecast branch 4,3
+b4c38,14,98.54316711425781,forecast branch 4,3
+b4c38,15,98.45580291748047,forecast branch 4,3
+b4c38,1,98.84696960449219,forecast branch 5,4
+b4c38,2,98.83403778076172,forecast branch 5,4
+b4c38,3,98.82539367675781,forecast branch 5,4
+b4c38,4,98.81856536865234,forecast branch 5,4
+b4c38,5,98.80915832519531,forecast branch 5,4
+b4c38,6,98.79769897460938,forecast branch 5,4
+b4c38,7,98.78479766845703,forecast branch 5,4
+b4c38,8,98.77112579345703,forecast branch 5,4
+b4c38,9,98.75617218017578,forecast branch 5,4
+b4c38,10,98.73821258544922,forecast branch 5,4
+b4c38,11,98.71566009521484,forecast branch 5,4
+b4c38,12,98.6794662475586,forecast branch 5,4
+b4c38,13,98.62570190429688,forecast branch 5,4
+b4c38,14,98.5557861328125,forecast branch 5,4
+b4c38,15,98.47178649902344,forecast branch 5,4
+b4c38,1,98.849365234375,forecast branch 6,5
+b4c38,2,98.83820343017578,forecast branch 6,5
+b4c38,3,98.83499908447266,forecast branch 6,5
+b4c38,4,98.83277893066406,forecast branch 6,5
+b4c38,5,98.82777404785156,forecast branch 6,5
+b4c38,6,98.82007598876953,forecast branch 6,5
+b4c38,7,98.81000518798828,forecast branch 6,5
+b4c38,8,98.79834747314453,forecast branch 6,5
+b4c38,9,98.78359985351562,forecast branch 6,5
+b4c38,10,98.76426696777344,forecast branch 6,5
+b4c38,11,98.73394012451172,forecast branch 6,5
+b4c38,12,98.68624114990234,forecast branch 6,5
+b4c38,13,98.62155151367188,forecast branch 6,5
+b4c38,14,98.54206848144531,forecast branch 6,5
+b4c38,15,98.44970703125,forecast branch 6,5
+b4c38,1,98.82495880126953,forecast branch 7,6
+b4c38,2,98.8100814819336,forecast branch 7,6
+b4c38,3,98.80902862548828,forecast branch 7,6
+b4c38,4,98.80935668945312,forecast branch 7,6
+b4c38,5,98.80442810058594,forecast branch 7,6
+b4c38,6,98.79570770263672,forecast branch 7,6
+b4c38,7,98.78466796875,forecast branch 7,6
+b4c38,8,98.77037048339844,forecast branch 7,6
+b4c38,9,98.75164031982422,forecast branch 7,6
+b4c38,10,98.72312927246094,forecast branch 7,6
+b4c38,11,98.67813110351562,forecast branch 7,6
+b4c38,12,98.6160888671875,forecast branch 7,6
+b4c38,13,98.5390853881836,forecast branch 7,6
+b4c38,14,98.44898223876953,forecast branch 7,6
+b4c38,15,98.34745788574219,forecast branch 7,6
+b4c38,1,98.86219787597656,forecast branch 8,7
+b4c38,2,98.85801696777344,forecast branch 8,7
+b4c38,3,98.85759735107422,forecast branch 8,7
+b4c38,4,98.85578155517578,forecast branch 8,7
+b4c38,5,98.84833526611328,forecast branch 8,7
+b4c38,6,98.83783721923828,forecast branch 8,7
+b4c38,7,98.82571411132812,forecast branch 8,7
+b4c38,8,98.81201171875,forecast branch 8,7
+b4c38,9,98.7950439453125,forecast branch 8,7
+b4c38,10,98.77278900146484,forecast branch 8,7
+b4c38,11,98.7359619140625,forecast branch 8,7
+b4c38,12,98.68158721923828,forecast branch 8,7
+b4c38,13,98.6112289428711,forecast branch 8,7
+b4c38,14,98.52690124511719,forecast branch 8,7
+b4c38,15,98.43038177490234,forecast branch 8,7
+b4c38,1,98.86557006835938,forecast branch 9,8
+b4c38,2,98.86491394042969,forecast branch 9,8
+b4c38,3,98.8727035522461,forecast branch 9,8
+b4c38,4,98.87102508544922,forecast branch 9,8
+b4c38,5,98.86270141601562,forecast branch 9,8
+b4c38,6,98.85103607177734,forecast branch 9,8
+b4c38,7,98.83763885498047,forecast branch 9,8
+b4c38,8,98.8217544555664,forecast branch 9,8
+b4c38,9,98.80168914794922,forecast branch 9,8
+b4c38,10,98.7729263305664,forecast branch 9,8
+b4c38,11,98.7280044555664,forecast branch 9,8
+b4c38,12,98.66610717773438,forecast branch 9,8
+b4c38,13,98.58927917480469,forecast branch 9,8
+b4c38,14,98.4993667602539,forecast branch 9,8
+b4c38,15,98.39803314208984,forecast branch 9,8
+b4c38,1,98.8543701171875,forecast branch 10,9
+b4c38,2,98.85198974609375,forecast branch 10,9
+b4c38,3,98.85446166992188,forecast branch 10,9
+b4c38,4,98.84954833984375,forecast branch 10,9
+b4c38,5,98.83978271484375,forecast branch 10,9
+b4c38,6,98.82780456542969,forecast branch 10,9
+b4c38,7,98.81468963623047,forecast branch 10,9
+b4c38,8,98.79939270019531,forecast branch 10,9
+b4c38,9,98.77962493896484,forecast branch 10,9
+b4c38,10,98.74893951416016,forecast branch 10,9
+b4c38,11,98.7018051147461,forecast branch 10,9
+b4c38,12,98.6378402709961,forecast branch 10,9
+b4c38,13,98.55913543701172,forecast branch 10,9
+b4c38,14,98.46754455566406,forecast branch 10,9
+b4c38,15,98.36473083496094,forecast branch 10,9
+b4c38,1,98.86473846435547,forecast branch 11,10
+b4c38,2,98.86503601074219,forecast branch 11,10
+b4c38,3,98.8678970336914,forecast branch 11,10
+b4c38,4,98.8656997680664,forecast branch 11,10
+b4c38,5,98.85781860351562,forecast branch 11,10
+b4c38,6,98.84648132324219,forecast branch 11,10
+b4c38,7,98.83245086669922,forecast branch 11,10
+b4c38,8,98.81514739990234,forecast branch 11,10
+b4c38,9,98.7929458618164,forecast branch 11,10
+b4c38,10,98.75804138183594,forecast branch 11,10
+b4c38,11,98.70675659179688,forecast branch 11,10
+b4c38,12,98.63924407958984,forecast branch 11,10
+b4c38,13,98.5574722290039,forecast branch 11,10
+b4c38,14,98.46321105957031,forecast branch 11,10
+b4c38,15,98.35807037353516,forecast branch 11,10
+b4c38,1,98.83527374267578,forecast branch 12,11
+b4c38,2,98.82506561279297,forecast branch 12,11
+b4c38,3,98.82514953613281,forecast branch 12,11
+b4c38,4,98.82347106933594,forecast branch 12,11
+b4c38,5,98.81767272949219,forecast branch 12,11
+b4c38,6,98.8082046508789,forecast branch 12,11
+b4c38,7,98.79654693603516,forecast branch 12,11
+b4c38,8,98.78308868408203,forecast branch 12,11
+b4c38,9,98.76632690429688,forecast branch 12,11
+b4c38,10,98.74481201171875,forecast branch 12,11
+b4c38,11,98.71023559570312,forecast branch 12,11
+b4c38,12,98.65850067138672,forecast branch 12,11
+b4c38,13,98.59050750732422,forecast branch 12,11
+b4c38,14,98.50826263427734,forecast branch 12,11
+b4c38,15,98.41357421875,forecast branch 12,11
