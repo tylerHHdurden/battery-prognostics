@@ -72,7 +72,7 @@ OUT_DIR = ROOT / "outputs"
 NASA_CELLS = ["B0005", "B0006", "B0007", "B0018"]
 CALCE_CELLS = ["CS2_35", "CS2_36", "CS2_37"]
 
-st.set_page_config(page_title="Battery Digital Twin", layout="wide")
+st.set_page_config(page_title="CellSense", page_icon="🔋", layout="wide")
 
 # --------------------------------------------------------------------------
 # Priority 4 visual pass (session 31, time-boxed): app-wide font pairing +
@@ -1540,6 +1540,11 @@ def render_full_results_archive_tab():
                    "producing an artificially tiny initial half-width.")
         _safe_table(PRED_DIR / "streaming_dt_NASA_B0018.csv", "Per-cycle streaming record, NASA/B0018.", head=15)
         _safe_table(PRED_DIR / "streaming_dt_MIT_b3c35.csv", "Per-cycle streaming record, MIT/b3c35.", head=15)
+        st.info("ℹ️ These are the ORIGINAL results from the linear (SGD) online corrector. "
+                "The live 🌊 Streaming Digital Twin tab now uses a newer, non-linear corrector "
+                "that reaches 2.86pp on B0018 (vs. 4.43pp here) - a real upgrade on the harder "
+                "case, though the simpler linear corrector still wins on the easier b3c35 case. "
+                "See the Stage 6 section below for the full head-to-head comparison.")
 
     with st.expander(f"{_section_num(31)} Adaptive Conformal Inference (ACI)"):
         st.markdown(f"Replaces session 28's fixed-alpha sliding-window conformal mechanism "
@@ -2258,45 +2263,25 @@ def _showcase_trend(seen: pd.DataFrame) -> go.Figure:
 # browser page load - acceptable for a decorative flourish, not
 # pretended to be more sophisticated session-state tracking than it is.
 def render_headline_numbers():
+    # FIX (this project's own recurring "shows 0" bug): this used to be a
+    # custom HTML/JS count-up animation that STARTS every number at the
+    # literal text "0" and relies on requestAnimationFrame executing in
+    # the visitor's browser to ever change it - any environment where
+    # that script doesn't run (a stricter CSP/iframe sandbox, a slow
+    # connection, script-blocking) leaves every card frozen at "0"
+    # forever, with no fallback. Replaced with plain st.metric() - the
+    # SAME reliable, no-JS-dependency widget every other real number in
+    # this app already uses successfully. Less flashy, always correct.
     stats = [
-        ("0.917", "Ensemble R² (fusion XGBoost)"),
-        ("52", "x faster - lean vs. full pipeline"),
-        ("95.6", "% → 6.1% CALCE conformal coverage collapse"),
-        ("4.641", "→ 4.426 pp Digital Twin B0018 MAE (raw→corrected)"),
+        ("Ensemble R²", "0.917", None),
+        ("Lean pipeline speedup", "52x", "faster than the full 5-branch ensemble"),
+        ("CALCE conformal coverage", "6.1%", "of a 90% target - a known, disclosed gap"),
+        ("B0018 MAE, online-corrected", "2.86 pp", "from 4.64 pp raw - using the current River-based corrector; "
+         "the earlier linear corrector reached 4.43 pp on this same battery"),
     ]
-    cards_html = ""
-    for i, (value, label) in enumerate(stats):
-        cards_html += f'''
-        <div style="flex:1; min-width:150px; background:rgba(33,102,172,0.06);
-                    border:1px solid rgba(33,102,172,0.2); border-radius:10px;
-                    padding:0.9rem 1rem; text-align:center;">
-          <div class="countup-number" data-target="{value}" id="countup-{i}"
-               style="font-size:1.8rem; font-weight:700; color:#2166ac;">0</div>
-          <div style="font-size:0.78rem; color:#666; margin-top:0.2rem;">{label}</div>
-        </div>'''
-    st.markdown(
-        f'<div style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:1rem;">'
-        f'{cards_html}</div>'
-        f'''<script>
-        (function() {{
-            document.querySelectorAll(".countup-number").forEach(function(el) {{
-                var target = parseFloat(el.getAttribute("data-target"));
-                if (isNaN(target)) return;
-                var decimals = (el.getAttribute("data-target").split(".")[1] || "").length;
-                var duration = 1100, start = null;
-                function step(ts) {{
-                    if (!start) start = ts;
-                    var progress = Math.min((ts - start) / duration, 1);
-                    var eased = 1 - Math.pow(1 - progress, 3);
-                    el.textContent = (target * eased).toFixed(decimals);
-                    if (progress < 1) requestAnimationFrame(step);
-                }}
-                requestAnimationFrame(step);
-            }});
-        }})();
-        </script>''',
-        unsafe_allow_html=True,
-    )
+    cols = st.columns(len(stats))
+    for col, (label, value, help_text) in zip(cols, stats):
+        col.metric(label, value, help=help_text)
 
 
 def render_showcase_tab():
@@ -2545,16 +2530,10 @@ def render_streaming_twin_tab(res: dict):
 
 
 def main():
-    st.title("🔋 Battery Digital Twin Dashboard")
-    _hash, _date, _subject = get_last_commit_info()
-    if _hash != "unknown":
-        st.markdown(
-            f'<span class="last-updated-badge">🕒 Last updated {_date} '
-            f'(commit <code>{_hash}</code>: {_subject})</span>',
-            unsafe_allow_html=True,
-        )
-    st.caption("Fusion-enabled ensemble (XGBoost+fusion / Stacking-Ridge+fusion) for SOH, "
-               "joint-adaptive model for RUL.")
+    st.title("🔋 CellSense")
+    st.caption("Battery health, forecasted and explained - live State-of-Health and "
+               "Remaining-Useful-Life predictions, with a plain-language reason for every "
+               "number.")
     render_about_section()
 
     # Part D #13: shareable URL state. Read once at the top so selectbox/
