@@ -28,6 +28,8 @@ explicit, reportable drift events - the two serve different purposes:
 the tree's internal ADWIN adapts model structure; the standalone one
 reports human-readable drift flags).
 """
+
+from __future__ import annotations
 import numpy as np
 from river import tree, drift
 

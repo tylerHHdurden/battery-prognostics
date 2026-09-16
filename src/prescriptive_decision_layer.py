@@ -13,6 +13,8 @@ produces; this layer only combines them transparently.
 NOT deployed to the live app in this stage - implemented and verified
 only, per instruction.
 """
+
+from __future__ import annotations
 from dataclasses import dataclass, field
 
 RECOMMENDATIONS = [

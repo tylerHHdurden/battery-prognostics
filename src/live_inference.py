@@ -40,6 +40,8 @@ built on top of it - never needs to reload the full NASA+MIT battery
 set (a multi-minute operation) to answer a single prediction request.
 """
 
+from __future__ import annotations
+
 import json
 import pickle
 import sys

@@ -17,6 +17,8 @@ charge, I < 0 during discharge. This matches both the NASA field names
 sign-flipping is needed for any of the three datasets.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 import h5py

@@ -64,6 +64,8 @@ only known once that cycle actually finishes) - predict-then-reveal-
 then-update, in that order, every step.
 """
 
+from __future__ import annotations
+
 import sys
 from pathlib import Path
 

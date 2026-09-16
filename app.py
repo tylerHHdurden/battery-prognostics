@@ -34,6 +34,8 @@ scoped that decision; session 28 revisits it as a new, separate, opt-in
 mode rather than changing the existing one-shot tabs' behavior).
 """
 
+from __future__ import annotations
+
 import ast
 import json
 import subprocess

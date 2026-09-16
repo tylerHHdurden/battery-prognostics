@@ -27,6 +27,8 @@ std, so a single extreme battery can't inflate its own denominator and
 mask itself as within +-3 sigma).
 """
 
+from __future__ import annotations
+
 import json
 import sys
 from pathlib import Path

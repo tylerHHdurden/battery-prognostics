@@ -28,6 +28,8 @@ still checks the `NO_API_KEY`/`API_ERROR` prefix on `report_text` to
 decide whether to show the structured-data fallback.
 """
 
+from __future__ import annotations
+
 import json
 import os
 import sys

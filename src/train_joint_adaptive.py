@@ -34,6 +34,8 @@ is taking too long, use fewer epochs, log it" allowance, since this is a
 here, not hidden.
 """
 
+from __future__ import annotations
+
 import json
 import sys
 import time

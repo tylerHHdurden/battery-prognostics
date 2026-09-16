@@ -49,6 +49,8 @@ Inference: y_hat = alpha*f_theta(x) + (1-alpha)*median_k[g_phi(x-x_k)+y_k]
     over K sampled reference (cycle, SOH) pairs from the training pool.
 """
 
+from __future__ import annotations
+
 import numpy as np
 import torch
 import torch.nn as nn
