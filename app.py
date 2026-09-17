@@ -223,18 +223,79 @@ h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
     color: var(--ink-soft) !important;
 }
 
-/* Expanders (the Full Results Archive's own building block) - a
-   slightly raised card look instead of a flat default list item. */
+/* Expanders (the Full Results Archive's own building block) - a real
+   raised card with a hover lift, not a flat default list item.
+   FIX (Priority 7, "flat, no depth, no motion" - not addressed by the
+   first styling pass at all): a single soft ambient shadow plus a
+   tighter, darker "contact" shadow underneath it reads as genuine
+   elevation (the way real UI shadows are layered) rather than a
+   generic 1px smudge; the hover state gives every one of the archive's
+   88 sections a small, deliberate lift + border-color shift so the
+   page feels responsive to the cursor, not static. */
 [data-testid="stExpander"] {
     border: 1px solid var(--border-soft) !important;
-    border-radius: 10px !important;
-    box-shadow: 0 1px 3px rgba(26,26,46,0.06);
+    border-radius: 12px !important;
+    box-shadow: 0 1px 2px rgba(26,26,46,0.04), 0 4px 10px rgba(26,26,46,0.05) !important;
+    transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+    margin-bottom: 0.6rem;
+}
+[data-testid="stExpander"]:hover {
+    box-shadow: 0 2px 4px rgba(26,26,46,0.06), 0 8px 20px rgba(26,26,46,0.09) !important;
+    border-color: rgba(33,102,172,0.35) !important;
+    transform: translateY(-1px);
 }
 
-/* Headings get a touch more breathing room - default Streamlit spacing
-   is cramped enough to read as unstyled. */
-h1, h2, h3 { margin-top: 0.6em; }
-.stMarkdown p { line-height: 1.55; }
+/* st.metric cards get the same real-elevation + hover treatment as the
+   expanders above, for one consistent "card" language site-wide. */
+[data-testid="stMetric"] {
+    box-shadow: 0 1px 2px rgba(26,26,46,0.04), 0 3px 8px rgba(26,26,46,0.05);
+    transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+[data-testid="stMetric"]:hover {
+    box-shadow: 0 2px 4px rgba(26,26,46,0.06), 0 6px 16px rgba(26,26,46,0.08);
+    transform: translateY(-1px);
+}
+
+/* Real typographic hierarchy - default Streamlit renders every heading
+   level at similar weight/tracking. Distinct size/weight/letter-
+   spacing steps per level, plus generous, consistent vertical rhythm
+   (not just "a bit more margin"), is what actually reads as designed
+   rather than accidental spacing. */
+h1 { font-size: 2.1rem !important; letter-spacing: -0.01em; margin-top: 0.2em !important; }
+h2 { font-size: 1.5rem !important; letter-spacing: -0.005em; margin-top: 1.4em !important; margin-bottom: 0.5em !important; }
+h3 { font-size: 1.15rem !important; margin-top: 1.1em !important; margin-bottom: 0.4em !important; }
+.stMarkdown p { line-height: 1.6; color: var(--ink); }
+.stCaptionContainer, [data-testid="stCaptionContainer"] { line-height: 1.5; }
+
+/* st.dataframe tables - a real bordered card instead of a flush,
+   edge-to-edge default table. */
+[data-testid="stDataFrame"] {
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Selectboxes/sliders/text inputs - a consistent rounded, bordered
+   look (default Streamlit renders these with almost no visual
+   presence against the page). */
+[data-baseweb="select"] > div, .stTextInput input, .stNumberInput input {
+    border-radius: 8px !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+[data-baseweb="select"] > div:focus-within, .stTextInput input:focus, .stNumberInput input:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-light) !important;
+}
+
+/* Chat message bubbles - a real card each, not flush text, and using
+   the same elevation language as everything else. */
+[data-testid="stChatMessage"] {
+    border-radius: 12px;
+    border: 1px solid var(--border-soft);
+    box-shadow: 0 1px 2px rgba(26,26,46,0.04);
+    padding: 0.3rem 0.2rem;
+    margin-bottom: 0.4rem;
+}
 </style>
 """, unsafe_allow_html=True)
 
