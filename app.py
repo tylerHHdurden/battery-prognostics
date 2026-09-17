@@ -390,28 +390,54 @@ def soh_band(soh_pred: float) -> tuple[str, str, str]:
 _SOH_HEX = {"green": "#2e8b47", "orange": "#d99a1b", "red": "#c0392b"}
 
 
-def battery_icon_svg(soh_pct: float, width: int = 220, height: int = 100) -> str:
+def battery_icon_svg(soh_pct: float, width: int = 220, height: int = 110) -> str:
     """A real visual representation of the battery itself, not just a
-    number - a body + terminal nub, with an internal fill level and
-    color that directly mirror the current SOH, the way a fuel gauge
-    mirrors a tank level. Pure inline SVG (no JS, no animation-timing
-    dependency) - it just redraws correctly every time this function is
-    called with a new soh_pct, including on every iteration of the
-    Streaming Digital Twin's own per-cycle loop, which is what makes it
-    visibly change cycle by cycle during a replay."""
+    number in a box - a genuinely battery-shaped icon (thick dark
+    casing, a clearly proportioned terminal cap, internal cell
+    segments), with an internal fill level and color that directly
+    mirror the current SOH, the way a fuel gauge mirrors a tank level.
+
+    FIX (found by direct live screenshot - the first version read as
+    "a rounded rectangle with a tiny bump", not recognizably a
+    battery): the terminal cap is now a real fraction of the body's
+    OWN height (not a small fixed-size nub that shrinks into
+    invisibility), the casing has a proper thick dark border + rounded
+    corners matching the universally-recognized phone/device battery
+    icon convention, and 3 subtle internal divider lines suggest real
+    battery cells rather than a plain progress bar.
+
+    Pure inline SVG (no JS, no animation-timing dependency) - it just
+    redraws correctly every time this function is called with a new
+    soh_pct, including on every iteration of the Streaming Digital
+    Twin's own per-cycle loop, which is what makes it visibly change
+    cycle by cycle during a replay."""
     soh_pct = max(0.0, min(100.0, soh_pct))
     _, color, label = soh_band(soh_pct)
     hexcolor = _SOH_HEX[color]
-    body_x, body_y = 8, 8
-    body_w, body_h = width - 28, height - 16
-    fill_w = max(2, (body_w - 8) * soh_pct / 100.0)
+    cap_w = max(10, int(width * 0.06))
+    body_x, body_y = 6, 6
+    body_w, body_h = width - cap_w - 14, height - 12
+    inner_pad = 6
+    inner_x, inner_y = body_x + inner_pad, body_y + inner_pad
+    inner_w, inner_h = body_w - 2 * inner_pad, body_h - 2 * inner_pad
+    fill_w = max(3, inner_w * soh_pct / 100.0)
+    cap_h = body_h * 0.42
+    cap_y = body_y + (body_h - cap_h) / 2
+    dividers = "".join(
+        f'<line x1="{inner_x + inner_w * frac:.1f}" y1="{body_y+3}" '
+        f'x2="{inner_x + inner_w * frac:.1f}" y2="{body_y+body_h-3}" '
+        f'stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>'
+        for frac in (0.25, 0.5, 0.75)
+    )
     return f'''
     <svg width="{width}" height="{height}" viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">
-      <rect x="{body_x}" y="{body_y}" width="{body_w}" height="{body_h}" rx="10"
-            fill="none" stroke="#888" stroke-width="4"/>
-      <rect x="{body_x + width - 24}" y="{body_y + body_h/2 - 14}" width="14" height="28" rx="3" fill="#888"/>
-      <rect x="{body_x + 4}" y="{body_y + 4}" width="{fill_w:.1f}" height="{body_h - 8}" rx="6"
+      <rect x="{body_x}" y="{body_y}" width="{body_w}" height="{body_h}" rx="12"
+            fill="#f2f3f6" stroke="#2b2f38" stroke-width="5"/>
+      <rect x="{body_x + width - cap_w - 14}" y="{cap_y:.1f}" width="{cap_w}" height="{cap_h:.1f}" rx="4"
+            fill="#2b2f38"/>
+      <rect x="{inner_x}" y="{inner_y}" width="{fill_w:.1f}" height="{inner_h}" rx="6"
             fill="{hexcolor}" style="transition: width 0.6s ease, fill 0.6s ease;"/>
+      {dividers}
       <text x="{body_x + body_w/2}" y="{body_y + body_h/2 + 8}" text-anchor="middle"
             font-size="26" font-weight="700" font-family="sans-serif"
             fill="{'#ffffff' if soh_pct > 30 else '#1a1a2e'}">{soh_pct:.0f}%</text>
@@ -2124,59 +2150,10 @@ def render_full_results_archive_tab():
 
     with st.expander(f"{_section_num(40)} World Model: Forecasting a Future, Not Just a Point",
                       expanded=(_jump == "world_model")):
-        st.caption("A genuinely different question from every other model on this site: not "
-                   "\"what is this battery's SOH right now,\" but \"what will its SOH look like "
-                   "several cycles from now, and how uncertain is that forecast?\"")
-        st.markdown(
-            "Every other prediction on this site answers one question: given this battery's "
-            "current cycle, what is its SOH right now? The World Model answers a different "
-            "question: given a short window of recent cycles, what will this battery's SOH be "
-            "several cycles into the FUTURE - and does that forecast get appropriately less "
-            "certain the further out it looks?"
-        )
-        wm_traj_df = _load_world_model_trajectories()
-        if wm_traj_df is not None:
-            st.markdown("**Multiple plausible future paths, branching forward from a real "
-                        "battery's current cycle:**")
-            fig = _world_model_branching_figure(wm_traj_df)
-            st.plotly_chart(fig, width="stretch")
-            st.caption(
-                "Each thin line is one plausible future SOH trajectory, generated by running "
-                "the model's own forecasting step forward repeatedly with small amounts of "
-                "random perturbation in its internal state (the model itself does not produce "
-                "raw future battery curves - see the technical note below). The spread between "
-                "lines is a visual stand-in for forecast uncertainty: notice it widens the "
-                "further into the future the forecast reaches, which is the behavior a "
-                "trustworthy forecaster should show."
-            )
-        else:
-            st.warning("Trajectory data for this visualization was not found on this deploy "
-                       "(`outputs/stage7_1_world_model_branching_trajectories.csv`) - the "
-                       "honest-comparison numbers below are unaffected.")
-        st.markdown("**Does it actually forecast well? Compared plainly against doing nothing:**")
-        st.dataframe(pd.DataFrame([
-            {"dataset": "In-domain (held-out test batteries)", "result": "Roughly tied with a naive \"assume no change\" baseline"},
-            {"dataset": "CALCE", "result": "Roughly tied (tiny margins either way)"},
-            {"dataset": "Oxford", "result": "Clearly, increasingly WINS - by the 10th cycle forecast ahead, the naive baseline's error is more than double the model's"},
-            {"dataset": "HUST", "result": "Consistently LOSES, and the gap grows the further ahead it forecasts"},
-            {"dataset": "XJTU", "result": "Roughly tied (essentially a coin flip which does better at each horizon)"},
-        ]), hide_index=True, width="stretch")
-        st.error(
-            "**Reported plainly, not softened: this does not yet produce a generally useful "
-            "forecasting capability.** On 4 of 5 test sets, it is statistically indistinguishable "
-            "from, or worse than, simply assuming nothing changes. The one clear exception - "
-            "Oxford - is a genuine, substantial result, but a single dataset out of five is not "
-            "a basis for calling this ready to use."
-        )
-        st.caption(
-            "Technical note on the chart above: the underlying model forecasts SOH values, not "
-            "future raw battery curves - a genuinely different, much harder generative task that "
-            "was deliberately not attempted. The \"branching\" shown here comes from perturbing "
-            "the model's own internal forecasting state and re-running its forecast several "
-            "times from the same real starting point, a standard way to visualize a "
-            "deterministic model's own forecast uncertainty without needing to retrain it as a "
-            "genuinely stochastic one."
-        )
+        st.info("🔮 **This section now has its own dedicated tab** - see \"World Model\" in the "
+                "main tab bar, right next to the Streaming Digital Twin, for the full writeup "
+                "and the branching-trajectory visualization. Kept as a pointer here rather than "
+                "duplicated content.")
 
     with st.expander(f"{_section_num(41)} The Oxford Pattern: One Dataset, Four Independent Surprises",
                       expanded=(_jump == "oxford_pattern")):
@@ -2490,6 +2467,67 @@ _STREAM_TEST_BATTERIES = {
 }
 
 
+def render_world_model_tab():
+    """Priority 5 fix (found by direct live review): this content
+    existed and was accurate, but was only reachable by scrolling
+    through the Full Results Archive's 88 sections - now a real,
+    dedicated top-level tab, placed directly next to the Streaming
+    Digital Twin in the tab bar, framed explicitly as its companion."""
+    st.markdown("## 🔭 World Model")
+    st.info(
+        "**The companion to the Digital Twin**: the 🌊 Streaming Digital Twin tab shows what "
+        "**is** happening to a battery right now, cycle by cycle. This tab tries to answer a "
+        "genuinely different question: given a short window of recent cycles, what will this "
+        "battery's SOH look like several cycles into the **future** - and how uncertain is "
+        "that forecast?"
+    )
+    wm_traj_df = _load_world_model_trajectories()
+    if wm_traj_df is not None:
+        st.markdown("### Multiple plausible future paths")
+        st.caption("Branching forward from a real battery's current cycle - genuinely "
+                   "different from every other chart on this site, which show one predicted "
+                   "line against one true line.")
+        fig = _world_model_branching_figure(wm_traj_df)
+        st.plotly_chart(fig, width="stretch")
+        st.caption(
+            "Each thin line is one plausible future SOH trajectory, generated by running "
+            "the model's own forecasting step forward repeatedly with small amounts of "
+            "random perturbation in its internal state (the model itself does not produce "
+            "raw future battery curves - see the technical note below). The spread between "
+            "lines is a visual stand-in for forecast uncertainty: notice it widens the "
+            "further into the future the forecast reaches, which is the behavior a "
+            "trustworthy forecaster should show."
+        )
+    else:
+        st.warning("Trajectory data for this visualization was not found on this deploy - "
+                   "the honest-comparison numbers below are unaffected.")
+
+    st.markdown("### Does it actually forecast well?")
+    st.caption("Compared plainly against doing nothing - a naive \"assume no change\" baseline.")
+    st.dataframe(pd.DataFrame([
+        {"dataset": "In-domain (held-out test batteries)", "result": "Roughly tied with the naive baseline"},
+        {"dataset": "CALCE", "result": "Roughly tied (tiny margins either way)"},
+        {"dataset": "Oxford", "result": "Clearly, increasingly WINS - by the 10th cycle forecast ahead, the naive baseline's error is more than double the model's"},
+        {"dataset": "HUST", "result": "Consistently LOSES, and the gap grows the further ahead it forecasts"},
+        {"dataset": "XJTU", "result": "Roughly tied (essentially a coin flip which does better at each horizon)"},
+    ]), hide_index=True, width="stretch")
+    st.error(
+        "**Reported plainly, not softened: this does not yet produce a generally useful "
+        "forecasting capability.** On 4 of 5 test sets, it is statistically indistinguishable "
+        "from, or worse than, simply assuming nothing changes. The one clear exception - "
+        "Oxford - is a genuine, substantial result, but a single dataset out of five is not "
+        "a basis for calling this ready to use."
+    )
+    st.caption(
+        "Technical note: the underlying model forecasts SOH values, not future raw battery "
+        "curves - a genuinely different, much harder generative task that was deliberately "
+        "not attempted. The \"branching\" shown above comes from perturbing the model's own "
+        "internal forecasting state and re-running its forecast several times from the same "
+        "real starting point - a standard way to visualize a deterministic model's own "
+        "forecast uncertainty without needing to retrain it as a genuinely stochastic one."
+    )
+
+
 def render_streaming_twin_tab(res: dict):
     st.caption(
         "🔬 **Simulation-stage digital twin** - not live hardware. This replays an "
@@ -2711,19 +2749,19 @@ def render_streaming_twin_tab(res: dict):
             st.caption("No concept-drift events flagged by ADWIN during this replay.")
 
         st.markdown("---")
-        st.subheader("🔮 What might happen next?")
+        st.subheader("🔭 What might happen next?")
         st.markdown(
             "This Twin shows what **is** happening right now, cycle by cycle. Its companion, "
-            "the **World Model** (in the Full Results Archive's Stage 7 section), tries to "
-            "answer a different question: what **might** happen several cycles from now - a "
-            "genuine multi-step forecast, not just the next single point."
+            "the **🔭 World Model tab** (right next to this one), tries to answer a different "
+            "question: what **might** happen several cycles from now - a genuine multi-step "
+            "forecast, not just the next single point."
         )
         st.info(
             "**Reported honestly, not oversold**: against a naive \"assume nothing changes\" "
             "baseline, the World Model ties or loses on 4 of 5 test sets and wins clearly on "
-            "only 1 (Oxford) - it does not yet forecast reliably in general. See the Full "
-            "Results Archive's World Model section for the full comparison, including a "
-            "branching-future-trajectories visualization."
+            "only 1 (Oxford) - it does not yet forecast reliably in general. See the 🔭 World "
+            "Model tab for the full comparison, including a branching-future-trajectories "
+            "visualization."
         )
 
 
@@ -2913,9 +2951,9 @@ def main():
                     "not a real confidence guarantee, for this battery."
                 )
 
-    tab_showcase, tab_prediction, tab_explain, tab_report, tab_stream, tab_validation, tab_archive = st.tabs(
+    tab_showcase, tab_prediction, tab_explain, tab_report, tab_stream, tab_world_model, tab_validation, tab_archive = st.tabs(
         ["🎬 Showcase", "🔮 Prediction", "🔍 Explainability", "📝 Health Report",
-         "🌊 Streaming Digital Twin", "🧪 Model Validation", "📁 Full Results Archive"]
+         "🌊 Streaming Digital Twin", "🔭 World Model", "🧪 Model Validation", "📁 Full Results Archive"]
     )
     with tab_showcase:
         render_showcase_tab()
@@ -2938,6 +2976,8 @@ def main():
             render_health_report_tab(ctx, dataset, battery_id, cycles)
     with tab_stream:
         render_streaming_twin_tab(get_resources())
+    with tab_world_model:
+        render_world_model_tab()
     with tab_validation:
         render_evaluation_protocol_section()
         st.divider()
