@@ -11445,3 +11445,102 @@ corresponding `outputs/researchpass_group*.csv` result files, plus
 per-run logs and prediction-history CSVs where applicable. All
 `_experimental_*` checkpoint files saved under `models/` are exactly
 that - experimental, not referenced by `live_inference.py` or `app.py`.
+
+## Research pass 2: 5 more items (few-shot adaptation, DANN, PyBaMM physics pretraining, bagged-XGBoost diversity, statistical consolidation) - and a significant correction to the "deployed baseline" figure used throughout both passes
+
+Same governing rule as the first pass, unchanged: nothing gets promoted
+unless it clearly beats the current baseline on the SAME held-out
+evaluation protocol this project has always used.
+
+### IMPORTANT CORRECTION, surfaced by this pass's own item 5 and independently re-verified before being reported: the "DEPLOYED_REFERENCE" figures used throughout BOTH research passes were wrong for 3 of 5 eval sets
+
+`run_stage7_2_selfsupervised_pretrain.py`'s own `DEPLOYED_REFERENCE`
+dict (`in-domain=0.973, CALCE=0.740, Oxford=0.953, HUST=0.800,
+XJTU=-1.775`) - copied forward into nearly every comparison in both
+research passes as "the deployed model's own numbers" - is actually
+Stage 6.1's own already-disclosed-at-the-time citation of the Stage-5
+EXTENDED-reformulation experimental model's numbers
+(`models/_experimental_xgb_soh_fusion_extended_reformulation.json`),
+NOT the literally currently-deployed model. That model was never
+promoted specifically because it regressed XJTU (see Stage 5's own
+entry) - the caveat was disclosed there, but did not carry forward into
+later scripts that reused the dict as if it were "deployed."
+
+This pass's item 5 (statistical consolidation) re-scored the ACTUAL
+deployed model (`models/xgb_soh_fusion.json`) fresh, pure inference, on
+the same held-out rows, and the result was independently re-verified
+with a second, minimal, standalone script before being trusted:
+
+| Dataset | Figure used throughout both passes | **TRUE deployed model** (verified) |
+|---|---|---|
+| in-domain TEST | 0.973 | 0.974 (consistent) |
+| CALCE | 0.740 | **0.568** |
+| Oxford | 0.953 | **-2.694** |
+| HUST | 0.800 | **-0.152** |
+| XJTU | -1.775 | **-1.062** (true model is actually better here) |
+
+**Practical consequence for THIS pass**: item 4's own script printed its
+verdicts against the old, inflated dict (written before this discovery)
+- recomputed here against the true numbers, the verdict flips from
+1-win/4-loss to **3-win/2-loss** (see item 4 below). Items 2 and 3 in
+this pass already used the corrected numbers (written after the
+discovery). **Practical consequence for the FIRST pass**: not
+re-audited here (out of this pass's own scope, and a non-trivial
+amount of re-verification work) - flagged explicitly as a real,
+load-bearing open question for whoever next evaluates promotion
+candidates from that pass, since several "LOSS vs. deployed" verdicts
+there (particularly on Oxford/HUST/CALCE) were measured against the
+same inflated figure and may not hold against the true model.
+
+### Full 5-item results table
+
+| # | Item | Verdict | Key numbers | Actual time |
+|---|------|---------|--------------|-------------|
+| 1 | Few-shot test-time adaptation (recalibration + continued XGBoost training, K=5/10 cycles) | SPLIT (4 win / 4 loss of 8 dataset x K combos) | Continued-training beats zero-retrain on Oxford (R2: -3.05->0.43 at K=5, -3.91->-0.26 at K=10) and XJTU (-1.05->-0.79 at K=5, -1.04->-0.56 at K=10) - genuine recoveries where the baseline was badly negative. Loses on CALCE (0.56->0.33 at best) and HUST (-0.16->-1.39, actively worse). Affine recalibration (2-parameter fit on 5-10 points) was consistently much worse than baseline everywhere - too unstable at this sample size. | 10.5 min |
+| 2 | Domain-adversarial training (DANN, gradient-reversal layer) | LOSS (all 4 domains) | CALCE R2=-11.40, Oxford R2=-66.71, HUST R2=-19.45, XJTU R2=-15.09, all vs. the TRUE deployed baseline. A real bug (unstandardized features causing soh_mse to explode to ~1e11) was found and fixed (StandardScaler added) before trusting the result - the fixed, numerically-stable run is what's reported. Root cause of the loss itself (not the bug): domain-classifier accuracy stayed at 97-100% throughout training on every domain - the adversarial game never actually challenged the feature extractor, so gradient reversal never produced domain-invariant features; the model just overfit source-domain SOH instead. | 6.4 min (after the fix; ~13 min total including the buggy first attempt) |
+| 3 | PyBaMM SPM+SEI-aging physics-simulated contrastive pretraining | LOSS (net; 1 win of 5 vs. TRUE deployed) | PyBaMM installed cleanly and simulated fast (12 trajectories x 60 cycles in 16s total) - neither of the two disclosed risk scenarios (won't install / infeasible) materialized. In-domain R2=0.4773 (marginal loss vs. Stage 7.2's order-ranking 0.4930 and item 15's ECM-contrastive 0.4878 from the first pass). Vs. TRUE deployed: LOSS on in-domain/CALCE/HUST/XJTU, but a genuine WIN on Oxford (-1.094 vs. -2.694). Notably beats item 15's ECM-proxy pretraining on CALCE (-2.32 vs. -4.68) despite using genuinely simulated physics instead of a hand-perturbed approximation - a real, if modest, improvement from closing that disclosed scope gap. | 17.8 min (vs. 1-3 hr estimate - PyBaMM's speed was the single biggest positive surprise of this pass) |
+| 4 | Diversity-forced bagged XGBoost (8 members, bootstrapped rows + random HI-feature subsets) | **SPLIT (3 win / 2 loss vs. TRUE deployed - corrected, see above)** | Bagged-Ridge-stacked: in-domain R2=0.9713 (LOSS, 0.974), CALCE R2=0.3711 (LOSS, 0.568), Oxford R2=0.0215 (**WIN**, vs. -2.694), HUST R2=0.0477 (**WIN**, vs. -0.152), XJTU R2=-0.8449 (**WIN**, vs. -1.062). Caveat on the 3 wins: they beat a baseline that is itself badly broken on those 3 sets (deeply negative R2) - the bagged ensemble's own absolute performance there is mediocre (R2 0.02-0.05 on Oxford/HUST, barely above predicting the mean), not genuinely good. Still extends the "stacking does nothing" finding: diversity within XGBoost alone doesn't produce a materially better model than the standalone deployed one in-domain, where both are already strong. | 9.3 min |
+| 5 | Statistical consolidation (paired battery-bootstrap + Wilcoxon signed-rank, 3 head-to-head comparisons) | Mixed, see table above for the headline finding | Ensemble vs. standalone XGBoost (expanded pool): R2 delta NOT significant by bootstrap (mean -0.015, CI includes 0) but Wilcoxon on per-battery mean|err| IS significant (p=0.0001, standalone wins) - the two tests disagree, a real and disclosed inconsistency, not resolved by picking whichever supports a preferred conclusion. Reformulated (Stage 5 extended) vs. original (deployed) features: SIGNIFICANT improvement on CALCE/Oxford/HUST (extended wins clearly), SIGNIFICANT regression on XJTU (original wins) - exactly reproduces the known reason the extended model was never promoted, now with a real significance test behind it instead of just point estimates. Deployed model vs. Severson/Attia baselines: deployed wins significantly on in-domain/CALCE/HUST/XJTU, but SEVERSON/ATTIA WIN SIGNIFICANTLY on Oxford (deployed model's own R2 is deeply negative there) - a genuinely new, disclosed finding: the project's simple 1-4-feature linear baselines beat the deployed XGBoost-fusion model on Oxford specifically. | 6.6 min |
+
+### Time: actual vs. estimated
+
+Original estimate: Best ~70 min, Avg ~3.7 hr, Expected ~4-6.5 hr, Worst
+~10+ hr - item 3 (PyBaMM) flagged as carrying by far the most
+uncertainty. **Actual total: ~50.6 minutes** (10.5 + 6.4 + 17.8 + 9.3 +
+6.6, item 2's initial buggy attempt not double-counted) - dramatically
+under even the Best-case estimate for the whole pass. PyBaMM's
+install-cleanly-and-simulate-fast outcome was the single biggest
+positive surprise; none of the 5 items needed anywhere near their
+budgeted time.
+
+### What's recommended for promotion vs. what stays documented
+
+**Nothing is promoted in this entry.** One item is flagged for an
+explicit decision:
+- **Item 4 (bagged XGBoost)**: genuinely beats the TRUE deployed model
+  on Oxford/HUST/XJTU (3 of 5 eval sets), satisfying this pass's own
+  promotion rule on those sets specifically - but the win is against a
+  baseline that is itself badly broken there, and the bagged model's
+  own absolute performance on those wins is mediocre (not a strong
+  model, just a less-broken one). Flagged for an explicit decision, not
+  auto-promoted, with this caveat stated plainly rather than presented
+  as an unqualified win.
+
+Items 1, 2, 3 stay documented as real, honest experiments that did not
+clear the promotion bar (item 1's Oxford/XJTU wins are a real
+per-battery-adaptation-protocol finding, not a model to promote outright
+- there is no single "few-shot-adapted model" artifact, just a
+demonstrated protocol). Item 5 is a methodology/analysis pass, not
+something to promote - its main output is the corrected baseline
+figures above and the disclosed Ensemble-vs-XGBoost test disagreement.
+The deployed model, `app.py`, and `live_inference.py` remain completely
+unchanged by this entire pass.
+
+### Files
+
+5 new scripts (`src/run_researchpass2_item{1-5}_*.py`) and their
+corresponding `outputs/researchpass2_item*.csv` result files (item 1
+also writes a `*_per_battery.csv` breakdown, per the task's own
+requirement). `models/_experimental_pybamm_pretrained_encoder.pt` and
+`models/_experimental_ssl_soh_pybamm_pretrained.pt` are experimental
+checkpoints, not referenced by `live_inference.py` or `app.py`.
