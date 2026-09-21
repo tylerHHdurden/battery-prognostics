@@ -62,7 +62,7 @@ from health_indicators import compute_health_indicators, HI_NAMES
 from sequence_features import get_cycle_tensor, apply_channel_norm, CHANNEL_NAMES
 from models.vlstm import VLSTM
 from models.ica_encoder import ICAEncoder
-from stage1_common import canonical_feature_cols, fusion_cols as _fusion_cols, DURATION_FEATURES, BASELINE_CYCLE
+from stage1_common import canonical_feature_cols, fusion_cols as _fusion_cols, DURATION_FEATURES, BASELINE_CYCLE, ICA_CHANNEL_SLICE
 from run_stage1_followup_partB_joint_rul import JointSOHRULModelFusion
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -214,7 +214,7 @@ PRECOMPUTED_HELDOUT_PARQUETS = {
 }
 
 
-def _calce_fusion_embeddings(battery_id: str, encoder) -> np.ndarray | None:
+def _calce_fusion_embeddings(battery_id: str, encoder, norm_stats: list[dict]) -> np.ndarray | None:
     """CALCE has no precomputed fusion_embeddings.csv row (unlike NASA/
     MIT/Oxford/HUST/XJTU), but DOES have its 3-channel ICA/DV/DC
     differential tensor cached (data/processed/differential_tensors/
@@ -223,11 +223,35 @@ def _calce_fusion_embeddings(battery_id: str, encoder) -> np.ndarray | None:
     live on this, genuinely computing fusion embeddings, without any
     raw V/I/T curve. Row order verified (not assumed) to align 1:1 with
     hi_table.parquet's own CALCE rows sorted by cycle_idx (same
-    original preprocessing pass built both, in the same cycle order)."""
+    original preprocessing pass built both, in the same cycle order).
+
+    REAL BUG, FOUND AND FIXED (not present when this function was first
+    written; caught while verifying a separate dataset-routing feature,
+    then fixed as its own standalone production fix - see
+    DEVELOPMENT_LOG.md): this cached tensor stores RAW, unnormalized
+    dQdV/dVdQ/dIdV values, but `ica_encoder.pt` was TRAINED on
+    channel-normalized input (train_fusion_encoder.py's own
+    `apply_channel_norm(X_all, norm_stats)` call, applied BEFORE slicing
+    to these 3 channels - stage1_common.build_calce_tensors, the batch
+    pipeline that produced every "CALCE" number this project has ever
+    reported, does the exact same thing). Differential-tensor channels
+    can blow up to O(1e5-1e6) near flat-capacity regions (documented
+    elsewhere in this project as the same reason CNN-LSTM needed
+    BatchNorm-input clipping) - feeding that raw into an encoder trained
+    on clipped/z-scored input produced embeddings wildly outside what
+    the encoder (and everything downstream of it) was ever trained to
+    expect. `norm_stats` is the SAME 6-channel `channel_norm_stats.json`
+    already loaded for every other tensor in this module - sliced to
+    channels 3:6 (dQdV/dVdQ/dIdV) via `ICA_CHANNEL_SLICE`, which is
+    mathematically identical to normalizing the full 6-channel tensor
+    first and slicing after (apply_channel_norm operates per-channel,
+    independently of what other channels are present) - matches
+    build_calce_tensors' own convention exactly, not a new one."""
     path = PROC_DIR / "differential_tensors" / f"CALCE_{battery_id}.npy"
     if not path.exists():
         return None
-    tensor = np.load(path)  # (n_cycles, 200, 3)
+    tensor = np.load(path)  # (n_cycles, 200, 3), RAW - channels 3-5 of the project's own 6-channel convention
+    tensor = apply_channel_norm(tensor, norm_stats[ICA_CHANNEL_SLICE])
     with torch.no_grad():
         return encoder.encode(torch.tensor(tensor, dtype=torch.float32)).numpy()
 
@@ -293,7 +317,7 @@ def load_precomputed_battery_series(dataset: str, battery_id: str, res: dict) ->
     elif dataset == "CALCE":
         hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
         sub = hi_df[(hi_df["dataset"] == "CALCE") & (hi_df["battery_id"] == battery_id)].sort_values("cycle_idx").reset_index(drop=True)
-        all_emb = _calce_fusion_embeddings(battery_id, res["encoder"])
+        all_emb = _calce_fusion_embeddings(battery_id, res["encoder"], res["norm_stats"])
         if all_emb is None:
             return []
         for pos, row in sub.iterrows():
@@ -420,7 +444,7 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
         baseline_match = sub[sub["cycle_idx"] == BASELINE_CYCLE]
         baseline_his = baseline_match.iloc[0].to_dict() if not baseline_match.empty else None
 
-        all_emb = _calce_fusion_embeddings(battery_id, res["encoder"])
+        all_emb = _calce_fusion_embeddings(battery_id, res["encoder"], res["norm_stats"])
         if all_emb is None or pos >= len(all_emb):
             return {"error": f"No cached ICA tensor available for CALCE/{battery_id}."}
         fusion_emb = all_emb[pos]

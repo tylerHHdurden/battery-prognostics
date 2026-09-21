@@ -11806,3 +11806,92 @@ selectively (e.g. a dataset-aware routing layer, scoped separately) -
 but a blanket promotion would reintroduce the exact XJTU regression
 this project already investigated twice and declined twice. No files
 changed by this entry beyond DEVELOPMENT_LOG.md itself.
+
+## Production bug fix: CALCE's live fusion embeddings were never normalized - found while scoping dataset-aware routing, fixed on its own merits
+
+**Real, independent bug in already-shipped code, not a footnote to the
+routing work it was found underneath. CALCE predictions on the live
+site have likely been wrong since this app was first deployed**, given
+the precomputed-fallback path is the ONLY path Streamlit Cloud ever
+takes for CALCE (`data/raw/` is gitignored there - confirmed earlier
+this session via the ImportError investigation into why the live app
+behaves differently from local dev).
+
+### The bug
+
+`live_inference._calce_fusion_embeddings()` loads CALCE's cached
+3-channel ICA/DV/DC differential tensor
+(`data/processed/differential_tensors/CALCE_{id}.npy`) and fed it
+DIRECTLY into the trained ICA encoder - no normalization step. The
+encoder (`models/ica_encoder.pt`) was TRAINED on channel-normalized
+input (`train_fusion_encoder.py`'s own `apply_channel_norm(X_all,
+norm_stats)` call, applied before slicing to these 3 channels) - and
+`stage1_common.build_calce_tensors()`, the batch pipeline that
+produced EVERY "CALCE" number this project has ever reported, does the
+exact same normalization. The live path alone skipped it.
+
+**Consequence, quantified, not just asserted**: differential-tensor
+channels (dQdV/dVdQ/dIdV) can reach O(1e5-1e6) near flat-capacity
+regions - a scale blowup already documented elsewhere in this project
+as the reason CNN-LSTM needed clipped/normalized inputs. Direct
+comparison of the two embedding sources for the same battery/cycle
+(CS2_35) found differences up to ~2.3 MILLION in magnitude - not a
+subtle numerical drift, a genuinely different, out-of-distribution
+input to the encoder.
+
+### How it was found
+
+Discovered as a side effect of verifying a separate dataset-aware
+routing feature (see below) - the live single-cycle pipeline's CALCE
+R2 didn't match the batch-validated number even after fixing an
+unrelated Oxford baseline-lookup issue in the SAME verification. Traced
+to this function specifically by direct comparison against
+`build_calce_tensors()`'s own tensor source, then confirmed root cause
+via `train_fusion_encoder.py`'s own training code.
+
+### The fix
+
+`_calce_fusion_embeddings(battery_id, encoder, norm_stats)` now applies
+`apply_channel_norm(tensor, norm_stats[ICA_CHANNEL_SLICE])` before
+encoding - the SAME `channel_norm_stats.json` already loaded in
+`load_resources()`'s own `res` dict, sliced to channels 3:6 (dQdV/dVdQ/
+dIdV), mathematically identical to normalizing the full 6-channel
+tensor first and slicing after (`apply_channel_norm` operates per-
+channel, independent of what other channels are present) - matches
+`build_calce_tensors()`'s own convention exactly, not a new one. Both
+call sites (`load_precomputed_battery_series`,
+`predict_and_explain_precomputed`) updated to pass `res["norm_stats"]`.
+
+### Verification (both steps required, neither skipped)
+
+1. **Base (currently-deployed) model, via the ACTUAL production
+   function** (`predict_and_explain_precomputed`, called directly, not
+   reimplemented, across all 2941 CALCE rows -
+   `src/verify_calce_embedding_fix.py`): R2=0.5691, RMSE=14.15 vs. the
+   batch-validated 0.568 (`outputs/audit_true_deployed_baseline.csv`) -
+   delta=+0.0011, MATCH.
+2. **Regression sweep** (`src/_regression_sweep_calce_fix.py`,
+   `streamlit.testing.v1.AppTest`, the project's own established
+   convention): base app load + all 6 dataset selections (NASA/MIT/
+   CALCE/Oxford/HUST/XJTU), zero exceptions across every one.
+
+### Scope, disclosed
+
+NASA/MIT/CALCE raw data is present in this local dev environment, so
+the regression sweep's own CALCE pass exercises the LIVE raw-cycle
+path (`predict_and_explain`), not the precomputed path this fix
+touches - the precomputed path's correctness is verified separately
+and directly by item 1 above (all 2941 rows, the actual production
+function), not by the sweep. Oxford/HUST/XJTU are never in the
+`dataset_available` dict at all (see `app.py`) - they always take the
+precomputed path in every environment, including this one, so the
+sweep DOES exercise the shared `load_resources()`/`res["norm_stats"]`
+plumbing this fix touches for those three.
+
+### Files
+
+`src/live_inference.py` (`_calce_fusion_embeddings` fixed, both call
+sites updated), `src/verify_calce_embedding_fix.py`,
+`src/_regression_sweep_calce_fix.py`. Committed on its own, separate
+from the dataset-aware routing work it was found underneath - a real,
+independent production fix on its own merits, not a side effect.
