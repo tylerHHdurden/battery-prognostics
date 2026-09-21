@@ -11544,3 +11544,190 @@ also writes a `*_per_battery.csv` breakdown, per the task's own
 requirement). `models/_experimental_pybamm_pretrained_encoder.pt` and
 `models/_experimental_ssl_soh_pybamm_pretrained.pt` are experimental
 checkpoints, not referenced by `live_inference.py` or `app.py`.
+
+## Re-audit: every "beats/loses to deployed baseline" verdict since Stage 1, following the deployed-baseline mislabeling found above
+
+Explicitly a VERIFICATION pass, not a promotion decision - the deployed
+model file itself was not touched anywhere in this entry.
+
+### Step 1: the production model file, confirmed a THIRD independent way
+
+Direct grep of `live_inference.py`'s own model-loading code (not
+inferred from any other script's convention, not assumed): line 70
+sets `MODELS_DIR = ROOT / "models"`; line 119 calls
+`xgb_fusion.load_model(str(MODELS_DIR / "xgb_soh_fusion.json"))`. No
+environment-variable override, no indirection. `app.py` line 56
+imports directly `from live_inference import (...)` - confirmed it
+does not load any XGBoost model file itself, independently of
+`live_inference.py`. This is now the third independent confirmation of
+the production model file, after (1) this session's own established
+convention (items 8/9/14/16/DFC-DGGate/etc. in both research passes
+all already used this exact file+feature pipeline) and (2)
+`run_save_percycle_predictions.py`'s own pre-existing docstring, which
+already documented `pool_suffix=""` as "deployed 42-battery,
+models/xgb_soh_fusion.json."
+
+### Step 2: fresh, authoritative recomputation - `src/run_audit_true_deployed_baseline.py`
+
+A new, dedicated script that pulls NO numbers from any prior log table,
+`outputs/*.csv`, or research-pass script's printed output - every
+number below is `models/xgb_soh_fusion.json` scored fresh, right now,
+directly from the model file and the raw held-out data files, using
+the exact same feature pipeline (`stage1_common.canonical_feature_cols
+(reformulated=True) + cycle_idx + fusion_cols()`, train-only median
+imputation) every other item in both research passes used:
+
+| eval_set | R2 | RMSE | MAE | n | n_batteries |
+|---|---|---|---|---|---|
+| in-domain (TEST) | 0.9740 | 0.7805 | 0.3063 | 5208 | 6 |
+| CALCE | 0.5679 | 14.1553 | 10.4415 | 2941 | 3 |
+| Oxford | -2.6939 | 13.1346 | 12.5100 | 519 | 8 |
+| HUST | -0.1523 | 7.9193 | 5.7154 | 146122 | 77 |
+| XJTU | -1.0620 | 8.6350 | 6.4475 | 19238 | 47 |
+
+Matches the previous pass's item 5 finding exactly (that finding is
+independently reconfirmed, not just repeated) - this table is now the
+**single authoritative reference** for "the deployed model's real
+zero-retrain numbers" going forward. Saved to
+`outputs/audit_true_deployed_baseline.csv`.
+
+### Step 3: root cause - exactly where the mislabeling happened
+
+Traced via `git log -S"DEPLOYED_REFERENCE" --oneline` (search for the
+commit that introduced the string) and `git log -- <file>` on the two
+candidate scripts:
+
+1. **`src/run_stage6_1_severson_attia_baselines.py`** (commit
+   `43dede3`, Stage 6, 2026-09-16) computed Severson/Attia baselines
+   against a comparison point it explicitly, correctly disclosed IN
+   ITS OWN DOCSTRING at the time: *"this stage's 'deployed XGBoost-
+   fusion' comparison numbers are this experimental-but-canonical-for-
+   Stage-6 model's own numbers (already computed and saved in
+   outputs/stage5_extended_reformulation_eval.csv), reused directly
+   rather than retrained... Stated explicitly here per instruction,
+   not glossed over."* This was a deliberate, disclosed simplification
+   for Stage 6's own purposes, not an error - the caveat was right
+   there.
+2. **`src/run_stage7_2_selfsupervised_pretrain.py`** (commit `33eedee`,
+   Stage 7, 2026-09-16, the VERY NEXT commit) introduced a
+   `DEPLOYED_REFERENCE` dict, copying these exact 5 numbers
+   (`0.973/0.740/0.953/0.800/-1.775`) verbatim, with only the comment
+   *"already established and reported in Stage 6/6-closeout"* - Stage
+   6.1's own explicit caveat did NOT carry forward. This is the exact
+   point the never-promoted experimental model's numbers became
+   silently relabeled "the deployed model's numbers." `git log
+   -S"DEPLOYED_REFERENCE"` confirms this commit is the first to
+   introduce that string anywhere in the repo's history.
+3. **Confirmed NOT corrupted**: Stage 7's OWN later closeout work
+   (`src/run_stage7_closeout_oxford_mechanism_test.py`, part of the
+   Stage 7 final closeout) independently used the CORRECT base-vs-
+   extended framing throughout - line 160 has `"r2_before": -2.694,
+   "r2_after": 0.9533` for Oxford, i.e. the closeout's own "before"
+   (base = `models/xgb_soh_fusion.json`, the true deployed model) is
+   -2.694, matching this audit's own number to 3 decimal places, and
+   "after" (the never-promoted extended-reformulation model) is 0.9533.
+   The Stage 7 closeout never called the extended model "deployed" -
+   it correctly named both models and their roles. The mislabeling is
+   fully confined to Stage 7.2's own `DEPLOYED_REFERENCE` dict and
+   everything downstream that copied it without re-verifying.
+4. Both research passes (18-item and 5-item) imported or hand-copied
+   Stage 7.2's `DEPLOYED_REFERENCE` dict as ground truth without
+   re-verifying it against the actual model file - propagating the
+   mislabeling into 2 new verdict tables before this audit caught it.
+
+**Prevention going forward**: any future script comparing against "the
+deployed model" should either (a) load `models/xgb_soh_fusion.json`
+and score it fresh, as `run_audit_true_deployed_baseline.py` now does,
+or (b) explicitly cite `outputs/audit_true_deployed_baseline.csv` by
+name - never copy a bare number forward from memory or from another
+script's own reference dict without checking what model that dict
+actually points to.
+
+### Step 4: every verdict in both research passes that compared against "the deployed baseline," re-checked
+
+**18-item pass**: items 1, 2, 3, 5, 6, 7, 8, 9, 16, 17 are ALL
+UNAFFECTED - each compared against a different baseline entirely (the
+joint SOH+RUL model's own AdaptiveLossWeighting figures for items 2/3/5;
+Stage 6.5's own prior symbolic-regression attempt for item 6; raw
+false-flag-rate/n_lost-cycle counts, not R2, for items 1/7; conformal
+coverage/width against the PRIOR_ATTEMPTS table, not R2, for items 8/9/16;
+item 17's own BatchNorm-vs-GroupNorm CNN-LSTM baseline, unrelated to the
+XGBoost-fusion DEPLOYED_REFERENCE dict) or were in-domain-only (where
+the inflated figure, 0.973, was already close to the true one, 0.974 -
+no practical difference).
+
+- **Item 14 (DFC-DGGate) - ONE VERDICT FLIPS**:
+
+  | eval_set | gated R2 | old ref (LOSS/WIN) | TRUE ref (LOSS/WIN) | changed? |
+  |---|---|---|---|---|
+  | in-domain | 0.9792 | 0.973 -> WIN | 0.9740 -> WIN | no |
+  | CALCE | 0.5864 | 0.740 -> LOSS | 0.5679 -> **WIN** | **FLIPS** |
+  | Oxford | -4.5358 | 0.953 -> LOSS | -2.6939 -> LOSS | no |
+  | HUST | -1.6743 | 0.800 -> LOSS | -0.1523 -> LOSS | no |
+  | XJTU | -0.9489 | -1.775 -> WIN | -1.0620 -> WIN | no (margin shrinks) |
+
+  **Corrected item 14 verdict: 3 win (in-domain, CALCE, XJTU) / 2 loss
+  (Oxford, HUST) - was reported as 2 win / 3 loss.** DFC-DGGate's own
+  CALCE result (0.5864) genuinely beats the true deployed model's own
+  CALCE result (0.5679, a real but modest 0.019 R2 margin) - previously
+  reported as a loss against an inflated 0.740 target it was never
+  actually being compared fairly against.
+
+- **Item 15 (contrastive pretraining) - no verdict flips, but the
+  displayed reference numbers were wrong**: the script never computed
+  an explicit WIN/LOSS verdict against `deployed_xgb_fusion_REFERENCE`
+  (its own printed verdict compared against Stage 7.2's pretrained row
+  only) - but the reference row shown in its results table
+  (`outputs/researchpass_groupE15_contrastive_pretrain.csv`) displayed
+  the wrong numbers. Corrected reference for that table: in-domain
+  0.9740, CALCE 0.5679, Oxford -2.6939, HUST -0.1523, XJTU -1.0620.
+
+**5-item pass**: item 1 (few-shot adaptation) is UNAFFECTED - it
+computed its own zero-retrain baseline fresh from the same model file
+each time, never used the `DEPLOYED_REFERENCE` dict. Items 2 (DANN) and
+3 (PyBaMM pretraining) already used the corrected numbers (written
+after this discovery) - no change.
+
+- **Item 4 (bagged XGBoost) - already corrected in the prior turn,
+  reconfirmed here**: Oxford and HUST flip LOSS->WIN. Corrected verdict:
+  3 win (Oxford, HUST, XJTU) / 2 loss (in-domain, CALCE) - was reported
+  in that script's own console output as 1 win (XJTU only) / 4 loss.
+
+### Summary of what changed
+
+Two items, two flipped datasets each, all in the direction of the
+never-promoted model looking BETTER than it should have relative to
+these experiments (i.e., every flip is a LOSS becoming a WIN for the
+new method, never the reverse) - consistent with the inflated reference
+having made the deployed baseline look artificially strong on exactly
+the 3 datasets (CALCE/Oxford/HUST) where the true model is weak:
+
+- Item 14 (DFC-DGGate, pass 1): CALCE LOSS -> WIN. Net: 2W/3L -> 3W/2L.
+- Item 4 (bagged XGBoost, pass 2): Oxford LOSS -> WIN, HUST LOSS -> WIN.
+  Net: 1W/4L -> 3W/2L.
+
+Both items now show a genuine, real majority of wins against the TRUE
+deployed baseline (3 of 5 eval sets each) - though in both cases the
+wins are against a baseline that is itself badly broken on those
+specific datasets (deeply negative R2), not evidence that either
+candidate is a strong model in absolute terms. This is exactly the
+caveat already attached to item 4 in the prior entry, and now applies
+equally to item 14.
+
+**No other items in either research pass, and no items in Stage 1
+through Stage 7 (confirmed via the Oxford-mechanism closeout's own
+correct base/extended framing), had a verdict against "the deployed
+model" that depended on the inflated figure.**
+
+### Explicitly NOT done here
+
+No promotion decision was made. `models/xgb_soh_fusion.json`,
+`app.py`, and `live_inference.py` are completely untouched. This entry
+documents a corrected reference table and two flipped experimental
+verdicts - what to DO about item 14 and item 4's now-3-win results is
+a separate decision, deferred per instruction.
+
+### Files
+
+`src/run_audit_true_deployed_baseline.py`,
+`outputs/audit_true_deployed_baseline.csv`.
