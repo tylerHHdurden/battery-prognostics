@@ -1,0 +1,14 @@
+method,coverage,width
+Domain-alignment (MMD),0.044,4.43
+Reweighted calibration (domain classifier),0.044,4.38
+More training data alone (32->204 batteries),0.074,2.309
+Normalized CP (GBR local-difficulty),0.193,6.545
+CQR,0.213,18.267
+Jackknife+/CV+ resampling,0.371,11.89
+KMM-CP,0.34,9.924
+Domain-alignment (CORAL),0.032,2.347
+Rescaled Jackknife+ (difficulty-aware),0.82,58.905
+"Plain split-conformal (XGBoost, do-nothing floor)",0.067,2.332
+"MC-Dropout ALONE (naive Gaussian, this item's MLP)",0.38592315538932337,27.910924911499023
+Split-conformal ALONE (this item's MLP),0.06188371302278137,4.776925938432981
+"HYBRID: MC-Dropout scale + conformal (THIS ITEM, U-H-Mamba-style)",0.11288677320639239,6.852504228152295

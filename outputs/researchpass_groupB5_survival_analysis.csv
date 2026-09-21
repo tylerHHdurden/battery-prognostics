@@ -1,0 +1,4 @@
+eval_set,concordance_index,rul_r2,rul_rmse,rul_mae,n,n_infinite_median_clipped
+TEST (in-domain),0.8261364884581172,0.5479887381787714,225.39484875573825,176.48751920122888,5208.0,4.0
+CALCE (zero-retrain),0.3304272201287451,-2317.8560548768883,952.40236335842,,2941.0,
+"DEPLOYED joint model (on record, point regression, no censoring awareness)",,0.6656929850578308,,,,

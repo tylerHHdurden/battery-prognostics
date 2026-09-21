@@ -1,0 +1,12 @@
+method,coverage,width
+Domain-alignment (MMD),0.044,4.43
+Reweighted calibration (domain classifier),0.044,4.38
+More training data alone (32->204 batteries),0.074,2.309
+Normalized CP (GBR local-difficulty),0.193,6.545
+CQR,0.213,18.267
+Jackknife+/CV+ resampling,0.371,11.89
+KMM-CP,0.34,9.924
+Domain-alignment (CORAL),0.032,2.347
+Rescaled Jackknife+ (difficulty-aware),0.82,58.905
+Plain split-conformal (do-nothing floor),0.067,2.332
+Isotonic-regression-calibrated (THIS ITEM),0.027201632097925876,2.2934812077396316

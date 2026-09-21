@@ -1,0 +1,3 @@
+target,n_nonzero_terms,formula,formula_only_r2_train,formula_only_r2_test,grey_box_r2_test,stage6_5_baseline_r2
+true SOH,4,93.4533 -0.7435*log|VIECT_rel| + +0.0072*cycle_idx*VIECT_rel + -0.0774*cycle_idx/(SCV_rel) + +0.0804*cycle_idx,0.7321132454496972,0.7174726819019891,0.7725547062629005,-1.95
+deployed model's own predictions,4,93.4560 -0.7432*log|VIECT_rel| + +0.0072*cycle_idx*VIECT_rel + -0.0774*cycle_idx/(SCV_rel) + +0.0803*cycle_idx,0.733038726104146,0.6559857546287882,0.7179993805286422,-1.92

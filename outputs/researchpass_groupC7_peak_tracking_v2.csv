@@ -1,0 +1,4 @@
+dataset,battery_id,n_cycles,n_tracked,n_lost,n_recovered_via_anchor,n_tracked_ORIGINAL,n_lost_ORIGINAL,improvement_in_lost_cycles
+NASA,B0018,132,131,1,0,131,1,0
+MIT,b3c0,1007,931,76,2,930,77,1
+MIT,b1c4,1225,548,677,0,548,677,0

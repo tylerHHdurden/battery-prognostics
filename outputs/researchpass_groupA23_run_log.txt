@@ -1,0 +1,77 @@
+=== Research pass Group A, items 2-3: CoV and EMA loss weighting ===
+[deep] loaded NASA/B0005: (168, 200, 6)
+[deep] loaded NASA/B0006: (168, 200, 6)
+[deep] loaded NASA/B0007: (168, 200, 6)
+[deep] loaded NASA/B0018: (132, 200, 6)
+[deep] loaded MIT/b1c20: (532, 200, 6)
+[deep] loaded MIT/b1c43: (649, 200, 6)
+[deep] loaded MIT/b1c32: (729, 200, 6)
+[deep] loaded MIT/b1c17: (855, 200, 6)
+[deep] loaded MIT/b1c22: (889, 200, 6)
+[deep] loaded MIT/b1c41: (1049, 200, 6)
+[deep] loaded MIT/b1c4: (1225, 200, 6)
+[deep] loaded MIT/b2c1: (169, 200, 6)
+[deep] loaded MIT/b2c44: (478, 200, 6)
+[deep] loaded MIT/b2c42: (491, 200, 6)
+[deep] loaded MIT/b2c13: (519, 200, 6)
+[deep] loaded MIT/b2c24: (523, 200, 6)
+[deep] loaded MIT/b2c32: (543, 200, 6)
+[deep] loaded MIT/b2c9: (1059, 200, 6)
+[deep] loaded MIT/b3c28: (539, 200, 6)
+[deep] loaded MIT/b3c13: (814, 200, 6)
+[deep] loaded MIT/b3c14: (856, 200, 6)
+[deep] loaded MIT/b3c0: (1007, 200, 6)
+[deep] loaded MIT/b3c35: (1091, 200, 6)
+[deep] loaded MIT/b3c33: (1282, 200, 6)
+[deep] loaded MIT/b3c38: (1933, 200, 6)
+[deep] loaded MIT/b4c9: (529, 200, 6)
+[deep] loaded MIT/b4c36: (713, 200, 6)
+[deep] loaded MIT/b4c39: (761, 200, 6)
+[deep] loaded MIT/b4c21: (903, 200, 6)
+[deep] loaded MIT/b4c0: (982, 200, 6)
+[deep] loaded MIT/b4c5: (1067, 200, 6)
+[deep] loaded MIT/b4c38: (1230, 200, 6)
+[researchA23] fit=21 val=5 test=6 batteries
+[researchA23] fit=14872 val=3973 test=5208 cycles
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[joint-fusion] 1 rows missing ICHV_rel - imputed with train median 0.9359
+[joint-fusion] 1 rows missing SCV - imputed with train median 0.6571
+[joint-fusion] 1 rows missing VDEDT - imputed with train median 0.0002
+[joint-fusion] 1 rows missing VIECT - imputed with train median 3.4368
+[joint-fusion] 1 rows missing MATD - imputed with train median 34.4861
+[joint-fusion] 1 rows missing MET - imputed with train median 0.0532
+[joint-fusion] 1 rows missing TEVD_rel - imputed with train median 0.8737
+[joint-fusion] 1 rows missing TEVI_rel - imputed with train median 0.9480
+[CoV-weighting] epoch  0 train=0.8636 val_soh=0.3436 val_rul=0.6402 alpha=1.337 beta=0.663
+[CoV-weighting] epoch  5 train=0.0763 val_soh=0.0979 val_rul=0.9019 alpha=1.625 beta=0.375
+[CoV-weighting] epoch 10 train=0.0495 val_soh=0.0857 val_rul=0.6650 alpha=1.675 beta=0.325
+[CoV-weighting] epoch 15 train=0.0368 val_soh=0.0522 val_rul=0.6932 alpha=1.823 beta=0.177
+[CoV-weighting] epoch 20 train=0.0312 val_soh=0.0566 val_rul=0.6346 alpha=1.811 beta=0.189
+[CoV-weighting] epoch 24 train=0.0291 val_soh=0.0495 val_rul=0.6744 alpha=1.819 beta=0.181
+[CoV-weighting] TEST SOH: {'rmse': 1.5342780554575954, 'mae': 1.1623090505599976, 'r2': 0.8993616700172424}
+[CoV-weighting] TEST RUL: {'rmse': 211.02272352462424, 'mae': 167.00177001953125, 'r2': 0.6041409373283386}
+[CoV-weighting] elapsed: 3.0 min
+[EMA-weighting] epoch  0 train=0.7728 val_soh=0.3845 val_rul=0.6312 alpha=1.599 beta=0.401
+[EMA-weighting] epoch  5 train=0.0686 val_soh=0.1055 val_rul=0.8981 alpha=1.750 beta=0.250
+[EMA-weighting] epoch 10 train=0.0487 val_soh=0.0797 val_rul=0.6877 alpha=1.675 beta=0.325
+[EMA-weighting] epoch 15 train=0.0418 val_soh=0.0659 val_rul=0.7570 alpha=1.853 beta=0.147
+[EMA-weighting] epoch 20 train=0.0307 val_soh=0.0496 val_rul=0.6377 alpha=1.580 beta=0.420
+[EMA-weighting] epoch 24 train=0.0330 val_soh=0.0549 val_rul=0.6301 alpha=1.687 beta=0.313
+[EMA-weighting] TEST SOH: {'rmse': 1.4579490246070543, 'mae': 1.0909184217453003, 'r2': 0.9091259241104126}
+[EMA-weighting] TEST RUL: {'rmse': 213.43692349848936, 'mae': 161.9689483642578, 'r2': 0.5950314998626709}
+[EMA-weighting] elapsed: 3.1 min
+
+=== SUMMARY: SOH R2 / RUL R2, all 3 methods ===
+                               variant   soh_r2   rul_r2  elapsed_min
+                         CoV-weighting 0.899362 0.604141     3.010557
+                         EMA-weighting 0.909126 0.595031     3.134301
+adaptive-clamped (DEPLOYED, on record) 0.924104 0.665693          NaN
+
+[researchA23] CoV-weighting vs. deployed (SOH R2=0.9241, RUL R2=0.6657): SOH LOSS (0.8994), RUL LOSS (0.6041)
+
+[researchA23] EMA-weighting vs. deployed (SOH R2=0.9241, RUL R2=0.6657): SOH LOSS (0.9091), RUL LOSS (0.5950)
+
+[researchA23] TOTAL TIME: 7.5 minutes

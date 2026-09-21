@@ -11362,3 +11362,86 @@ output, exactly per this project's standing practice - not a defect in
 any previously-reported Stage 7 result. **Nothing here reopens any
 question from Stage 7 or any earlier stage. The full seven-stage
 improvement plan (Stage 0 through Stage 7) is closed.**
+
+## Research-driven improvement pass: 18 items across 4 research rounds, risk-accepted work
+
+Explicit governing rule for this whole pass, stated up front and held
+to throughout: **nothing gets promoted to the deployed model unless it
+clearly beats the current baseline on the SAME held-out evaluation this
+project has always used (in-domain GroupKFold/fixed split + all
+held-out datasets).** Several items were expected, going in, to plausibly
+lose - that was accepted as a normal, honest outcome, not a failure of
+the pass itself.
+
+### Result: 1 clear win (in-domain only, not yet promotable), 1 split
+result, 1 documentation item (partially completed, 1 of 2 citations -
+see below), 4 datasets genuinely blocked, and 11 real, honest losses/
+ties/inconclusive results. **Nothing was promoted.** No deployed model
+file or the Streamlit app itself was touched.
+
+### Full 18-item results table
+
+| # | Item | Verdict | Key numbers | Actual time |
+|---|------|---------|--------------|-------------|
+| 1 | Isolation Forest vs. OC-SVM (false-flag rate) | LOSS | IsolationForest: NASA FF=98.8%, MIT FF=0.2%, imbalance=0.986. OC-SVM (re-measured on a corrected, properly NASA+MIT-stratified VAL split - the original split had a string-sort bug that silently produced an all-MIT VAL set): NASA FF=88.1%, MIT FF=1.1%, imbalance=0.870 (lower imbalance = better). IsolationForest is worse. | part of ~35 min combined (items 1,2,3,5,6,7) |
+| 2 | CoV loss weighting (joint SOH+RUL) | LOSS | SOH R²=0.8994, RUL R²=0.6041, both worse than the deployed joint model's own AdaptiveLossWeighting baseline (SOH 0.9241, RUL 0.6657). | 7.5 min (items 2+3 combined) |
+| 3 | EMA loss weighting (joint SOH+RUL) | LOSS | SOH R²=0.9091, RUL R²=0.5950 - also both worse than baseline; slightly better than CoV on both tasks but still a clear loss vs. deployed. | 7.5 min (items 2+3 combined) |
+| 4 | Two citations (tabular-ML consensus + cross-domain SSL paper) | PARTIAL | 1 of 2 added: Shwartz-Ziv & Armon, "Tabular Data: Deep Learning is Not All You Need," Information Fusion, 2022 (the established gradient-boosted-trees-vs-deep-learning-on-tabular-data consensus this project's own XGBoost-over-deep-learning result already lines up with). The second ("the NASA/Oxford/SNL cross-domain SSL paper") was **declined** - I do not have verified bibliographic details (authors/venue/year) for a specific paper matching that description, and fabricating one would violate this project's own standing no-fabrication discipline. No dedicated paper-draft file exists in this repo to file citations into; recorded here in DEVELOPMENT_LOG.md as the most appropriate home. | ~0 min |
+| 5 | Survival analysis (Cox Proportional Hazards) for RUL | LOSS | TEST: concordance=0.8261, RUL R²=0.5480 (vs. deployed joint model's 0.6657). CALCE (zero-retrain): concordance=0.3304 (worse than random), RUL R²=-2317.86 (catastrophic). Oxford/HUST/XJTU skipped - no RUL/censoring data precomputed for them anywhere in this project (disclosed scope limit, not silently dropped). scikit-survival (would've given genuine time-dependent AUC) could not be installed (missing C++ build toolchain for its `ecos` dependency) - lifelines' concordance index used instead, disclosed. | part of ~35 min combined |
+| 6 | Symbolic regression retry (SISSO-inspired SIS+Lasso, constrained operators, grey-box residual) | WIN vs. Stage 6.5's own prior attempt, but NOT promotable | Formula-only test R²=0.7175 (true SOH), grey-box (formula + small residual tree) test R²=0.7726 - both dramatically non-degenerate versus Stage 6.5's original R²=-1.95/-1.92. Against the deployed model's own predictions: formula R²=0.6560, combined R²=0.7180. Genuine SISSO (pysisso) could not be installed (broken build chain); a disclosed SIS+Lasso approximation was used instead. Still far below the deployed model's own 0.973 in-domain R² - a real methodological win over the earlier degenerate attempt, not a promotion candidate. | part of ~35 min combined |
+| 7 | Reference-anchored peak-tracking (replacing purely sequential tracker) | TIE | B0018: unchanged (1/132 lost, same as baseline). b3c0: marginal improvement (77→76 lost cycles). b1c4 (the original target case): unchanged (677/1225 lost, 0 cycles recovered via the anchor-retry mechanism). Root-caused via a direct diagnostic: 34% of b1c4's early cycles have ZERO peaks above the prominence threshold at all - the real bottleneck is peak-DETECTION sensitivity, not the sequential-drift problem this fix targeted. Genuine half-cell OCV anchoring was out of scope (no half-cell reference data exists for these cells' chemistries anywhere in this project - disclosed, not faked). | part of ~35 min combined |
+| 8 | Isotonic-regression-calibrated conformal prediction, CALCE | LOSS | coverage=2.7%, width=2.293 - near/below the plain split-conformal do-nothing floor (6.7%/2.332), and worse than every method already on record except the domain-alignment methods. | 2.2 min |
+| 9 | Composite-kernel GPR (RBF+WhiteKernel) conformal prediction, CALCE | LOSS | coverage=4.3%, width=3.067 - also near the do-nothing floor. Both locally-adaptive-scale approaches tried this pass (isotonic and GPR) failed the same way: the domain-shift-specific methods (MMD, CORAL, more-training-data) remain the best on record for CALCE. GPR fit on an 800-row subsample (disclosed O(n³) practical cap, not a silently-shrunk dataset). | 9.8 min |
+| 10-13 | Group D: 4 new/expanded datasets (EIS-rich 2026 NMC/graphite, second-life grid-storage, 279-cell Samsung INR21700-50E, 228-cell NMC/C-SiO) | BLOCKED | None of these 4 datasets exist anywhere in `data/raw/` (confirmed by direct directory listing - only NASA and CALCE raw source files are present), and there is no bulk-download capability available to obtain them. Reported as genuinely blocked, not silently skipped. | 0 min |
+| 14 | DFC-DGGate-style domain-difference gating (3 branches: XGBoost/local-nonlinear, linear/global-trend, Huber/robust; gated by a domain-difference-aware MLP) | SPLIT (2 win / 3 loss) - NOT promotable | in-domain TEST: WIN, gated R²=0.9792 vs. deployed 0.973 (marginal). XJTU: WIN, gated R²=-0.949 vs. deployed -1.775 (less bad, still negative). CALCE: LOSS, 0.586 vs. 0.740. Oxford: LOSS badly, -4.54 vs. 0.953. HUST: LOSS, -1.67 vs. 0.800. Notable finding: the "robust" Huber branch was the LEAST robust component out-of-domain (branch-only R² as bad as -367 on XJTU) - the trained gate learned to almost entirely ignore it (mean weight ~1-27%) and lean on the XGBoost branch instead, the opposite of the architecture's own premise. | 6.4 min |
+| 15 | ACCEPT-style physics-simulated (equivalent-circuit-model perturbation) contrastive pretraining | LOSS | in-domain R²=0.4878 vs. Stage 7.2's own order-ranking-pretrained result of 0.4930 (marginal loss). Mixed on held-out: beats Stage 7.2's pretrained row on HUST (-1.51 vs. -5.36) and XJTU (-120.96 vs. -256.06), loses on CALCE (-4.68 vs. -3.91) and is roughly flat on Oxford (0.027 vs. 0.034). Every self-supervised-pretraining variant tried (this item and both Stage 7.2 rows) remains dramatically below the deployed XGBoost-fusion model across every single eval set (0.973/0.740/0.953/0.800/-1.775). Genuine full electrochemical/SPM simulation was out of scope (no on-the-fly simulator wired up); a disclosed first-order ECM (Ohm's-law voltage-sag) perturbation was used as the "physics-simulated" positive-pair augmentation instead. | 97.7 min |
+| 16 | U-H-Mamba-style hybrid UQ (MC-Dropout combined with conformal prediction) | LOSS / INCONCLUSIVE | On a purpose-built dropout-enabled MLP (no existing deep model in this project has dropout layers - disclosed): MC-Dropout alone reached coverage=38.6% at width=27.9 (wide but reasonably covered). Split-conformal alone: coverage=6.2% at width=4.78 (tight but under-covers). The HYBRID (conformal calibration scaled by MC-Dropout's own predictive std): coverage=11.3%, width=6.85 - did not beat EITHER component cleanly on its own metric, landing in a worse middle ground rather than combining their strengths. | 7.8 min |
+| 17 | GroupNorm swap for CNN-LSTM's BatchNorm1d layers | **WIN (in-domain only) - flagged, NOT promoted** | TEST R²=0.9757 vs. BatchNorm baseline R²=0.9666, RMSE=1.109 vs. 1.300 (expanded 204-battery NASA+MIT pool, identical split/norm-stats/hyperparameters to the baseline run - only the norm layer differs). This is a real, non-trivial improvement, but it has **only been checked in-domain** - it has NOT yet been re-evaluated zero-retrain against CALCE/Oxford/HUST/XJTU, which this project's own standing practice requires before any promotion decision. Per this pass's own rule, this is flagged for an explicit decision, not auto-promoted. | 58.9 min |
+
+### Time: actual vs. estimated
+
+Original whole-pass estimate (excluding Group D, correctly predicted
+blocked before any work started): Group A 45min-3hr, Group B 2-8hr
+(survival analysis flagged as least predictable), Group C 1-4hr, Group E
+3-12+hr (flagged as the highest uncertainty in the entire pass), Group F
+15min-1hr - roughly 7-28+ hours total.
+
+**Actual total compute/run time: ≈3.6 hours** (≈35 min for items
+1/2/3/5/6/7 combined + 2.2 + 9.8 + 6.4 + 97.7 + 7.8 + 58.9 minutes for
+items 8/9/14/15/16/17) - dramatically under even the low end of the
+original estimate for every group, including Group E, which had been
+flagged as the dominant risk. Item 15 (contrastive pretraining, 97.7
+min) was the single slowest item, consistent with that flagged
+uncertainty, though still well inside the group's own budgeted range.
+Groups A-C in particular ran far faster than estimated because none of
+items 1/2/3/5/6/7 needed anything beyond the existing feature pipelines
+and already-cached data.
+
+### What's recommended for promotion vs. what stays documented
+
+**Nothing is promoted in this entry.** Two items are flagged for an
+explicit decision, both requiring more verification before any real
+promotion conversation:
+- **Item 17 (GroupNorm)**: a genuine in-domain win, but needs zero-retrain
+  verification against CALCE/Oxford/HUST/XJTU before it can be assessed
+  against this pass's own promotion rule.
+- **Item 14 (DFC-DGGate)**: a split result (2 win/3 loss) - the in-domain
+  win is real but marginal, and the architecture loses badly on 3 of 4
+  held-out sets, so it is NOT a promotion candidate as-is; documented for
+  completeness, not flagged as promotable.
+
+Every other item (1, 2, 3, 5, 6, 7, 8, 9, 15, 16) stays documented as a
+real, honest experiment that did not beat the deployed baseline on this
+project's own established evaluation protocol. Items 10-13 (Group D)
+stay documented as genuinely blocked by data availability, not attempted.
+The deployed model (`models/xgb_soh_fusion.json`, the joint SOH+RUL
+model, and the live Streamlit app) remain completely unchanged by this
+entire pass.
+
+### Files
+
+18 new scripts (`src/run_researchpass_group_{a,b,c,e,f}_*.py`) and their
+corresponding `outputs/researchpass_group*.csv` result files, plus
+per-run logs and prediction-history CSVs where applicable. All
+`_experimental_*` checkpoint files saved under `models/` are exactly
+that - experimental, not referenced by `live_inference.py` or `app.py`.
