@@ -11731,3 +11731,78 @@ a separate decision, deferred per instruction.
 
 `src/run_audit_true_deployed_baseline.py`,
 `outputs/audit_true_deployed_baseline.csv`.
+
+## XJTU/reformulation promotion question - closed, not a bug
+
+A direct follow-up request asked to promote "the validated Stage 1
+reformulation" (CALCE 0.740, Oxford 0.953, HUST 0.800, XJTU -1.775) to
+`models/xgb_soh_fusion.json`, on the premise that it had been tested
+and referenced as deployed throughout Stage 1-7 but never actually
+promoted. Investigated before touching anything. **Conclusion: this
+premise is incorrect. Nothing was missed. `xgb_soh_fusion.json` remains
+Stage 4's model, and that is correct and final - not an oversight to
+fix.**
+
+### What those numbers actually are
+
+Not "the Stage 1 reformulation" - Stage 1's own reformulation (duration
+features -> `_rel` ratios) IS already in the deployed model (confirmed
+directly: the audit script's own feature list includes `ICHV_rel`,
+`TEVD_rel`, `TEVI_rel`). The cited numbers belong to the **Stage 5
+extended reformulation** (SCV/MATD/VIECT/MET swapped for `_rel`
+versions) - a separate, later, and explicitly experimental change,
+saved at `models/_experimental_xgb_soh_fusion_extended_reformulation.
+json`.
+
+### Four independent pieces of evidence, cross-referenced, that this was a deliberate "not promoting" decision, not an unfinished task
+
+1. **The original Stage 5 follow-on decision itself** ("Item 1
+   follow-up: reformulating MET too ('fix XJTU first, then promote')" -
+   this same file, above): XJTU was reformulated TWICE, specifically
+   trying to close its gap before promoting (the entry's own title says
+   so). Both attempts made XJTU WORSE, not better (-1.059 -> -1.649 ->
+   -1.775, widening at every step), while CALCE/Oxford/HUST kept
+   improving. The entry's own explicit, bolded decision: *"XJTU's gap
+   did NOT close - it widened at every step of this pass. **Not
+   promoting to deployment.** `models/xgb_soh_fusion.json`,
+   `live_inference.py`, and `app.py` remain completely unchanged."*
+2. **Stage 6.1's own docstring** (`src/run_stage6_1_severson_attia_
+   baselines.py`), written after the above: *"the extended-
+   reformulation model was never promoted, due to its own XJTU
+   regression."*
+3. **The extended-reformulation eval script's own docstring**
+   (`src/run_stage5_extended_reformulation_eval.py`, a later rerun of
+   the same idea): *"EXPERIMENTAL - a separate model/feature set, NOT
+   written to models/xgb_soh_fusion.json or any file live_inference.py
+   loads. Only promoted to deployment if explicitly confirmed after
+   review."*
+4. **`git log --oneline -- models/xgb_soh_fusion.json`** - the file
+   itself has been changed exactly twice in the entire repository
+   history: the initial dashboard commit, and Stage 4's "full retrain,
+   promoted to deployment." Nothing since. It was never touched again,
+   by anyone, at any later stage - the most direct possible evidence
+   that no promotion of the extended-reformulation model ever happened.
+
+### Root cause of the confusion (already documented above, restated here for this closing note's own completeness)
+
+A single labeling bug: `run_stage7_2_selfsupervised_pretrain.py`
+(Stage 7) named a dict `DEPLOYED_REFERENCE` while copying Stage 6.1's
+already-disclosed experimental numbers, dropping Stage 6.1's own
+caveat in the process. That variable NAME implied promotion had
+happened; nothing in the project's actual decision record - at the
+time or since - ever claimed it had. Both research passes inherited
+the mislabeled dict at face value without checking it against the
+model file, which is exactly what the prior audit entry (above) and
+this closing note both now correct.
+
+### Final status
+
+`models/xgb_soh_fusion.json` = Stage 4's model (Stage 1.1 reformulation
+only). This is correct, deliberate, and final - not a bug, not an
+oversight, not something to promote. The extended-reformulation model
+remains available at `models/_experimental_xgb_soh_fusion_extended_
+reformulation.json` for any FUTURE work that wants to use it
+selectively (e.g. a dataset-aware routing layer, scoped separately) -
+but a blanket promotion would reintroduce the exact XJTU regression
+this project already investigated twice and declined twice. No files
+changed by this entry beyond DEVELOPMENT_LOG.md itself.
