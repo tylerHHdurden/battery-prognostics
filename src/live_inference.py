@@ -63,6 +63,7 @@ from sequence_features import get_cycle_tensor, apply_channel_norm, CHANNEL_NAME
 from models.vlstm import VLSTM
 from models.ica_encoder import ICAEncoder
 from stage1_common import canonical_feature_cols, fusion_cols as _fusion_cols, DURATION_FEATURES, BASELINE_CYCLE, ICA_CHANNEL_SLICE
+from stage5_extended_reformulation import extended_canonical_feature_cols
 from run_stage1_followup_partB_joint_rul import JointSOHRULModelFusion
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -73,13 +74,34 @@ CANONICAL_RAW = canonical_feature_cols(reformulated=False)   # e.g. ICHV, SCV, .
 CANONICAL_REL = canonical_feature_cols(reformulated=True)    # e.g. ICHV_rel, SCV, ...
 FEATURE_COLS = CANONICAL_REL + ["cycle_idx"]
 
+# Dataset-aware routing (added after this session's own baseline audit
+# found the deployed model's zero-retrain numbers were much worse than
+# assumed on Oxford/HUST/CALCE - see DEVELOPMENT_LOG.md). Stage 5's
+# extended reformulation (SCV/MATD/VIECT/MET swapped for _rel versions)
+# genuinely beats the base model on these 3 datasets but REGRESSES
+# XJTU - twice-investigated, twice-declined for a BLANKET promotion
+# (also in DEVELOPMENT_LOG.md). Routing sidesteps that all-or-nothing
+# choice: each dataset gets whichever already-validated model actually
+# wins on IT, decided by dataset identity alone, not a new trained
+# model. XJTU (and NASA/MIT, never part of this routing's scope) stay
+# on the original Stage 4 model, completely unchanged.
+EXTENDED_ROUTED_DATASETS = {"CALCE", "Oxford", "HUST"}
+EXTENDED_CANONICAL_REL = extended_canonical_feature_cols(CANONICAL_REL)  # ICHV_rel,SCV_rel,VDEDT,VIECT_rel,MATD_rel,MET_rel,TEVD_rel,TEVI_rel
+EXTENDED_FEATURE_COLS = EXTENDED_CANONICAL_REL + ["cycle_idx"]
+EXT_RATIO_RAW_FEATURES = {"ICHV", "TEVD", "TEVI", "SCV", "MET"}   # ratio-reformulated (Stage 1.1's own 3 + Stage 5's SCV/MET)
+EXT_DELTA_RAW_FEATURES = {"MATD", "VIECT"}                        # delta-reformulated (Stage 5's own choice - additive-offset quantities)
+
 HI_DESCRIPTIONS = {
     "ICHV_rel": "time spent charging near peak voltage (high-voltage/CV-tail duration), relative to this battery's own cycle-10 baseline",
     "SCV": "average capacity-vs-voltage slope during discharge",
+    "SCV_rel": "average capacity-vs-voltage slope during discharge, relative to this battery's own cycle-10 baseline",
     "VDEDT": "rate of voltage collapse near the end of discharge",
     "VIECT": "voltage reached at a fixed elapsed time into charging",
+    "VIECT_rel": "voltage reached at a fixed elapsed time into charging, relative to this battery's own cycle-10 baseline (a delta, not a ratio - voltage level is an additive offset, not a multiplicative scale)",
     "MATD": "mean cell temperature during discharging",
+    "MATD_rel": "mean cell temperature during discharging, relative to this battery's own cycle-10 baseline (a delta, not a ratio - temperature is an additive offset, not a multiplicative scale)",
     "MET": "mean energy during test (average of charge and discharge energy)",
+    "MET_rel": "mean energy during test, relative to this battery's own cycle-10 baseline",
     "TEVD_rel": "time elapsed until discharge voltage first falls to 50%, relative to this battery's own cycle-10 baseline",
     "TEVI_rel": "time spent traversing the mid-range of the discharge voltage curve, relative to this battery's own cycle-10 baseline",
     "cycle_idx": "cycle number (monotone-constrained: the model is constrained to never predict higher SOH for a later cycle)",
@@ -118,6 +140,17 @@ def load_resources() -> dict:
     xgb_fusion = XGBRegressor()
     xgb_fusion.load_model(str(MODELS_DIR / "xgb_soh_fusion.json"))
 
+    # Dataset-aware routing's second model (CALCE/Oxford/HUST only - see
+    # EXTENDED_ROUTED_DATASETS above). ext_medians is precomputed and
+    # saved (precompute_ext_reformulation_medians.py) - the TRAIN-pool,
+    # post-reformulation column medians fit_xgb used when this model was
+    # trained; recomputing it live on every app start would mean
+    # reloading the full NASA+MIT pool (a multi-second operation) for a
+    # constant that never changes unless the model itself is retrained.
+    xgb_fusion_extended = XGBRegressor()
+    xgb_fusion_extended.load_model(str(MODELS_DIR / "_experimental_xgb_soh_fusion_extended_reformulation.json"))
+    ext_medians = json.loads((PROC_DIR / "ext_reformulation_medians.json").read_text())
+
     with open(MODELS_DIR / "ocsvm_model.pkl", "rb") as f:
         ocsvm = pickle.load(f)
     with open(MODELS_DIR / "ocsvm_scaler.pkl", "rb") as f:
@@ -129,6 +162,7 @@ def load_resources() -> dict:
         "background": background, "train_medians": train_medians,
         "vlstm": vlstm, "encoder": encoder, "joint_fusion": joint_fusion,
         "xgb_fusion": xgb_fusion,
+        "xgb_fusion_extended": xgb_fusion_extended, "ext_medians": ext_medians,
         "ocsvm": ocsvm, "ocsvm_scaler": ocsvm_scaler, "ocsvm_feature_cols": ocsvm_feature_cols,
         # kept for StreamingDigitalTwin's constructor API (digital_twin_streaming.py) -
         # the canonical reformulated names now, not the old pre-Stage-1 set; no longer
@@ -204,6 +238,81 @@ def build_reformulated_hi_vector(his: dict, train_medians: dict, baseline_his: d
             vec[i] = raw_val / base_val if abs(base_val) >= 1e-6 else 1.0
         else:
             vec[i] = raw_val
+    return vec
+
+
+def build_extended_reformulated_hi_vector(his: dict, baseline_his: dict | None,
+                                           battery_medians: dict, ext_medians: dict) -> np.ndarray:
+    """Extended analogue of build_reformulated_hi_vector, for the
+    dataset-aware-routed model (CALCE/Oxford/HUST - see
+    EXTENDED_ROUTED_DATASETS). RATIO for {ICHV,TEVD,TEVI,SCV,MET},
+    DELTA for {MATD,VIECT} - Stage 5's own established convention
+    (stage5_extended_reformulation.py), VDEDT passed through raw.
+
+    Mechanically faithful to how this exact model was TRAINED
+    (fit_xgb fills NaN with POST-reformulation, TRAIN-pool column
+    medians - NOT raw-feature medians, a materially different
+    statistic once a feature has been ratio/delta-transformed) -
+    verified end-to-end against the batch-validated numbers
+    (0.740/0.953/0.800 for CALCE/Oxford/HUST) before this function was
+    ever wired into live routing (see DEVELOPMENT_LOG.md and
+    src/verify_extended_live_feature_parity.py, whose own exact logic
+    this ports unchanged, not reimplemented from scratch).
+
+    battery_medians: {"SCV": ..., "MET": ...} - that SAME battery's own
+    median across ALL its cycles, used ONLY as the near-zero-baseline
+    ratio guard's fallback (mirrors stage5_extended_reformulation.
+    add_scv_matd_viect_reformulated's own per-battery guard exactly) -
+    in practice this guard essentially never fires (0 batteries needed
+    it across the entire TRAIN+CALCE pool when ext_medians was computed
+    - see that script's own log), but kept faithful to the validated
+    logic rather than assumed safe to drop.
+
+    ext_medians: TRAIN-pool, POST-reformulation column medians (see
+    precompute_ext_reformulation_medians.py) - fills any value this
+    function itself leaves as NaN (near-zero/missing baseline with no
+    battery_medians fallback either, or a genuinely missing raw
+    feature), matching fit_xgb's own training-time imputation exactly."""
+    vec = np.full(len(EXTENDED_CANONICAL_REL), np.nan, dtype=float)
+    for i, col in enumerate(EXTENDED_CANONICAL_REL):
+        raw_feat = col[:-4] if col.endswith("_rel") else col
+        raw_val = his.get(raw_feat)
+        raw_val = float(raw_val) if raw_val is not None else float("nan")
+
+        if raw_feat in ("ICHV", "TEVD", "TEVI"):
+            # UNCHANGED existing convention (matches build_reformulated_hi_vector exactly)
+            if raw_val != raw_val:
+                raw_val = 0.0
+            base_val = None
+            if baseline_his is not None:
+                base_val = baseline_his.get(raw_feat)
+                if base_val is not None and (base_val != base_val or abs(base_val) < 1e-6):
+                    base_val = None
+            if base_val is None:
+                base_val = raw_val if abs(raw_val) >= 1e-6 else 1.0
+            vec[i] = raw_val / base_val if abs(base_val) >= 1e-6 else 1.0
+
+        elif raw_feat in EXT_RATIO_RAW_FEATURES:  # SCV, MET
+            base_val = baseline_his.get(raw_feat) if baseline_his is not None else None
+            if base_val is None or base_val != base_val or abs(base_val) < 1e-6:
+                base_val = battery_medians.get(raw_feat)
+            if base_val is not None and np.isfinite(base_val) and abs(base_val) >= 1e-6 and raw_val == raw_val:
+                vec[i] = raw_val / base_val
+            # else leave NaN -> filled by ext_medians below
+
+        elif raw_feat in EXT_DELTA_RAW_FEATURES:  # MATD, VIECT
+            base_val = baseline_his.get(raw_feat) if baseline_his is not None else None
+            if base_val is not None and base_val == base_val and raw_val == raw_val:
+                vec[i] = raw_val - base_val
+            # else leave NaN -> filled by ext_medians below
+
+        else:  # VDEDT, raw passthrough
+            vec[i] = raw_val
+
+    nan_mask = np.isnan(vec)
+    if nan_mask.any():
+        for i in np.where(nan_mask)[0]:
+            vec[i] = ext_medians[EXTENDED_CANONICAL_REL[i]]
     return vec
 
 
@@ -443,6 +552,7 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
         true_soh = float(his.get("SOH", float("nan")))
         baseline_match = sub[sub["cycle_idx"] == BASELINE_CYCLE]
         baseline_his = baseline_match.iloc[0].to_dict() if not baseline_match.empty else None
+        battery_medians = {"SCV": sub["SCV"].median(), "MET": sub["MET"].median()}
 
         all_emb = _calce_fusion_embeddings(battery_id, res["encoder"], res["norm_stats"])
         if all_emb is None or pos >= len(all_emb):
@@ -458,19 +568,62 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
         r = row.iloc[0]
         his = r.to_dict()
         true_soh = float(his.get("SOH", float("nan")))
-        base_row = df[(df["battery_id"] == battery_id) & (df["cycle_idx"] == BASELINE_CYCLE)]
-        baseline_his = base_row.iloc[0].to_dict() if not base_row.empty else None
+        battery_df = df[df["battery_id"] == battery_id].sort_values("cycle_idx")
+        base_row = battery_df[battery_df["cycle_idx"] == BASELINE_CYCLE]
+        if not base_row.empty:
+            baseline_his = base_row.iloc[0].to_dict()
+        else:
+            # REAL BUG, found and fixed here (not present in the original
+            # narrower build_reformulated_hi_vector degradation path, which
+            # is a disclosed, deliberate fallback for a genuinely isolated
+            # cycle with no battery context - this branch DOES have full
+            # battery context, it just wasn't using it). Oxford has ZERO
+            # batteries with a real cycle_idx==10 row (confirmed directly -
+            # its own HI table samples every ~20-30 cycles, not every
+            # cycle) - falling back to None here fired for EVERY Oxford
+            # row, not a rare edge case, and produced degraded ICHV_rel/
+            # TEVD_rel/TEVI_rel (base model) and SCV_rel/MET_rel/MATD_rel/
+            # VIECT_rel (routed model) for all of them. Matches
+            # stage5_extended_reformulation._baseline_map's own convention
+            # exactly: that battery's own FIRST available cycle, not None -
+            # the SAME fix already verified end-to-end in
+            # verify_extended_live_feature_parity.py before being ported
+            # here (see DEVELOPMENT_LOG.md).
+            baseline_his = battery_df.iloc[0].to_dict()
+        battery_medians = {"SCV": battery_df["SCV"].median(), "MET": battery_df["MET"].median()}
         fusion_emb = r[[f"fusion_{i}" for i in range(16)]].to_numpy(dtype=float)
         no_temperature = dataset != "HUST"  # HUST has a temperature channel; Oxford/XJTU's raw pipeline does not carry one into this table
 
     else:
         return {"error": f"Precomputed fallback not implemented for dataset {dataset}."}
 
+    # ORIGINAL (Stage 4/base-model) feature vector - ALWAYS built, regardless of
+    # routing: the OC-SVM anomaly check below was fit on THIS feature
+    # representation and must never see the extended one (different scale,
+    # different columns - routing only ever swaps the SOH point-prediction
+    # model, never this diagnostic).
     hi_rel_vector = build_reformulated_hi_vector(his, train_medians, baseline_his)
     hi_vector = np.concatenate([hi_rel_vector, [float(cycle_idx)]])
     feat_vector = np.concatenate([hi_vector, fusion_emb])
 
-    pred_soh = float(res["xgb_fusion"].predict(feat_vector.reshape(1, -1))[0])
+    if dataset in EXTENDED_ROUTED_DATASETS:
+        ext_hi_rel_vector = build_extended_reformulated_hi_vector(
+            his, baseline_his, battery_medians, res["ext_medians"])
+        ext_hi_vector = np.concatenate([ext_hi_rel_vector, [float(cycle_idx)]])
+        ext_feat_vector = np.concatenate([ext_hi_vector, fusion_emb])
+        pred_soh = float(res["xgb_fusion_extended"].predict(ext_feat_vector.reshape(1, -1))[0])
+        shap_vector, shap_model, shap_cols = ext_feat_vector, res["xgb_fusion_extended"], EXTENDED_FEATURE_COLS
+    else:
+        pred_soh = float(res["xgb_fusion"].predict(feat_vector.reshape(1, -1))[0])
+        shap_vector, shap_model, shap_cols = feat_vector, res["xgb_fusion"], FEATURE_COLS
+
+    # NOTE, disclosed limitation: the conformal interval half-width below is
+    # the BASE model's own calibrated figure - this routing feature swaps the
+    # point-prediction model per dataset, but does not (yet) separately
+    # recalibrate conformal intervals for the extended model. Out of this
+    # item's scope (would need its own held-out calibration/eval battery
+    # split for the extended model) - the point prediction is what's been
+    # verified to match the batch-validated numbers, not the interval width.
     soh_half = res["constants"]["soh_conformal_half_width"]
 
     ocsvm_feat = feat_vector.reshape(1, -1)
@@ -488,8 +641,8 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
         domain_reasons.append("the One-Class SVM flags this cycle's feature vector as unlike "
                                "anything in the NASA+MIT training data")
 
-    top_features = _tree_shap_top_features(feat_vector, res["xgb_fusion"],
-                                            FEATURE_COLS + [f"fusion_{i}" for i in range(16)])
+    top_features = _tree_shap_top_features(shap_vector, shap_model,
+                                            shap_cols + [f"fusion_{i}" for i in range(16)])
 
     return {
         "soh_pred": round(pred_soh, 1),
@@ -509,15 +662,38 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
         "true_soh": round(true_soh, 1) if true_soh == true_soh else None,
         "true_rul": None,
         "precomputed_fallback": True,
+        "model_variant": "extended_reformulation" if dataset in EXTENDED_ROUTED_DATASETS else "base",
     }
 
 
-def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None) -> dict:
+def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None,
+                         dataset: str | None = None, battery_medians: dict | None = None) -> dict:
     """cycle: single cycle record (data_adapters convention). baseline_his:
     optional - this battery's own cycle-10 raw HI dict (see
     build_reformulated_hi_vector). Returns a full context dict for
     display, or {"error": ...} if the cycle is too short/malformed for
-    the sequence models."""
+    the sequence models.
+
+    dataset: optional - enables dataset-aware routing (see
+    EXTENDED_ROUTED_DATASETS) for the SOH point prediction ONLY, exactly
+    as predict_and_explain_precomputed does. RUL (joint_fusion) is
+    NEVER routed - it's a separate model, entirely outside this
+    routing's scope, unaffected regardless of dataset. Defaults to None
+    (base model, today's existing behavior) for backward compatibility
+    with any caller that doesn't pass it.
+
+    battery_medians: optional {"SCV":..., "MET":...} - this battery's
+    own median across all its cycles, for the extended model's ratio
+    near-zero-baseline guard (see build_extended_reformulated_hi_vector).
+    This "live" single-cycle path has no natural full-battery context
+    the way predict_and_explain_precomputed's callers do (they already
+    loop a whole battery's rows) - if the caller doesn't supply it, the
+    near-zero guard falls straight through to ext_medians instead, a
+    disclosed simplification for this path only. In practice this guard
+    essentially never fires (0 batteries needed it across the entire
+    TRAIN+CALCE pool when ext_medians was computed), so this only
+    matters for a hypothetical future battery with a genuinely
+    near-zero SCV/MET baseline."""
     train_medians = res["train_medians"]
 
     # 1. Health Indicators (always computable, even for very short cycles)
@@ -553,9 +729,22 @@ def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None
         _, pred_rul_z = res["joint_fusion"](torch.tensor(x_norm[None]), torch.tensor(hi_rel_z[None], dtype=torch.float32))
         pred_rul = destd(pred_rul_z, rul_mean, rul_std)
 
-    feat_vector = np.concatenate([hi_vector, fusion_emb])
-    pred_soh = float(res["xgb_fusion"].predict(feat_vector.reshape(1, -1))[0])
+    feat_vector = np.concatenate([hi_vector, fusion_emb])  # ORIGINAL vector - OC-SVM always uses this, unchanged
 
+    if dataset in EXTENDED_ROUTED_DATASETS:
+        ext_hi_rel_vector = build_extended_reformulated_hi_vector(
+            his, baseline_his, battery_medians or {}, res["ext_medians"])
+        ext_hi_vector = np.concatenate([ext_hi_rel_vector, [float(cycle["cycle_idx"])]])
+        ext_feat_vector = np.concatenate([ext_hi_vector, fusion_emb])
+        pred_soh = float(res["xgb_fusion_extended"].predict(ext_feat_vector.reshape(1, -1))[0])
+        shap_vector, shap_model, shap_cols = ext_feat_vector, res["xgb_fusion_extended"], EXTENDED_FEATURE_COLS
+    else:
+        pred_soh = float(res["xgb_fusion"].predict(feat_vector.reshape(1, -1))[0])
+        shap_vector, shap_model, shap_cols = feat_vector, res["xgb_fusion"], FEATURE_COLS
+
+    # Same disclosed limitation as predict_and_explain_precomputed: the
+    # conformal half-width is the base model's own calibrated figure,
+    # not separately recalibrated for the extended model.
     soh_half = res["constants"]["soh_conformal_half_width"]
     rul_half = res["constants"]["rul_conformal_half_width"]
 
@@ -573,8 +762,8 @@ def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None
         domain_reasons.append("the One-Class SVM flags this cycle's feature vector as unlike "
                                "anything in the NASA+MIT training data")
 
-    top_features = _tree_shap_top_features(feat_vector, res["xgb_fusion"],
-                                            FEATURE_COLS + [f"fusion_{i}" for i in range(16)])
+    top_features = _tree_shap_top_features(shap_vector, shap_model,
+                                            shap_cols + [f"fusion_{i}" for i in range(16)])
     voltage_region, voltage_region_error = _vlstm_voltage_region(
         x_raw, x_norm, res["vlstm"], res["background"]
     )
@@ -601,4 +790,5 @@ def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None
         "true_soh": None,  # filled in by the caller if ground truth is available
         "true_rul": None,
         "precomputed_fallback": False,
+        "model_variant": "extended_reformulation" if dataset in EXTENDED_ROUTED_DATASETS else "base",
     }

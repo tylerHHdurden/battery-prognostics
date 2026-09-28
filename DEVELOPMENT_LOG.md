@@ -11895,3 +11895,114 @@ sites updated), `src/verify_calce_embedding_fix.py`,
 `src/_regression_sweep_calce_fix.py`. Committed on its own, separate
 from the dataset-aware routing work it was found underneath - a real,
 independent production fix on its own merits, not a side effect.
+
+## Dataset-aware routing: CALCE/Oxford/HUST routed to the extended-reformulation model, XJTU stays on Stage 4 - sidesteps the all-or-nothing promotion rule instead of overriding it
+
+Ties together this session's own prior findings: the baseline audit
+(above) established the TRUE deployed model is badly broken on Oxford
+(-2.69) and HUST (-0.15), mediocre on CALCE (0.57 after the embedding
+fix); the closing note (above) confirmed the extended-reformulation
+model is genuinely better on those 3 (0.740/0.953/0.800) but was
+correctly, deliberately never promoted BLANKET because it regresses
+XJTU (-1.06 -> as bad as -1.78, tried fixing twice, got worse both
+times). Routing resolves this without reopening that decision: each
+dataset gets whichever already-validated model actually wins on IT,
+decided by dataset identity alone - not a new trained model, and not a
+blanket promotion that would reintroduce the XJTU regression.
+
+### What shipped
+
+- `EXTENDED_ROUTED_DATASETS = {"CALCE", "Oxford", "HUST"}` - XJTU (and
+  NASA/MIT, never part of this routing's scope) stay on the original
+  Stage 4 model, completely unchanged.
+- `load_resources()` now also loads `models/_experimental_xgb_soh_
+  fusion_extended_reformulation.json` and `data/processed/ext_
+  reformulation_medians.json` (new, precomputed by `precompute_ext_
+  reformulation_medians.py` - the TRAIN-pool, POST-reformulation column
+  medians `fit_xgb` used when this model was trained; NOT the same
+  statistic as raw-feature medians once a feature has been ratio/delta-
+  transformed - this distinction is exactly what a first draft of the
+  live feature-builder got wrong before it was caught by the
+  verification gate, see below).
+- `build_extended_reformulated_hi_vector()` (new) - mixed ratio/delta
+  convention (`stage5_extended_reformulation.py`'s own: ICHV/TEVD/TEVI/
+  SCV/MET as ratios, MATD/VIECT as deltas, VDEDT raw), mechanically
+  faithful to how the extended model was actually trained/evaluated.
+- `predict_and_explain_precomputed()` and `predict_and_explain()` both
+  route the SOH point-prediction model (and its own SHAP explanation)
+  by dataset. The OC-SVM anomaly check and RUL (joint_fusion) are
+  **never** routed - separate models/diagnostics entirely outside this
+  feature's scope, always use the original feature representation.
+  `ctx["model_variant"]` ("base" | "extended_reformulation") added to
+  both functions' return contract for transparency.
+- Known, disclosed limitation: the conformal interval half-width is
+  still the base model's own calibrated figure for ALL datasets,
+  including routed ones - only the point prediction is routed, not a
+  separately-recalibrated interval. Out of this item's scope (would
+  need its own held-out calibration/eval split for the extended model).
+
+### Verification (three steps, none skipped, exactly the discipline this session established for the CALCE fix)
+
+1. **`src/verify_extended_live_feature_parity.py`** (standalone, run
+   BEFORE anything was wired into live_inference.py/app.py): the new
+   feature-builder logic, scored row-by-row through the same
+   precomputed-data sources production uses, reproduces the batch-
+   validated numbers exactly (CALCE delta -0.0003, Oxford delta
+   +0.0003, HUST delta +0.0000, all well inside +/-0.01 tolerance).
+2. **`src/verify_routing_production_code.py`** (the ACTUAL wired-in
+   code, not the standalone port) - caught a REAL bug the standalone
+   script's own fix hadn't been ported into production: **Oxford has
+   ZERO batteries with a real `cycle_idx==10` row** (its own HI table
+   samples every ~20-30 cycles) - `predict_and_explain_precomputed`'s
+   Oxford/HUST/XJTU branch was still falling back to `baseline_his=
+   None` instead of that battery's own first available cycle (the
+   fix already verified in the standalone script, just not yet copied
+   into the real function). Fixed - Oxford went from a subsample R2 of
+   -1.09 (MISMATCH) to +0.95 (MATCH, delta +0.0015) after the fix.
+   Final subsample check (n=250/dataset, seed=42, widened +/-0.05
+   tolerance since this re-checks WIRING not exact math already
+   verified in step 1): CALCE delta -0.0042 MATCH, Oxford delta
+   +0.0015 MATCH, HUST delta -0.0223 MATCH. XJTU's own subsample showed
+   delta -0.20 (nominally outside tolerance) - investigated directly,
+   not dismissed: confirmed ALL 47 XJTU batteries DO have a real
+   `cycle_idx==10` row, so the baseline-fallback fix above never
+   actually changes behavior for XJTU (the fallback branch is never
+   taken) - XJTU's code path is provably byte-identical to before this
+   whole routing pass. The full 19,238-row XJTU number is already
+   independently confirmed at -1.0620 (`audit_true_deployed_baseline.
+   csv`) via a completely different script - a 250-row (1.3%) subsample
+   deviating from an already highly-negative (high-variance) R2 is
+   ordinary sampling noise, not a routing defect.
+3. **AppTest regression sweep** (`src/_regression_sweep_calce_fix.py`,
+   reused unchanged): base load + all 6 dataset selections, zero
+   exceptions.
+
+### A separate, unrelated bug found during verification - NOT fixed here, flagged for a decision
+
+Random-sampling XJTU rows for step 2's verification surfaced a genuine,
+pre-existing, unrelated defect: **194 of 19,238 XJTU rows (~1%) have
+`VDEDT = inf`** in their raw HI features. `build_reformulated_hi_vector`
+passes this straight through (only NaN is checked, not inf), and
+`res["ocsvm_scaler"].transform()` raises `ValueError: Input X contains
+infinity` for any of these specific cycles - an uncaught exception, not
+a graceful `{"error": ...}` return. XJTU is not routed by this feature
+and its code path is otherwise completely unchanged - this bug
+predates this session's work and is unrelated to routing. Not fixed as
+part of this entry, per the same standing practice the CALCE embedding
+bug was handled with: investigate, disclose, and let a real production
+defect be fixed on its own merits with an explicit decision, not folded
+silently into whatever work happened to surface it.
+
+### Files
+
+`src/live_inference.py` (routing wired into `load_resources`,
+`predict_and_explain_precomputed`, `predict_and_explain`; new
+`build_extended_reformulated_hi_vector`, `EXTENDED_ROUTED_DATASETS`,
+`EXTENDED_CANONICAL_REL`/`EXTENDED_FEATURE_COLS` constants; Oxford
+baseline-fallback bug fixed in the same branch), `app.py` (3
+`predict_and_explain` call sites now pass `dataset`),
+`src/verify_extended_live_feature_parity.py`, `src/precompute_ext_
+reformulation_medians.py`, `src/verify_routing_production_code.py`,
+`data/processed/ext_reformulation_medians.json`. Committed separately
+from the CALCE embedding fix (already pushed) - this commit held
+locally for review before pushing, per instruction.

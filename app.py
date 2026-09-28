@@ -887,9 +887,9 @@ def render_battery_comparison_section():
 
     res = get_resources()
     with st.spinner("Running live inference for both batteries..."):
-        ctx_a = (predict_and_explain(cyc_a, res, baseline_his=base_his_a) if mode_a == "live"
+        ctx_a = (predict_and_explain(cyc_a, res, baseline_his=base_his_a, dataset=ds_a) if mode_a == "live"
                   else predict_and_explain_precomputed(ds_a, bid_a, cyc_a, res))
-        ctx_b = (predict_and_explain(cyc_b, res, baseline_his=base_his_b) if mode_b == "live"
+        ctx_b = (predict_and_explain(cyc_b, res, baseline_his=base_his_b, dataset=ds_b) if mode_b == "live"
                   else predict_and_explain_precomputed(ds_b, bid_b, cyc_b, res))
 
     col_a, col_b = st.columns(2)
@@ -2983,7 +2983,7 @@ def main():
                 from stage1_common import BASELINE_CYCLE as _BASELINE_CYCLE
                 _baseline_cycle = next((c for c in cycles if c["cycle_idx"] == _BASELINE_CYCLE), cycles[0])
                 _baseline_his = _compute_his(_baseline_cycle)
-                ctx = predict_and_explain(selected_cycle, res, baseline_his=_baseline_his)
+                ctx = predict_and_explain(selected_cycle, res, baseline_his=_baseline_his, dataset=dataset)
 
         if "error" in ctx:
             st.error(ctx["error"])
