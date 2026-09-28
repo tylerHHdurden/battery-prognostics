@@ -63,8 +63,9 @@ This project builds a full lithium-ion battery State-of-Health (SOH) and Remaini
 37. [Adaptive Conformal Inference (ACI)](#session-29)
 38. [Digital Twin Showcase tab](#session-30)
 39. [Broken-tabs fix + visual pass](#session-31)
-40. [Full file index](#file-index)
-41. [Verification](#verification)
+40. [A note on scope, and three later findings worth knowing about](#post-audit)
+41. [Full file index](#file-index)
+42. [Verification](#verification)
 
 ---
 
@@ -1076,8 +1077,43 @@ Changed: `app.py` only (97 insertions, 16 deletions). No new files.
 
 ---
 
+<a id="post-audit"></a>
+## 40. A note on scope, and three later findings worth knowing about
+
+A large amount of further work happened after session 31 — a structured seven-stage improvement plan, then two full rounds of additional research experiments — recorded in full in `DEVELOPMENT_LOG.md`, which has grown from the 3,683 lines this document was originally verified against to roughly 12,000. This document was not rewritten to cover all of it; that would make it a different, much longer document. What follows instead are the three findings from that later work that directly affect what the live dashboard actually shows a user today, added here so this presentation doesn't go on describing an out-of-date picture of the deployed app.
+
+### What "the deployed model" means, precisely
+
+The model actually running in the live dashboard for SOH prediction has been unchanged since a later retraining pass ("Stage 4"): the same XGBoost-on-fused-features architecture described throughout this document, with one further feature reformulation added on top (Stage 1.1's duration-feature ratios). Its real accuracy on held-out data, checked directly against the model file itself rather than any older note or summary table:
+
+| held-out dataset | R² |
+|---|---|
+| in-domain test split | 0.974 |
+| CALCE (out-of-domain) | 0.568 |
+| Oxford (out-of-domain) | **-2.69** |
+| HUST (out-of-domain) | **-0.15** |
+| XJTU (out-of-domain) | -1.06 |
+
+That Oxford and HUST result is genuinely bad — worse than just predicting the average. A separate, later reformulation of the input features (swapping four of the health indicators for ratio/delta versions relative to each battery's own early cycles) was tried specifically to fix this, and it worked dramatically well on three of the four held-out datasets: **CALCE 0.740, Oxford 0.953, HUST 0.800**. But it made the fourth, XJTU, meaningfully worse (down to around -1.6 to -1.8) — tried twice, fixed differently each time, and it got worse both times, not better. Because of that one regression, this reformulated model was correctly never promoted to replace the deployed model outright — a genuine, disclosed trade-off, not an oversight.
+
+Elsewhere in this project's own working notes, that reformulated model's numbers were at one point informally referred to as "the deployed model's" numbers, without the caveat that it was a separate, unpromoted model — a labeling slip in one internal script, not a real claim anywhere that it had actually replaced the deployed model. It hadn't; the model file itself was checked directly and confirmed unchanged since Stage 4. This is noted here only so this document doesn't repeat that same slip.
+
+### Dataset-aware routing: giving each dataset the model that actually works for it
+
+Rather than either keep the original model everywhere (accepting Oxford/HUST's bad numbers) or promote the reformulated one everywhere (accepting XJTU's regression), the dashboard now does something simpler: it uses whichever of the two already-validated models actually performs best on the dataset currently selected. CALCE, Oxford, and HUST now use the reformulated model; XJTU stays on the original. Nothing new was trained — this is a routing decision at prediction time, based on which dataset the user picked, not a new model.
+
+This was verified two ways before being switched on: first, that the routing logic reproduces the validated numbers above exactly when tested standalone; second, by testing the actual live prediction code directly and confirming the same numbers come out, plus a full check that every one of the app's six dataset options still loads and predicts without error.
+
+### Two live bugs found and fixed
+
+**CALCE predictions were wrong from the day this dashboard first went live, not just off by a little.** The step that turns a CALCE battery's discharge-curve shape into a feature the model can read was feeding it raw, unnormalized numbers, when the model was trained expecting those same numbers scaled down first. The gap was large — in one direct comparison, the un-normalized and correctly-normalized versions of the same value differed by a factor of roughly two million. Because the dashboard's deployed copy never has the raw underlying data files available to it (they're too large to ship with the app), every single CALCE prediction on the live site went through this exact, broken step. Fixed by adding the missing normalization; checked directly against the correct number afterward and confirmed it now matches.
+
+**Selecting certain XJTU batteries and cycles could crash the page outright.** One of the health indicators (a measure of how fast voltage drops right at the end of a discharge) is calculated by dividing by the time between two consecutive readings. For about 1% of XJTU's cycles, the raw data logs the exact same timestamp twice in a row at the very end of discharge — a real quirk in that dataset's own recording, confirmed by looking directly at the raw numbers for one such cycle. Dividing by that zero produced an invalid, infinitely large value, which then made a downstream safety check crash instead of returning a prediction. Fixed by skipping that one bad reading instead of dividing by it; verified the specific previously-crashing cycle now returns a normal prediction, and re-ran the full six-dataset check with zero errors.
+
+---
+
 <a id="file-index"></a>
-## 40. Full file index
+## 41. Full file index
 
 ### `outputs/` — 19 PNGs, 20 CSVs, 1 JSON
 
@@ -1189,7 +1225,7 @@ Each `logs_<script>.txt` is the raw terminal capture from the corresponding pipe
 ---
 
 <a id="verification"></a>
-## 41. Verification
+## 42. Verification
 
 **Image path verification**: all 19 `outputs/*.png` files referenced above were confirmed to exist on disk via `ls -la outputs/*.png` immediately before this document was written (file sizes 22.7KB–166.4KB, timestamps Jul 22 – Aug 31 2026). **No broken image links** — every embedded `![...](outputs/....png)` path corresponds to a file confirmed present in this repository at the time of writing.
 
@@ -1198,3 +1234,5 @@ Each `logs_<script>.txt` is the raw terminal capture from the corresponding pipe
 **File counts confirmed at time of writing**: `outputs/` — 19 PNGs, 20 CSVs, 1 JSON. `data/processed/predictions/` — 52 CSVs. `logs/` — 55 `.txt` files. `DEVELOPMENT_LOG.md` — 3,683 lines (~211KB).
 
 **This document**: generated as a single markdown file, `PRESENTATION_SUMMARY.md`, at the repository root, intended for viewing via VS Code's Markdown Preview (Ctrl+Shift+V) — all image references use paths relative to the repo root, matching where this file lives.
+
+**Later update**: section 40 was added afterward to correct this document's picture of the live deployed app following further work not otherwise covered here. Its own numbers were checked directly against the model file and the live prediction code at the time it was written, separately from the verification pass described above — the file/line counts above describe this document's original scope (sections 1–39) only, not section 40.
