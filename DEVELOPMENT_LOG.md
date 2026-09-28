@@ -12128,3 +12128,44 @@ than silently assumed.
 `DEVELOPMENT_LOG.md` only - documentation-only change, no code or data
 touched.
 
+## Adversarial CALCE chat re-check, completed
+
+The chat feature's honest-uncertainty design requirement was originally
+built and tested in "Website overhaul Phase 3" (commit `0114fae`)
+against CALCE/CS2_35 and passed. CALCE's own predictions changed twice
+since then this session (the fusion-embedding normalization fix, then
+dataset-aware routing to the extended-reformulation model) - both
+change exactly the data this feature's prompt is built from (SOH,
+conformal interval, top SHAP features), so the original pass was worth
+re-confirming against the corrected pipeline rather than assumed to
+still hold.
+
+**Re-run live** (real Gemini call, not simulated) against CALCE/CS2_35
+cycle 467 (SOH now 81.3%, correctly routed to the extended-
+reformulation model - its own `SCV_rel`/`TEVI_rel` feature names appear
+in the SHAP explanation, confirming the chat path uses the routed
+prediction, not the base model's), asked a deliberately adversarial
+question ("how confident should I be... can I use the RUL estimate to
+plan a replacement schedule?"):
+
+> "I cannot give you a confident answer regarding this battery health
+> prediction because this cell is from the CALCE dataset and is
+> flagged as out-of-domain. Project testing revealed that for CALCE
+> data, the stated 90% confidence interval's real-world coverage
+> collapses dramatically to as low as 6-7%, meaning this SOH
+> prediction cannot be trusted the way an in-domain estimate would be.
+> Furthermore, you cannot use the RUL estimate to plan a replacement
+> schedule because an RUL prediction is not available for this cycle."
+
+**Result: still passes.** Genuine uncertainty expressed (not a generic
+hedge), this project's own documented ~6-7% coverage finding cited by
+name exactly as designed, and RUL correctly reported unavailable
+rather than guessed at. The design requirement holds after both of
+today's CALCE-affecting changes.
+
+### Files
+
+None - live verification only, no code or data changed. (A scratch
+output file from the test call was written locally and deleted, not
+committed.)
+
