@@ -356,6 +356,11 @@ GLOSSARY = {
     "ACI": "Adaptive Conformal Inference - an online-updating variant of conformal prediction whose target miscoverage rate adapts over time, designed for settings (like an online-learning model) where the fixed-calibration exchangeability assumption breaks down.",
     "SHAP": "SHapley Additive exPlanations - a game-theoretic method for attributing a model's prediction to its individual input features.",
     "LIME": "Local Interpretable Model-agnostic Explanations - explains one prediction at a time by fitting a simple local surrogate model around it, independent of SHAP's exact game-theoretic method - used here to cross-validate SHAP's feature rankings.",
+    "conformal prediction": "a statistical method for building prediction intervals (e.g. a \"90% confidence interval\") with a guaranteed coverage rate ON DATA LIKE WHAT IT WAS CALIBRATED ON. That guarantee can quietly fail when the input looks meaningfully different from the calibration data - which is exactly why an interval is sometimes flagged unreliable on this site rather than trusted at face value.",
+    "ICA": "Incremental Capacity Analysis - NOT Independent Component Analysis, despite the same acronym. A way of transforming a battery's raw voltage/current curve into a shape (capacity vs. voltage, and related derivatives) that's more sensitive to specific degradation mechanisms than the raw curve itself.",
+    "One-Class SVM": "a model trained on ONLY normal (NASA+MIT training) data that learns what \"typical\" looks like, then flags any new input that falls outside that learned boundary. Used here as an out-of-domain/anomaly check, separate from the SOH prediction itself.",
+    "DiCE": "Diverse Counterfactual Explanations - a method that searches for the smallest realistic change to a prediction's input features that would flip the prediction to a different, specified outcome.",
+    "ADWIN": "ADaptive WINdowing - an algorithm that watches a stream of values (here, prediction error) and signals when their statistical behavior shifts meaningfully, used to flag possible concept drift.",
 }
 
 
@@ -584,8 +589,10 @@ def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_i
         emoji, color, label = soh_band(ctx["soh_pred"])
         st.markdown(f"{emoji} :{color}[**{label}**] "
                     f"(bands: green >80% healthy, yellow 50-80% degraded, red <50% critical)")
-        st.caption(f"90% conformal interval: {ctx['soh_conformal_lo']}% – {ctx['soh_conformal_hi']}%"
-                   + (" ⚠️ unreliable, see banner above" if ctx["out_of_domain"] else ""))
+        st.caption(f"90% {glossary_term('conformal prediction')} interval: "
+                   f"{ctx['soh_conformal_lo']}% – {ctx['soh_conformal_hi']}%"
+                   + (" ⚠️ unreliable, see banner above" if ctx["out_of_domain"] else ""),
+                   unsafe_allow_html=True)
     with col2:
         if ctx["rul_pred"] is None:
             st.metric("Predicted RUL", "not available")
@@ -594,15 +601,18 @@ def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_i
             delta = None if true_rul is None else round(ctx["rul_pred"] - true_rul)
             st.metric("Predicted RUL", f"{ctx['rul_pred']} cycles",
                        delta=(f"{delta:+d} vs. true {true_rul}" if delta is not None else None))
-            st.caption(f"90% conformal interval: {ctx['rul_conformal_lo']} – {ctx['rul_conformal_hi']} cycles"
-                       + (" ⚠️ unreliable, see banner above" if ctx["out_of_domain"] else ""))
+            st.caption(f"90% {glossary_term('conformal prediction')} interval: "
+                       f"{ctx['rul_conformal_lo']} – {ctx['rul_conformal_hi']} cycles"
+                       + (" ⚠️ unreliable, see banner above" if ctx["out_of_domain"] else ""),
+                       unsafe_allow_html=True)
             st.caption("_RUL comes from a separate joint SOH+RUL model - the deployed "
                        "XGBoost-fusion model that predicts SOH does not predict RUL itself._")
 
     st.divider()
     if ctx["anomaly_flag"]:
-        st.error("🚨 **Anomaly flag**: the One-Class SVM considers this cycle's feature "
-                  "vector unlike the NASA+MIT training distribution.")
+        st.error("🚨 **Anomaly flag**: the One-Class SVM (a model trained on typical NASA+MIT "
+                  "data that flags anything unlike it) considers this cycle's feature vector "
+                  "unlike the NASA+MIT training distribution.")
     else:
         st.success("✅ No anomaly flagged (One-Class SVM) - this cycle's feature vector "
                     "looks consistent with the NASA+MIT training distribution.")
@@ -643,6 +653,11 @@ def render_explainability_tab(ctx: dict):
                "average over many cycles.")
 
     st.subheader("Top contributing features (TreeSHAP)")
+    top = ctx["top_features"][0] if ctx["top_features"] else None
+    if top is not None:
+        direction = "pushed the prediction UP" if top["shap_value"] > 0 else "pushed the prediction DOWN"
+        st.markdown(f"**Most influential factor for this cycle:** `{top['feature']}` "
+                    f"({top['description']}) - it {direction} more than anything else.")
     feat_df = pd.DataFrame(ctx["top_features"])
     st.dataframe(feat_df[["feature", "description", "shap_value"]], hide_index=True,
                  width="stretch")
@@ -652,8 +667,9 @@ def render_explainability_tab(ctx: dict):
     st.subheader("Voltage region driving this prediction (VLSTM DeepSHAP)")
     if ctx["voltage_region"]:
         vr = ctx["voltage_region"]
-        st.write(f"**{vr['v_lo']}V – {vr['v_hi']}V** "
-                 f"(~{round(vr['frac_of_attribution']*100)}% of attribution)")
+        st.markdown(f"**Where this prediction's reasoning concentrated:** the "
+                    f"**{vr['v_lo']}V – {vr['v_hi']}V** window of the discharge curve "
+                    f"(~{round(vr['frac_of_attribution']*100)}% of the model's attention).")
         st.caption("This is the voltage window where VLSTM's own gradient-based explanation "
                    "(DeepSHAP) concentrates most of its attention when predicting this "
                    "specific cycle's SOH - computed fresh per cycle, not a fixed constant.")
@@ -669,19 +685,26 @@ def render_explainability_tab(ctx: dict):
         st.info("Counterfactual examples aren't available on this deploy.")
     else:
         st.markdown(
-            "Generating a counterfactual (via DiCE) takes real search time per battery - too "
-            "slow to run live for an arbitrary selection here - so this shows 5 representative "
-            "example cases, precomputed once from this project's own held-out test batteries, "
-            "each with the same bounded search a later closeout fixed (an earlier version of "
-            "this search let one rarely-glitchy feature wander to physically absurd values; "
-            "now bounded to the sane, observed range - see the Full Results Archive's Stage 6.6 "
-            "entry for the full story)."
+            f"Generating a counterfactual (via {glossary_term('DiCE')}) takes real search time "
+            f"per battery - too slow to run live for an arbitrary selection here - so this shows "
+            f"5 representative example cases, precomputed once from this project's own held-out "
+            f"test batteries, each with the same bounded search a later closeout fixed (an "
+            f"earlier version of this search let one rarely-glitchy feature wander to physically "
+            f"absurd values; now bounded to the sane, observed range - see the Full Results "
+            f"Archive's Stage 6.6 entry for the full story).",
+            unsafe_allow_html=True,
         )
         cf_df["case"] = cf_df["battery_id"] + " · cycle " + cf_df["cycle_idx"].astype(str)
         cases = list(dict.fromkeys(cf_df["case"]))
         choice = st.selectbox("Example case", cases, key="cf_case_picker")
         case_rows = cf_df[cf_df["case"] == choice]
         first = case_rows.iloc[0]
+        st.markdown(
+            f"**In plain terms:** the rows below are realistic COMBINATIONS of feature changes "
+            f"that would be enough to flip this battery's prediction to a meaningfully worse "
+            f"outcome - not a forecast of what will happen, just examples of the smallest "
+            f"realistic push that could."
+        )
         st.write(f"Current predicted SOH: **{first['current_pred']:.1f}%** → "
                  f"target (a meaningful ~15-point drop, an \"early-retirement\" scenario): "
                  f"**{first['target']:.1f}%**")
@@ -2599,11 +2622,12 @@ def render_streaming_twin_tab(res: dict):
         "cycles), this mode keeps a small **online-learning corrector** that updates, "
         "cycle by cycle, using ONLY cycles already streamed in so far - a genuine "
         "incremental model, not a lookup table replaying precomputed numbers. "
-        "**What's frozen**: the XGBoost-fusion SOH model, the ICA fusion encoder, the "
-        "RUL model, and the anomaly detector - none of these are retrained here. "
+        f"**What's frozen**: the XGBoost-fusion SOH model, the {glossary_term('ICA')} fusion "
+        f"encoder, the RUL model, and the anomaly detector - none of these are retrained here. "
         "**What updates online**: a lightweight residual-correction term that learns as "
         "each new cycle's true outcome is revealed - see the Full Results Archive for "
-        "exactly how it works, and an honest report of whether it actually helps."
+        "exactly how it works, and an honest report of whether it actually helps.",
+        unsafe_allow_html=True,
     )
 
     choice = st.selectbox(
@@ -2801,13 +2825,15 @@ def render_streaming_twin_tab(res: dict):
         n_drift = len(twin.drift_events) if hasattr(twin, "drift_events") else 0
         if n_drift:
             drift_cycles = ", ".join(str(e["cycle_idx"]) for e in twin.drift_events)
-            st.warning(f"🔶 **{n_drift} concept-drift event(s) flagged** by the standalone ADWIN "
-                       f"detector (monitoring the raw pipeline's own prediction residual stream) "
-                       f"at cycle(s): {drift_cycles}. This is a genuine signal that the raw "
-                       f"pipeline's error behavior shifted noticeably at that point - not "
-                       f"necessarily a problem with the battery itself.")
+            st.warning(f"🔶 **{n_drift} concept-drift event(s) flagged** by the standalone "
+                       f"ADWIN detector (an algorithm that watches the prediction-error stream "
+                       f"and signals when its statistical behavior shifts) at cycle(s): "
+                       f"{drift_cycles}. This is a genuine signal that the raw pipeline's error "
+                       f"behavior shifted noticeably at that point - not necessarily a problem "
+                       f"with the battery itself.")
         else:
-            st.caption("No concept-drift events flagged by ADWIN during this replay.")
+            st.caption(f"No concept-drift events flagged by {glossary_term('ADWIN')} during "
+                       f"this replay.", unsafe_allow_html=True)
 
         st.markdown("---")
         st.subheader("🔭 What might happen next?")

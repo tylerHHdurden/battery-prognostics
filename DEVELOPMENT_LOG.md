@@ -12169,3 +12169,93 @@ None - live verification only, no code or data changed. (A scratch
 output file from the test call was written locally and deleted, not
 committed.)
 
+## Phase 9 (audience layering): one-sentence-verdict pass + inline-jargon sweep
+
+Completes the work flagged as never done (confirmed via git history: the
+"Phase N" commit sequence jumps directly from Phase 5 (`e9a87b6`) to
+Phase 10 (`2176f4c`) with zero commits for Phases 6-9 - genuine
+evidence, not just recollection, that this was never executed).
+Copy/content changes only, no model or prediction logic touched.
+
+### Scope judgment, stated explicitly per instruction
+
+Treated 6 of the app's 8 tabs as visitor-facing: **Showcase, Prediction,
+Explainability, Health Report, Streaming Digital Twin, World Model**.
+This matches and extends Phase 2's own already-established precedent
+(commit `4e2e1a8`, which scoped jargon-stripping to "Showcase,
+Prediction, Explainability, Health Report, Streaming Digital Twin...
+NOT the Full Results Archive") - World Model is added here because
+Phase 5 (`e9a87b6`) explicitly promoted it to a dedicated top-level tab
+"paired... as a direct pointer, not a fold-in" alongside the Digital
+Twin, the same treatment as an already-primary tab. **Model Validation**
+and **Full Results Archive** were judged OUT of scope and left
+untouched: both are explicitly technical/methodology sections by their
+own naming and majority content (evaluation-protocol caveats, the
+88-section research archive) - the same category Phase 2 already
+excluded the Archive from, extended here to Model Validation by the
+same reasoning, not a new rule invented for this pass.
+
+### One-sentence-verdict pass
+
+Surveyed all 6 in-scope tabs before editing. Found Showcase, World
+Model, Streaming Digital Twin, Health Report, and Prediction's
+Recommendation section already had strong verdict-first framing from
+earlier phases (`_showcase_verdict`, World Model's "Reported plainly,
+not softened" block, Streaming Twin's "Honest summary" section, the
+Recommendation widget's own colored action verdict) - genuinely little
+to add there. The real gap was the **Explainability tab's three
+subsections** (TreeSHAP feature table, VLSTM voltage-region, DiCE
+counterfactuals), which showed raw technical output with no upfront
+plain-language takeaway. Added one to each:
+- TreeSHAP: a computed-live (not hardcoded) sentence naming the single
+  most influential feature for the specific cycle being viewed, before
+  the full ranked table.
+- Voltage region: reordered to lead with a plain "where this
+  prediction's reasoning concentrated" sentence, raw voltage range
+  second.
+- Counterfactuals: added a per-selection plain-language framing
+  sentence ("realistic COMBINATIONS of feature changes... not a
+  forecast, just examples of the smallest realistic push") before the
+  raw before/after feature deltas.
+
+### Inline-jargon sweep
+
+Five real, repeated, undefined terms found across the 6 in-scope tabs
+and added to the existing `GLOSSARY` mechanism (native hover-tooltip
+via `glossary_term()`, unchanged from Part D #12's own design):
+**conformal prediction** (the single most-repeated undefined term in
+the app - "conformal interval" appeared in the Prediction tab with no
+definition anywhere), **ICA** (disclosed collision risk: this project's
+own acronym for Incremental Capacity Analysis, easily confused with the
+unrelated "Independent Component Analysis" - the definition says so
+explicitly), **One-Class SVM**, **DiCE**, **ADWIN**. Wired into every
+occurrence found in the 6 in-scope tabs' visitor-facing text.
+
+### Two real bugs found and fixed during this edit, not shipped
+
+`st.error`/`st.warning`/`st.success`/`st.info` do **not** support the
+`unsafe_allow_html` parameter in the installed Streamlit version
+(1.55.0) - confirmed directly via `inspect.signature()`, not assumed -
+only `st.markdown`/`st.caption` do. A first-draft edit passed
+`unsafe_allow_html=True` to `st.error`/`st.success` (Prediction tab's
+One-Class SVM anomaly banner) and `st.warning` (Streaming Twin's ADWIN
+drift banner), which would have raised `TypeError` the moment either
+branch rendered - caught before shipping, not left for a user to find.
+Fixed by using plain inline parenthetical definitions in those two
+specific spots instead of the HTML-tooltip mechanism (which needs
+`st.markdown`/`st.caption`). Verified every one of the file's 18
+`unsafe_allow_html=True` call sites (old and new) programmatically
+attaches only to `markdown`/`caption`, not just the 2 fixed ones.
+
+### Verification
+
+Full `AppTest` regression sweep (`src/_regression_sweep_calce_fix.py`,
+reused unchanged): base load + all 6 dataset selections, zero
+exceptions.
+
+### Files
+
+`app.py` only (glossary additions + wiring, Explainability tab verdict
+sentences, the 2 bugs found-and-fixed above). No model, prediction, or
+routing logic touched - copy/content only, as scoped.
+
