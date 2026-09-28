@@ -12077,3 +12077,54 @@ audit trail). `data/processed/stage5_1_xjtu_merged.parquet` regenerated
 in place (VDEDT column only). Committed separately from the routing
 build (`0f039cb`) and the CALCE embedding fix (already pushed) - this
 commit held locally for review before pushing, per instruction.
+
+## Item 4's declined citation, completed - the cross-domain SSL paper found and verified
+
+Follow-up to item 4 of the 18-item research pass (above): the first
+citation (Shwartz-Ziv & Armon) was added at the time; the second - "the
+NASA/Oxford/SNL cross-domain SSL paper" - was declined then for lack of
+verified bibliographic details, rather than guessed at. Completed now
+with a specific citation, independently verified before being added
+(not taken on the user's own characterization alone, per this
+project's standing no-fabrication discipline - the same discipline
+that caused the original decline):
+
+**Citation added**: Feng, Y., Hu, G., Li, X., Zhang, Z., "Adapting
+Amidst Degradation: Cross Domain Li-ion Battery Health Estimation via
+Physics-Guided Test-Time Training," arXiv:2402.00068.
+
+**Why this one, not the other candidate offered**: two candidates were
+given - this arXiv paper, and an SSRN paper, "Diagnosing and Partially
+Mitigating Conformal Coverage Failure under Battery Deployment Shift
+for Joint SOC/SOH Estimation" (Akter, Yong, Liang, Sarkar). Checked
+both directly before choosing (arXiv abstract page fetched directly;
+the SSRN paper's own abstract found via search, SSRN itself returning
+403 to direct fetch) rather than assumed from title alone:
+- The arXiv paper's own abstract confirms it centers on exactly
+  self-supervised learning AND test-time training ("BatteryTTT," a
+  "practical Test-Time Training framework" combining self-supervised
+  learning with physics-guided methods) for CROSS-DOMAIN battery
+  health estimation - a direct match for "cross-domain SSL."
+- The SSRN paper is about something else entirely: conformal
+  prediction COVERAGE FAILURE under battery deployment/domain shift (a
+  physics-guided Transformer's prediction intervals, and post-hoc
+  corrections to them) - genuinely relevant to this project's own
+  conformal-prediction work elsewhere, but it has no self-supervised-
+  learning component at all, so it does not support a claim about
+  "cross-domain SSL" specifically.
+
+**One caveat, disclosed rather than glossed over**: the arXiv abstract
+does not explicitly name NASA/Oxford/SNL as its benchmark datasets (it
+references "current LIB benchmarks" without listing them by name in
+the abstract itself) - the dataset-name portion of the original task's
+own description could not be independently confirmed from the abstract
+alone. The topical match (cross-domain, self-supervised, battery health
+estimation) is exact and was verified directly; the specific dataset
+list was not independently re-verified beyond that. Noted here rather
+than silently assumed.
+
+### Files
+
+`DEVELOPMENT_LOG.md` only - documentation-only change, no code or data
+touched.
+
