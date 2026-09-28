@@ -12006,3 +12006,74 @@ reformulation_medians.py`, `src/verify_routing_production_code.py`,
 `data/processed/ext_reformulation_medians.json`. Committed separately
 from the CALCE embedding fix (already pushed) - this commit held
 locally for review before pushing, per instruction.
+
+## Production bug fix: XJTU's VDEDT=inf crash - same treatment as the CALCE embedding bug
+
+Real, independent bug found while verifying the routing feature above
+(unrelated to routing itself - XJTU is not routed and its code path
+was otherwise untouched), fixed on its own merits per the same standing
+practice the CALCE embedding fix was handled with.
+
+### Root cause, confirmed directly, not assumed
+
+`health_indicators.py`'s VDEDT formula (`mean(diff(V)/diff(t))` over
+the last 10% of discharge samples) divides by consecutive TIME deltas
+with no guard. Traced one specific failure directly to its raw source
+data: **XJTU/Batch-1/2C_battery-1, cycle 122** has a genuine DUPLICATE
+consecutive timestamp at the very end of its discharge log
+(`td[339] == td[340] == 3519.48s`), while voltage still drops slightly
+(`2.5003V -> 2.5V`) - an EXACT zero time-delta (not a near-zero one),
+confirmed by direct inspection of the raw discharge array, not
+inferred. `-0.0003 / 0 = -inf`, which then poisons the entire tail-
+window MEAN (mean of an array containing inf is inf) - one bad sample
+pair corrupts the whole feature for that cycle. Found in 194 of 19,238
+XJTU rows (~1%), a genuine artifact in XJTU's own raw cycler export,
+not a computation choice - confirmed absent from NASA/MIT/CALCE/
+Oxford/HUST's own already-saved HI tables (0 inf VDEDT rows in any of
+them), so this is specific to XJTU's raw data, not a general flaw in
+every dataset.
+
+### The fix, at the source
+
+`health_indicators.py`: VDEDT's tail-window computation now excludes
+any step with `|dt| <= 1e-9` from the mean, the same explicit near-
+zero-guard convention already used throughout this project's own
+ratio/delta reformulations (Stage 1.1, Stage 5) - disclosed, not
+silent. Verified directly on the traced cycle: VDEDT now
+`-0.0022991...` (a small, sensible negative slope, consistent with the
+surrounding non-corrupted tail values), not `-inf`.
+
+Fixing the LIVE function alone does not retroactively fix the already-
+persisted `data/processed/stage5_1_xjtu_merged.parquet` (built once by
+`run_stage5_1_new_datasets_eval.py` calling the OLD, buggy function) -
+`src/fix_xjtu_vdedt_inf.py` recomputes VDEDT for EVERY XJTU row (not
+just the 194 known-bad ones, so the fix's threshold is applied
+consistently rather than cherry-picked) via the same raw-cycle
+iteration the parquet was originally built from, and overwrites ONLY
+the VDEDT column in place - fusion embeddings, other HI columns, SOH,
+everything else untouched. 196 rows changed (194 that were inf, plus 2
+more with a near-zero-but-finite dt that the new guard threshold also
+affects, a real and expected consequence of applying the fix
+consistently, not a discrepancy). File backed up
+(`stage5_1_xjtu_merged.parquet.bak_pre_vdedt_fix`, local only, not
+committed) before being overwritten.
+
+### Verification (two steps, neither skipped)
+
+1. **Direct**: `np.isinf(df["VDEDT"]).sum()` on the regenerated parquet
+   = 0 (was 194). The specific traced cycle
+   (Batch-1/2C_battery-1/122) re-checked via the ACTUAL production
+   function (`predict_and_explain_precomputed`, not a reimplementation)
+   - no exception, a real prediction returned (`soh_pred=98.0`,
+   `model_variant="base"`, correctly unrouted).
+2. **Full AppTest regression sweep**: base load + all 6 dataset
+   selections, zero exceptions.
+
+### Files
+
+`src/health_indicators.py` (VDEDT formula fixed), `src/fix_xjtu_vdedt_
+inf.py` (one-time regeneration script, kept for reproducibility/
+audit trail). `data/processed/stage5_1_xjtu_merged.parquet` regenerated
+in place (VDEDT column only). Committed separately from the routing
+build (`0f039cb`) and the CALCE embedding fix (already pushed) - this
+commit held locally for review before pushing, per instruction.

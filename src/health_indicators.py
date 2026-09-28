@@ -151,8 +151,30 @@ def compute_health_indicators(cycle: dict) -> dict:
         # VDEDT = Voltage Drop rate at End of Discharge Time: mean dV/dt
         # over the last 10% of discharge samples (rate of voltage
         # collapse approaching cutoff — sensitive to internal resistance).
+        #
+        # REAL BUG, found and fixed (not present when this was first
+        # written): some cyclers' raw logs contain a genuine DUPLICATE
+        # consecutive timestamp at the very end of discharge (confirmed
+        # directly on XJTU Batch-1/2C_battery-1 cycle 122: td[339]==
+        # td[340]==3519.48s while voltage still drops 2.5003->2.5V) - an
+        # exact zero time-delta, not a near-zero one. Dividing by it
+        # produces +/-inf, which then poisons the WHOLE tail-window mean
+        # (mean of an array containing inf is inf) - confirmed present in
+        # 194/19,238 XJTU rows this way, a genuine data artifact in the
+        # raw export, not a computation choice. Explicit near-zero guard
+        # (same convention as every other ratio/delta guard in this
+        # project) - steps with |dt|<=1e-9 are excluded from the mean
+        # rather than silently propagating +/-inf into a feature this
+        # project's own downstream code (OC-SVM, XGBoost) does not
+        # uniformly tolerate.
         tail_n = max(2, len(Vd) // 10)
-        out["VDEDT"] = float(np.mean(np.diff(Vd[-tail_n:]) / np.diff(td[-tail_n:]))) if tail_n > 1 else np.nan
+        if tail_n > 1:
+            dt_tail = np.diff(td[-tail_n:])
+            dv_tail = np.diff(Vd[-tail_n:])
+            valid = np.abs(dt_tail) > 1e-9
+            out["VDEDT"] = float(np.mean(dv_tail[valid] / dt_tail[valid])) if valid.any() else np.nan
+        else:
+            out["VDEDT"] = np.nan
     else:
         out["UVP"] = out["LVP"] = out["SCV"] = out["VDEDT"] = np.nan
 
