@@ -307,6 +307,65 @@ revealed labels recovers most of nominal coverage on every dataset
 tested. Not wired into the deployed app (out of scope) - flagged as the
 strongest concrete follow-up direction.
 
+## 9. Leave-one-dataset-out (item B) - source diversity helps transfer on 11/13 targets
+
+XGBoost-fusion trained on the pooled union of 14 sources, evaluated
+zero-retrain on the 15th (held-out) source, same features/
+hyperparameters as the deployed model, no tuning on the held-out set.
+
+| Held-out | LODO R2 [95% CI] | NASA+MIT-only R2 | Delta |
+|---|---|---|---|
+| CALCE | 0.870 [0.845,0.896] | 0.568 | +0.302 |
+| Oxford | -0.571 [-1.361,-0.090] | -2.694 | +2.123 |
+| HUST | 0.535 [0.437,0.614] | -0.152 | +0.687 |
+| XJTU | -4.100 [-4.953,-3.229] | -1.062 | **-3.038 (worse)** |
+| ul_pur | 0.488 [0.416,0.589] | 0.116 | +0.372 |
+| hnei | 0.681 [0.634,0.738] | -0.038 | +0.719 |
+| snl | 0.442 [0.033,0.677] | 0.147 | +0.296 |
+| mich | 0.795 [0.754,0.844] | 0.573 | +0.223 |
+| mich_exp | 0.638 [0.256,0.714] | 0.721 | -0.082 |
+| rwth | 0.353 [0.330,0.373] | -0.485 | +0.838 |
+| stanford | 0.997 [0.994,0.999] | 0.111 | +0.886 |
+| stanford_2 | 0.990 [0.975,0.999] | 0.066 | +0.925 |
+| isu_ilcc | 0.800 [0.187,0.892] | 0.140 | +0.660 |
+| NASA (held out, no comparable baseline) | 0.149 [-0.249,0.363] | - | - |
+| MIT (held out, no comparable baseline) | -4.817 [-9.151,-2.498] | - | - |
+
+**Source diversity helps transfer on 11/13 comparable targets, often
+dramatically** (stanford/stanford_2 jump from ~0.07-0.11 to ~0.99).
+**It fails on exactly the two datasets this project has repeatedly
+flagged as its hardest, most protocol-divergent cases**: XJTU gets
+substantially WORSE with more pooled data (not better), and mich_exp
+regresses marginally. MIT held out alone is a striking new finding:
+its fast-charging protocol is different enough that even 14-source
+pooling cannot generalize to it (R2=-4.82).
+
+## 10. Shift diagnostics (item E) - AUC has no reliable relationship with outcomes at this severity of shift
+
+**Part 1**: across the 13 datasets, domain-classifier AUC correlates
+weakly and NOT significantly with R2, MAE, or conformal coverage
+(Spearman rho: -0.201, 0.248, -0.195 respectively, all 95% bootstrap
+CIs crossing zero) - directly reinforcing item 1's finding that AUC
+saturates near 1.0 for most datasets, leaving too little variance to
+predict anything with.
+
+**Part 2**: a legitimately source-only-calibrated OOD threshold (90th
+percentile of an in-domain calib-vs-eval classifier's own scores, never
+touching real target data) abstains on 100% of batteries for 12/13
+target datasets (96.4% for the sole exception, snl) - a real,
+disclosed consequence of how saturated OOD scores already are. The
+target-relative risk-coverage curve (retaining the lowest-OOD battery
+fraction within each dataset, sweeping abstention 0-50%) shows mean
+retained-battery MAE staying essentially flat (10.34 -> 10.17 -> 10.39)
+- abstaining on "more OOD-looking" batteries does not reliably reduce
+error at this severity of shift.
+
+**Coherent conclusion across both parts**: the domain-classifier-AUC
+diagnostic, useful earlier for motivating Stage 1.1's reformulation
+work, does not function as a reliable per-dataset risk indicator once
+shift is this severe. No AUC-based selective-prediction mechanism is
+recommended for deployment.
+
 ---
 
 *Full experimental detail for items A-F: `DEVELOPMENT_LOG.md`, "Final

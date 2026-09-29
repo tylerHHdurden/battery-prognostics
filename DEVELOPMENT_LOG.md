@@ -13493,3 +13493,112 @@ candidate for a genuine follow-up feature.
 touched; no new model file (this item recalibrates INTERVALS only, the
 point-prediction models are loaded unchanged).
 
+### Item B: leave-one-dataset-out (LODO) - COMPLETE, a genuine, mostly-positive result: source diversity helps transfer
+
+15 sources (NASA, MIT, CALCE, Oxford, HUST, XJTU + 9 BatteryLife
+sources) - for each held-out source, an XGBoost-fusion model trained on
+the pooled union of all 14 OTHER sources (same features/hyperparameters/
+monotone_constraints as Stage 4/Stage 1.5, no tuning on the held-out
+set), evaluated zero-retrain on that source's own full data. 15
+experimental models saved as `models/_experimental_lodo_xgb_holdout_
+<source>.json`.
+
+**Source diversity (LODO pooling) beats the existing NASA+MIT-only
+zero-retrain baseline on 11/13 comparable targets** (NASA/MIT
+themselves excluded from this comparison - they ARE that baseline's
+own training pool, not a fair comparison target):
+
+| held-out | LODO R2 [95% CI] | NASA+MIT-only R2 | delta |
+|---|---|---|---|
+| CALCE | 0.870 [0.845,0.896] | 0.568 | +0.302 |
+| Oxford | -0.571 [-1.361,-0.090] | -2.694 | +2.123 |
+| HUST | 0.535 [0.437,0.614] | -0.152 | +0.687 |
+| XJTU | -4.100 [-4.953,-3.229] | -1.062 | **-3.038 (WORSE)** |
+| ul_pur | 0.488 [0.416,0.589] | 0.116 | +0.372 |
+| hnei | 0.681 [0.634,0.738] | -0.038 | +0.719 |
+| snl | 0.442 [0.033,0.677] | 0.147 | +0.296 |
+| mich | 0.795 [0.754,0.844] | 0.573 | +0.223 |
+| mich_exp | 0.638 [0.256,0.714] | 0.721 | **-0.082 (WORSE)** |
+| rwth | 0.353 [0.330,0.373] | -0.485 | +0.838 |
+| stanford | 0.997 [0.994,0.999] | 0.111 | +0.886 |
+| stanford_2 | 0.990 [0.975,0.999] | 0.066 | +0.925 |
+| isu_ilcc | 0.800 [0.187,0.892] | 0.140 | +0.660 |
+
+**For reference, NASA and MIT held out alone (no comparable baseline -
+they ARE the existing baseline's own pool)**: NASA R2=0.149
+[-0.249,0.363] (modest, wide CI - only 9 batteries), MIT R2=**-4.817**
+[-9.151,-2.498] (severe - even with every other source's data
+available, the pooled model cannot predict MIT's own fast-charging
+protocol well when MIT itself is excluded from training).
+
+**Plain answer to "does source diversity help transfer, and for
+which targets": YES, for most targets, often dramatically**
+(stanford/stanford_2: R2 goes from ~0.07-0.11 to ~0.99; HUST/hnei flip
+from negative to positive). **It fails on exactly the same 2 datasets
+this project has repeatedly flagged as its hardest, most protocol-
+divergent cases**: XJTU (already this project's most persistently
+negative held-out set across every prior method tried) gets WORSE with
+more pooled data, not better - a real, disclosed exception, not
+smoothed over. mich_exp regresses only marginally (-0.08, likely noise-
+level given its own CI width). The MIT-held-out result is a genuinely
+new, striking finding: MIT's fast-charging protocol is different enough
+from every other source (including NASA, CALCE, and all 9 BatteryLife
+sources combined) that even 14-source pooling cannot generalize to it.
+
+### Files
+
+`src/run_finalpass2_itemB_lodo.py`,
+`outputs/finalpass2_itemB_lodo_results.csv`,
+`models/_experimental_lodo_xgb_holdout_{nasa,mit,calce,oxford,hust,
+xjtu,ul_pur,hnei,snl,mich,mich_exp,rwth,stanford,stanford_2,isu_ilcc}.
+json` (15 new experimental models, per instruction). No deployed file
+touched.
+
+### Item E: shift diagnostics - COMPLETE, a coherent negative result that reinforces item 1's own finding
+
+**Part 1 (AUC vs. R2/MAE/coverage correlation, n=13 datasets, bootstrap
+95% CI)**: every correlation is weak and NOT statistically distinguishable
+from zero - AUC vs. R2: Spearman rho=-0.201 [95% CI -0.744,0.360];
+AUC vs. MAE: rho=0.248 [-0.270,0.714]; AUC vs. coverage: rho=-0.195
+[-0.665,0.309]. **The domain-classifier AUC has no reliable
+relationship with any of this project's own outcome metrics across the
+13-dataset panel** - directly consistent with (not merely repeating)
+item 1's own root-cause finding that AUC is saturated near 1.0 for
+most datasets, leaving too little real variance for a correlation to
+detect.
+
+**Part 2 (per-battery OOD score + risk-coverage curve)**: the
+source-only-calibrated threshold (90th percentile of an in-domain
+calib-vs-eval classifier's own battery-level OOD scores, 0.917 -
+computed WITHOUT ever touching real target data) abstains on **100% of
+batteries for 12 of 13 target datasets** (96.4%, 53/55, for snl - the
+sole partial exception) - a real, disclosed consequence of how
+saturated OOD scores already are given this project's severe domain
+shift: a legitimately-calibrated, non-target-informed threshold is
+USELESS as an abstention rule here, since it correctly identifies
+essentially every external battery as OOD, all the time. The
+target-relative risk-coverage curve (retaining the lowest-OOD-ranked
+fraction WITHIN each target dataset, sweeping abstention 0%->50%)
+shows mean retained-battery MAE staying essentially FLAT (10.34 ->
+10.17 -> 10.39 across the sweep) - abstaining on the "most OOD-looking"
+battery within a dataset does NOT reliably reduce the error of what's
+kept, consistent with Part 1's own finding that the OOD score carries
+little usable signal at this severity of shift.
+
+**Verdict: a coherent, disclosed negative result across both parts.**
+This project's own domain-classifier-AUC diagnostic, while genuinely
+useful earlier for motivating Stage 1.1's reformulation work, does NOT
+function as a reliable per-dataset risk indicator once shift is this
+severe - it saturates too early to discriminate. No selective-
+prediction/abstention mechanism built on it is recommended for
+deployment.
+
+### Files
+
+`src/run_finalpass2_itemE_shift_diagnostics.py`,
+`outputs/finalpass2_itemE_auc_vs_metrics.csv`,
+`outputs/finalpass2_itemE_correlations.csv`,
+`outputs/finalpass2_itemE_risk_coverage.csv`,
+`outputs/finalpass2_itemE_source_threshold.csv`. No deployed file
+touched.
+
