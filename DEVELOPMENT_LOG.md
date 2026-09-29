@@ -13277,3 +13277,92 @@ observation that XGBoost-on-precomputed-tabular-features work runs
 far faster than upfront estimates calibrated toward the deep-model/
 raw-data items in earlier passes - this pass had none of those.
 
+## Post-hoc verification: two user-requested checks on item 3 (conformal coverage) and item 5c (RUL R2=-566), no code in app.py/live_inference.py/models/ touched
+
+### CHECK A: is item 3's ~11-13% conformal coverage (vs. 90% target) a bug?
+
+Verdict: **no bug found - a real, independently-verified non-exchangeability
+effect.** Four sub-checks, run fresh against CALCE/Oxford/HUST/XJTU
+(`src/run_finalpass_checkA_conformal_diagnostic.py`):
+
+1. **Calib/eval integrity**: re-asserted (not just re-trusted) zero
+   index overlap between the k=50 sampled calibration cycles and the
+   evaluation cycles for all 4 datasets; every battery contributing
+   calibration cycles also retains its own remaining cycles in eval
+   (a true same-battery split, matching the item's own spec, not
+   battery-level leakage); `split_conformal(calib_pred, calib_y,
+   test_pred, alpha)`'s argument order confirmed not reversed.
+2. **Scale/units**: calibration residuals and target residuals are
+   directly comparable, same raw-SOH-% scale - e.g. CALCE calibration
+   residual mean=0.41% vs. CALCE target residual mean=6.51%, no unit
+   mismatch, the target residuals are just genuinely ~16x larger.
+3. **Quantile formula**: MAPIE's `SplitConformalRegressor` (the method
+   item 3 actually used, confirmed via its own logged method column)
+   half-width matches an independently, manually computed
+   ceil((n+1)(1-alpha))/n quantile to within 0.003 SOH% on every
+   dataset - the finite-sample correction is applied correctly, not a
+   naive uncorrected quantile.
+4. **Early vs. late cycle residuals** (fraction of test residuals
+   exceeding the k=0 interval): CALCE grows sharply with degradation
+   (early mean|resid|=2.54%, late=10.49%, coverage 6.7%->1.8%), HUST
+   grows moderately (2.21%->2.92%, coverage 9.5%->7.5%), Oxford is
+   roughly flat (1.15%->1.43%), XJTU's residuals are large in BOTH
+   regimes and don't clearly grow (7.87%->5.02%, if anything shrinking
+   late).
+
+**Root cause, stated plainly**: the in-domain-calibrated interval is
+tight (half-width 0.41-1.14 SOH%, reflecting the model's genuine
+in-domain accuracy) - an interval sized for that little noise cannot
+cover errors 3-15x larger under domain shift, at ANY k, which is
+exactly item 3's own finding. CALCE/HUST additionally show a SECOND,
+compounding non-exchangeability effect (residual growth within a
+battery's own life, correlated with degradation stage) on top of the
+primary domain-shift effect. Both are genuine statistical phenomena,
+not implementation defects. **No fix applied, item 3 not rerun** - its
+original numbers stand as correct.
+
+### CHECK B: is CALCE's RUL R2=-566.35 a bug, scale artifact, or real?
+
+Verdict: **real prediction failure, amplified in magnitude by a genuine
+scale/variance mismatch - not a bug, not a censoring or EOL-threshold-
+definition artifact.** (`src/run_finalpass_checkB_rul_diagnostic.py`)
+
+- **Censoring/threshold check**: all 3 CALCE cells are non-censored
+  (CS2_35 eol_cycle=126, CS2_36 eol_cycle=97, CS2_37 eol_cycle=98 - each
+  independently crosses the SAME 80%-of-initial-capacity threshold
+  `build_dataset_tensors` uses for every dataset via plain
+  `compute_eol_and_rul`, confirmed by direct code read, not assumed).
+  No cross-dataset EOL-definition inconsistency; no censoring artifact.
+- **Target scale**: CALCE's true RUL range is 0-125 cycles (mean=5.9,
+  std=19.9) - these cells degrade far faster than the NASA/MIT
+  batteries the model's destandardization constants were fit on
+  (train-scale rul_mean=390.6, rul_std=292.9). CALCE's own target
+  variance is ~740x smaller than the training-scale variance.
+- **Predictions are genuinely, severely wrong, not just "small-error-
+  looks-big"**: predicted RUL mean=**-401.3 cycles** (physically
+  impossible - RUL cannot be negative), range -1144 to +1098, vs. a
+  true range of 0-125. MAE=421.5 cycles, MAPE=1395.9% - both large in
+  absolute/relative terms on their own, independent of R2's specific
+  scaling. The model shows essentially zero transfer to CALCE's
+  compressed lifetime scale, not a modest miss.
+- **R2's specific magnitude (-566) is additionally amplified** by
+  CALCE's small SS_tot (target variance) in the denominator - reported
+  honestly as a real but SCALE-SENSITIVE metric here; MAE/MAPE are the
+  more interpretable headline numbers for this specific dataset,
+  without erasing that the underlying failure is real and severe.
+
+**No fix applied - this is a correct computation of a genuine
+result**, not a bug to fix. `PAPER_RESULTS.md` updated with both
+verifications inline (not a separate section) so the numbers stay
+attached to the tables they qualify.
+
+### Files
+
+`src/run_finalpass_checkA_conformal_diagnostic.py`,
+`outputs/finalpass_checkA_conformal_diagnostic.csv`,
+`src/run_finalpass_checkB_rul_diagnostic.py`,
+`outputs/finalpass_checkB_rul_diagnostic.csv`. `PAPER_RESULTS.md`
+updated (RUL and conformal sections). No deployed file touched -
+confirmed via `git diff --stat app.py src/live_inference.py models/`
+returning empty, per this check's own explicit instruction.
+

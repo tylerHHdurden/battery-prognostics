@@ -109,13 +109,13 @@ RUL model is only possible for CALCE/Oxford/HUST/XJTU - it requires raw
 per-cycle V/I/T tensors that were never built for the 9 BatteryLife
 sources (disclosed infrastructure gap, not silently skipped).
 
-| Dataset | RUL R2 | RUL RMSE (cycles) | RUL MAE (cycles) | n batteries |
-|---|---|---|---|---|
-| In-domain (TEST, reference) | 0.666 | - | - | - |
-| CALCE | -566.35 | 474.2 | 421.5 | 3 |
-| Oxford | -1.31 | 3208.5 | 2520.0 | 8 |
-| HUST | -0.45 | 689.7 | 543.3 | 77 |
-| XJTU | -78.46 | 1538.8 | 1017.9 | 47 |
+| Dataset | RUL R2 | RUL RMSE (cycles) | RUL MAE (cycles) | RUL MAPE (%) | Target RUL range (cycles) | n batteries |
+|---|---|---|---|---|---|---|
+| In-domain (TEST, reference) | 0.666 | - | - | - | mean 390.6, std 292.9 (train-fit scale) | - |
+| CALCE | -566.35 | 474.2 | 421.5 | 1395.9 | 0-125, mean 5.9, std 19.9 | 3 |
+| Oxford | -1.31 | 3208.5 | 2520.0 | - | - | 8 |
+| HUST | -0.45 | 689.7 | 543.3 | - | - | 77 |
+| XJTU | -78.46 | 1538.8 | 1017.9 | - | - | 47 |
 
 **RUL prediction fails far more catastrophically under domain shift
 than SOH prediction does, for the exact same 4 datasets and the same
@@ -125,6 +125,20 @@ than the corresponding RUL number here). The RUL head's own zero-retrain
 generalization had never been measured on these 4 datasets before this
 pass; the deployed model's practical reliability claim should be
 understood as in-domain-only for RUL even more strongly than for SOH.
+
+**Verification (CHECK B, post-hoc): CALCE's R2=-566 is a real failure, not a bug, and not purely a label/censoring
+artifact, but its exact magnitude is amplified by a genuine scale mismatch.** All 3 CALCE cells are non-censored
+(each independently crosses the SAME 80%-of-initial-capacity EOL threshold used for every other dataset - no
+cross-dataset threshold inconsistency). CALCE's true RUL range is compressed (0-125 cycles, std=19.9) because
+these cells degrade far faster than the NASA/MIT batteries the model was trained/destandardized on (train-fit
+RUL scale: mean=390.6, std=292.9). The model's predictions for CALCE are not merely off - their mean is
+**-401.3 cycles** (physically impossible; RUL cannot be negative) with values ranging from -1144 to +1098,
+showing the model has effectively zero transfer to CALCE's compressed lifetime scale (MAE=421.5, MAPE=1396%,
+both genuinely large on an absolute/relative basis, not just relative-to-small-variance). R2's specific
+magnitude is additionally amplified because CALCE's own target variance (SS_tot) is ~740x smaller than the
+in-domain training-scale variance the model was calibrated against, so R2 is not directly comparable in scale
+across datasets with such different native RUL ranges - MAE/MAPE are the more honest headline metrics here.
+Full diagnostic: `outputs/finalpass_checkB_rul_diagnostic.csv`.
 
 ## 5. BatteryLife's own benchmark task (early-cycle-life prediction), reproduced
 
@@ -176,6 +190,21 @@ points of the 90% target.** This project's conformal interval should
 be read as an in-domain-only guarantee - it does not transfer under
 domain shift, and (per item 3, below) does not recover even with up to
 50 genuinely-labeled target-domain calibration points.
+
+**Verification (CHECK A, post-hoc): the low coverage is a real non-exchangeability effect, not a bug.**
+Independently re-checked, for CALCE/Oxford/HUST/XJTU: (1) calibration and evaluation cycles are correctly split
+within the same target battery with zero index overlap (re-asserted, not just trusted), and `split_conformal`'s
+argument order is not reversed; (2) calibration residuals and target residuals are on the identical raw-SOH-%
+scale (no unit mismatch - e.g. CALCE calibration residuals mean 0.41% vs. CALCE target residuals mean 6.51%,
+directly comparable); (3) MAPIE's `SplitConformalRegressor` half-width matches a manually-computed
+ceil((n+1)(1-alpha))/n quantile to within 0.003 SOH% on every dataset checked - the finite-sample correction is
+applied correctly. The actual cause: the in-domain-calibrated interval is extremely tight (half-width 0.41-1.14
+SOH%, reflecting how accurate the model is in-domain) while target residuals under domain shift are 3-15x larger
+(mean 1.29-6.51 SOH%) - an interval sized for in-domain noise cannot cover errors of that magnitude, regardless
+of k. CALCE and HUST additionally show genuine within-battery residual growth from early to late cycles (CALCE:
+2.54% -> 10.49% SOH, HUST: 2.21% -> 2.92% SOH) - a second, compounding non-exchangeability effect (degradation-
+stage-dependent error), while Oxford is roughly flat and XJTU's residuals are uniformly large regardless of cycle
+position. Full diagnostic: `outputs/finalpass_checkA_conformal_diagnostic.csv`.
 
 ## 7. Findings from items 1-4 (all negative/gated, none promoted)
 
