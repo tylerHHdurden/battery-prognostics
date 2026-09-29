@@ -14135,3 +14135,119 @@ like every other raw dataset), `data/processed/batterylife_tongji_
 merged.parquet`, `src/run_toolkit_phase1b_tongji_integration.py`. No
 deployed file touched.
 
+## Phase 2: multi-source promotion candidate - COMPLETE, STOPPING here per instruction
+
+Retrained the ICA fusion encoder, XGBoost-fusion, and OC-SVM on ALL 16
+sources (NASA, MIT, CALCE, Oxford, HUST, XJTU + 9 BatteryLife sources +
+Tongji), raw tensors built fresh for every one (no caching - the
+single most expensive step, dominated by HUST's 146K and Tongji's 59K
+cycles). Gate: a battery-level split WITHIN every source (fixed seed,
+`split_utils.battery_level_split`'s own per-dataset stratification),
+candidate scored against the CURRENT DEPLOYED ROUTED model (loaded
+unchanged, scored fresh on the identical held-out rows - a real bug
+from this pass's own earlier, abandoned Phase-1 attempt was caught and
+fixed before this run: the routed-model scoring path was silently
+missing the 16-dim fusion columns, which would have crashed or
+produced garbage; also fixed, a second real bug where the routed-model
+comparison would have silently skipped 14/16 sources because old
+fusion embeddings for non-NASA/MIT sources live inside each source's
+own file, not the central `fusion_embeddings.csv`).
+
+### GATE TABLE
+
+| Source | Candidate R2 [95% CI] | Routed R2 (current deployed) | n batteries (test) | Verdict |
+|---|---|---|---|---|
+| NASA | 0.317 [-1.662,0.703] | **0.994** | 2 | ROUTED WINS |
+| MIT | 0.971 [0.866,0.991] | **0.999** | 6 | ROUTED WINS |
+| Oxford | 0.955 (n=1, no CI) | 0.960 | 1 | ROUTED WINS (marginal) |
+| CALCE | 0.972 (n=1, no CI) | 0.709 | 1 | CANDIDATE WINS |
+| HUST | 0.988 [0.983,0.992] | 0.721 | 15 | CANDIDATE WINS |
+| XJTU | 0.939 [0.871,0.971] | -1.188 | 9 | CANDIDATE WINS |
+| ul_pur | 0.792 [0.477,0.919] | 0.145 | 2 | CANDIDATE WINS |
+| hnei | 0.998 [0.998,0.998] | -0.009 | 2 | CANDIDATE WINS |
+| snl | 0.918 [0.760,0.963] | 0.196 | 11 | CANDIDATE WINS |
+| mich | 0.986 [0.980,0.997] | 0.558 | 8 | CANDIDATE WINS |
+| mich_exp | 0.925 [0.000,0.933] | 0.627 | 3 | CANDIDATE WINS |
+| rwth | 0.987 [0.969,0.998] | -0.421 | 2 | CANDIDATE WINS |
+| stanford | 1.000 (n=1, no CI) | 0.286 | 1 | CANDIDATE WINS |
+| stanford_2 | 0.999 (n=1, no CI) | 0.275 | 1 | CANDIDATE WINS |
+| isu_ilcc | 0.985 (n=1, no CI) | -0.292 | 1 | CANDIDATE WINS |
+| tongji | 0.994 [0.991,0.996] | -0.118 | 26 | CANDIDATE WINS |
+
+**Candidate wins on 14/16 sources, often by a huge margin.**
+
+**Two real, honest caveats that change how this table should be
+read - not glossed over**:
+
+1. **THIS IS NOT A LODO/genuinely-new-source test, and must not be
+   read as one.** The encoder (and therefore the fusion embeddings
+   every held-out row is scored with) was trained on data from ALL 16
+   sources INCLUDING the held-out battery's own source - only the
+   specific held-out BATTERIES were excluded from training, not their
+   source's distribution as a whole. This gate answers "does pooling +
+   an encoder that has already seen this source's general
+   characteristics generalize to a few more of that same source's own
+   batteries" - a materially easier, weaker question than "does this
+   generalize to a source never seen at all" (LODO). A genuine LODO-
+   with-retrained-encoder test would require retraining a SEPARATE
+   encoder per held-out source (16x this run's own tensor-building +
+   encoder-training cost) - judged out of scope for this session,
+   disclosed as NOT attempted rather than silently implied by the
+   table's own strong numbers. The existing LODO/family-holdout
+   evidence (this pass's own item B / CHECK 1, using the OLD, frozen
+   encoder) remains the only genuine "new source" evidence available.
+2. **5 of 16 sources' candidate R2 come from a SINGLE test battery**
+   (CALCE, Oxford, stanford, stanford_2, isu_ilcc - `n_batteries=1`,
+   hence no bootstrap CI: a CI needs >=2 unique batteries to resample)
+   - these specific numbers are a single battery's own fit quality,
+   not a statistically robust claim, a direct consequence of how few
+   total batteries some of these sources have (test_every=5 on a
+   3-10-battery source yields exactly one test battery).
+
+**NASA and MIT genuinely lose to the routed model** - not a bug,
+investigated directly: NASA's test split has only 2 batteries (216
+rows) out of the ENTIRE 16-source, ~420K-row pool, and MIT's 6
+batteries (4454 rows) are similarly a small fraction of a pool now
+dominated by HUST (146K) and Tongji (59K) cycles. This is a real,
+plausible "small source gets crowded out" effect of naive multi-source
+pooling (every source weighted only by its own row count, not
+explicitly balanced) - flagged as a genuine finding for any future
+promotion decision, not fixed here (out of this phase's own "STOP and
+report" scope).
+
+### OC-SVM: dramatic flag-rate change, interpreted cautiously
+
+On the SAME external (non-NASA/MIT) held-out cycles: the **currently
+deployed** OC-SVM flags **100.0%** as anomalous (confirms, doesn't just
+repeat, this project's own standing finding that the anomaly detector
+is unreliable out-of-domain - it isn't discriminating at all here, just
+flagging everything). The **candidate** OC-SVM, retrained on the same
+16-source pool, flags only **5.8%**. This is a large, real change -
+read cautiously, not celebrated uncritically: a near-0% flag rate could
+mean either a genuinely better-calibrated detector (plausible, since it
+has now seen distributionally-similar in-domain examples from every
+source) OR an OC-SVM that has become too permissive to be a useful
+anomaly signal at all (nu=0.05 is unchanged from the original deployed
+recipe, reused not retuned). No ground-truth anomaly labels exist to
+resolve which explanation is correct - flagged as an open question, not
+resolved here.
+
+### Files
+
+`src/run_toolkit_phase2_multisource_retrain.py`,
+`src/run_toolkit_phase2c_ocsvm_retrain.py` (completes the OC-SVM step
+after a real NaN-handling bug crashed the first run partway through -
+reuses the already-saved encoder/embeddings rather than repeating the
+expensive tensor-build/encoder-train steps), `models/_candidate_ica_
+encoder.pt`, `models/_candidate_multisource.json`, `models/_candidate_
+ocsvm.pkl`, `models/_candidate_ocsvm_scaler.pkl`, `data/processed/
+fusion_embeddings_multisource.csv`, `outputs/toolkit_phase2_gate_
+table.csv`, `outputs/toolkit_phase2c_ocsvm_comparison.csv`. **No
+deployed file touched - every artifact above is a `_candidate_*` file,
+none wired into `app.py`/`src/live_inference.py`.**
+
+### STOPPING HERE, per this phase's own explicit instruction
+
+Gate table reported above. Not wiring the candidate into the app.
+Phase 3 (app feature work) waits for confirmation before proceeding.
+
