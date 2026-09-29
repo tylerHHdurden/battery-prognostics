@@ -14417,3 +14417,57 @@ exists for, caught here before it reached production, not after.
 in the first, broken run, a real gap independently worth fixing). No
 deployed file touched.
 
+## Corrected Phase 2 re-run: CONFIRMED, gate table + decisions hold with a genuinely working encoder
+
+Fix verified directly: **11,314,018 non-finite cells sanitized across
+56,656/419,250 rows (13.5%)**, all 3 new safety asserts passed
+(`channel_norm_stats` finite, encoder weights finite, zero NaN
+embeddings), encoder validation loss converged sensibly (0.0032 at
+epoch 0, early-stopped at epoch 8 - a real, working training run this
+time, not a divergence). Total time: 25.6 minutes.
+
+**Corrected gate table** (candidate now genuinely uses the retrained
+encoder's own embeddings, not silently-ignored NaN columns) - **wins
+on 13/16 sources**, same overall pattern as the broken run (confirming
+the earlier XGBoost-only signal was real; the working encoder adds a
+modest further improvement on several sources - e.g. HUST MAE
+2.75->0.58, rwth R2 -0.42->0.99, all improving slightly over the
+broken-encoder numbers): NASA (0.430, was 0.317), MIT (0.970), Oxford
+(0.947, still a marginal loss vs. routed's 0.960) all still LOSE to
+routed; every other source (CALCE, HUST, XJTU, ul_pur, hnei, snl, mich,
+mich_exp, rwth, stanford, stanford_2, isu_ilcc, tongji) still WINS.
+Same two caveats as before still apply (not a LODO test; several
+sources' numbers rest on 1 test battery) - unchanged by this
+correction, restated not re-derived.
+
+**Corrected OC-SVM**: candidate flags 5.6% of external held-out cycles
+(vs. the broken run's 5.8% - materially unchanged) vs. deployed's
+100.0%.
+
+**Balanced retrain (Phase 2d) re-run with the corrected embeddings
+produced numbers IDENTICAL to the broken-embedding run, to many
+decimal places** - investigated directly, not dismissed: this is
+consistent with (not contradicting) the already-diagnosed root cause,
+not a new bug. The 153x per-row sample-weight variance is severe
+enough that XGBoost's greedy split selection apparently never once
+picks a fusion-embedding feature as the best split, in either run -
+so whether those 16 columns hold genuine encoder output or a constant
+NaN-imputed value never changes which splits get chosen, given how
+completely the extreme weighting already dominates the fit. **Decision
+UNCHANGED, now confirmed with a working encoder**: keep the unweighted
+candidate; route by dataset identity (NASA/MIT -> current deployed
+model, every other known source and every uploaded/unknown battery ->
+the unweighted `_candidate_multisource.json`).
+
+### Files
+
+`outputs/toolkit_phase2_gate_table.csv`, `outputs/toolkit_phase2d_
+balanced_gate_table.csv`, `outputs/toolkit_phase2d_decision.txt`,
+`data/processed/fusion_embeddings_multisource.csv`,
+`data/processed/candidate_multisource_medians.json` (all overwritten
+with corrected values), `models/_candidate_ica_encoder.pt`,
+`models/_candidate_multisource.json`, `models/_candidate_ocsvm.pkl`,
+`models/_candidate_ocsvm_scaler.pkl`, `models/_candidate_multisource_
+balanced.json` (all retrained with the corrected pipeline). No
+deployed file touched.
+

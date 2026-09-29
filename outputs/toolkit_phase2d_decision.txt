@@ -2,4 +2,4 @@ adopt_balanced=False
 nasa_ok=False
 mit_ok=False
 balanced_still_wins=False
-lost_wins=['ul_pur', 'mich', 'XJTU', 'stanford', 'hnei', 'rwth', 'snl', 'CALCE', 'HUST', 'mich_exp', 'stanford_2', 'tongji']
+lost_wins=['snl', 'HUST', 'tongji', 'stanford_2', 'XJTU', 'CALCE', 'mich', 'rwth', 'ul_pur', 'mich_exp', 'hnei', 'stanford']
