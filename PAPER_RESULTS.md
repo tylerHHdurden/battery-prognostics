@@ -1,0 +1,216 @@
+# Paper Results
+
+Final, publication-ready tables and findings from the last research
+pass before submission (5 items: label-free routing, cycle_idx
+ablation, few-shot conformal calibration, relaxation-voltage
+feasibility, final rigor pass). Full experimental narrative, negative
+results, and disclosed scope limits are in `DEVELOPMENT_LOG.md`; this
+file contains only the tables and one-paragraph plain-language findings
+meant for the paper itself.
+
+**Governing rule, unchanged throughout every pass in this project**:
+nothing is promoted to the deployed model/routing/app unless it clearly
+beats the current baseline on the full standard protocol. **Nothing
+from this final pass was promoted** - every item is either a disclosed
+negative result, a feasibility-gated stop, or a rigor/reporting
+exercise on the already-shipped configuration. The deployed model
+(dataset-aware routing: the extended-reformulation XGBoost-fusion model
+for CALCE/Oxford/HUST, the base XGBoost-fusion model for XJTU and every
+other evaluated dataset) is unchanged.
+
+---
+
+## 1. Final configuration: 5-seed accuracy, mean +/- std
+
+Retrained 5 times (seeds 42, 1, 2, 3, 4 - seed 42 matches the
+actually-deployed models), routing applied exactly as production does.
+R2, RMSE, MAE in % SOH (SOH is stored on a 0-100 scale).
+
+| Dataset | R2 (mean +/- std) | RMSE (mean +/- std) | MAE (mean +/- std) | n cycles |
+|---|---|---|---|---|
+| In-domain (TEST) | 0.978 +/- 0.003 | 0.716 +/- 0.050 | 0.281 +/- 0.014 | 5,208 |
+| CALCE | 0.749 +/- 0.012 | 10.791 +/- 0.265 | 6.256 +/- 0.255 | 2,941 |
+| Oxford | 0.940 +/- 0.030 | 1.639 +/- 0.409 | 1.431 +/- 0.434 | 519 |
+| HUST | 0.795 +/- 0.022 | 3.336 +/- 0.178 | 2.643 +/- 0.138 | 146,122 |
+| XJTU | -1.037 +/- 0.216 | 8.572 +/- 0.460 | 6.457 +/- 0.213 | 19,238 |
+| ul_pur (BatteryLife) | 0.116 +/- 0.094 | 5.689 +/- 0.304 | 3.675 +/- 0.283 | 2,245 |
+| hnei (BatteryLife) | -0.038 +/- 0.073 | 18.180 +/- 0.650 | 13.966 +/- 0.624 | 15,155 |
+| snl (BatteryLife) | 0.147 +/- 0.042 | 7.703 +/- 0.193 | 5.752 +/- 0.183 | 38,880 |
+| mich (BatteryLife) | 0.573 +/- 0.028 | 14.727 +/- 0.478 | 7.837 +/- 0.343 | 19,881 |
+| mich_exp (BatteryLife) | 0.721 +/- 0.013 | 7.254 +/- 0.165 | 4.539 +/- 0.148 | 6,545 |
+| rwth (BatteryLife) | -0.485 +/- 0.077 | 29.558 +/- 0.775 | 23.072 +/- 0.457 | 22,095 |
+| stanford (BatteryLife) | 0.111 +/- 0.105 | 20.183 +/- 1.179 | 17.827 +/- 1.265 | 5,633 |
+| stanford_2 (BatteryLife) | 0.066 +/- 0.118 | 20.027 +/- 1.254 | 17.988 +/- 1.381 | 8,465 |
+| isu_ilcc (BatteryLife) | 0.140 +/- 0.029 | 33.450 +/- 0.560 | 29.737 +/- 0.420 | 45,229 |
+
+XJTU is by far the least seed-stable held-out result (std=0.216 on R2),
+consistent with this project's own repeated prior finding that it is
+the hardest, most unstable held-out set.
+
+## 2. Extended per-dataset metrics (NRMSE, NMAE, MAPE, % SOH)
+
+NRMSE/NMAE = RMSE or MAE as a percentage of the dataset's own mean SOH.
+5-seed mean; full mean+/-std in `outputs/finalpass_item5a_5seed_aggregate.csv`.
+
+| Dataset | NRMSE (%) | NMAE (%) | MAPE (%) |
+|---|---|---|---|
+| In-domain (TEST) | 0.742 | 0.291 | 0.316 |
+| CALCE | 14.718 | 8.533 | 19.007 |
+| Oxford | 1.865 | 1.628 | 1.670 |
+| HUST | 3.654 | 2.895 | 2.947 |
+| XJTU | 8.728 | 6.575 | 6.532 |
+| ul_pur | 6.123 | 3.955 | 4.251 |
+| hnei | 26.780 | 20.572 | 27.215 |
+| snl | 8.804 | 6.573 | 7.438 |
+| mich | 17.599 | 9.365 | 34.333 |
+| mich_exp | 8.074 | 5.052 | 6.758 |
+| rwth | 47.178 | 36.826 | 61.700 |
+| stanford | 24.641 | 21.765 | 32.020 |
+| stanford_2 | 24.245 | 21.777 | 28.553 |
+| isu_ilcc | 69.489 | 61.775 | 324.315 |
+
+MAPE is disproportionately large for isu_ilcc/mich/stanford/stanford_2
+specifically - diagnosed as a near-zero-SOH-value artifact in the MAPE
+denominator for a handful of rows on those sources (RMSE/MAE/NRMSE/NMAE
+all stay reasonable for the same rows), not a computation error.
+
+## 3. Battery-level bootstrap 95% confidence intervals (seed=42, n=1000 resamples)
+
+Resampling BATTERIES (the real unit of independence), not rows.
+
+| Dataset | n batteries | R2 [95% CI] | RMSE [95% CI] | MAE [95% CI] |
+|---|---|---|---|---|
+| In-domain (TEST) | 6 | 0.976 [0.945, 0.996] | 0.755 [0.243, 1.482] | 0.295 [0.156, 0.629] |
+| CALCE | 3 | 0.755 [0.721, 0.826] | 10.656 [8.102, 12.173] | 6.229 [4.874, 7.421] |
+| Oxford | 8 | 0.914 [0.900, 0.927] | 2.003 [1.707, 2.239] | 1.773 [1.551, 1.976] |
+| HUST | 77 | 0.770 [0.703, 0.818] | 3.540 [3.153, 4.006] | 2.778 [2.544, 3.050] |
+| XJTU | 47 | -0.974 [-1.404, -0.593] | 8.449 [7.592, 9.317] | 6.400 [5.769, 7.108] |
+| ul_pur | 10 | 0.140 [0.024, 0.289] | 5.618 [4.456, 6.630] | 3.705 [3.018, 4.399] |
+| hnei | 14 | -0.106 [-0.148, -0.068] | 18.776 [18.067, 19.387] | 14.544 [13.961, 15.106] |
+| snl | 55 | 0.110 [-0.211, 0.266] | 7.867 [6.560, 9.511] | 5.723 [4.871, 6.965] |
+| mich | 40 | 0.544 [0.526, 0.556] | 15.222 [12.606, 18.295] | 8.325 [7.001, 10.135] |
+| mich_exp | 18 | 0.702 [0.599, 0.811] | 7.490 [3.760, 10.531] | 4.492 [2.744, 6.608] |
+| rwth | 10 | -0.554 [-0.632, -0.476] | 30.243 [28.933, 31.325] | 23.480 [22.353, 24.510] |
+| stanford | 6 | 0.030 [-0.229, 0.152] | 21.115 [18.902, 23.557] | 18.842 [17.006, 20.987] |
+| stanford_2 | 8 | -0.028 [-0.377, 0.154] | 21.035 [19.889, 22.390] | 19.096 [18.208, 20.222] |
+| isu_ilcc | 9 | 0.129 [-0.294, 0.265] | 33.670 [21.438, 39.426] | 29.993 [19.701, 36.127] |
+
+Datasets with fewer than ~10 batteries (in-domain, CALCE, Oxford,
+stanford, stanford_2, isu_ilcc, ul_pur, rwth, mich_exp) carry
+substantial battery-count-driven uncertainty - a single point R2 for
+these should not be read as precise.
+
+## 4. RUL cross-domain
+
+RUL LABELS are derivable for all 13 held-out datasets (every one has a
+`discharge_capacity` column; the project's threshold-crossing RUL
+definition is dataset-agnostic). Zero-retrain scoring of the DEPLOYED
+RUL model is only possible for CALCE/Oxford/HUST/XJTU - it requires raw
+per-cycle V/I/T tensors that were never built for the 9 BatteryLife
+sources (disclosed infrastructure gap, not silently skipped).
+
+| Dataset | RUL R2 | RUL RMSE (cycles) | RUL MAE (cycles) | n batteries |
+|---|---|---|---|---|
+| In-domain (TEST, reference) | 0.666 | - | - | - |
+| CALCE | -566.35 | 474.2 | 421.5 | 3 |
+| Oxford | -1.31 | 3208.5 | 2520.0 | 8 |
+| HUST | -0.45 | 689.7 | 543.3 | 77 |
+| XJTU | -78.46 | 1538.8 | 1017.9 | 47 |
+
+**RUL prediction fails far more catastrophically under domain shift
+than SOH prediction does, for the exact same 4 datasets and the same
+deployed model family** (compare against Table 1's SOH R2: CALCE 0.749,
+Oxford 0.940, HUST 0.795, XJTU -1.037 - every one dramatically better
+than the corresponding RUL number here). The RUL head's own zero-retrain
+generalization had never been measured on these 4 datasets before this
+pass; the deployed model's practical reliability claim should be
+understood as in-domain-only for RUL even more strongly than for SOH.
+
+## 5. BatteryLife's own benchmark task (early-cycle-life prediction), reproduced
+
+Predict the cycle number at which SOH first reaches 80%, from only the
+first <=100 cycles, using this project's own HI features (mean + slope
+over the first 100 cycles) + discharge_capacity + fusion embedding,
+XGBoost, 5-fold battery-level cross-validation, pooled across all 9
+locally-available BatteryLife sources (125 usable batteries).
+
+| Metric | This work (HI+XGBoost) | BatteryLife published (Li-ion, CPTransformer/CPMLP) |
+|---|---|---|
+| MAPE | 0.214 | 0.184 / 0.179 |
+| 15%-Acc | 0.576 | 0.573 |
+
+**A simple hand-engineered-feature + XGBoost approach is essentially
+tied on 15%-Acc and only modestly worse on MAPE against a purpose-built
+transformer architecture.** Per-source breakdown (n<10 flagged as
+low-confidence): rwth 15%-Acc=1.00 (n=10), hnei 0.86 (n=14), mich 0.75
+(n=40), stanford_2 0.63 (n=8), mich_exp 0.50 (n=10), snl 0.25 (n=24),
+ul_pur 0.25 (n=4), isu_ilcc 0.22 (n=9), stanford 0.17 (n=6). Not a
+strict apples-to-apples comparison (different exact battery
+sets/splits; this pool is chemistry-mixed rather than family-separated
+the way BatteryLife's own table is) - stated plainly.
+
+## 6. Consolidated conformal coverage/width (target = 90%)
+
+Standard (non-few-shot) split-conformal calibration - the same
+convention this project has always shipped.
+
+| Dataset | Coverage | Avg. width (% SOH) | n |
+|---|---|---|---|
+| In-domain (TEST) | 97.9% | 2.288 | 3,462 |
+| CALCE | 4.3% | 0.813 | 2,941 |
+| Oxford | 5.4% | 0.813 | 519 |
+| HUST | 8.5% | 0.813 | 146,122 |
+| XJTU | 11.0% | 2.288 | 19,238 |
+| ul_pur | 21.6% | 2.288 | 2,245 |
+| hnei | 19.0% | 2.288 | 15,155 |
+| snl | 11.7% | 2.288 | 38,880 |
+| mich | 16.2% | 2.288 | 19,881 |
+| mich_exp | 34.1% | 2.288 | 6,545 |
+| rwth | 4.7% | 2.288 | 22,095 |
+| stanford | 1.5% | 2.288 | 5,633 |
+| stanford_2 | 1.6% | 2.288 | 8,465 |
+| isu_ilcc | 1.3% | 2.288 | 45,229 |
+
+**Only 1 of 14 rows (in-domain itself) reaches within 10 percentage
+points of the 90% target.** This project's conformal interval should
+be read as an in-domain-only guarantee - it does not transfer under
+domain shift, and (per item 3, below) does not recover even with up to
+50 genuinely-labeled target-domain calibration points.
+
+## 7. Findings from items 1-4 (all negative/gated, none promoted)
+
+**Item 1 - label-free routing**: a routing rule built purely from the
+project's own domain-classifier-AUC diagnostic (no target labels) ties
+the naive "always route to the extended model" baseline at 8/13 (61.5%)
+correct across all 13 held-out datasets. It fails specifically on
+CALCE/Oxford/HUST - where the extended model IS the true winner by a
+wide margin - because the AUC signal is saturated (~1.0) in both
+feature representations for those datasets, giving the rule nothing to
+discriminate on. Not adopted.
+
+**Item 2 - cycle_idx ablation**: retraining with cycle_idx removed, or
+replaced by a chemistry/format-normalized "equivalent full cycles"
+feature, shows cycle_idx provides negligible in-domain benefit (+0.0005
+R2) and a slightly POSITIVE mean zero-retrain effect (+0.0421 R2 across
+13 held-out sets, worse on only 5/13). cycle_idx is not acting as a
+dataset-specific shortcut. No change to the deployed feature set.
+
+**Item 3 - few-shot conformal calibration**: pooling k=5/10/20/50
+genuinely-labeled target-domain cycles into the calibration set barely
+moves mean coverage across 13 held-out datasets (10.8% -> 13.4% as k
+goes 0 -> 50, target 90%). Domain shift this severe cannot be fixed
+with a handful of labeled calibration points. Not adopted.
+
+**Item 4 - relaxation-voltage features**: stopped at the feasibility
+gate, per the item's own explicit instruction. Only 5 of 13 held-out
+datasets have genuine post-charge rest-period data in their raw files
+(CALCE, XJTU, ul_pur, snl, mich), and only 2 of those 5 (XJTU, mich)
+are well-resolved enough for the variance/skewness features the
+underlying method (Zhu et al., 2022) specifies. Below the ~half-of-
+datasets bar; not built, not evaluated.
+
+---
+
+*Full experimental detail, negative-result diagnosis, and every
+disclosed scope limitation for all 5 items: `DEVELOPMENT_LOG.md`,
+"Final research pass before journal submission" section onward.*

@@ -13203,3 +13203,77 @@ in the 18-item pass), just never assembled into one table before.
 `outputs/finalpass_item5e_conformal_consolidated.csv`. No deployed
 file touched.
 
+### Item 5, sub-item 3: RUL cross-domain - COMPLETE, and a striking, much-worse-than-SOH result
+
+Two separate questions, kept distinct: can RUL LABELS be derived (yes,
+for all 13 held-out datasets - every one has a `discharge_capacity`
+column and `rul_labels.py`'s threshold-crossing functions are
+dataset-agnostic), vs. can the DEPLOYED RUL MODEL (`JointSOHRULModel
+Fusion`, `models/joint_adaptive_fusion.pt`) be SCORED zero-retrain
+(only for CALCE/Oxford/HUST/XJTU - it requires a raw 200-timestep/
+6-channel per-cycle tensor that `stage7_common.py` already builds for
+those 4 via `build_dataset_tensors`, but no adapter anywhere in this
+project builds that same raw-tensor representation for any BatteryLife
+source; `data_adapters_batterylife.py` only ever produced the
+AGGREGATED tabular HI pipeline used by every SOH item in this pass.
+Building a raw-tensor adapter per BatteryLife source is a real,
+non-trivial infrastructure project, disclosed as out of this item's
+scope, not silently skipped). Loaded the joint_fusion model exactly as
+`live_inference.py` loads it for production, scored batched (not the
+live app's slow per-cycle loop) - no retraining.
+
+**RUL zero-retrain results (in-domain reference R2=0.6657)**: CALCE
+R2=**-566.35**, Oxford R2=-1.31, HUST R2=-0.45, XJTU R2=**-78.46**.
+**Every one of these is far more catastrophic than the SAME datasets'
+own SOH zero-retrain numbers from this same pass** (CALCE SOH R2=0.749,
+Oxford 0.940, HUST 0.795, XJTU -1.037) - RUL prediction under domain
+shift fails dramatically harder than SOH prediction does, for the
+exact same 4 datasets, using the exact same deployed model family.
+This is a genuinely new, disclosed finding for this project: the joint
+SOH+RUL model's SOH head has always been the one evaluated zero-retrain
+throughout every prior pass (routing, both research passes, the 18-item
+pass); the RUL head's own zero-retrain generalization had never
+actually been measured on any of these 4 datasets before this entry.
+CALCE and XJTU's RUL predictions are not just wrong but wrong by
+hundreds-to-thousands of cycles on average (MAE 421.5 and 1017.9
+cycles respectively) - consistent with RUL being a much harder,
+more compounding-error-prone target than a bounded 0-100 SOH value.
+
+**Verdict: not promoted (nothing to promote - this is a measurement,
+not a candidate), but flagged prominently as a genuine finding for the
+paper.** The deployed RUL model's practical reliability claim should be
+understood as in-domain-only, more strongly than the SOH model's
+already-qualified one.
+
+### Files
+
+`src/run_finalpass_item5c_rul_crossdomain.py`,
+`outputs/finalpass_item5c_rul_crossdomain.csv`. No deployed file
+touched.
+
+### Final pass promotion summary
+
+**Nothing promoted.** Items 1-4 are all disclosed negative results or
+feasibility-gated stops; item 5 is a rigor/reporting pass on the
+already-shipped configuration, plus one genuinely new finding (RUL
+zero-retrain is far worse than SOH zero-retrain) that changes no code
+but should inform the paper's own discussion of limitations. The
+deployed model, routing, and `app.py` are byte-identical to before this
+pass started - confirmed via `git diff --stat app.py src/live_inference.py models/` returning empty.
+Final publication-ready tables: `PAPER_RESULTS.md`.
+
+### Time: actual vs. estimated
+
+Upfront estimate (Best/Avg/Expected/Worst): 3.75/9.5/14.5/29h, with
+item 5's RUL sub-item flagged as the dominant risk. **Actual: well
+under Best** - every item's actual compute time was seconds to low
+minutes except item 5c's RUL cross-domain (15.9 min, driven by
+building raw 200-timestep tensors from scratch for HUST's 146,122
+cycles with no existing cache - the one place this pass's own risk
+flag was correct, though far short of "dominant risk" scale). No
+infrastructure interruptions this pass (unlike Part B's two). The
+5x-under-Best result is consistent with this project's own repeated
+observation that XGBoost-on-precomputed-tabular-features work runs
+far faster than upfront estimates calibrated toward the deep-model/
+raw-data items in earlier passes - this pass had none of those.
+
