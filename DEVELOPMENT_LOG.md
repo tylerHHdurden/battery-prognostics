@@ -12995,3 +12995,94 @@ reported honestly rather than overstated in either direction.
 all three variants are experimental retrains, distinct model objects
 never saved to `models/`.
 
+### Item 3: few-shot conformal calibration - COMPLETE, coverage recovery fails at every k tested
+
+For each of the 13 held-out datasets, recalibrated the split-conformal
+interval by pooling the existing in-domain calibration half's residuals
+with k labeled target cycles (k=0/5/10/20/50, sampled from each
+dataset's own early-cycle window - cycle_idx below its own 30th
+percentile - never overlapping the evaluation set, verified via an
+explicit disjoint-index assertion). Point predictions themselves were
+NEVER adapted - this isolates the conformal-calibration question from
+item 3's own earlier-pass cousin (run_researchpass2_item1_fewshot_
+adaptation.py's k-shot AFFINE POINT-PREDICTION recalibration, a
+different mechanism entirely). Used whichever model is currently,
+actually routed per dataset (extended for CALCE/Oxford/HUST, base for
+XJTU + all 9 BatteryLife sources).
+
+**Mean coverage across all 13 datasets, by k (target=90%): k=0
+10.8%, k=5 10.9%, k=10 11.1%, k=20 11.4%, k=50 13.4%.** Every single
+dataset stays dramatically under-covered at every k - the best any
+dataset reaches even at k=50 is Oxford's 17.7% (still <1/5 of target),
+and several (stanford, stanford_2, isu_ilcc) never clear 2% coverage
+even with 50 labeled target cycles. Width grows moderately with k
+(mean 1.95 -> 2.28) without buying nearly enough coverage in return -
+a real, unfavorable trade-off, not a free win.
+
+**Verdict: few-shot conformal calibration does NOT recover coverage
+under this project's severe domain shift, at any k tested (up to
+50).** This extends, rather than reverses, this project's own
+standing finding (session 19's weighted-conformal-by-domain-classifier
+attempt, items 8/9 of the 18-item pass's isotonic/GPR attempts) that
+small-sample or locally-adaptive fixes cannot close a domain-shift gap
+this large - pooling in a handful of genuinely-labeled target points is
+a MORE direct fix than any of those indirect reweighting schemes, and
+it still fails by a wide margin. Not adopted; no change to the deployed
+conformal interval, which remains the base model's own calibrated
+figure for every dataset (the same disclosed limitation the routing
+feature's own entry already documents).
+
+### Files
+
+`src/run_finalpass_item3_fewshot_conformal.py`,
+`outputs/finalpass_item3_fewshot_conformal.csv`,
+`outputs/finalpass_item3_coverage_pivot.csv`,
+`outputs/finalpass_item3_width_pivot.csv`. No deployed file touched.
+
+### Item 4: relaxation-voltage features - STOPPED at the feasibility gate, per the item's own explicit instruction
+
+Checked, dataset by dataset, whether a genuine post-charge rest/
+relaxation period exists in the RAW per-cycle data (not just whether
+`health_indicators.py` currently computes anything from one - it
+doesn't; confirmed directly, all 16 existing HIs read only `cycle
+["charge"]`/`cycle["discharge"]`, zero "rest" references anywhere in
+that file). Checked all 13 held-out-panel datasets' raw loader code
+AND, for the ambiguous cases, the actual raw files directly (not just
+docstrings):
+
+| dataset | rest period in raw data | resolution |
+|---|---|---|
+| CALCE | yes | ~2 samples/cycle - usable for max only, too sparse for variance/skewness |
+| XJTU | yes | ~293 samples/cycle @ ~1Hz - well-resolved, genuinely usable |
+| ul_pur | yes (weak) | ~3 samples/cycle, only 39/60 cycles have a measurable gap |
+| snl | yes (weak) | ~1 sample/cycle - real rest occurred, too coarse for variance/skewness |
+| mich | yes | ~11 samples/cycle - well-resolved, genuinely usable |
+| Oxford | **no** | no current channel logged at all (confirmed: `data_adapters.py` lines 364-370, current is reconstructed via dq/dt from cumulative capacity checkpoints - no rest segment exists in the raw structure to find) |
+| HUST | **no** | `Status` column has only charge/discharge states, no rest/OCV state (confirmed directly against a raw `.pkl`) |
+| hnei, mich_exp, stanford, stanford_2, isu_ilcc | **no/negligible** | median inter-sample gap 0-10s - ordinary sampling granularity, not a real rest step |
+| rwth | unclear/no | no valid post-charge gap found in 60 sampled cycles; this source's own adapter already carries a disclosed "pulse-like protocol, simplified" warning for unrelated reasons |
+
+**5 of 13 datasets (38%) have genuine rest-period data, and only 2 of
+those 5 (XJTU, mich) are well-resolved enough for the variance/
+skewness/max feature set Zhu et al. actually specify** - CALCE/snl/
+ul_pur's 1-3-point "rest" segments can support a max feature but not a
+meaningful variance or skewness estimate. This is below the item's own
+stated ~half-of-datasets feasibility bar (6-7 of 13).
+
+**Verdict: STOPPED here, per the item's own explicit instruction**
+("If fewer than ~half do, stop, report it, and skip") - not built, not
+evaluated. This is a real, disclosed scope limitation of the
+underlying raw data (most of this project's loaders deliberately mask
+out zero-current rows as "not charge/discharge," which is exactly where
+a rest period would live - a structural adapter choice, not a data
+absence, for the datasets that DO have a current/status channel but
+still show no rest; genuinely absent for Oxford/HUST at the source
+level).
+
+### Files
+
+No new script - feasibility determined by direct inspection of
+existing loader code (`src/data_adapters.py`, `src/data_adapters_
+batterylife.py`) and raw files, no run to save output from. No deployed
+file touched.
+
