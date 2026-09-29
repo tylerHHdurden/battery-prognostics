@@ -14350,3 +14350,70 @@ own wiring decisions, not itself an app change here.
 `outputs/toolkit_phase2e_ocsvm_sanity_check.csv`. No deployed file
 touched.
 
+## CRITICAL correction found before wiring: the Phase 2 candidate encoder's weights were entirely NaN - training silently diverged, undetected until now
+
+While preparing to wire the chosen model into `live_inference.py`,
+computing the candidate's own feature medians surfaced something
+wrong: every one of the 419,250 rows in `fusion_embeddings_
+multisource.csv` had `fusion_0=NaN`. Direct inspection confirmed **all
+6 of the candidate ICA encoder's own parameter tensors are 100% NaN** -
+training diverged completely, silently, and was never caught before
+this point (Phase 2's own gate table and Phase 2e's OC-SVM check both
+ran to completion and produced plausible-looking numbers regardless,
+because XGBoost's native missing-value handling routed around the
+now-entirely-missing 16 fusion columns and the OC-SVM's own median-
+imputation filled them with a constant 0.0 - both models' real
+predictive signal in every prior result this phase reported came
+ENTIRELY from the 8 HI features + cycle_idx, not from any working
+fusion embedding, despite "retrain the ICA fusion encoder" being half
+of this phase's own stated goal).
+
+**Root cause, diagnosed directly, not guessed**: sampled 114
+BatteryLife batteries across 10 sources - **59 (52%) have non-finite
+(NaN/Inf) values in their own raw 200-bin tensors**, overwhelmingly in
+channel 2 (temperature - several BatteryLife sources don't log one,
+and `get_cycle_tensor` has no missing-temperature guard) and, in a
+smaller but critical number of cases (Stanford/Stanford_2 specifically,
+confirmed directly), in channel 4 - **dVdQ, one of the 3 ICA_CHANNEL_
+SLICE channels the encoder actually trains on**. `sequence_features.
+compute_channel_norm_stats` uses plain `np.percentile` (not NaN-
+robust) - a SINGLE non-finite value anywhere in a channel across the
+whole ~420K-row pool poisons that channel's lo/hi/mean/std to NaN,
+which then NaN-normalizes EVERY row's value for that channel (not just
+the originally-bad rows) - exactly reproducing the observed symptom
+(100% of embeddings NaN, not ~52%). One NaN-poisoned input channel on
+the very first training batch, with no NaN-weight guard anywhere in
+this project's `train_one_model`, permanently destroys every weight
+via a single bad gradient step.
+
+**Fix applied**: sanitizes non-finite raw tensor VALUES (not the
+shared `sequence_features.py` normalization function itself - out of
+scope and risky to change for other already-validated models that
+depend on it unchanged) to 0.0 immediately after tensor concatenation,
+before computing normalization stats - `np.nan_to_num`, with the exact
+count of affected cells/rows printed and disclosed, not silently
+patched. Also added two hard safety checks that were previously
+missing entirely: (1) asserts every channel's own norm stats are
+finite after sanitization, (2) asserts every one of the encoder's own
+trained parameters is finite before saving to disk, and a third assert
+that zero rows produce NaN embeddings after encoding - any of these
+firing now HALTS the script rather than silently shipping a broken
+model, which is exactly what happened here undetected through 3
+downstream scripts (Phase 2's own gate table, Phase 2d's balanced
+retrain, Phase 2e's OC-SVM check) before this was caught.
+
+**Consequence, stated plainly**: Phase 2's gate table, Phase 2d's
+balanced-retrain decision, and Phase 2e's OC-SVM sanity check are ALL
+being RE-RUN with the fixed encoder before any wiring proceeds. Their
+previous numbers are not being treated as final - superseded by the
+corrected re-runs below. This is exactly the kind of catch this
+project's own "confirm nothing else changed" verification discipline
+exists for, caught here before it reached production, not after.
+
+### Files
+
+`src/run_toolkit_phase2_multisource_retrain.py` (fixed, re-running),
+`data/processed/candidate_channel_norm_stats.json` (new - never saved
+in the first, broken run, a real gap independently worth fixing). No
+deployed file touched.
+

@@ -195,6 +195,32 @@ def main():
     print(f"\n[phase2] TOTAL: {len(soh_all)} cycles, {len(set(bid_all.tolist()))} batteries, "
           f"{len(set(ds_all.tolist()))} sources. Tensor build took {(time.time()-t0)/60:.1f} min so far.")
 
+    # CRITICAL FIX (found post-hoc, after the first run of this script
+    # silently produced an all-NaN-weights encoder): direct diagnosis
+    # confirmed 59/114 sampled BatteryLife batteries (52%) have non-
+    # finite (NaN/Inf) values in their raw tensors - predominantly
+    # channel 2 (temperature, for sources that don't log it - get_cycle_
+    # tensor has no missing-temperature guard) and, critically,
+    # occasionally channel 4 (dVdQ, one of the 3 ICA_CHANNEL_SLICE
+    # channels the encoder actually trains on - confirmed on Stanford/
+    # Stanford_2 batteries specifically). `compute_channel_norm_stats`
+    # uses plain `np.percentile`, not NaN-robust - a SINGLE non-finite
+    # value anywhere in a channel across the whole ~420K-row pool
+    # poisons that channel's lo/hi/mean/std to NaN, which then NaN-
+    # normalizes EVERY row's value for that channel (not just the
+    # originally-bad rows), which destroys the encoder's weights via
+    # NaN gradients on its very first training step - exactly
+    # reproducing the observed symptom (100% of embeddings NaN, not
+    # just ~52%). Sanitized here, not inside `sequence_features.py`
+    # itself (a shared function other, already-validated models in this
+    # project depend on - out of scope and risky to change there).
+    n_non_finite = int((~np.isfinite(X_all)).sum())
+    n_rows_affected = int((~np.isfinite(X_all)).any(axis=(1, 2)).sum())
+    print(f"[phase2] SANITIZING non-finite raw tensor values: {n_non_finite} non-finite cells across "
+          f"{n_rows_affected}/{len(X_all)} rows ({100*n_rows_affected/len(X_all):.1f}%) - replaced with 0.0 "
+          f"before normalization (see code comment for root-cause diagnosis)")
+    X_all = np.nan_to_num(X_all, nan=0.0, posinf=0.0, neginf=0.0)
+
     # ---------- 2. battery-level stratified split ----------
     dataset_of = dict(zip(bid_all, ds_all))
     unique_bids = sorted(set(bid_all.tolist()))
@@ -205,7 +231,12 @@ def main():
 
     # ---------- 3. channel norm on TRAIN split ----------
     norm_stats = compute_channel_norm_stats(X_all[train_mask], clip_percentile=1.0)
+    for c, s in enumerate(norm_stats):
+        assert all(np.isfinite(v) for v in s.values()), f"channel {c} norm stats still non-finite after sanitization: {s}"
     X_norm = apply_channel_norm(X_all, norm_stats)
+    with open(PROC_DIR / "candidate_channel_norm_stats.json", "w") as f:
+        json.dump(norm_stats, f, indent=2)
+    print("[phase2] saved data/processed/candidate_channel_norm_stats.json (never saved in the first, broken run)")
 
     # ---------- 4. train ICA encoder ----------
     print("\n[phase2] === step 2: training the multi-source ICA encoder ===")
@@ -225,12 +256,25 @@ def main():
     encoder = ICAEncoder(in_channels=3, embed_dim=EMBED_DIM)
     encoder, hist = train_one_model("ICAEncoder-multisource", encoder, X_fit_ica, y_fit, X_val_ica, y_val,
                                      epochs=25, patience=6)
+
+    # HARD SAFETY CHECK (added after the first run silently shipped an
+    # all-NaN-weights encoder past this exact point) - never again let a
+    # diverged encoder reach disk undetected.
+    for name, param in encoder.state_dict().items():
+        assert torch.isfinite(param).all(), (
+            f"ENCODER TRAINING DIVERGED: parameter '{name}' contains non-finite values - "
+            f"NOT saving. Root cause last time was non-finite raw tensor input silently "
+            f"poisoning channel_norm_stats (see the sanitization step above); "
+            f"if this fires again after that fix, investigate learning rate / gradient clipping.")
+    print("[phase2] encoder weights confirmed all-finite - safe to save")
     torch.save(encoder.state_dict(), ROOT / "models" / "_candidate_ica_encoder.pt")
     print("[phase2] saved models/_candidate_ica_encoder.pt")
 
     encoder.eval()
     with torch.no_grad():
         embeddings = encoder.encode(torch.tensor(X_norm[:, :, ICA_CHANNEL_SLICE])).numpy()
+    n_nan_embeddings = int(np.isnan(embeddings).any(axis=1).sum())
+    assert n_nan_embeddings == 0, f"{n_nan_embeddings} rows produced NaN embeddings despite finite encoder weights - investigate X_norm for remaining non-finite input rows"
     fusion_df = pd.DataFrame({"dataset": ds_all, "battery_id": bid_all, "cycle_idx": cyc_all})
     for i in range(EMBED_DIM):
         fusion_df[f"fusion_{i}"] = embeddings[:, i]
