@@ -14246,8 +14246,47 @@ table.csv`, `outputs/toolkit_phase2c_ocsvm_comparison.csv`. **No
 deployed file touched - every artifact above is a `_candidate_*` file,
 none wired into `app.py`/`src/live_inference.py`.**
 
-### STOPPING HERE, per this phase's own explicit instruction
+## Phase 2 decision: APPROVED with conditions - source-balanced retrain FAILED decisively, unweighted candidate + dataset-identity routing adopted
 
-Gate table reported above. Not wiring the candidate into the app.
-Phase 3 (app feature work) waits for confirmation before proceeding.
+Per the user's own explicit decision rule: retrained the Phase 2
+candidate XGBoost with sample weights giving every source (sibling
+families - {stanford,stanford_2}, {mich,mich_exp} - collapsed to one
+weight group each, 14 groups total) EQUAL TOTAL weight; reused the
+already-trained encoder unchanged (no re-training, no tensor rebuild -
+this retrain took 1.5 minutes, reusing the already-saved multi-source
+fusion embeddings).
+
+**Result: the balanced model collapses dramatically - NEGATIVE R2 on
+15 of 16 sources**, including catastrophic collapse on sources that
+won cleanly under the unweighted candidate (XJTU: 0.939->-7.150; HUST:
+0.988->-1.647; ul_pur: 0.792->-5.772). Root cause, diagnosed not just
+reported: source sizes span a 153x range on the train split (NASA=766
+rows, HUST=116,949 rows) - forcing equal TOTAL weight per source gives
+each NASA row ~153x the weight of each HUST row, and gradient-boosted
+trees fit under that much per-row weight variance become unstable,
+dominated by a handful of hyper-weighted rows rather than genuinely
+"balanced" - a real, disclosed lesson (naive equal-total-weight
+balancing fails badly once source sizes vary by 2+ orders of
+magnitude), not a coding bug (verified: per-group total weight sums
+were exactly equal, `0.071428...` each, confirmed printed).
+
+**Decision rule applied**: NASA within bootstrap noise of routed?
+**NO** (routed R2=0.9945 nowhere near the balanced candidate's own
+[-13.17,-0.65] CI). MIT within noise? **NO** (routed R2=0.9996 vs.
+CI [-11.50,-1.77]). Do the 13 sources that won under the unweighted
+candidate still win? **NO** (12 of 13 LOST their win, only isu_ilcc's
+already-marginal case held). **All three conditions fail -> KEEP THE
+UNWEIGHTED CANDIDATE. Routing (a deployment decision, not a paper
+claim, made on the gate split - labeled as such per instruction): NASA
+and MIT stay on the current deployed model; every other known source
+AND every uploaded/unknown battery routes to the (unweighted)
+`_candidate_multisource.json`.**
+
+### Files
+
+`src/run_toolkit_phase2d_balanced_retrain.py`,
+`models/_candidate_multisource_balanced.json` (the failed balanced
+attempt, kept for the record, NOT the adopted candidate),
+`outputs/toolkit_phase2d_balanced_gate_table.csv`,
+`outputs/toolkit_phase2d_decision.txt`. No deployed file touched.
 
