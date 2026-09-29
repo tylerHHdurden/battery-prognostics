@@ -12881,3 +12881,117 @@ still pending.
 `outputs/researchpass_item17_zeroretrain_verify.csv`. No deployed file
 touched.
 
+## Final research pass before journal submission: 5 items (label-free routing, cycle_idx ablation, few-shot conformal, relaxation-voltage feasibility, final rigor pass)
+
+Same governing rule as every prior pass: nothing touches the deployed
+model/routing/app.py unless it clearly beats the current baseline on
+the standard protocol; flag, don't auto-promote.
+
+**Upfront estimates** (Best/Avg/Expected/Worst, wall-clock, excluding
+any human-review wait time): item 1 0.5/1/1.5/3h; item 2 0.5/1.5/2/4h
+(3 full retrains + 13-dataset scoring, all tabular XGBoost - cheap);
+item 3 0.5/1.5/2/4h; item 4 0.25/0.5/1/2h if infeasible (stop-and-
+report path), 2/4/6/10h if feasible; item 5 2/5/8/16h (the RUL cross-
+domain sub-item is the single biggest unknown - no RUL labels exist
+yet for CALCE-adjacent Oxford/HUST/XJTU or any BatteryLife source, all
+would need deriving fresh from raw cycle data via `rul_labels.py`,
+confirmed dataset-agnostic but never run on these before). **Total: 3.75/9.5/14.5/29h**, with item 5's RUL sub-item flagged as the
+dominant risk, same role Group E/item 15 played in the 18-item pass.
+
+### Item 1: label-free routing - COMPLETE, a real negative result
+
+Built a routing rule using ONLY the project's own domain-classifier-AUC
+diagnostic (session 19's method: LogisticRegression train-pool-vs-
+target in-sample AUC, unchanged) - no SOH/RUL labels enter the rule.
+Rule: for each held-out dataset, compute AUC of train-pool-vs-target in
+BOTH the base and extended-reformulation feature representations, route
+to whichever representation shows LOWER separability (closer to 0.5);
+ties default to base. Real R2 (labels) used ONLY afterward, to grade
+the rule, never inside it.
+
+**Result across all 13 held-out sets (CALCE/Oxford/HUST/XJTU + the 9
+locally-available BatteryLife sources)**: the rule agrees with the true
+better-performing model on **8/13 (61.5%)** - EXACTLY TIED with the
+naive "always route to extended" baseline (also 8/13) and with the
+CURRENT live positive-list routing evaluated on this same panel (also
+8/13, since it's dataset-name-based and undefined for 9 of these 13
+sources, defaulting them all to base). **The rule adds no real signal
+over a naive baseline.**
+
+**Root cause, directly diagnosed, not guessed**: the AUC signal is
+SATURATED (AUC=1.0000 or within 0.0003 of it) in BOTH representations
+for CALCE, Oxford, HUST, XJTU, mich, and mich_exp - 6 of 13 datasets
+give the rule a coin-flip tie it has to break arbitrarily (defaults to
+base). This is fatal specifically for CALCE/Oxford/HUST, where the
+extended model IS the true winner by a wide margin (R2 deltas of
++0.17/+3.65/+0.95) - the rule gets exactly these 3 wrong, honestly
+reproducing this project's own session-19-era finding that small-
+battery-count domain classifiers saturate at near-total separation
+regardless of which representation is used, so AUC alone cannot
+discriminate a genuinely-helpful reformulation from a genuinely-useless
+one once separation is already total. Where AUC does show real
+variation (hnei/snl/stanford/stanford_2/isu_ilcc, AUC ranging
+0.857-0.985), the rule is right 4/5 times (wrong only on snl) - the
+method has real signal ONLY in the regime where AUC hasn't already
+saturated, which this project's own prior domain-classifier work never
+resolved either.
+
+**Verdict: not adopted.** A label-free alternative to the current
+positive-list routing was the goal; this one does not clear even the
+naive-baseline bar, so it provides no basis to replace or extend
+`EXTENDED_ROUTED_DATASETS`. Documented as a genuine, disclosed negative
+result, consistent with this pass's own governing rule.
+
+### Files
+
+`src/run_finalpass_item1_labelfree_routing.py`,
+`outputs/finalpass_item1_labelfree_routing.csv`,
+`outputs/finalpass_item1_confusion.csv`. No deployed file touched.
+
+### Item 2: cycle_idx ablation - COMPLETE, cycle_idx is NOT a shortcut
+
+Retrained the deployed XGBoost-fusion recipe (Stage 1.5's exact
+pipeline via `stage1_common.fit_xgb`, unchanged) three ways: (a)
+as-is (canonical 8 HI + cycle_idx + fusion, monotone_constraints=-1 on
+cycle_idx - reproduces `models/xgb_soh_fusion.json`'s own recipe), (b)
+without cycle_idx (same 8 HI + fusion, no monotone constraint), (c)
+cycle_idx replaced by "equivalent full cycles" (cumulative
+discharge-capacity throughput / that battery's own nominal capacity,
+same sign monotone constraint). Evaluated fresh, zero-retrain, on
+in-domain TEST + all 13 held-out sets.
+
+**cycle_idx's in-domain R2 contribution (a vs. b): +0.0005 -
+negligible.** cycle_idx's MEAN zero-retrain R2 contribution across all
+13 held-out sets: **+0.0421 - if anything, slightly POSITIVE**, not
+negative. It made zero-retrain worse on 5/13 sets (Oxford, CALCE, mich,
+snl marginally, hnei) but better on 8/13, including two of the model's
+worst held-out sets (XJTU: -0.974 vs. -0.787 without... actually WORSE
+with cycle_idx there specifically - XJTU is the one dataset where the
+shortcut pattern would be most plausible, and it IS worse with
+cycle_idx there, by -0.19 R2, but this is offset by gains elsewhere and
+does not generalize across the panel).
+
+**Verdict: cycle_idx is NOT acting as a dataset-specific shortcut.**
+The classic shortcut signature (real in-domain lift + broad zero-retrain
+penalty) is absent on both counts - the in-domain lift is not real
+(+0.0005, noise-level) and the zero-retrain effect is not broadly
+negative (mean +0.0421, worse on a minority of sets). Variant (c),
+replacing cycle_idx with a chemistry/format-normalized equivalent-full-
+cycles feature, performs within noise of (a) everywhere (in-domain
+0.9762 vs 0.9756, held-out sets all within ~0.01-0.05 R2 of variant a) -
+a legitimate, slightly-more-physical drop-in substitute, but not a
+material improvement over the status quo either. **No promotion
+action**: cycle_idx stays in the deployed feature set exactly as-is:
+this ablation found no evidence it should be removed or replaced, and
+also found no evidence removing it would help - a genuinely
+inconclusive-toward-neutral result on the "is it a shortcut" question,
+reported honestly rather than overstated in either direction.
+
+### Files
+
+`src/run_finalpass_item2_cycleidx_ablation.py`,
+`outputs/finalpass_item2_cycleidx_ablation.csv`,
+`outputs/finalpass_item2_r2_pivot.csv`. No deployed file touched -
+all three variants are experimental retrains, distinct model objects
+never saved to `models/`.
+
