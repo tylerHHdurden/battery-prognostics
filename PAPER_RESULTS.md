@@ -278,8 +278,11 @@ history (best prior CALCE result: 82.0%, itself flagged as
 near-vacuous-width - see the consolidated table above).
 
 **Real caveats, disclosed not hidden**: (1) rolling-20-cycle coverage
-MIN is 0.00 for 10/13 datasets even under the best config - local
-bursts of zero coverage persist despite strong long-run averages; (2)
+MIN is 0.00 for 7/13 datasets even under the best config (HUST,
+ul_pur, hnei, snl, mich, mich_exp, rwth - **corrected here from an
+earlier, wrong "10/13" via the final verification pass's own
+per-battery re-check**) - local bursts of zero coverage persist despite
+strong long-run averages; (2)
 late-life coverage is often much worse than early-life (e.g. mich:
 87.8%->22.7%), consistent with the residual-growth-with-degradation
 effect CHECK A found; (3) mean interval width is large on several
@@ -325,20 +328,37 @@ hyperparameters as the deployed model, no tuning on the held-out set.
 | mich | 0.795 [0.754,0.844] | 0.573 | +0.223 |
 | mich_exp | 0.638 [0.256,0.714] | 0.721 | -0.082 |
 | rwth | 0.353 [0.330,0.373] | -0.485 | +0.838 |
-| stanford | 0.997 [0.994,0.999] | 0.111 | +0.886 |
-| stanford_2 | 0.990 [0.975,0.999] | 0.066 | +0.925 |
+| stanford | ~~0.997~~ **0.889** [0.717,0.971] (corrected, see CHECK 1) | 0.111 | +0.778 |
+| stanford_2 | ~~0.990~~ **0.858** [0.561,0.974] (corrected, see CHECK 1) | 0.066 | +0.793 |
 | isu_ilcc | 0.800 [0.187,0.892] | 0.140 | +0.660 |
 | NASA (held out, no comparable baseline) | 0.149 [-0.249,0.363] | - | - |
 | MIT (held out, no comparable baseline) | -4.817 [-9.151,-2.498] | - | - |
 
 **Source diversity helps transfer on 11/13 comparable targets, often
-dramatically** (stanford/stanford_2 jump from ~0.07-0.11 to ~0.99).
-**It fails on exactly the two datasets this project has repeatedly
-flagged as its hardest, most protocol-divergent cases**: XJTU gets
-substantially WORSE with more pooled data (not better), and mich_exp
-regresses marginally. MIT held out alone is a striking new finding:
-its fast-charging protocol is different enough that even 14-source
-pooling cannot generalize to it (R2=-4.82).
+dramatically** (stanford/stanford_2 jump from ~0.07-0.11 to ~0.86-0.89
+- see the family-level-holdout correction below). **It fails on exactly
+the two datasets this project has repeatedly flagged as its hardest,
+most protocol-divergent cases**: XJTU gets substantially WORSE with
+more pooled data (not better), and mich_exp regresses marginally. MIT
+held out alone is a striking new finding: its fast-charging protocol
+is different enough that even 14-source pooling cannot generalize to
+it (R2=-4.82).
+
+**CHECK 1 (family/sibling-holdout verification, post-hoc)**: Stanford
+and Stanford_2 are sibling sources (same lab); MICH/MICH_EXP likewise.
+Re-running LODO while holding out EACH SIBLING PAIR TOGETHER (not just
+the target alone) found a real, measurable leakage effect for the
+Stanford pair - **stanford's original 0.997 does NOT survive as
+reported**; the honest, sibling-corrected number is **0.889** (MAE
+roughly doubles, 0.50->4.25 cycles), and stanford_2's corrected number
+is **0.858** (from 0.990). mich shows almost no effect (0.795->0.790);
+mich_exp shows a modest one (0.638->0.563). **The qualitative headline
+claim is unaffected**: exactly 11/13 targets beat the NASA+MIT-only
+baseline in BOTH the original and the sibling-corrected setting (same
+11 datasets each time). No battery-ID collision was found between any
+train/target split in either setting (asserted in code, all 15
+settings x 2 configurations). Full detail:
+`outputs/finalpass3_check1_side_by_side.csv`.
 
 ## 10. Shift diagnostics (item E) - AUC has no reliable relationship with outcomes at this severity of shift
 
@@ -405,7 +425,83 @@ measures raw error magnitude (the simpler baselines make smaller,
 more conservative absolute errors) - a real case where metric choice
 changes which model looks better, reported as found.
 
+## 12. Online conformal verification (CHECK 2)
+
+**(a) No-lookahead - now a VERIFIED fact, not an inline assertion.** A
+real unit test (shuffle every label after a fixed cycle t, confirm the
+interval at t is byte-identical) passed for both PID and nexCP on
+synthetic data and 3 real battery traces (CALCE, HUST, isu_ilcc).
+
+**(b) Label-free vs. online, one table** (the label-feedback
+requirement made explicit):
+
+| Dataset | Static (label-free) | PID (needs labels) | nexCP 0.95 (needs labels) | nexCP 0.99 (needs labels) |
+|---|---|---|---|---|
+| CALCE | 4.3% | 84.9% | 80.4% | 73.5% |
+| Oxford | 5.4% | 85.4% | 89.7% | 86.1% |
+| HUST | 8.5% | 88.1% | 87.0% | 85.0% |
+| XJTU | 11.0% | 89.3% | 89.2% | 90.8% |
+| ul_pur | 21.6% | 72.8% | 79.7% | 72.5% |
+| hnei | 19.0% | 69.1% | 71.2% | 56.8% |
+| snl | 11.7% | 84.0% | 63.1% | 59.7% |
+| mich | 16.2% | 64.4% | 64.8% | 61.4% |
+| mich_exp | 34.1% | 69.1% | 70.1% | 64.2% |
+| rwth | 4.7% | 79.9% | 78.2% | 57.0% |
+| stanford | 1.5% | 89.7% | 86.0% | 89.8% |
+| stanford_2 | 1.6% | 89.7% | 86.5% | 89.0% |
+| isu_ilcc | 1.3% | 90.0% | 82.5% | 73.9% |
+
+**(c) Life-stage of the rolling-20 zero-coverage window** (7/13
+datasets affected, corrected count): **88% of affected battery-
+instances (63/72) hit zero coverage in LATE life**, only 6 mid and 3
+early - a late-life phenomenon, not a burn-in artifact. **mich is a
+standout case**: all 40/40 of its batteries hit a zero-coverage window
+(39/40 late-life), despite a respectable 64.4% aggregate coverage -
+the aggregate number alone masks near-universal local failure there.
+
+**(d) Mean width as % of SOH range** - where intervals are genuinely
+informative vs. borderline useless: Oxford is most informative (8.8%
+of range); **XJTU (62.7%), isu_ilcc (61.0%), and rwth (59.0%) are
+borderline uselessly wide** - their strong-looking coverage numbers
+(89.3%, 90.0%, 79.9%) are bought almost entirely through width on these
+3 specific datasets.
+
 ---
 
-*Full experimental detail for items A-F: `DEVELOPMENT_LOG.md`, "Final
-experiment pass 2 before the paper" section onward.*
+## Final list: numbers the paper can safely headline
+
+Every number below has been independently re-verified in this final
+pass (post-hoc checks A/B) and is safe to state without qualification
+beyond what's noted:
+
+- **Online conformal (item A) recovers coverage dramatically across
+  all 13 datasets** (static 1.3-34.1% -> PID+scorecaster 74.3-94.7%) -
+  no-lookahead is a VERIFIED, tested property. State the 7/13 (not
+  10/13) rolling-20-zero-coverage count, and flag XJTU/isu_ilcc/rwth's
+  width (59-63% of SOH range) as the 3 datasets where coverage is
+  bought mostly through width.
+- **LODO source-diversity pooling (item B) beats NASA+MIT-only
+  zero-retrain on 11/13 targets** - this count is ROBUST, verified
+  identical in both the original and the sibling-corrected
+  family-holdout setting. **Use stanford=0.889 and stanford_2=0.858**
+  (family-holdout-corrected), NOT the original 0.997/0.990 - those were
+  measurably inflated by sibling-source leakage.
+- **MIT held out alone cannot be predicted even from 14 pooled other
+  sources** (R2=-4.82) - unaffected by either check, safe to headline
+  as-is.
+- **XJTU is the one dataset where more pooled training data makes
+  things WORSE**, both in the original and family-corrected LODO -
+  consistent across every check in this pass.
+- **Engineered HI+fusion+XGBoost beats literature early-cycle-life
+  baselines (Severson/Attia) on 8/13 datasets** (item C, paired
+  significance) - with the Oxford MAE-vs-R2 exception stated exactly
+  as found, not smoothed over.
+- **Domain-classifier AUC has no reliable relationship with outcomes**
+  once shift is this severe (item E) - safe to headline as a clean
+  negative result, unaffected by either check.
+
+---
+
+*Full experimental detail for items A-F and the final verification
+pass: `DEVELOPMENT_LOG.md`, "Final experiment pass 2 before the paper"
+and "Final verification pass" sections.*

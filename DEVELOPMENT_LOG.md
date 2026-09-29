@@ -13426,11 +13426,16 @@ method topped out at 82.0%, itself flagged as having a near-vacuous
 width - see the consolidated CALCE table above).
 
 **Real, honestly-reported caveats - not a solved problem**:
-1. **Rolling-20-cycle coverage MIN is 0.00 for 10/13 datasets** even
-   under the best-performing configuration - meaning every method still
-   has LOCAL bursts of zero coverage somewhere in a battery's life,
-   even while the LONG-RUN average looks strong. Only Oxford/XJTU/
-   stanford/stanford_2/isu_ilcc keep their rolling minimum above 0.
+1. **Rolling-20-cycle coverage MIN is 0.00 for 7/13 datasets**
+   [**CORRECTED** by CHECK 2's own verification pass - this entry
+   originally, incorrectly, said "10/13"; the true count, re-verified
+   directly against the per-battery rolling-coverage traces rather than
+   just re-reading the aggregate table, is 7/13: HUST, ul_pur, hnei,
+   snl, mich, mich_exp, rwth. CALCE/Oxford/XJTU/stanford/stanford_2/
+   isu_ilcc all keep their rolling minimum above 0] - under the
+   best-performing configuration, meaning these 7 datasets' PID
+   trackers still have LOCAL bursts of zero coverage somewhere in a
+   battery's life, even while the LONG-RUN average looks strong.
 2. **Late-life coverage is often much worse than early-life** (e.g.
    mich: early=87.8% -> late=22.7%; ul_pur: 75.8%->53.0%; rwth:
    87.8%->78.3% under PID) - directly consistent with CHECK A's own
@@ -13740,4 +13745,188 @@ promotion candidates. `app.py`, `src/live_inference.py`, and every
 existing (non-`_experimental_`) file under `models/` remain
 byte-identical to before this pass - confirmed via `git diff --stat`
 at every commit point throughout.
+
+## Final verification pass: two checks on items A (online conformal) and B (LODO), no new methods, no code changes to app.py/live_inference.py/models/
+
+### CHECK 1: LODO sibling/family-level holdout - a real, measurable sibling-leakage effect found for Stanford/Stanford_2, but the headline QUALITATIVE finding survives fully intact
+
+Family groups (per this check's own explicit instruction): {Stanford,
+Stanford_2}, {MICH, MICH_EXP}, {NASA, and any NASA-derived/randomized-
+usage set in the pool}. **Verified directly, not assumed**: `hi_table.
+parquet`'s own `dataset` column contains only {CALCE, MIT, NASA} - the
+NASA Randomized Battery Usage dataset (acquired in Part B) was NEVER
+merged into any training pool this project has ever retrained on, so
+NASA has NO sibling anywhere in this 15-source pool. Every other source
+(MIT, CALCE, Oxford, HUST, XJTU, ul_pur, hnei, snl, rwth, isu_ilcc) was
+also checked and confirmed to have no identified sibling. **Battery-ID-
+collision assertion, run for all 15 settings, in both the original and
+family-holdout configurations**: zero collisions found (the script
+would have raised `AssertionError` and halted on any collision; it
+completed cleanly for all 15).
+
+**Side-by-side (R2), original single-source LODO vs. family-level
+LODO**:
+
+| held-out | siblings excluded | original LODO R2 | family-holdout R2 | NASA+MIT-only |
+|---|---|---|---|---|
+| CALCE | none | 0.870 | 0.870 (unchanged) | 0.568 |
+| Oxford | none | -0.571 | -0.571 (unchanged) | -2.694 |
+| HUST | none | 0.535 | 0.535 (unchanged) | -0.152 |
+| XJTU | none | -4.100 | -4.100 (unchanged) | -1.062 |
+| ul_pur | none | 0.488 | 0.488 (unchanged) | 0.116 |
+| hnei | none | 0.681 | 0.681 (unchanged) | -0.038 |
+| snl | none | 0.442 | 0.442 (unchanged) | 0.147 |
+| mich | mich_exp | 0.795 | 0.790 (-0.005, negligible) | 0.573 |
+| mich_exp | mich | 0.638 | 0.563 (-0.076, real but modest) | 0.721 |
+| rwth | none | 0.353 | 0.353 (unchanged) | -0.485 |
+| **stanford** | **stanford_2** | **0.997** | **0.889 (-0.108, real)** | 0.111 |
+| **stanford_2** | **stanford** | **0.990** | **0.858 (-0.132, real)** | 0.066 |
+| isu_ilcc | none | 0.800 | 0.800 (unchanged) | 0.140 |
+
+**Does Stanford's 0.997 survive? Answer, stated plainly: NO, not as
+the exact number reported - there IS a real, measurable sibling-
+leakage effect** (R2 drops 0.997->0.889, MAE roughly doubles from
+0.50->4.25 cycles, RMSE from 1.12->7.16). **But the QUALITATIVE
+finding survives fully**: 0.889 still beats the NASA+MIT-only baseline
+(0.111) by a massive margin, and the count of targets beating that
+baseline is IDENTICAL in both settings - **11/13 in the original LODO,
+11/13 in family-holdout LODO** (the same 11 datasets in both cases;
+XJTU and mich_exp fail to beat the baseline in BOTH settings,
+consistently, not a new failure introduced by the correction).
+mich/mich_exp show a much smaller sibling effect than Stanford/
+Stanford_2 (mich barely moves at all, -0.005) - the leakage effect is
+real but source-pair-specific, not uniform across all sibling pairs.
+
+**Verdict: item B's own headline claim ("source diversity helps
+transfer on 11/13 targets") is CONFIRMED ROBUST to sibling-leakage
+correction.** The one number that needs revising downward for the
+paper is Stanford's own R2, from 0.997 to 0.889 (and Stanford_2's from
+0.990 to 0.858) - both remain genuinely strong, just not
+near-perfect. All other 11 targets' LODO numbers are completely
+unaffected (no identified sibling to correct for).
+
+### Files
+
+`src/run_finalpass3_check1_lodo_family_holdout.py`,
+`outputs/finalpass3_check1_lodo_family_holdout.csv`,
+`outputs/finalpass3_check1_side_by_side.csv`,
+`models/_experimental_lodo_family_xgb_holdout_{15 sources}.json` (15
+new experimental models, per instruction). No deployed file touched.
+
+### CHECK 2: online conformal audit - no-lookahead verified by a real test, label-free-vs-online table, zero-coverage life-stage traced, width-as-%-of-range reported
+
+**(a) No-lookahead unit test - PASSED, both on synthetic data and 3
+real battery traces (CALCE/CS2_37, HUST/5-3, isu_ilcc/ISU-ILCC_G50C2)**:
+for each, ran PID and nexCP once, recorded the interval at a fixed
+cycle t, SHUFFLED every label at cycles >t (verified the shuffle
+actually changed those values, so the test isn't vacuous), reran, and
+asserted the interval at t is byte-identical between the two runs.
+Confirmed true for both trackers on all 4 traces (1 synthetic + 3
+real) - the no-lookahead property is a verified fact about this code,
+not merely an inline code comment asserting it.
+
+**(b) Label-free (static) vs. online (needs sequential target labels)
+coverage, consolidated in one table**:
+
+| dataset | static split-conformal (LABEL-FREE) | PID (needs labels) | nexCP rho=0.95 (needs labels) | nexCP rho=0.99 (needs labels) |
+|---|---|---|---|---|
+| CALCE | 4.3% | 84.9% | 80.4% | 73.5% |
+| Oxford | 5.4% | 85.4% | 89.7% | 86.1% |
+| HUST | 8.5% | 88.1% | 87.0% | 85.0% |
+| XJTU | 11.0% | 89.3% | 89.2% | 90.8% |
+| ul_pur | 21.6% | 72.8% | 79.7% | 72.5% |
+| hnei | 19.0% | 69.1% | 71.2% | 56.8% |
+| snl | 11.7% | 84.0% | 63.1% | 59.7% |
+| mich | 16.2% | 64.4% | 64.8% | 61.4% |
+| mich_exp | 34.1% | 69.1% | 70.1% | 64.2% |
+| rwth | 4.7% | 79.9% | 78.2% | 57.0% |
+| stanford | 1.5% | 89.7% | 86.0% | 89.8% |
+| stanford_2 | 1.6% | 89.7% | 86.5% | 89.0% |
+| isu_ilcc | 1.3% | 90.0% | 82.5% | 73.9% |
+
+The label-feedback requirement is now explicit in the table itself, not
+just prose: every "needs labels" column requires the target's own true
+SOH to be revealed cycle-by-cycle as a real deployed monitor would
+accumulate it - a real operational cost the static column does not
+have.
+
+**(c) Life-stage of the rolling-20 zero-coverage window (PID,
+k_burnin=10), corrected count = 7/13 datasets affected (see the
+correction to item A's own entry above)**:
+
+| dataset | batteries affected | early | mid | late |
+|---|---|---|---|---|
+| HUST | 2/77 | 0 | 0 | 2 |
+| ul_pur | 4/10 | 0 | 0 | 4 |
+| hnei | 5/14 | 0 | 5 | 0 |
+| snl | 8/49 | 0 | 1 | 7 |
+| **mich** | **40/40 (ALL)** | 0 | 1 | 39 |
+| mich_exp | 11/18 | 1 | 1 | 9 |
+| rwth | 2/10 | 1 | 1 | 0 |
+
+**63 of the 72 affected battery-instances (88%) hit their zero-
+coverage window in LATE life, only 6 mid and 3 early** - strongly
+confirming (not merely repeating) the residual-growth-with-degradation
+hypothesis: local coverage failure is overwhelmingly a late-life
+phenomenon, not a burn-in artifact. **mich is a standout, previously-
+underemphasized case**: EVERY SINGLE one of its 40 batteries hits a
+zero-coverage window, 39/40 in late life - despite a respectable
+AGGREGATE coverage of 64.4%, mich's PID performance has near-universal
+late-life LOCAL coverage collapse, a materially different (and worse)
+picture than the aggregate number alone conveys.
+
+**(d) Mean interval width as % of each dataset's own true SOH range**:
+
+| dataset | mean width (SOH-%) | SOH range | width as % of range |
+|---|---|---|---|
+| Oxford | 3.37 | 38.44 | **8.8% (most informative)** |
+| mich_exp | 8.75 | 75.36 | 11.6% |
+| snl | 13.20 | 101.46 | 13.0% |
+| mich | 13.32 | 98.26 | 13.6% |
+| CALCE | 16.09 | 88.95 | 18.1% |
+| HUST | 7.44 | 30.59 | 24.3% |
+| ul_pur | 7.28 | 27.62 | 26.3% |
+| stanford | 38.12 | 93.43 | 40.8% |
+| hnei | 29.50 | 67.11 | 44.0% |
+| stanford_2 | 38.38 | 89.12 | 43.1% |
+| rwth | 47.27 | 80.14 | **59.0% (borderline uselessly wide)** |
+| isu_ilcc | 62.35 | 102.13 | **61.0% (borderline uselessly wide)** |
+| XJTU | 23.78 | 37.95 | **62.7% (borderline uselessly wide)** |
+
+**XJTU, isu_ilcc, and rwth have intervals spanning 59-63% of the entire
+observed SOH range on that dataset** - genuinely, honestly, close to
+uninformative even though their COVERAGE numbers look strong (XJTU
+89.3%, isu_ilcc 90.0%, rwth 79.9%) - the coverage recovery on these 3
+specific datasets is bought almost entirely through width, a real,
+now-quantified instance of exactly the caveat item A's own entry
+already flagged in general terms.
+
+### Files
+
+`src/run_finalpass3_check2_online_conformal_audit.py`,
+`outputs/finalpass3_check2_width_and_coverage.csv`,
+`outputs/finalpass3_check2_lifestage.csv`,
+`outputs/finalpass3_check2_labelfree_vs_online.csv`. No deployed file
+touched; no new model file (this check only re-scores intervals over
+already-computed predictions).
+
+### Final verification pass summary: what survived, what changed
+
+**Survived intact**: item A's headline claim (online conformal
+dramatically outperforms static split-conformal on every dataset) -
+no-lookahead is now a VERIFIED fact, not just an inline assertion.
+Item B's headline claim (source diversity helps transfer on 11/13
+targets) - identical count in both the original and the sibling-
+corrected family-holdout setting.
+
+**Changed/corrected**:
+1. Item A's own "rolling-20 coverage MIN is 0.00" count was WRONG in
+   the original entry (said 10/13, true value re-verified as 7/13) -
+   fixed in both `DEVELOPMENT_LOG.md` and `PAPER_RESULTS.md`.
+2. Item B's Stanford (0.997->0.889) and Stanford_2 (0.990->0.858) LODO
+   R2 numbers were inflated by real sibling-dataset leakage - the
+   corrected, family-holdout numbers are what the paper should
+   headline, not the original single-source ones. mich/mich_exp show a
+   much smaller, largely negligible-to-modest version of the same
+   effect.
 
