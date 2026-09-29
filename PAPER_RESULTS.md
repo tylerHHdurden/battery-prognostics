@@ -502,6 +502,51 @@ beyond what's noted:
 
 ---
 
+# Toolkit pass: minimum labeled checkpoints before trusting the online conformal interval
+
+Derived from item A's own PID results (eta=0.1, k_burnin=10), using
+`src/online_conformal.py` (the reusable module item A's recursion was
+moved into). Definition: for each battery, the smallest number of
+revealed cycles t such that rolling-20 coverage from t onward never
+again drops below 70% for the rest of that battery's life. Batteries
+that never reach a stable point are excluded from the median and
+counted separately, not papered over with a misleading number.
+
+| Dataset | Median checkpoints | Mean | Batteries reaching stability | Batteries that never stabilize |
+|---|---|---|---|---|
+| Oxford | 22 | 22 | 4/8 | 4/8 |
+| XJTU | 25 | 34 | 46/47 | 1/47 |
+| isu_ilcc | 25 | 25 | 9/9 | 0/9 |
+| stanford | 26 | 308 | 6/6 | 0/6 |
+| stanford_2 | 26 | 203 | 8/8 | 0/8 |
+| ul_pur | 60 | 60 | 2/10 | 8/10 |
+| mich_exp | 250 | 243 | 7/18 | 11/18 |
+| snl | 391 | 842 | 28/55 | 27/55 |
+| CALCE | 985 | 985 | 2/3 | 1/3 |
+| hnei | 992 | 1001 | 5/14 | 9/14 |
+| HUST | 1324 | 1095 | 67/77 | 10/77 |
+| rwth | 2018 | 1482 | 9/10 | 1/10 |
+| **mich** | **N/A - no battery ever stabilizes** | - | 0/40 | **40/40** |
+
+**Overall (pooled across every battery that reached a stable point,
+n=193): median = 62 cycles, 75th percentile = 1297 cycles.**
+
+**There is no single safe "minimum checkpoints" number - it varies by
+roughly 100x across datasets (22 to 2018), and mich is a genuine,
+disclosed outlier where NO battery ever reaches a stable trustworthy
+point at all** (consistent with CHECK 2's own earlier finding that
+every one of mich's 40 batteries hits a late-life zero-coverage
+window). **Practical recommendation for the toolkit**: use the
+dataset-specific number when the nearest source is known (via the
+trust-report's own nearest-source lookup); when unknown, use the
+conservative POOLED 75th percentile (~1300 cycles) rather than the
+median, and always disclose that some sources (mich-like protocols)
+may never reach a trustworthy interval at all, however many labeled
+checkpoints are supplied.
+
+---
+
 *Full experimental detail for items A-F and the final verification
 pass: `DEVELOPMENT_LOG.md`, "Final experiment pass 2 before the paper"
-and "Final verification pass" sections.*
+and "Final verification pass" sections. Toolkit-pass detail:
+`DEVELOPMENT_LOG.md`, "Toolkit pass" section.*

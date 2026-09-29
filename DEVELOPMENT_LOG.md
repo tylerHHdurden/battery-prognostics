@@ -14000,3 +14000,100 @@ for the upload-path test). No file in `app.py`/`src/live_inference.py`/
 `models/` touched - `river` was installed into the local venv only
 (already declared in `requirements.txt`, not a code change).
 
+### Phase 3(a) second half: minimum labeled checkpoints before trusting the online interval - derived, no single safe number exists
+
+Reused `src/online_conformal.py` (moved item A's own PID/nexCP
+recursion into a clean, tested, reusable module - satisfies the first
+half of Phase 3(a)). Definition: per battery, the smallest number of
+revealed cycles after which rolling-20 coverage never again drops below
+70% for the rest of that battery's life; batteries that never reach
+such a point are excluded from the median and counted separately.
+
+**Result: varies by ~100x across datasets (median 22 cycles for Oxford
+up to 2018 for rwth), and mich is a genuine outlier where NO battery
+(0/40) ever reaches a stable trustworthy point at all** - consistent
+with CHECK 2's own earlier finding that all 40 of mich's batteries hit
+a late-life zero-coverage window. Overall pooled median (across 193
+batteries that DID stabilize) = 62 cycles, 75th percentile = 1297.
+Written into `PAPER_RESULTS.md` with the honest caveat that this is not
+a single safe number - the toolkit should use the dataset-specific
+figure when the nearest source is known, the conservative 75th-
+percentile figure otherwise, and disclose that some sources may never
+reach a trustworthy interval regardless of how many checkpoints are
+supplied.
+
+### Files
+
+`src/run_toolkit_phase3a_min_checkpoints.py`,
+`outputs/toolkit_phase3a_min_checkpoints.csv`. No deployed file
+touched.
+
+## Phase 1: data completion
+
+### Phase 1(a): rebuild BatteryLife sources without subsampling - CONFIRMED already true, nothing to rebuild
+
+Checked directly (not assumed): grepped `data_adapters_batterylife.py`
+and `build_batterylife_hi_table.py` for any subsampling logic
+(`[::N]`, `.sample(`, row/cycle caps) - none exists. Cross-checked
+local battery counts per source against this pass's own item C
+Severson-feature battery counts (independently rebuilt from the same
+raw files): identical (e.g. snl=61, mich_exp=18, matching exactly).
+**The 9 already-integrated BatteryLife sources were never subsampled -
+this instruction's premise does not apply; nothing needed rebuilding.**
+Reported honestly rather than performing a redundant "rebuild" to
+appear responsive.
+
+### Phase 1(c): EVBattery feasibility - NOT FEASIBLE, stopped per this item's own explicit instruction
+
+Downloaded the smallest of EVBattery's 3 files (`battery_dataset3.
+tar.gz`, 177.8 MB of the dataset's ~1.4 GB total, figshare DOI
+10.6084/m9.figshare.23301881) and inspected the ACTUAL schema directly
+(not assumed from the paper's abstract alone) - confirmed against
+independently-found published documentation of the same dataset
+(WebSearch), not just this project's own reading of one sample file.
+
+**Two independent, disqualifying findings**:
+1. **No discharge-phase data exists anywhere in this dataset.** Every
+   `.pkl` file is a charging-session snippet only: 128 timesteps x 8
+   columns (average cell voltage, charging current, SOC, max/min cell
+   voltage, max/min cell temperature, timestamp) - confirmed directly
+   from a real downloaded file's own array shape and values, matching
+   independently-found documentation exactly. This project's entire HI
+   pipeline (`health_indicators.compute_health_indicators`) requires
+   BOTH `cycle["charge"]` AND `cycle["discharge"]` sub-dicts - several
+   canonical HIs (TEVD, VDEDT, VIECT) and the SOH label itself
+   (`discharge_capacity`/initial capacity) are discharge-derived and
+   have no analog in charging-only data. Real-world EV field telemetry
+   commonly logs only charging sessions (discharge happens while
+   driving, not instrumented this way) - a structural property of the
+   dataset, not a download problem.
+2. **The dataset's own "label" is a per-VEHICLE BINARY classification
+   (0/1, 34/16 split in the sample), not a per-cycle continuous
+   capacity/SOH value** - confirmed directly from the actual
+   `label.csv` (columns: `car`, `label`), consistent with the
+   associated paper's own framing as an anomaly-detection task, not a
+   capacity-regression task. Even setting aside Finding 1 entirely,
+   this project's continuous per-cycle SOH regression protocol has no
+   valid target to predict here.
+
+**Secondary, non-blocking finding**: the dataset's license is
+inconsistently stated across sources checked (figshare's own API:
+"CC BY 4.0"; the arXiv abstract page's displayed badge: "CC BY-NC-ND
+4.0"; this task's own instruction said "CC BY-NC-SA") - not resolved
+here since it's moot given the technical stop below, but flagged so it
+is not silently asserted as any one of these if this dataset is ever
+revisited.
+
+**Verdict: NOT FEASIBLE for this project's zero-retrain SOH/RUL
+pipeline, for two independent, structural reasons (missing discharge
+data; wrong label type). Stopped here per this item's own explicit
+instruction - no adapter built, no evaluation attempted.**
+
+### Files
+
+`data/raw/evbattery_sample/battery_dataset3.tar.gz` (downloaded sample,
+git-ignored like every other raw dataset in this project), no
+processing script needed - feasibility determined by direct inspection
+of the downloaded sample's own schema plus independently-found
+published documentation. No deployed file touched.
+

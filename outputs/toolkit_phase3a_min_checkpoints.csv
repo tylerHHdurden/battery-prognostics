@@ -1,0 +1,14 @@
+dataset,median_checkpoints,mean_checkpoints,n_batteries_stable,n_batteries_never_stabilized,n_batteries_total
+CALCE,985.0,985.0,2,1,3
+Oxford,22.0,21.75,4,4,8
+HUST,1324.0,1095.0746268656717,67,10,77
+XJTU,25.0,33.73913043478261,46,1,47
+ul_pur,59.5,59.5,2,8,10
+hnei,992.0,1001.4,5,9,14
+snl,390.5,841.8928571428571,28,27,55
+mich,,,0,40,40
+mich_exp,250.0,243.0,7,11,18
+rwth,2018.0,1481.888888888889,9,1,10
+stanford,26.0,307.6666666666667,6,0,6
+stanford_2,26.0,202.75,8,0,8
+isu_ilcc,25.0,24.666666666666668,9,0,9
