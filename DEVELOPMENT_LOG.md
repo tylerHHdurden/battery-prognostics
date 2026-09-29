@@ -12258,4 +12258,298 @@ exceptions.
 `app.py` only (glossary additions + wiring, Explainability tab verdict
 sentences, the 2 bugs found-and-fixed above). No model, prediction, or
 routing logic touched - copy/content only, as scoped.
+---
+
+## Research pass, Part A: 5 external-method upgrades tested against the CURRENT ROUTED deployed baseline - 0/5 valid wins, nothing promoted
+
+Five items from external literature, each verified (not assumed from
+its own task description) before implementation, each adapted to this
+project's own data/pipeline with disclosed scope reductions, each
+evaluated on the FULL standard protocol (in-domain fixed-split test +
+zero-retrain CALCE/Oxford/HUST/XJTU) against the CURRENTLY DEPLOYED,
+DATASET-ROUTED baseline (base model for in-domain/XJTU: R2=0.974/
+-1.062; extended-reformulation model for CALCE/Oxford/HUST: R2=0.740/
+0.953/0.800 - the actual numbers a real user of the live app sees
+today, per the "Dataset-aware routing" entry above). Part B (BatteryLife
+dataset integration) is explicitly OUT of scope for this pass, per
+instruction - not started.
+
+### Upfront time estimates (given before any of the 5 items was started, per instruction)
+
+| | Best | Avg | Expected | Worst |
+|---|---|---|---|---|
+| **Whole Part A** | 3h | 6.5h | 8h | 16h |
+| Item 1 (gating router) | 30min | 45min | 1h | 2h |
+| Item 2 (physics TTT) | 45min | 1.5h | 2h | 4h |
+| Item 3 (mechanistic residual) | 30min | 1h | 1.25h | 2.5h |
+| Item 4 (DiffBatt augmentation) | 45min | 1.5h | 2h | 4h |
+| Item 5 (Neural-ODE) | 45min | 1.5h | 2h | 4h |
+
+Flagged upfront as carrying the most uncertainty: items 2 and 5 (both
+depend on `stage7_common`'s raw per-cycle tensor pipeline, which this
+project's own history records as taking "tens of minutes" to build for
+HUST/XJTU specifically, plus item 2's own per-cycle gradient loop at
+test time); item 4 (a from-scratch diffusion model has real, disclosed
+non-convergence risk, unlike the tabular XGBoost variants this project
+has trained dozens of times).
+
+**Actual: far under estimate.** Total wall-clock script runtime across
+all 5 items: ~41 minutes of compute (items 1/3/4: 1.14/1.09/1.51 min;
+items 2/5: 18.61/18.54 min, run concurrently in the background so their
+wall-clock overlapped rather than summed) plus implementation/
+verification/write-up time, landing the whole pass well inside the
+**Best** case, not just under Expected. Primary reason: heavy, correct
+reuse of already-built project infrastructure (`stage1_common.py`,
+`stage7_common.py`, `stage5_extended_reformulation.py`, and the TWO
+already-trained production models, neither retrained) rather than
+building each item's data/eval plumbing from scratch, plus no
+environment blockers (torch/xgboost/pybamm all already installed and
+working from prior sessions) and no non-convergence in any of the 5
+trained models.
+
+### Reference verification (all 5, done BEFORE writing any code - per instruction, not assumed from the task's own description)
+
+| # | Claimed reference | Verified via | Actual status found |
+|---|---|---|---|
+| 1 | "MDPI *Batteries* 2025... gating network... zero-shot/TTA/fine-tune/MAML" | WebSearch, then WebFetch of MDPI HTML (403'd) - full abstract-level detail via search-indexed text instead | **Real paper**: "Domain-Adaptive Mixture-of-Experts for Cross-Dataset Lithium-Ion Battery State-of-Health Prediction," MDPI *Batteries*, Vol 12, Issue 9, Article 359 (`mdpi.com/2313-0105/12/9/359`). Confirmed: a 32-learnable-parameter LINEAR gating network, shared Transformer backbone, routes to {zero-shot, TTA, fine-tune, MAML}, Leave-One-Domain-Out CV on 564 cells/7 datasets, R2=0.864 (oracle)/0.795 (held-out-domain gating). |
+| 2 | "GPT4Battery/BatteryTTT, arXiv:2402.00068... preprint, not peer-reviewed" | WebFetch of arXiv abstract page directly | **Confirmed preprint only** (v1 Jan 2024, v3 Nov 2024, no peer-reviewed venue found). Feng, Hu, Li, Zhang, "Adapting Amidst Degradation: Cross Domain Li-ion Battery Health Estimation via Physics-Guided Test-Time Training." Confirmed: continual adaptation using unlabeled target data collected during degradation, physics-informed + self-supervised, combined into "GPT4Battery." |
+| 3 | "*Nature Communications* 2025... ECM+Kalman-filter... EV SOC domain" | WebSearch (nature.com itself 403'd/auth-walled) | **Real paper, one nuance corrected**: Che, Zheng, Rhyu, Guo, Wang, Teodorescu, Braatz, "Mechanistically guided residual learning for battery state monitoring," *Nature Communications* 17:855, DOI `10.1038/s41467-025-67565-z` (published online Jan 2026; DOI/received date carries a 2025 suffix, close enough to "2025" to cite directly, disclosed rather than silently smoothed over). **Correction to the task's own framing**: the paper covers BOTH real-time SOC estimation AND SOH monitoring for EVs (a Kalman-filter/mechanistic prior + ML residual learner for both states) - NOT SOC-only as originally described; disclosed, not glossed over. |
+| 4 | "DiffBatt, arXiv:2410.23893... genuinely OpenReview-reviewed" | WebFetch of arXiv abstract page directly | **Confirmed, with a disclosed nuance**: Eivazi et al., "DiffBatt: A Diffusion Model for Battery Degradation Prediction and Synthesis." Accepted at the Foundation Models for Science Workshop, NeurIPS 2024 - an OpenReview-managed, genuinely reviewed WORKSHOP track, a lighter bar than a full NeurIPS main-track paper (disclosed distinction, not presented as unqualified "peer reviewed"). Paper's own report: mean RMSE 196 cycles for RUL across datasets. |
+| 5 | "Neural-ODE, arXiv:2505.05803... charging curves" | WebFetch of arXiv abstract page directly | **Confirmed preprint only** (submitted May 2025, no peer review found). Li, He, Liu, "A novel Neural-ODE model for the state of health estimation of lithium-ion battery using charging curve" - "ACLA" (attention+CNN/LSTM+augmented Neural ODE) on CC-phase charging-curve time data, RMSE 1.01%/2.24% on TJU/HUST (paper's own numbers, not independently reproduced here). |
+
+### Item 1 - Domain-adaptive strategy-selection gating router: **LOSS** (net; conservative-but-inert where correct, actively harmful where it acts)
+
+`src/run_researchpass_partA_item1_gating_router.py`. Per-BATTERY
+(not per-dataset, so genuinely different granularity from this
+project's own already-deployed per-DATASET routing) cheap-signal gate
+between zero-shot and an unsupervised, label-free per-feature mean-
+matching test-time correction, layered ON TOP of the already-deployed
+routed model for each dataset (not a replacement for it). **Disclosed,
+load-bearing finding, not a cop-out**: the paper's own "fine-tune"/
+"MAML" branches both require LABELED target data to fit anything - by
+definition incompatible with this project's zero-retrain protocol for
+the 4 held-out sets, so neither was invoked in the headline result; the
+gate only ever chooses between zero-shot and label-free TTA.
+
+| dataset | R2 | routed baseline | outcome |
+|---|---|---|---|
+| in-domain | 0.9740 | 0.974 | unchanged (gating not applicable - not a target domain) |
+| CALCE | 0.7397 | 0.740 | unchanged (0/3 batteries triggered TTA) |
+| Oxford | 0.9533 | 0.953 | unchanged (0/8 batteries triggered TTA) |
+| HUST | 0.8000 | 0.800 | unchanged (0/77 batteries triggered TTA) |
+| **XJTU** | **-2.0100** | **-1.062** | **WORSE - 47/47 batteries triggered TTA, and it hurt** |
+
+The gate was correctly conservative on 3 held-out sets (no domain-gap
+signal exceeded its own data-derived threshold, so it left the already-
+deployed prediction untouched) but on XJTU - where this project's own
+prior work already knows domain shift is severe - it triggered on
+EVERY battery, and the resulting per-feature mean-matching correction
+made R2 nearly TWICE as negative. Diagnosed, not just reported: a naive
+mean-shift correction assumes the covariate shift is a simple offset;
+XJTU's shift is evidently not well-modeled that way, so "correcting" it
+actively destroys real signal. **Verdict: LOSS** - no promotion.
+
+### Item 2 - Physics-guided test-time training (TTT): **LOSS** (5/5 vs. deployed baseline; TTT itself a modest, mixed effect)
+
+`src/run_researchpass_partA_item2_physics_ttt.py`. Disclosed
+architecture change (same standing as Stage 7.2's own precedent): TTT
+needs gradient-updatable weights, so a fresh small `CycleCNNEncoder` +
+SOH head + physics-auxiliary head on the raw-tensor representation
+replaces the deployed XGBoost model for this item ONLY - an
+intentionally-unfair-by-architecture comparison, disclosed upfront.
+Physics signal: R_apparent = whole-discharge IR-drop-over-current (a
+disclosed single-resistor ECM proxy - this project's raw-tensor pipeline
+resamples curves onto normalized time, not real seconds, so a full
+multi-RC nonlinear fit wasn't meaningfully recoverable). TTT = one
+label-free gradient step per new cycle, encoder+physics-head only, SOH
+head frozen, carried forward continuously across each battery's own
+cycle sequence.
+
+| dataset | zero-shot R2 | +TTT R2 | TTT itself | vs. routed deployed baseline |
+|---|---|---|---|---|
+| in-domain | 0.425 | n/a (not a target domain) | - | LOSS (0.425 vs 0.974) |
+| CALCE | -2.089 | -1.503 | **helps** | LOSS (vs 0.740) |
+| Oxford | -0.748 | -1.597 | **hurts** | LOSS (vs 0.953) |
+| HUST (1/5 subsample*) | -2.070 | -2.137 | flat/slightly hurts | LOSS (vs 0.800) |
+| XJTU (1/5 subsample*) | -32.022 | -28.540 | **helps** | LOSS (vs -1.062) |
+
+*Disclosed compute-budget subsampling (every 5th cycle, still a
+continuous in-order sequence) for HUST/XJTU's per-cycle gradient loop -
+a real necessity for CPU wall-clock, same class of disclosed
+subsampling as the Stage 7 closeout's own HUST 8-cell test.
+
+**Verdict: LOSS everywhere** vs. the deployed baseline (expected, given
+the disclosed architecture gap). TTT's OWN contribution (isolated via
+the zero-shot control, same architecture) is real but modest and
+inconsistent - helps on 2/4 held-out sets, hurts/flat on 2/4. Continuous
+physics-guided adaptation is not a transformative capability here, at
+this scope.
+
+### Item 3 - Mechanistically-guided residual learning: **INVALID AS A "WIN" - corrected verdict is LOSS/no-real-benefit once an information-asymmetry artifact is caught and controlled for**
+
+`src/run_researchpass_partA_item3_mechanistic_residual.py`. Disclosed
+adaptation (paper is EV SOC+SOH via ECM/EKF; this project's SOH ground
+truth IS the raw measured capacity, so a physics baseline reading the
+current cycle's own capacity would nearly reproduce the label directly
+- defeats the point of testing residual learning). Built instead: a
+genuine CAUSAL, one-step-ahead constant-velocity KALMAN FILTER over
+each battery's own OBSERVED SOH sequence (disclosed, simplified stand-in
+for the paper's own ECM+EKF), predicting cycle n from cycles <n only,
+then XGBoost trained to predict the residual against this physics prior.
+
+**Raw, as-built result looked like a clean 5/5 sweep** (in-domain
+0.9965, CALCE 0.9822, Oxford 0.9605, HUST 0.9905, **XJTU 0.8876** vs.
+baseline -1.062) - dramatic enough to be suspicious, so it was checked
+directly rather than reported at face value (the same discipline this
+project applied to the Stage 7 Oxford anomaly). **Diagnostic run**: a
+TRIVIAL persistence baseline (SOH(n) = SOH(n-1), zero physics, zero ML,
+using the exact SAME kind of causal access to a target battery's own
+past true SOH labels this item's Kalman filter also uses) was scored on
+the identical eval sets:
+
+| dataset | persistence-only R2 | this item's full R2 | routed deployed baseline |
+|---|---|---|---|
+| in-domain | 0.9941 | 0.9965 | 0.974 |
+| CALCE | 0.9729 | 0.9822 | 0.740 |
+| **Oxford** | **0.9720** | 0.9605 | 0.953 |
+| **HUST** | **0.99999** | 0.9905 | 0.800 |
+| **XJTU** | **0.8985** | 0.8877 | -1.062 |
+
+**The dumbest possible baseline that shares the SAME unfair information
+access already beats this item's own "full" physics+ML result on 3 of
+5 sets** (Oxford, HUST, XJTU). This is conclusive: the apparent "5/5
+win" is overwhelmingly an artifact of an input-assumption mismatch, not
+genuine skill from the physics model or the ML residual - this item's
+causal Kalman baseline (and therefore its residual target) is built
+from each target battery's OWN sequential true SOH history, cycle by
+cycle, an input the DEPLOYED model's actual task definition never
+assumes (it scores one cycle's own features alone, with zero
+per-battery label history). Comparing this item's numbers directly
+against the deployed baseline's R2 is not apples-to-apples, and doing
+so anyway would misrepresent a "different, much easier task, done only
+middlingly well" as a "same-task win." **Corrected verdict: not a valid
+win under the standard protocol; even under its own easier task
+framing, it underperforms the trivial persistence baseline on 3/5 sets.
+No promotion, and this apparent win is explicitly flagged as an
+artifact, not reported as a real one.**
+
+### Item 4 - DiffBatt-style diffusion augmentation: **PARTIAL** (2/5 wins, one substantial)
+
+`src/run_researchpass_partA_item4_diffbatt_augmentation.py`. Disclosed,
+substantial scope reduction from DiffBatt's own transformer+classifier-
+free-guidance full-TRAJECTORY generation: a small MLP epsilon-predictor
+DDPM (T=200 steps, linear beta schedule) trained on the TRAIN pool's
+own (features, SOH) rows as one joint continuous vector, sampling 2x
+synthetic i.i.d. rows (clipped to each real column's own observed
+range - the only realism guardrail applied), added to the real XGBoost
+training set (base + extended representations trained/augmented
+separately, matching each dataset's own already-deployed routing).
+
+| dataset | R2 (augmented) | routed baseline | verdict |
+|---|---|---|---|
+| in-domain | 0.9646 | 0.974 | LOSS |
+| CALCE | 0.5725 | 0.740 | LOSS |
+| Oxford | 0.7869 | 0.953 | LOSS |
+| **HUST** | **0.8930** | 0.800 | **WIN** |
+| **XJTU** | **-0.1708** | -1.062 | **WIN (substantial, still failing outright)** |
+
+**Verdict: PARTIAL**, reported honestly rather than rounded to either
+extreme - real, non-trivial gains on 2 datasets (XJTU especially, still
+far from usable but a large relative improvement) alongside real
+degradation on 3, including a notable one on Oxford. No promotion.
+
+### Item 5 - Neural-ODE, continuous-TIME per-cycle-curve modeling: **LOSS** (5/5 vs. deployed baseline); one comparison in this item's own script output is RETRACTED as metric-mismatched
+
+`src/run_researchpass_partA_item5_neural_ode.py`. Two disclosed scope
+reductions: (a) curve TYPE - the paper uses CHARGING curves; this
+project's raw-tensor pipeline is built around DISCHARGE curves across
+all 6 dataset adapters, and building an analogous charging-curve
+pipeline from scratch was judged out of this pass's budget, so this
+item applies the same mechanism to the discharge curve's V_t/I_t/T_t
+channels instead - curve TYPE substituted, the item's actual axis of
+interest (continuous-TIME vs. DeepONet's continuous-SPACE) preserved;
+(b) architecture - no `torchdiffeq` (not installed, checked directly),
+a hand-rolled fixed-step RK4 integrator (49 steps) with direct backprop
+through the unrolled steps, zero-order-hold forcing input.
+
+| dataset | R2 | routed baseline | verdict |
+|---|---|---|---|
+| in-domain | 0.278 | 0.974 | LOSS |
+| CALCE | -2.354 | 0.740 | LOSS |
+| Oxford | -3.221 | 0.953 | LOSS |
+| HUST | -2.640 | 0.800 | LOSS |
+| XJTU | -3.323 | -1.062 | LOSS |
+
+**A comparison this item's own script printed ("BEATS DeepONet" on all
+4 held-out sets) is RETRACTED here, caught during write-up, not left
+standing**: the script compared this item's downstream SOH-R2 against
+Stage 7.3's DeepONet **operator-RECONSTRUCTION** R2 (voltage-curve fit
+quality, a different metric on a different task entirely - I(t)->V(t)
+operator learning, not SOH prediction) - not a valid comparison, and
+retracted rather than left as a misleading "win" framing. Stage 7.3
+never trained a standalone raw-tensor-to-SOH model in the first place
+(its own downstream test embeds DeepONet features INTO the tabular
+XGBoost pipeline, a different representation family), so no valid
+same-metric "DeepONet-doing-SOH-from-raw-tensors" number actually
+exists in this project's history to compare against. **The correct
+same-kind reference** (same representation family, standalone raw-CNN
+architecture doing SOH regression directly) is Stage 7.2's own
+pretrained/random-init numbers (in-domain 0.493/0.453, CALCE -3.914/
+-4.163, Oxford 0.034/-20.618, HUST -5.363/-2.768, XJTU -256.061/
+-102.084): item 5 is WORSE in-domain (0.278 vs. both) but notably MORE
+ROBUST cross-domain, especially on XJTU (-3.323 vs. -256/-102,
+dramatically less catastrophic) and HUST (-2.640, better than both
+Stage 7.2 variants) - a genuine, informative secondary finding (the
+continuous-time ODE inductive bias generalizes better under domain
+shift than Stage 7.2's discrete CNN+order-ranking-pretext architecture,
+on the identical raw representation), even though neither approach
+comes close to the deployed feature-engineered pipeline. **Verdict:
+LOSS** on the actual protocol - no promotion.
+
+### Summary table (all 5, vs. the CURRENT ROUTED deployed baseline)
+
+| item | in-domain | CALCE | Oxford | HUST | XJTU | verdict |
+|---|---|---|---|---|---|---|
+| routed deployed baseline | 0.974 | 0.740 | 0.953 | 0.800 | -1.062 | - |
+| 1. gating router | 0.974 | 0.740 | 0.953 | 0.800 | **-2.010** | LOSS |
+| 2. physics TTT | 0.425 | -1.503 | -1.597 | -2.137 | -28.540 | LOSS |
+| 3. mechanistic residual | *0.9965 (invalid)* | *0.9822 (invalid)* | *0.9605 (invalid)* | *0.9905 (invalid)* | *0.8877 (invalid)* | INVALID/LOSS |
+| 4. DiffBatt augmentation | 0.965 | 0.573 | 0.787 | **0.893** | **-0.171** | PARTIAL |
+| 5. Neural-ODE | 0.278 | -2.354 | -3.221 | -2.640 | -3.323 | LOSS |
+
+Item 3's numbers are shown in italics with "(invalid)" - real, computed
+numbers, not fabricated, but not a valid same-task comparison to the
+baseline, per the diagnostic above; included for transparency, not as
+a claimed result.
+
+### Promotion decision
+
+**Per the project's own governing rule: nothing is promoted, regardless
+of outcome, and nothing here is close enough to flag for a human
+promotion decision either.** 0 of 5 items produce a genuine, valid win
+on the full protocol. Item 4's XJTU/HUST gains are real but don't clear
+the bar (XJTU still deeply negative; HUST's own +0.09 gain is modest
+and comes with losses on 3 other metrics including the primary
+in-domain one). This is a below-average-even-for-this-project's-own-
+history hit rate (compare Stage 7's "one striking cross-cutting
+pattern, Oxford, across all three items" or the extended-reformulation
+work's clean 3/4 win) - genuinely new method territory turned out
+harder to extract value from than genuinely new data/feature-
+representation territory has, in this project's own experience so far.
+Reported with the same weight as a positive result would get, per
+standing practice.
+
+### Files
+
+`src/researchpass_partA_common.py` (shared tabular-pipeline loading/
+eval helpers, items 1/3/4); `src/run_researchpass_partA_item{1,2,3,4,5}_
+*.py`; `outputs/researchpass_partA_item{1,2,3,4,5}_*.csv` + item 1's
+per-battery signal log, item 3's persistence diagnostic, items 2/5's
+run logs. No deployed file touched - confirmed via `git status`/`git
+diff --stat` on `app.py`, `src/live_inference.py`, and every file under
+`models/` before committing: zero diff on any of them. Two NEW
+experimental checkpoints saved (`models/_experimental_ttt_physics_
+encoder.pt`, `models/_experimental_neural_ode_soh.pt`) - neither loaded
+by `app.py`/`live_inference.py`, same standing as every other
+`_experimental_*` artifact in this project.
 

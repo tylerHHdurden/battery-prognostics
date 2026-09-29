@@ -1,0 +1,95 @@
+=== Part A, item 2: physics-guided test-time training (TTT) ===
+[item2] loading canonical 42-battery pool (raw tensors)...
+[stage4-pool] loaded NASA/B0005: (168, 200, 6)
+[stage4-pool] loaded NASA/B0006: (168, 200, 6)
+[stage4-pool] loaded NASA/B0007: (168, 200, 6)
+[stage4-pool] loaded NASA/B0018: (132, 200, 6)
+[stage4-pool] loaded MIT/b1c20: (532, 200, 6)
+[stage4-pool] loaded MIT/b1c43: (649, 200, 6)
+[stage4-pool] loaded MIT/b1c32: (729, 200, 6)
+[stage4-pool] loaded MIT/b1c17: (855, 200, 6)
+[stage4-pool] loaded MIT/b1c22: (889, 200, 6)
+[stage4-pool] loaded MIT/b1c41: (1049, 200, 6)
+[stage4-pool] loaded MIT/b1c4: (1225, 200, 6)
+[stage4-pool] loaded MIT/b2c1: (169, 200, 6)
+[stage4-pool] loaded MIT/b2c44: (478, 200, 6)
+[stage4-pool] loaded MIT/b2c42: (491, 200, 6)
+[stage4-pool] loaded MIT/b2c13: (519, 200, 6)
+[stage4-pool] loaded MIT/b2c24: (523, 200, 6)
+[stage4-pool] loaded MIT/b2c32: (543, 200, 6)
+[stage4-pool] loaded MIT/b2c9: (1059, 200, 6)
+[stage4-pool] loaded MIT/b3c28: (539, 200, 6)
+[stage4-pool] loaded MIT/b3c13: (814, 200, 6)
+[stage4-pool] loaded MIT/b3c14: (856, 200, 6)
+[stage4-pool] loaded MIT/b3c0: (1007, 200, 6)
+[stage4-pool] loaded MIT/b3c35: (1091, 200, 6)
+[stage4-pool] loaded MIT/b3c33: (1282, 200, 6)
+[stage4-pool] loaded MIT/b3c38: (1933, 200, 6)
+[stage4-pool] loaded MIT/b4c9: (529, 200, 6)
+[stage4-pool] loaded MIT/b4c36: (713, 200, 6)
+[stage4-pool] loaded MIT/b4c39: (761, 200, 6)
+[stage4-pool] loaded MIT/b4c21: (903, 200, 6)
+[stage4-pool] loaded MIT/b4c0: (982, 200, 6)
+[stage4-pool] loaded MIT/b4c5: (1067, 200, 6)
+[stage4-pool] loaded MIT/b4c38: (1230, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0036: (194, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0038: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0039: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0040: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0041: (25, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0051: (22, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c0: (1187, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c18: (688, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c12: (489, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c44: (477, 200, 6)
+[item2] soh_mean=95.366 soh_std=6.866 | r_apparent_mean=0.7002 r_apparent_std=0.2392
+
+[item2] supervised training (SOH head + physics R-head, TRAIN pool only)...
+[item2] supervised pretrain epoch 1/15: mean_loss=0.5351
+[item2] supervised pretrain epoch 2/15: mean_loss=0.2770
+[item2] supervised pretrain epoch 3/15: mean_loss=0.2356
+[item2] supervised pretrain epoch 4/15: mean_loss=0.2148
+[item2] supervised pretrain epoch 5/15: mean_loss=0.2027
+[item2] supervised pretrain epoch 6/15: mean_loss=0.1917
+[item2] supervised pretrain epoch 7/15: mean_loss=0.1873
+[item2] supervised pretrain epoch 8/15: mean_loss=0.1803
+[item2] supervised pretrain epoch 9/15: mean_loss=0.1702
+[item2] supervised pretrain epoch 10/15: mean_loss=0.1697
+[item2] supervised pretrain epoch 11/15: mean_loss=0.1656
+[item2] supervised pretrain epoch 12/15: mean_loss=0.1556
+[item2] supervised pretrain epoch 13/15: mean_loss=0.1523
+[item2] supervised pretrain epoch 14/15: mean_loss=0.1494
+[item2] supervised pretrain epoch 15/15: mean_loss=0.1466
+
+[item2] in-domain (TEST split): zero-shot control (no TTT, held-out battery IDs but same distribution)...
+[item2] in-domain zero-shot (same small architecture, no TTT): R2=0.4250 RMSE=3.6673 n=5208
+
+[item2] loading CALCE (raw cycles, zero-retrain)...
+[item2] CALCE zero-shot (same small architecture, no TTT): R2=-2.0888 RMSE=37.8455 n=2941
+[item2] CALCE PHYSICS-GUIDED TTT (subsample_every=1, 2941 cycles adapted over 0.17 min): R2=-1.5029 RMSE=34.0672 n=2941 | vs zero-shot control R2=-2.0888 -> TTT HELPS | vs routed deployed baseline 0.740 -> LOSS
+
+[item2] loading Oxford (raw cycles, zero-retrain)...
+[item2] Oxford zero-shot (same small architecture, no TTT): R2=-0.7482 RMSE=9.0359 n=519
+[item2] Oxford PHYSICS-GUIDED TTT (subsample_every=1, 519 cycles adapted over 0.02 min): R2=-1.5970 RMSE=11.0131 n=519 | vs zero-shot control R2=-0.7482 -> TTT HURTS/NO HELP | vs routed deployed baseline 0.953 -> LOSS
+
+[item2] loading HUST (raw cycles, zero-retrain)...
+[item2] HUST zero-shot (same small architecture, no TTT): R2=-2.0699 RMSE=12.9264 n=146122
+[item2] HUST PHYSICS-GUIDED TTT (subsample_every=5, 29255 cycles adapted over 1.22 min): R2=-2.1371 RMSE=13.0695 n=29255 | vs zero-shot control R2=-2.0699 -> TTT HURTS/NO HELP | vs routed deployed baseline 0.800 -> LOSS
+
+[item2] loading XJTU (raw cycles, zero-retrain)...
+[item2] XJTU zero-shot (same small architecture, no TTT): R2=-32.0219 RMSE=34.5556 n=19238
+[item2] XJTU PHYSICS-GUIDED TTT (subsample_every=5, 3870 cycles adapted over 0.16 min): R2=-28.5401 RMSE=33.3660 n=3870 | vs zero-shot control R2=-32.0219 -> TTT HELPS | vs routed deployed baseline -1.062 -> LOSS
+
+=== Item 2 (physics-guided TTT) FULL RESULTS ===
+                dataset             variant      rmse       mae         r2      n  routed_baseline_r2  subsample_every
+in-domain (fixed split) zero_shot_same_arch  3.667297  2.501329   0.425027   5208               0.974              NaN
+                  CALCE zero_shot_same_arch 37.845487 33.037338  -2.088844   2941               0.740              NaN
+                  CALCE         physics_ttt 34.067228 30.208055  -1.502888   2941               0.740              1.0
+                 Oxford zero_shot_same_arch  9.035897  7.562126  -0.748214    519               0.953              NaN
+                 Oxford         physics_ttt 11.013083  9.229038  -1.596987    519               0.953              1.0
+                   HUST zero_shot_same_arch 12.926392 10.378819  -2.069929 146122               0.800              NaN
+                   HUST         physics_ttt 13.069461 10.454060  -2.137052  29255               0.800              5.0
+                   XJTU zero_shot_same_arch 34.555632 32.279171 -32.021866  19238              -1.062              NaN
+                   XJTU         physics_ttt 33.366016 31.245725 -28.540095   3870              -1.062              5.0
+
+[item2] TOTAL TIME: 18.61 minutes

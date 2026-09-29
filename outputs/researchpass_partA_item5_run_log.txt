@@ -1,0 +1,83 @@
+=== Part A, item 5: Neural-ODE, continuous-TIME per-cycle-curve SOH model ===
+[item5] loading canonical 42-battery pool (raw tensors, reused from stage7_common)...
+[stage4-pool] loaded NASA/B0005: (168, 200, 6)
+[stage4-pool] loaded NASA/B0006: (168, 200, 6)
+[stage4-pool] loaded NASA/B0007: (168, 200, 6)
+[stage4-pool] loaded NASA/B0018: (132, 200, 6)
+[stage4-pool] loaded MIT/b1c20: (532, 200, 6)
+[stage4-pool] loaded MIT/b1c43: (649, 200, 6)
+[stage4-pool] loaded MIT/b1c32: (729, 200, 6)
+[stage4-pool] loaded MIT/b1c17: (855, 200, 6)
+[stage4-pool] loaded MIT/b1c22: (889, 200, 6)
+[stage4-pool] loaded MIT/b1c41: (1049, 200, 6)
+[stage4-pool] loaded MIT/b1c4: (1225, 200, 6)
+[stage4-pool] loaded MIT/b2c1: (169, 200, 6)
+[stage4-pool] loaded MIT/b2c44: (478, 200, 6)
+[stage4-pool] loaded MIT/b2c42: (491, 200, 6)
+[stage4-pool] loaded MIT/b2c13: (519, 200, 6)
+[stage4-pool] loaded MIT/b2c24: (523, 200, 6)
+[stage4-pool] loaded MIT/b2c32: (543, 200, 6)
+[stage4-pool] loaded MIT/b2c9: (1059, 200, 6)
+[stage4-pool] loaded MIT/b3c28: (539, 200, 6)
+[stage4-pool] loaded MIT/b3c13: (814, 200, 6)
+[stage4-pool] loaded MIT/b3c14: (856, 200, 6)
+[stage4-pool] loaded MIT/b3c0: (1007, 200, 6)
+[stage4-pool] loaded MIT/b3c35: (1091, 200, 6)
+[stage4-pool] loaded MIT/b3c33: (1282, 200, 6)
+[stage4-pool] loaded MIT/b3c38: (1933, 200, 6)
+[stage4-pool] loaded MIT/b4c9: (529, 200, 6)
+[stage4-pool] loaded MIT/b4c36: (713, 200, 6)
+[stage4-pool] loaded MIT/b4c39: (761, 200, 6)
+[stage4-pool] loaded MIT/b4c21: (903, 200, 6)
+[stage4-pool] loaded MIT/b4c0: (982, 200, 6)
+[stage4-pool] loaded MIT/b4c5: (1067, 200, 6)
+[stage4-pool] loaded MIT/b4c38: (1230, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0036: (194, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0038: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0039: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0040: (35, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0041: (25, 200, 6)
+[stage4-pool] loaded RECOVERED NASA/B0051: (22, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c0: (1187, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b1c18: (688, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c12: (489, 200, 6)
+[stage4-pool] loaded RECOVERED MIT/b2c44: (477, 200, 6)
+[item5] 21554 train cycles, soh_mean=95.366 soh_std=6.866, curve shape per cycle: (50, 3)
+
+[item5] training (RK4-integrated Neural ODE, direct backprop through unrolled steps)...
+[item5] epoch 1/12: mean_mse(z-scored)=0.6509
+[item5] epoch 2/12: mean_mse(z-scored)=0.3718
+[item5] epoch 3/12: mean_mse(z-scored)=0.3401
+[item5] epoch 4/12: mean_mse(z-scored)=0.2988
+[item5] epoch 5/12: mean_mse(z-scored)=0.2513
+[item5] epoch 6/12: mean_mse(z-scored)=0.2133
+[item5] epoch 7/12: mean_mse(z-scored)=0.2028
+[item5] epoch 8/12: mean_mse(z-scored)=0.1901
+[item5] epoch 9/12: mean_mse(z-scored)=0.1846
+[item5] epoch 10/12: mean_mse(z-scored)=0.1792
+[item5] epoch 11/12: mean_mse(z-scored)=0.1707
+[item5] epoch 12/12: mean_mse(z-scored)=0.1663
+
+[item5] in-domain (fixed split): R2=0.2784 RMSE=4.1085 n=5208 | vs routed deployed baseline 0.974 | vs Stage 7.3 DeepONet (continuous-SPACE) 0.982
+
+[item5] loading CALCE (raw cycles, zero-retrain)...
+[item5] CALCE: R2=-2.3540 RMSE=39.4364 n=2941 | vs routed deployed baseline 0.740 -> LOSS | vs Stage 7.3 DeepONet (continuous-SPACE) -2.652 -> BEATS DeepONet
+
+[item5] loading Oxford (raw cycles, zero-retrain)...
+[item5] Oxford: R2=-3.2213 RMSE=14.0410 n=519 | vs routed deployed baseline 0.953 -> LOSS | vs Stage 7.3 DeepONet (continuous-SPACE) -4.240 -> BEATS DeepONet
+
+[item5] loading HUST (raw cycles, zero-retrain)...
+[item5] HUST: R2=-2.6402 RMSE=14.0759 n=146122 | vs routed deployed baseline 0.800 -> LOSS | vs Stage 7.3 DeepONet (continuous-SPACE) -9.176 -> BEATS DeepONet
+
+[item5] loading XJTU (raw cycles, zero-retrain)...
+[item5] XJTU: R2=-3.3231 RMSE=12.5031 n=19238 | vs routed deployed baseline -1.062 -> LOSS | vs Stage 7.3 DeepONet (continuous-SPACE) -5.541 -> BEATS DeepONet
+
+=== Item 5 (Neural-ODE, continuous-time) FULL RESULTS ===
+                dataset      rmse       mae        r2      n  routed_baseline_r2  deeponet_stage7_3_r2 verdict_vs_routed verdict_vs_deeponet
+in-domain (fixed split)  4.108485  2.789791  0.278363   5208               0.974                 0.982               NaN                 NaN
+                  CALCE 39.436397 34.421833 -2.353994   2941               0.740                -2.652              LOSS      BEATS DeepONet
+                 Oxford 14.041013 12.290283 -3.221325    519               0.953                -4.240              LOSS      BEATS DeepONet
+                   HUST 14.075946 12.089292 -2.640230 146122               0.800                -9.176              LOSS      BEATS DeepONet
+                   XJTU 12.503068 10.978906 -3.323118  19238              -1.062                -5.541              LOSS      BEATS DeepONet
+
+[item5] TOTAL TIME: 18.54 minutes
