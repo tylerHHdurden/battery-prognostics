@@ -1,0 +1,6 @@
+chemistry_family,n_batteries,best_method,mape,mape_std,acc15pct,acc15pct_std
+Li-ion,837,CPTransformer,0.184,0.003,0.573,0.016
+Li-ion (alt best),837,CPMLP,0.179,0.003,,
+Zn-ion,95,CPTransformer,0.515,0.067,,
+Na-ion,31,CPTransformer,0.255,0.036,,
+CALB,27,CPTransformer,0.149,0.005,0.672,0.107

@@ -1,0 +1,161 @@
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\lib\_function_base_impl.py:1317: RuntimeWarning: divide by zero encountered in divide
+  a = -(dx2) / (dx1 * (dx1 + dx2))
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\lib\_function_base_impl.py:1319: RuntimeWarning: divide by zero encountered in divide
+  c = dx1 / (dx2 * (dx1 + dx2))
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\lib\_function_base_impl.py:1328: RuntimeWarning: invalid value encountered in add
+  out[tuple(slice1)] = a * f[tuple(slice2)] + b * f[tuple(slice3)] \
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\lib\_function_base_impl.py:1317: RuntimeWarning: divide by zero encountered in divide
+  a = -(dx2) / (dx1 * (dx1 + dx2))
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\lib\_function_base_impl.py:1319: RuntimeWarning: divide by zero encountered in divide
+  c = dx1 / (dx2 * (dx1 + dx2))
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\lib\_function_base_impl.py:1328: RuntimeWarning: invalid value encountered in add
+  out[tuple(slice1)] = a * f[tuple(slice2)] + b * f[tuple(slice3)] \
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\lib\_function_base_impl.py:1317: RuntimeWarning: divide by zero encountered in divide
+  a = -(dx2) / (dx1 * (dx1 + dx2))
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\lib\_function_base_impl.py:1319: RuntimeWarning: divide by zero encountered in divide
+  c = dx1 / (dx2 * (dx1 + dx2))
+C:\Users\manoj\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\numpy\lib\_function_base_impl.py:1328: RuntimeWarning: invalid value encountered in add
+  out[tuple(slice1)] = a * f[tuple(slice2)] + b * f[tuple(slice3)] \
+=== Building BatteryLife HI+fusion tables (per source, reusing the deployed pipeline unchanged) ===
+[batterylife-build] UL_PUR: 10/10 battery files usable, 2245 cycle-rows, 10 distinct batteries in final table
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 2245 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 2245 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 2245 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 0 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[batterylife-build]   saved batterylife_ul_pur_merged.parquet (2245 rows)
+[batterylife-build] HNEI: 14/14 battery files usable, 15155 cycle-rows, 14 distinct batteries in final table
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 15155 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 15155 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 15155 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 15155 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[batterylife-build]   saved batterylife_hnei_merged.parquet (15155 rows)
+[batterylife-build]   SNL/SNL_18650_LFP_35C_0-100_0.5-1C_a: tensor-build FAILED (ValueError: array must not contain infs or NaNs) - HI rows for this battery are KEPT, fusion embedding SKIPPED for it (will be NaN, dropped by the merge)
+[batterylife-build]   SNL/SNL_18650_LFP_35C_0-100_0.5-1C_b: tensor-build FAILED (ValueError: array must not contain infs or NaNs) - HI rows for this battery are KEPT, fusion embedding SKIPPED for it (will be NaN, dropped by the merge)
+[batterylife-build]   SNL/SNL_18650_LFP_35C_0-100_0.5-1C_c: tensor-build FAILED (ValueError: array must not contain infs or NaNs) - HI rows for this battery are KEPT, fusion embedding SKIPPED for it (will be NaN, dropped by the merge)
+[batterylife-build]   SNL/SNL_18650_LFP_35C_0-100_0.5-1C_d: tensor-build FAILED (ValueError: array must not contain infs or NaNs) - HI rows for this battery are KEPT, fusion embedding SKIPPED for it (will be NaN, dropped by the merge)
+[batterylife-build]   SNL/SNL_18650_LFP_35C_0-100_0.5-2C_a: tensor-build FAILED (ValueError: array must not contain infs or NaNs) - HI rows for this battery are KEPT, fusion embedding SKIPPED for it (will be NaN, dropped by the merge)
+[batterylife-build]   SNL/SNL_18650_LFP_35C_0-100_0.5-2C_b: tensor-build FAILED (ValueError: array must not contain infs or NaNs) - HI rows for this battery are KEPT, fusion embedding SKIPPED for it (will be NaN, dropped by the merge)
+[batterylife-build] SNL: 6 battery file(s) failed fusion-embedding tensor-build (skipped for fusion only, HI rows kept where computed)
+[batterylife-build] SNL: dropping 11/96275 rows with physically-impossible SOH (>105% or <0%, a mis-segmented check-up-cycle artifact, see code comment) across 2 batteries: ['SNL_18650_NCA_25C_0-100_0.5-2C_b', 'SNL_18650_NMC_25C_0-100_0.5-3C_c']
+[batterylife-build] SNL: 55/61 battery files usable, 38880 cycle-rows, 55 distinct batteries in final table
+[stage1-duration] WARNING: 13 batteries have no cycle_idx==10 row at all: ['SNL_18650_LFP_25C_0-100_0.5-3C_a', 'SNL_18650_LFP_25C_0-100_0.5-3C_b', 'SNL_18650_LFP_25C_0-100_0.5-3C_c', 'SNL_18650_LFP_25C_0-100_0.5-3C_d', 'SNL_18650_NCA_15C_0-100_0.5-2C_a', 'SNL_18650_NCA_15C_0-100_0.5-2C_b', 'SNL_18650_NCA_25C_0-100_0.5-2C_b', 'SNL_18650_NMC_15C_0-100_0.5-2C_a', 'SNL_18650_NMC_15C_0-100_0.5-2C_b', 'SNL_18650_NMC_25C_0-100_0.5-3C_a', 'SNL_18650_NMC_25C_0-100_0.5-3C_b', 'SNL_18650_NMC_25C_0-100_0.5-3C_c', 'SNL_18650_NMC_25C_0-100_0.5-3C_d'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 38880 rows)
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NCA_35C_0-100_0.5-1C_c/TEVD (0.0) - falling back to this battery's own median TEVD (1919.9980) as the denominator.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NCA_35C_0-100_0.5-1C_d/TEVD (0.0) - falling back to this battery's own median TEVD (1739.9990) as the denominator.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NMC_35C_0-100_0.5-1C_a/TEVD (0.0) - falling back to this battery's own median TEVD (0.0000) as the denominator.
+[stage1-duration] ERROR: SNL_18650_NMC_35C_0-100_0.5-1C_a/TEVD has a degenerate median baseline too (0.0) - TEVD_rel will be NaN for this battery, not silently 0/inf.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NMC_35C_0-100_0.5-1C_b/TEVD (0.0) - falling back to this battery's own median TEVD (0.0000) as the denominator.
+[stage1-duration] ERROR: SNL_18650_NMC_35C_0-100_0.5-1C_b/TEVD has a degenerate median baseline too (0.0) - TEVD_rel will be NaN for this battery, not silently 0/inf.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NMC_35C_0-100_0.5-1C_c/TEVD (0.0) - falling back to this battery's own median TEVD (0.0000) as the denominator.
+[stage1-duration] ERROR: SNL_18650_NMC_35C_0-100_0.5-1C_c/TEVD has a degenerate median baseline too (0.0) - TEVD_rel will be NaN for this battery, not silently 0/inf.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NMC_35C_0-100_0.5-1C_d/TEVD (0.0) - falling back to this battery's own median TEVD (0.0000) as the denominator.
+[stage1-duration] ERROR: SNL_18650_NMC_35C_0-100_0.5-1C_d/TEVD has a degenerate median baseline too (0.0) - TEVD_rel will be NaN for this battery, not silently 0/inf.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NMC_35C_0-100_0.5-2C_a/TEVD (0.0) - falling back to this battery's own median TEVD (0.0000) as the denominator.
+[stage1-duration] ERROR: SNL_18650_NMC_35C_0-100_0.5-2C_a/TEVD has a degenerate median baseline too (0.0) - TEVD_rel will be NaN for this battery, not silently 0/inf.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NMC_35C_0-100_0.5-2C_b/TEVD (0.0) - falling back to this battery's own median TEVD (0.0000) as the denominator.
+[stage1-duration] ERROR: SNL_18650_NMC_35C_0-100_0.5-2C_b/TEVD has a degenerate median baseline too (0.0) - TEVD_rel will be NaN for this battery, not silently 0/inf.
+[stage1-duration] TEVD -> TEVD_rel: 8 batteries used median-fallback baseline, 4701 non-finite output values (of 38880 rows)
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NCA_35C_0-100_0.5-1C_c/TEVI (0.0) - falling back to this battery's own median TEVI (1799.9960) as the denominator.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NCA_35C_0-100_0.5-1C_d/TEVI (0.0) - falling back to this battery's own median TEVI (1560.0015) as the denominator.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NMC_35C_0-100_0.5-1C_a/TEVI (0.0) - falling back to this battery's own median TEVI (0.0000) as the denominator.
+[stage1-duration] ERROR: SNL_18650_NMC_35C_0-100_0.5-1C_a/TEVI has a degenerate median baseline too (0.0) - TEVI_rel will be NaN for this battery, not silently 0/inf.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NMC_35C_0-100_0.5-1C_b/TEVI (0.0) - falling back to this battery's own median TEVI (0.0000) as the denominator.
+[stage1-duration] ERROR: SNL_18650_NMC_35C_0-100_0.5-1C_b/TEVI has a degenerate median baseline too (0.0) - TEVI_rel will be NaN for this battery, not silently 0/inf.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NMC_35C_0-100_0.5-1C_c/TEVI (0.0) - falling back to this battery's own median TEVI (0.0000) as the denominator.
+[stage1-duration] ERROR: SNL_18650_NMC_35C_0-100_0.5-1C_c/TEVI has a degenerate median baseline too (0.0) - TEVI_rel will be NaN for this battery, not silently 0/inf.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NMC_35C_0-100_0.5-1C_d/TEVI (0.0) - falling back to this battery's own median TEVI (0.0000) as the denominator.
+[stage1-duration] ERROR: SNL_18650_NMC_35C_0-100_0.5-1C_d/TEVI has a degenerate median baseline too (0.0) - TEVI_rel will be NaN for this battery, not silently 0/inf.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NMC_35C_0-100_0.5-2C_a/TEVI (0.0) - falling back to this battery's own median TEVI (0.0000) as the denominator.
+[stage1-duration] ERROR: SNL_18650_NMC_35C_0-100_0.5-2C_a/TEVI has a degenerate median baseline too (0.0) - TEVI_rel will be NaN for this battery, not silently 0/inf.
+[stage1-duration] near-zero/non-finite cycle-10 baseline for SNL_18650_NMC_35C_0-100_0.5-2C_b/TEVI (0.0) - falling back to this battery's own median TEVI (0.0000) as the denominator.
+[stage1-duration] ERROR: SNL_18650_NMC_35C_0-100_0.5-2C_b/TEVI has a degenerate median baseline too (0.0) - TEVI_rel will be NaN for this battery, not silently 0/inf.
+[stage1-duration] TEVI -> TEVI_rel: 8 batteries used median-fallback baseline, 4701 non-finite output values (of 38880 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 1194 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[batterylife-build]   saved batterylife_snl_merged.parquet (38880 rows)
+[batterylife-build] MICH: 40/40 battery files usable, 19881 cycle-rows, 40 distinct batteries in final table
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 19881 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 19881 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 19881 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 19881 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[batterylife-build]   saved batterylife_mich_merged.parquet (19881 rows)
+[batterylife-build] MICH_EXP: 18/18 battery files usable, 6545 cycle-rows, 18 distinct batteries in final table
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 6545 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 6545 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 6545 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 6545 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[batterylife-build]   saved batterylife_mich_exp_merged.parquet (6545 rows)
+[batterylife-build] RWTH: dropping 11/22920 rows with physically-impossible SOH (>105% or <0%, a mis-segmented check-up-cycle artifact, see code comment) across 8 batteries: ['RWTH_007', 'RWTH_008', 'RWTH_009', 'RWTH_016', 'RWTH_017', 'RWTH_019', 'RWTH_036', 'RWTH_042']
+[batterylife-build] RWTH: 10/10 battery files usable, 22095 cycle-rows, 10 distinct batteries in final table
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 22095 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 22095 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 22095 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 0 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[batterylife-build]   saved batterylife_rwth_merged.parquet (22095 rows)
+[batterylife-build]   Stanford/Stanford_Nova_Regular_200: tensor-build FAILED (ValueError: array must not contain infs or NaNs) - HI rows for this battery are KEPT, fusion embedding SKIPPED for it (will be NaN, dropped by the merge)
+[batterylife-build]   Stanford/Stanford_Nova_Regular_206: tensor-build FAILED (ValueError: array must not contain infs or NaNs) - HI rows for this battery are KEPT, fusion embedding SKIPPED for it (will be NaN, dropped by the merge)
+[batterylife-build]   Stanford/Stanford_Nova_Regular_207: tensor-build FAILED (ValueError: array must not contain infs or NaNs) - HI rows for this battery are KEPT, fusion embedding SKIPPED for it (will be NaN, dropped by the merge)
+[batterylife-build]   Stanford/Stanford_Nova_Regular_Ref_102: tensor-build FAILED (ValueError: array must not contain infs or NaNs) - HI rows for this battery are KEPT, fusion embedding SKIPPED for it (will be NaN, dropped by the merge)
+[batterylife-build] Stanford: 4 battery file(s) failed fusion-embedding tensor-build (skipped for fusion only, HI rows kept where computed)
+[batterylife-build] Stanford: 6/10 battery files usable, 5633 cycle-rows, 6 distinct batteries in final table
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 5633 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 5633 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 5633 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 5633 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[batterylife-build]   saved batterylife_stanford_merged.parquet (5633 rows)
+[batterylife-build]   Stanford_2/Stanford_Nova_Regular_129: tensor-build FAILED (ValueError: array must not contain infs or NaNs) - HI rows for this battery are KEPT, fusion embedding SKIPPED for it (will be NaN, dropped by the merge)
+[batterylife-build]   Stanford_2/Stanford_Nova_Regular_319: tensor-build FAILED (ValueError: array must not contain infs or NaNs) - HI rows for this battery are KEPT, fusion embedding SKIPPED for it (will be NaN, dropped by the merge)
+[batterylife-build] Stanford_2: 2 battery file(s) failed fusion-embedding tensor-build (skipped for fusion only, HI rows kept where computed)
+[batterylife-build] Stanford_2: 8/10 battery files usable, 8465 cycle-rows, 8 distinct batteries in final table
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 8465 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 8465 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 8465 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 8465 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[batterylife-build]   saved batterylife_stanford_2_merged.parquet (8465 rows)
+[batterylife-build] ISU_ILCC: dropping 2/45231 rows with physically-impossible SOH (>105% or <0%, a mis-segmented check-up-cycle artifact, see code comment) across 1 batteries: ['ISU-ILCC_G50C2']
+[batterylife-build] ISU_ILCC: 9/9 battery files usable, 45229 cycle-rows, 9 distinct batteries in final table
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 45229 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 45229 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 45229 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 0 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[batterylife-build]   saved batterylife_isu_ilcc_merged.parquet (45229 rows)
+
+=== BUILD SUMMARY ===
+    source  n_batteries  n_rows
+    UL_PUR           10    2245
+      HNEI           14   15155
+       SNL           55   38880
+      MICH           40   19881
+  MICH_EXP           18    6545
+      RWTH           10   22095
+  Stanford            6    5633
+Stanford_2            8    8465
+  ISU_ILCC            9   45229
+
+[batterylife-build] TOTAL TIME: 5.01 minutes

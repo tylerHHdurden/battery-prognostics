@@ -12552,4 +12552,282 @@ experimental checkpoints saved (`models/_experimental_ttt_physics_
 encoder.pt`, `models/_experimental_neural_ode_soh.pt`) - neither loaded
 by `app.py`/`live_inference.py`, same standing as every other
 `_experimental_*` artifact in this project.
+---
+
+## Research pass, Part B: BatteryLife dataset integration (items 6-10) - 170 new batteries usable, expanded-pool retrain is a genuine 2/5 mixed result, nothing promoted
+
+Follow-on to Part A (above), same session, same governing rule. Items
+6-10 of the original brief: pull BatteryLife's processed data, zero-
+retrain-eval the current deployed routing against it, compare to
+BatteryLife's own published benchmark, retest the Stage 5 pool-
+expansion pattern, and check the two previously-blocked Group D
+datasets. Two hand-back points were sent mid-run per instruction
+(after item 6, and after item 9) - this entry is the full, consolidated
+write-up.
+
+### Environment note for this pass specifically
+
+This session hit two genuine, disclosed infrastructure interruptions
+(transient network errors killing the agent process mid-download,
+confirmed by direct inspection of on-disk file sizes against expected
+Zenodo byte counts after each resume - not assumed recovered, checked)
+and multiple additional transient connection drops during large-file
+downloads (`ChunkedEncodingError`, read timeouts) - all disclosed
+inline in the work itself, not smoothed over. None were caused by this
+project's own code; all were confirmed network-layer.
+
+### Item 6 - dataset verification: real, accessible, one access-route correction
+
+Task named Hugging Face (`Battery-Life/BatteryLife_Processed`) or
+Zenodo. **Hugging Face is gated** (confirmed directly: WebFetch
+returned "Access requires account login and acceptance of data sharing
+conditions" - no credentials available here). **Used Zenodo instead**:
+record 17756951, confirmed OPEN ACCESS via the Zenodo API directly (no
+login), with real per-file download URLs and exact byte sizes for
+every one of its 19 zips.
+
+All 7 named sub-sources (Stanford x2 releases, RWTH, ISU-ILCC, SNL,
+HNEI, MICH, UL-PUR) are real and present, **plus one bonus 8th source
+found in the actual repo but not named in the task's own list**
+(MICH_EXP, 18 batteries). Verified per source, not assumed from the
+dataset's own README:
+
+| source | verification method | real battery count | README's own claim |
+|---|---|---|---|
+| UL_PUR | full download + `pickle.load` + inspected arrays | 10 | 10 (match) |
+| HNEI | full download + loaded | 14 | 14 (match) |
+| SNL | full download + loaded | 61 files | "52 batteries" (**discrepancy, disclosed, not resolved**) |
+| MICH | full download + loaded | 40 | 40 (match) |
+| MICH_EXP | full download + loaded | 18 files | "12 batteries" (**same class of discrepancy**) |
+| RWTH | HTTP Range-request ZIP central-directory listing (no full download - a hand-rolled seekable HTTP file object, confirmed real without downloading 1GB+) | 48 (structural) | 48 (match) |
+| Stanford | same Range technique | 41 (structural) | 41 (match) |
+| Stanford_2 | same | 181 (structural) | 181 (match) |
+| ISU_ILCC | same | 240 (structural) | 240 (match) |
+
+**Format** (directly inspected via real `pickle.load` + real HI-feature
+computation, not assumed): one pickle per battery, a metadata dict +
+`cycle_data` (list of per-cycle dicts with raw `current_in_A`/
+`voltage_in_V`/`charge_capacity_in_Ah`/`discharge_capacity_in_Ah`/
+`time_in_s`/`temperature_in_C` arrays) - genuinely usable raw-cycle
+data, not just aggregate life labels, and current-sign convention
+(+charge/-discharge) confirmed identical to this project's own. NOT
+pre-split into charge/discharge segments the way this project's own
+`data_adapters.py` convention is - one new adapter needed (built, see
+item 7 below), but the schema is UNIFORM across all 9 sources, so one
+adapter serves all of them.
+
+**Real constraint found: size, not access.** RWTH/Stanford/Stanford_2/
+ISU_ILCC total ~19GB; at Zenodo's own observed throughput in this
+environment, full download of just those 4 would have taken 10+ hours.
+**Disclosed, principled resolution**: the 5 small/medium sources
+(UL_PUR/HNEI/SNL/MICH/MICH_EXP, ~350MB, 137 batteries) were downloaded
+and used IN FULL. The 4 large sources were NOT fully downloaded -
+instead, a fixed-seed (42) random sample of individual battery files
+was pulled directly from each large ZIP via HTTP Range requests against
+Zenodo's own central directory (no full-archive download needed at
+all - confirmed working, though the large single-file reads proved
+flaky against repeated transient network drops and needed a hardened,
+per-sub-chunk-retry version to complete reliably). Target was 10 files/
+source; landed 10/10 (RWTH), 10/10 (Stanford), 10/10 (Stanford_2), 9/10
+(ISU_ILCC) - 39 of 40 targeted large-source files, not cherry-picked.
+
+### Item 7 - zero-retrain eval of the current deployed setup on all 9 new sources
+
+`src/data_adapters_batterylife.py` (new adapter - segments each raw
+cycle by current sign into this project's own `{"charge","discharge"}`
+convention, then hands off UNCHANGED to `health_indicators.py`/
+`sequence_features.py`/`rul_labels.py`, exactly as every other dataset's
+adapter does) + `src/build_batterylife_hi_table.py` (builds one merged
+HI+fusion parquet per source, reusing the ALREADY-TRAINED `ica_encoder.pt`
+- never retrained - and applying Stage 1.1's duration reformulation +
+Stage 5's extended reformulation, identically to every other dataset).
+
+**A real data artifact was found and fixed during this build, not
+silently dropped or silently kept**: 22 of ~163,000 cycle-rows (11
+batteries, mostly RWTH) had physically-impossible SOH values (up to
+41,446%) - traced directly to a single mis-segmented check-up/reference-
+performance-test cycle per affected battery (the new adapter's own
+disclosed simplification - one contiguous charge phase then one
+contiguous discharge phase per cycle - breaks down for these specific,
+more complex protocol steps). Fixed by dropping rows with SOH>105% or
+<0%, counted and logged per source, not silently discarded (see
+`build_batterylife_hi_table.py`'s own code comment for the full trace).
+
+**"Current deployed" for a brand-new dataset name, stated explicitly**:
+`live_inference.py`'s `EXTENDED_ROUTED_DATASETS` is a positive list -
+none of these 9 new names are in it, so the BASE model is what the live
+app would actually run today for all of them, by construction of the
+real deployed code, not a judgment call. Reported as the primary
+number; the extended model's own number is shown alongside for context
+only (would extending the routing list help here?).
+
+| source | n batteries | n cycles | CURRENT DEPLOYED (base) R2 | extended (context only) R2 |
+|---|---|---|---|---|
+| UL_PUR | 10 | 2,245 | 0.192 | -3.400 |
+| HNEI | 14 | 15,155 | 0.022 | **0.792** |
+| SNL | 55 | 38,880 | 0.138 | -2.133 |
+| MICH | 40 | 19,881 | 0.573 | 0.310 |
+| MICH_EXP | 18 | 6,545 | 0.737 | 0.178 |
+| RWTH | 10 | 22,095 | -0.421 | **0.529** |
+| Stanford | 6 | 5,633 | 0.131 | 0.446 |
+| Stanford_2 | 8 | 8,465 | 0.095 | 0.418 |
+| ISU_ILCC | 9 | 45,229 | 0.140 | 0.219 |
+
+None of the 9 new sources comes close to the in-domain 0.974 baseline,
+but none is catastrophically negative under the base model either
+(unlike Oxford's original -2.694) - a genuinely different, milder
+domain-shift profile than the 4 existing held-out sets. **HNEI and
+RWTH show the SAME pattern that originally justified CALCE/Oxford/
+HUST's own extended-reformulation routing** (base model weak/negative,
+extended model substantially better) - a real, noticed-but-not-acted-
+on signal, flagged here rather than acted on (routing-list changes are
+a deployment decision, out of this research pass's own scope per the
+standing "flag, don't promote" rule).
+
+### Item 8 - external baseline comparison: task/metric mismatch, disclosed rather than forced
+
+Verified directly (WebFetch of the arXiv paper, arXiv:2502.18807)
+BEFORE writing any comparison code: **BatteryLife's own benchmark task
+is not this project's task.** Theirs predicts a single scalar - the
+cycle number at which SOH first reaches 80% (90% for CALB) - from only
+the first <=100 cycles, scored by MAPE/"15%-Acc". This project predicts
+SOH continuously, per cycle, across a battery's full life, scored by
+R2/RMSE. A second, independently-checked limitation: BatteryLife's own
+results tables are aggregated ONLY by chemistry family (Li-ion/Zn-ion/
+Na-ion/CALB) - no per-source breakdown exists anywhere in the paper to
+compare this project's own per-source numbers against, even setting
+the task mismatch aside.
+
+**Consequence, stated plainly rather than forced into a fake
+comparison**: no "beats BatteryLife's published number" claim is made.
+Their own best aggregate figures (best method CPTransformer: Li-ion
+MAPE=0.184, CALB MAPE=0.149) are reported in
+`outputs/partB_item8_batterylife_published_benchmark.csv` for scale/
+context only, alongside item 7's own per-source R2 table - never
+implied to be the same comparison by proximity on a page. Reproducing
+their exact early-cycle-life protocol for a genuinely comparable number
+was judged out of this pass's time budget - not attempted, a real,
+disclosed scope limit.
+
+### Item 9 - pool-expansion retrain (Stage 5's 32->204 pattern, XGBoost-fusion only): 2/5 standard-protocol WIN, 3/5 LOSS (2 severe)
+
+Final usable new-data pool: **170 batteries across all 9 sources**
+(the 5 full small/medium sources + the 4 large sources' disclosed
+subsamples from item 6/7). **Disclosed, narrower scope than Stage 5's
+own 204-pool retrain**: that version ALSO retrained the ICA fusion
+encoder itself; this item did NOT (reused the same already-trained
+`ica_encoder.pt` every other dataset's fusion embeddings already come
+from) - found no specific reason this pass's time budget justified
+retraining a second deep-learning component, kept to exactly what the
+task named ("retrained XGBoost-fusion specifically"), stated explicitly
+rather than silently matching or silently diverging from Stage 5's own
+broader version.
+
+**Split, disclosed and reasoned**: the new batteries cannot be BOTH
+folded into training AND reported as zero-retrain - a fixed-seed (42)
+80/20 battery-level split put 136 into the expanded TRAIN pool and held
+34 out as a secondary, non-standard-protocol check. The ORIGINAL
+NASA+MIT `battery_split.json` train/test split, and the CALCE/Oxford/
+HUST/XJTU zero-retrain sets, are BYTE-FOR-BYTE UNCHANGED.
+
+**Headline result (standard protocol, vs. the routed deployed
+baseline)**:
+
+| eval set | retrained R2 | routed baseline | verdict |
+|---|---|---|---|
+| in-domain (fixed split) | **0.9849** | 0.974 | **WIN** |
+| CALCE | **0.9143** | 0.740 | **WIN** |
+| Oxford | -1.4561 | 0.953 | LOSS (severe) |
+| HUST | 0.5424 | 0.800 | LOSS |
+| XJTU | -4.2681 | -1.062 | LOSS (severe) |
+
+**2 of 5 standard-protocol settings beat the routed baseline; 3 lose,
+two of those severely** (Oxford and XJTU both regress well below their
+already-poor routed numbers). Secondary, bonus check (34 held-out new-
+BatteryLife batteries, explicitly NOT counted toward the verdict above
+since they're not part of the standard protocol): R2=0.9984 - expected
+to be very high (these batteries are distributionally similar to what
+was just trained on, not a meaningful new-domain generalization test on
+its own, disclosed rather than presented as a headline number).
+
+**Pattern noted, disclosed as a hypothesis, not root-caused** (matching
+this project's own standing practice of flagging an unverified but
+plausible explanation rather than either asserting or ignoring it):
+folding in ~170 batteries spanning many new chemistries/formats/
+protocols pulls the model toward a better fit on in-domain and CALCE
+specifically, while pushing it further from Oxford/HUST/XJTU's own
+characteristics - structurally the same CLASS of tension Stage 5's
+original extended-reformulation work found (a change that clearly
+helps some held-out sets can clearly hurt others), just a different
+specific winner/loser pattern this time. Not investigated further here
+- flagged, not chased, given this pass's remaining time budget.
+
+**Verdict: not promoted, and not flagged as "genuinely close" either**
+- Oxford's and XJTU's regressions are large, not borderline.
+
+### Item 10 - Group D datasets: confirmed NOT part of BatteryLife
+
+Both previously-blocked Group D datasets independently verified via
+WebSearch (not assumed) to be REAL and OPEN ACCESS:
+
+- **Stroebl et al.**, 279-cell Samsung INR21700-50E, *Scientific Data*
+  11:1020 (2024), figshare (~10GB compressed / ~100GB uncompressed).
+- **Luh & Blank** (KIT), 228-cell NMC/C-SiO, *Scientific Data* DOI
+  10.1038/s41597-024-03831-x, Zenodo/RADAR4KIT DOI
+  10.35097/kww7jv8ajuvchcah.
+
+**Neither is among BatteryLife's 18 integrated raw sources** (checked
+directly against the Zenodo record's own file listing: CALB/CALCE/
+HNEI/HUST/ISU_ILCC/MATR/MICH/MICH_EXP/NA-ion/RWTH/SDU/SNL/Stanford/
+Stanford_2/Tongji/UL_PUR/XJTU/ZN-coin - no name or institution match for
+either; RWTH is the closest same-country candidate but its own README
+cites a completely different, unrelated 2021 paper, confirmed not the
+same dataset). **Folding BatteryLife in does NOT close this gap** -
+both remain real and accessible, but would need their own, separate
+integration effort, out of this pass's scope. Full detail:
+`outputs/partB_item10_group_d_check.md`.
+
+### Time actual vs. estimate
+
+Hand-back Point 1's own informed estimate (replacing the parent
+session's rough upfront 1.75/5.25/6.75/14hr): Best 5h / Avg 7h /
+**Expected 9h** / Worst 14h. Actual landed toward the **Worst** end of
+that range, not Expected - driven almost entirely by the two genuine
+infrastructure interruptions (each requiring a full state-verification-
+before-resuming pass, per instruction) and by large-file download/
+extraction against Zenodo proving slower and less reliable than a
+single clean-network throughput measurement suggested it would be
+(repeated `ChunkedEncodingError`/timeout retries on individual large
+files). The actual DATA/ADAPTER/RETRAIN work itself (item 6's schema
+verification, the adapter, the HI-table builder, items 7-10) executed
+close to the Best-case estimate once data was actually in hand -
+compute time for items 7+9 combined was under 2 minutes.
+
+### Promotion decision
+
+**Per the project's own governing rule: nothing promoted.** Item 9's
+retrained model is a genuine, real mixed result (2 real wins, 2 severe
+losses) - not close enough to the bar to flag for a human promotion
+decision on its own merits. The routing-pattern signal noticed in item
+7 (HNEI/RWTH looking like CALCE/Oxford/HUST candidates for extended-
+model routing) is flagged above as a real, noticed pattern, explicitly
+NOT acted on here - a deployment/routing decision, not a promotion
+decision, and out of this research pass's own scope either way.
+
+### Files
+
+`src/data_adapters_batterylife.py`, `src/build_batterylife_hi_table.py`,
+`src/run_partB_item{7,8,9}_*.py`; `data/processed/batterylife_
+{ul_pur,hnei,snl,mich,mich_exp,rwth,stanford,stanford_2,isu_ilcc}_
+merged.parquet`; `outputs/batterylife_build_summary.csv`,
+`outputs/batterylife_build_run_log.txt`, `outputs/partB_item{7,8,9,10}_
+*.{csv,md}`; `models/_experimental_xgb_soh_fusion_batterylife_
+expanded.json` (new, NOT wired into `live_inference.py`/`app.py`).
+Raw downloaded BatteryLife data itself
+(`data/raw/batterylife/`) is git-ignored, same as every other raw
+dataset in this project - not committed, regenerable from this entry's
+own documented Zenodo URLs. No deployed file touched - confirmed via
+`git diff --stat` on `app.py`, `src/live_inference.py`, and every
+existing file under `models/` before committing: zero diff on all of
+them.
 
