@@ -14471,3 +14471,44 @@ with corrected values), `models/_candidate_ica_encoder.pt`,
 balanced.json` (all retrained with the corrected pipeline). No
 deployed file touched.
 
+### OC-SVM sanity check, rerun with the candidate's OWN exact normalization stats (not the OLD-model approximation the first version used)
+
+Caught before running: the first Phase 2e version approximated the
+corruption-test encoding using the OLD (deployed) `channel_norm_stats.
+json`, disclosed as an approximation since the candidate's own exact
+stats hadn't been saved yet at that point. They now are (`candidate_
+channel_norm_stats.json`, saved by the corrected Phase 2 re-run) - the
+approximation is no longer needed, so the script was updated to use
+the real ones and rerun, rather than leaving a known-fixable
+approximation in the final numbers.
+
+**Result changed meaningfully for one corruption type**: truncated-
+cycle detection went from 0% (under the OLD-stats approximation) to
+**100%** (under the candidate's own correct stats) - the approximation
+was NOT merely cosmetic, it genuinely mattered for this specific
+corruption. Gaussian noise (both 1x and 5x the disclosed BMS-level
+assumption) remains **0% detected** either way - structural
+corruptions (V/I swap, capacity x10, now also truncation) are all
+caught at 100%, sensor noise is not caught at all, under the
+now-correct stats too.
+
+**Decision UNCHANGED, now on fully-correct numbers**: the lowest
+corruption flag rate (0.0%, from Gaussian noise) is still not "well
+above" the in-domain baseline (0.6%). **RECOMMENDATION HOLDS: REPLACE
+the in-app anomaly flag with the nearest-source trust report; move
+OC-SVM to Research.**
+
+Updated per-source external flag rates (corrected stats): CALCE 0.5%,
+Oxford 0.0%, HUST 2.4%, XJTU 5.4%, ul_pur 5.6%, hnei 0.2%, snl 2.0%,
+mich 0.0%, mich_exp 9.7%, rwth 49.4%, stanford 12.4%, stanford_2 5.6%,
+isu_ilcc 7.6%, tongji 2.4% - same qualitative pattern as before
+(highly variable by source, genuinely discriminating unlike the
+deployed detector's uniform 100%).
+
+### Files
+
+`src/run_toolkit_phase2e_ocsvm_sanity_check.py` (updated to use the
+candidate's own exact norm stats), `outputs/toolkit_phase2e_ocsvm_
+sanity_check.csv` (overwritten with corrected values). No deployed
+file touched.
+

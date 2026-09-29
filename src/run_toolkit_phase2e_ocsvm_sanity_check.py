@@ -21,15 +21,11 @@ the nearest-source trust report and move OC-SVM to the Research
 section - stated as a recommendation here, not itself an app change
 (Phase 3 wiring is separate).
 
-DISCLOSED APPROXIMATION: corrupted cycles are re-encoded using the
-OLD (currently-deployed) `channel_norm_stats.json`, not the candidate
-encoder's own exact training-time stats (never saved to disk before
-Phase 2's original run crashed, and recomputing them exactly would
-require re-running the ~25-minute raw-tensor-build step just for this
-sanity check). Channel normalization stats are per-channel scale/
-center constants (median/IQR-style) - unlikely to differ by enough to
-change the QUALITATIVE flag-rate comparison this check cares about,
-but stated as an approximation, not hidden.
+Uses `candidate_channel_norm_stats.json` - the candidate encoder's OWN
+exact training-time normalization stats (saved by the corrected Phase
+2 re-run; the original run never saved these at all, an approximation
+using the OLD deployed stats was used in this script's first version
+and is no longer needed now that the real ones exist).
 """
 import sys
 import time
@@ -79,7 +75,7 @@ def main():
     encoder = ICAEncoder(in_channels=3, embed_dim=EMBED_DIM)
     encoder.load_state_dict(torch.load(ROOT / "models" / "_candidate_ica_encoder.pt"))
     encoder.eval()
-    norm_stats = json.loads((PROC_DIR / "channel_norm_stats.json").read_text())  # disclosed approximation, see docstring
+    norm_stats = json.loads((PROC_DIR / "candidate_channel_norm_stats.json").read_text())  # candidate's own exact stats
 
     # ---------- rebuild the pool (same as Phase 2c) ----------
     fusion_df = pd.read_csv(PROC_DIR / "fusion_embeddings_multisource.csv")
