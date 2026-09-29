@@ -13366,3 +13366,130 @@ updated (RUL and conformal sections). No deployed file touched -
 confirmed via `git diff --stat app.py src/live_inference.py models/`
 returning empty, per this check's own explicit instruction.
 
+## Final experiment pass 2 before the paper: items A-F (online conformal, LODO, baseline table, honest routing, shift diagnostics, reproducibility package)
+
+Same standing rule: nothing promoted, `app.py`/`live_inference.py`/
+`models/` untouched, every new model saved as `models/_experimental_*`.
+
+### Item A (highest priority): online conformal under drift - COMPLETE, a genuine, large win
+
+Two online methods run per-battery, in cycle-time order, over all 13
+external datasets, alpha=0.1, starting from this project's own
+in-domain split-conformal half-width (q_src=1.1438 base model,
+0.4064 extended model - recomputed fresh, matching CHECK A exactly):
+
+- **Conformal PID** (P-term, Angelopoulos/Candes/Tibshirani NeurIPS
+  2023): q updates online via `q += eta*(err-alpha)`, eta = multiplier
+  x max(|residual|) over the battery's own first-k burn-in cycles,
+  multiplier swept {0.01,0.05,0.1,0.2}; scorecaster variant adds a
+  linear |residual|-vs-cycle_idx trend (refit every 20 cycles on past
+  cycles only, disclosed compute simplification).
+- **nexCP** (Barber et al., Ann. Statist. 2023): exponentially decay-
+  weighted quantile (rho in {0.95,0.99}) of the battery's own past
+  absolute residuals, truncated to a window where rho^W<1e-4 (W=180/
+  920) - a disclosed, provably-negligible-weight truncation, not an
+  accuracy shortcut. Source score used as prior ONLY for the first k
+  burn-in cycles.
+
+No lookahead (asserted structurally in code - q used to score cycle t
+is only ever updated using cycles <t). Burn-in k in {5,10,20} excluded
+from scoring only (PID's own q keeps updating through burn-in, per its
+literal pseudocode).
+
+**Headline result (k_burnin=10, primary eta=0.1/rho shown), long-run
+coverage vs. the SAME datasets' static split-conformal baseline
+(item 5e's k=0 numbers, 1.3%-97.9%, nearly all <20%)**:
+
+| dataset | static split-conformal | PID (eta=0.1) | PID+scorecaster | nexCP (rho=0.95) | nexCP (rho=0.99) |
+|---|---|---|---|---|---|
+| CALCE | 4.3% | 84.9% | 87.4% | 80.4% | 73.5% |
+| Oxford | 5.4% | 85.4% | 90.4% | 89.7% | 86.1% |
+| HUST | 8.5% | 88.1% | 90.2% | 87.0% | 85.0% |
+| XJTU | 11.0% | 89.3% | 92.4% | 89.2% | 90.8% |
+| ul_pur | 21.6% | 72.8% | 83.3% | 79.7% | 72.5% |
+| hnei | 19.0% | 69.1% | 89.4% | 71.2% | 56.8% |
+| snl | 11.7% | 84.0% | 91.3% | 63.1% | 59.7% |
+| mich | 16.2% | 64.4% | 74.3% | 64.8% | 61.4% |
+| mich_exp | 34.1% | 69.1% | 83.4% | 70.1% | 64.2% |
+| rwth | 4.7% | 79.9% | 91.6% | 78.2% | 57.0% |
+| stanford | 1.5% | 89.7% | 93.5% | 86.0% | 89.8% |
+| stanford_2 | 1.6% | 89.7% | 93.4% | 86.5% | 89.0% |
+| isu_ilcc | 1.3% | 90.0% | 94.7% | 82.5% | 73.9% |
+
+**Every single dataset improves dramatically - PID+scorecaster is the
+best performer on 12/13 datasets, several reaching 90-95% (near or
+above the 90% target) from a starting point in the low single digits
+(stanford: 1.5%->93.5%, isu_ilcc: 1.3%->94.7%, rwth: 4.7%->91.6%).**
+This is easily the strongest positive result in this entire project's
+conformal-prediction history (the prior best static/reweighted CALCE
+method topped out at 82.0%, itself flagged as having a near-vacuous
+width - see the consolidated CALCE table above).
+
+**Real, honestly-reported caveats - not a solved problem**:
+1. **Rolling-20-cycle coverage MIN is 0.00 for 10/13 datasets** even
+   under the best-performing configuration - meaning every method still
+   has LOCAL bursts of zero coverage somewhere in a battery's life,
+   even while the LONG-RUN average looks strong. Only Oxford/XJTU/
+   stanford/stanford_2/isu_ilcc keep their rolling minimum above 0.
+2. **Late-life coverage is often much worse than early-life** (e.g.
+   mich: early=87.8% -> late=22.7%; ul_pur: 75.8%->53.0%; rwth:
+   87.8%->78.3% under PID) - directly consistent with CHECK A's own
+   finding that residuals grow with degradation stage on several
+   datasets; the online trackers partially compensate but do not fully
+   close this gap.
+3. **Width is large** on several datasets (mean width 30-62 SOH-% on
+   hnei/rwth/stanford/stanford_2/isu_ilcc) - coverage recovery is
+   bought partly through genuinely wide intervals, not a free win;
+   reported alongside coverage, not omitted.
+4. **Infinite intervals: structurally always 0** for both PID and
+   nexCP (neither can diverge by construction) - a real, disclosed
+   difference from this project's own MAPIE-based methods (session 19's
+   weighted conformal produced literally infinite intervals under
+   near-total AUC separation).
+5. **eta-multiplier sensitivity** (full sweep in
+   `outputs/finalpass2_itemA_pid_results.csv`): smaller multipliers
+   (0.01) track more slowly/conservatively, larger (0.2) react faster
+   but noisier - 0.1 (this project's reported primary) sits in a
+   reasonable middle of that tradeoff on visual inspection of the
+   sweep, not separately optimized/selected using any held-out
+   criterion (stated explicitly - this is a default, not a tuned
+   choice).
+
+**Why standard ACI could not reach target coverage here (explained,
+not just asserted)**: ACI (session 29, this project's own prior
+adoption) adapts alpha_t over time so the SELECTED QUANTILE OF THE
+CALIBRATION SCORE DISTRIBUTION shifts - but it still draws that
+quantile from the SOURCE calibration scores' own distribution (just at
+a different quantile level each step). Under severe distribution shift,
+the source score distribution's SUPPORT itself is too narrow (its
+max is nowhere near the magnitude of target residuals - CHECK A found
+target residuals 3-15x larger than calibration residuals) - no quantile
+of an intrinsically-too-narrow distribution can cover errors that
+large, however far alpha_t is pushed toward 0. PID/nexCP instead
+directly ESTIMATE the interval width from the TARGET's own observed
+residuals as they arrive, which is the structural reason they succeed
+where ACI's calibration-score-quantile mechanism cannot.
+
+**Verdict: this is a real, substantial, disclosed-honestly finding
+that changes this project's own practical conclusion about conformal
+prediction under domain shift** - static, source-calibrated conformal
+intervals fail almost completely cross-dataset (established across
+many sessions), but ONLINE recalibration using the target's own
+observed residuals (needing only unlabeled-at-prediction-time,
+sequentially-revealed true SOH - i.e. still needs eventual ground
+truth per cycle, same information a real deployed monitoring system
+would accumulate) recovers the large majority of nominal coverage on
+every dataset tested. Not promoted to the deployed app (that would
+require wiring a stateful online tracker into `live_inference.py`, out
+of this pass's own "no code changes" scope) - flagged as the strongest
+candidate for a genuine follow-up feature.
+
+### Files
+
+`src/run_finalpass2_itemA_online_conformal.py`,
+`outputs/finalpass2_itemA_pid_results.csv`,
+`outputs/finalpass2_itemA_nexcp_results.csv`,
+`outputs/finalpass2_itemA_headline_comparison.csv`. No deployed file
+touched; no new model file (this item recalibrates INTERVALS only, the
+point-prediction models are loaded unchanged).
+

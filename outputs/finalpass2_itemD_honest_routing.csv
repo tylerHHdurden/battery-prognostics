@@ -1,0 +1,3 @@
+direction,n_val,n_test,selected_strategy,val_accuracy,test_accuracy,current_live_accuracy_on_test,val_acc_always_base,val_acc_always_extended,val_acc_auc_rule_tie_base,val_acc_auc_rule_tie_ext
+BatteryLife-validation -> classic-4-test,9,4,auc_rule_tie_base,0.7777777777777778,0.25,1.0,0.4444444444444444,0.5555555555555556,0.7777777777777778,0.5555555555555556
+classic-4-validation -> BatteryLife-test,4,9,always_extended,0.75,0.5555555555555556,0.4444444444444444,0.25,0.75,0.25,0.75

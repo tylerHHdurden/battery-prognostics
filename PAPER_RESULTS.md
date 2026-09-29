@@ -240,6 +240,74 @@ datasets bar; not built, not evaluated.
 
 ---
 
-*Full experimental detail, negative-result diagnosis, and every
-disclosed scope limitation for all 5 items: `DEVELOPMENT_LOG.md`,
-"Final research pass before journal submission" section onward.*
+# Final experiment pass 2: items A-F
+
+Second and final pre-submission pass. Same governing rule: nothing
+promoted, `app.py`/`live_inference.py`/`models/` untouched, every new
+model saved as `models/_experimental_*`. Full narrative:
+`DEVELOPMENT_LOG.md`, "Final experiment pass 2" section.
+
+## 8. Online conformal under drift (item A) - the strongest positive result in this project's conformal history
+
+Two online methods (Conformal PID, Angelopoulos/Candes/Tibshirani
+NeurIPS 2023; nexCP decay-weighted quantile, Barber et al. Ann.
+Statist. 2023), run per-battery in cycle-time order, alpha=0.1,
+starting from this project's own in-domain split-conformal half-width.
+No lookahead (structurally guaranteed in code).
+
+| Dataset | Static split-conformal (baseline) | PID (eta=0.1) | PID+scorecaster | nexCP (rho=0.95) | nexCP (rho=0.99) |
+|---|---|---|---|---|---|
+| CALCE | 4.3% | 84.9% | 87.4% | 80.4% | 73.5% |
+| Oxford | 5.4% | 85.4% | 90.4% | 89.7% | 86.1% |
+| HUST | 8.5% | 88.1% | 90.2% | 87.0% | 85.0% |
+| XJTU | 11.0% | 89.3% | 92.4% | 89.2% | 90.8% |
+| ul_pur | 21.6% | 72.8% | 83.3% | 79.7% | 72.5% |
+| hnei | 19.0% | 69.1% | 89.4% | 71.2% | 56.8% |
+| snl | 11.7% | 84.0% | 91.3% | 63.1% | 59.7% |
+| mich | 16.2% | 64.4% | 74.3% | 64.8% | 61.4% |
+| mich_exp | 34.1% | 69.1% | 83.4% | 70.1% | 64.2% |
+| rwth | 4.7% | 79.9% | 91.6% | 78.2% | 57.0% |
+| stanford | 1.5% | 89.7% | 93.5% | 86.0% | 89.8% |
+| stanford_2 | 1.6% | 89.7% | 93.4% | 86.5% | 89.0% |
+| isu_ilcc | 1.3% | 90.0% | 94.7% | 82.5% | 73.9% |
+
+**Every dataset improves dramatically; PID+scorecaster is best on
+12/13, several reaching 90-95% from a low-single-digit starting point.**
+This beats every prior conformal method tried in this project's
+history (best prior CALCE result: 82.0%, itself flagged as
+near-vacuous-width - see the consolidated table above).
+
+**Real caveats, disclosed not hidden**: (1) rolling-20-cycle coverage
+MIN is 0.00 for 10/13 datasets even under the best config - local
+bursts of zero coverage persist despite strong long-run averages; (2)
+late-life coverage is often much worse than early-life (e.g. mich:
+87.8%->22.7%), consistent with the residual-growth-with-degradation
+effect CHECK A found; (3) mean interval width is large on several
+datasets (30-62 SOH-% on hnei/rwth/stanford/stanford_2/isu_ilcc) -
+coverage recovery is bought partly through width, not free; (4)
+infinite intervals are structurally always 0 for both methods (unlike
+this project's earlier MAPIE-based attempts); (5) the eta=0.1/rho
+values reported as primary are defaults, not separately tuned/selected
+against any held-out criterion.
+
+**Why standard ACI cannot do this**: ACI shifts WHICH quantile of the
+SOURCE calibration-score distribution to use, but that distribution's
+own support is too narrow under severe shift (target residuals run
+3-15x larger than calibration residuals, per CHECK A) - no quantile of
+an intrinsically too-narrow distribution can reach the target. PID/
+nexCP instead estimate width directly from the target's own observed
+residuals as they arrive - the structural reason they succeed where ACI
+cannot.
+
+**This is a genuine, disclosed finding that changes the paper's
+practical conclusion on conformal prediction under domain shift**:
+static source-calibrated intervals fail almost completely cross-
+dataset, but online recalibration from the target's own sequentially-
+revealed labels recovers most of nominal coverage on every dataset
+tested. Not wired into the deployed app (out of scope) - flagged as the
+strongest concrete follow-up direction.
+
+---
+
+*Full experimental detail for items A-F: `DEVELOPMENT_LOG.md`, "Final
+experiment pass 2 before the paper" section onward.*
