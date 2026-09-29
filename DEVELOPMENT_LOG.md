@@ -13930,3 +13930,73 @@ corrected family-holdout setting.
    much smaller, largely negligible-to-modest version of the same
    effect.
 
+## Toolkit pass: turning the project into a usable, honest toolkit (Phases 0-5)
+
+New goal, distinct from every prior research pass: make every
+component work to its real potential and make the project usable, not
+just researched. No new ML methods. No existing code/feature deleted -
+demoted features move to a "Research" section rather than being
+removed. Progress update after each phase.
+
+### Phase 0: live app audit - COMPLETE, 2 real actionable findings, no code changes made
+
+Drove `app.py` end-to-end via Streamlit's own `AppTest` framework (this
+project's established convention) for NASA/B0005 (in-domain), CALCE/
+CS2_35 (out-of-domain, raw-data path), XJTU (out-of-domain, precomputed-
+only path), and HNEI (a BatteryLife source, tested via CSV upload since
+it isn't reachable any other way - see Finding 3). Full detail:
+`outputs/app_audit.md`.
+
+**Finding 1 (CRITICAL, found and worked around to complete the audit,
+NOT fixed in code per this phase's own "no changes" scope)**: `app.py`
+does an unconditional, top-level `from digital_twin_streaming_river
+import StreamingDigitalTwinRiver`, which itself does `from river import
+tree, drift` at module level. `river==0.26.1` IS declared in
+`requirements.txt`, but was NOT actually installed in this local dev
+environment - with it missing, **the ENTIRE app crashes on every single
+page load**, not just the one tab (Streaming Digital Twin) that needs
+it. Installed `river==0.26.1` to match the project's own declared
+requirement (not a code change) and proceeded. Flagged as the clearest,
+highest-priority Phase 3/4 fix: guard that one import so a missing
+optional dependency degrades ONE tab, not the whole app.
+
+**Finding 2**: 17-19 `st.error()` elements render on every page load,
+regardless of dataset - investigated directly (not just counted): these
+are intentional narrative call-out boxes in the Full Results Archive
+tab (e.g. "Reported plainly, not softened..."), not runtime failures. A
+real UI/UX observation for Phase 4 (using error-styling for non-error
+content is unconventional), not a functional bug.
+
+**Finding 3**: none of the 9 BatteryLife sources (hnei, snl, mich,
+mich_exp, rwth, stanford, stanford_2, isu_ilcc, ul_pur) are selectable
+in the sidebar dropdown at all (`_dataset_options` hardcodes
+`["NASA","MIT","CALCE","Oxford","HUST","XJTU"]`) - the only way to see
+a BatteryLife battery today is the upload path. Real, disclosed gap for
+Phase 4.
+
+**Finding 4 (the most important one)**: uploading a real HNEI battery's
+own raw cycles produces **Predicted RUL = 3036 cycles** - ~9 std devs
+above the deployed RUL model's own training-scale distribution
+(mean=390.6, std=292.9, per this pass's own earlier CHECK B), a live,
+visible, concrete demonstration of the RUL cross-domain failure CHECK B
+already found analytically (CALCE RUL R2=-566). The app shows a generic
+out-of-domain warning but does NOT specifically flag RUL itself as
+untrustworthy - directly informs Phase 3(c)'s own instruction (hide RUL
+when the nearest source is out-of-domain).
+
+**Everything else checked out correctly**: NASA/B0005 - not flagged
+out-of-domain, not anomaly-flagged, SOH prediction close to true
+(71.7% vs. 72.8%), RUL=2 plausible for a near-end-of-life cycle. CALCE/
+XJTU - correctly flagged out-of-domain AND anomaly-flagged. XJTU's RUL
+correctly shows "not available" (matches its documented precomputed-
+path limitation). Zero exceptions once the `river` dependency was
+present.
+
+### Files
+
+`src/run_toolkit_phase0_app_audit.py`, `outputs/app_audit.md`,
+`outputs/_phase0_hnei_upload_test.csv` (the real HNEI-sourced CSV built
+for the upload-path test). No file in `app.py`/`src/live_inference.py`/
+`models/` touched - `river` was installed into the local venv only
+(already declared in `requirements.txt`, not a code change).
+
