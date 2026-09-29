@@ -13602,3 +13602,67 @@ deployment.
 `outputs/finalpass2_itemE_source_threshold.csv`. No deployed file
 touched.
 
+### Item F: reproducibility package - COMPLETE
+
+- **`REPRODUCIBILITY.md`**: a ~50-row methods table spanning this
+  project's ENTIRE history (Phase 1 through this pass's own item E),
+  compiled from `DEVELOPMENT_LOG.md`'s own section headers and results
+  tables (not recalled from memory without a source) - method, stage,
+  key hyperparameters, tuning budget, seed(s), verdict. Confirms the
+  project-wide norm: 0 formal hyperparameter search for nearly every
+  XGBoost variant (fixed config, reused everywhere); the 2 real
+  exceptions are BFA (a 30-agent x 100-iteration search PROCEDURE, not
+  a grid search) and ElasticNetCV (5-fold CV over an l1_ratio grid, the
+  Severson/Attia baselines).
+- **Battery-level split confirmation**: verified directly against
+  `split_utils.py` (`battery_level_split`, per-dataset stratified,
+  with a documented `pinned_test_ids` fix for a real B0018 near-miss),
+  `run_conformal.py` (`calib_eval_battery_split`), `GroupKFold(groups=
+  battery_id)` usage in Stage 6.1/`run_groupkfold_cv.py`, and every
+  battery-level bootstrap in this pass - all resample/split whole
+  batteries, never individual cycles. **One known, historical, already-
+  corrected exception disclosed**: Check 0.3 (Stage 0) found CALCE's
+  cycles included in the ORIGINAL BFA feature-selection fitness pool (a
+  dataset-visibility leak, not a cycle-within-battery leak) -
+  corrected via a NASA+MIT-only re-run; the corrected feature set has
+  been canonical since Stage 1, confirmed via `stage1_common.py`'s own
+  docstring.
+- **`requirements-lock.txt`**: exact pinned package versions (`pip
+  freeze`, 93 packages), alongside the existing `requirements.txt`.
+- **`scripts/reproduce_paper.sh`**: re-runs every script behind every
+  `PAPER_RESULTS.md` table, in dependency order (item D depends on item
+  1's own CSV; item C depends on item B's own CSV - ordered accordingly).
+  Does NOT re-run Stage 0-7's own raw-data-to-features pipeline (a
+  separate, multi-session undertaking, out of this script's own stated
+  scope) - assumes the precomputed feature/embedding files and deployed
+  model files already exist, as they do in this repository's current
+  state.
+- **`DATA_AVAILABILITY.md`**: every dataset source (NASA PCoE + NASA
+  Randomized Usage, MIT/Severson, CALCE, Oxford, HUST, XJTU,
+  BatteryLife's 9 locally-integrated sub-sources), its exact access
+  URL/DOI (verified against this project's own loader-script docstrings
+  and prior acquisition entries, not re-derived), and license/terms as
+  stated by each host. Also lists the 2 datasets confirmed real and
+  open but never integrated (Stroebl et al., Luh & Blank), per the
+  18-item pass's own Group D entry.
+
+### Files
+
+`REPRODUCIBILITY.md`, `requirements-lock.txt`,
+`scripts/reproduce_paper.sh`, `DATA_AVAILABILITY.md`. No deployed file
+touched.
+
+### Final pass 2 promotion summary
+
+**Nothing promoted.** Item A (online conformal) and item B (LODO) are
+genuine, substantial positive findings - but both require either a
+stateful online-tracker integration (item A) or a full model/pipeline
+swap (item B) to actually deploy, both explicitly out of this pass's
+"no code changes to app.py/live_inference.py/models/" scope. Items D
+and E are disclosed negative/mixed results. Item C's baseline table and
+item F's reproducibility package are reporting exercises, not
+promotion candidates. `app.py`, `src/live_inference.py`, and every
+existing (non-`_experimental_`) file under `models/` remain
+byte-identical to before this pass - confirmed via `git diff --stat`
+at every commit point throughout.
+
