@@ -91,6 +91,48 @@ EXTENDED_FEATURE_COLS = EXTENDED_CANONICAL_REL + ["cycle_idx"]
 EXT_RATIO_RAW_FEATURES = {"ICHV", "TEVD", "TEVI", "SCV", "MET"}   # ratio-reformulated (Stage 1.1's own 3 + Stage 5's SCV/MET)
 EXT_DELTA_RAW_FEATURES = {"MATD", "VIECT"}                        # delta-reformulated (Stage 5's own choice - additive-offset quantities)
 
+# ---------------------------------------------------------------------
+# MULTI-SOURCE CANDIDATE MODEL FLAG (toolkit pass, Phase 2 -> decision).
+# ---------------------------------------------------------------------
+# Trained on ALL 16 sources (NASA/MIT/CALCE/Oxford/HUST/XJTU + 9
+# BatteryLife sources + Tongji) - its own ICA encoder, its own XGBoost-
+# fusion. Gate evaluation (battery-level split WITHIN every source)
+# found it beats the current deployed routed model on 13/16 sources,
+# often by a wide margin; NASA and MIT are the exception - it loses to
+# the current deployed model on both (a real, diagnosed "small source
+# crowded out by pooling" effect, not fixed here - see DEVELOPMENT_LOG.
+# md's "Phase 2 decision" entry). A source-balanced retrain (equal
+# per-source sample weight) was tried specifically to close that NASA/
+# MIT gap and instead collapsed catastrophically on 15/16 sources - not
+# adopted.
+#
+# ROUTING DECISION (a DEPLOYMENT choice, made on the gate-table split -
+# NOT re-derived from, and not itself, a paper claim about
+# generalization): NASA and MIT stay on the CURRENT DEPLOYED model
+# (unchanged, exactly as before this flag existed). Every OTHER known
+# dataset (CALCE/Oxford/HUST/XJTU, any BatteryLife source if ever wired
+# into PRECOMPUTED_HELDOUT_PARQUETS below, and any "Uploaded"/unknown
+# battery) routes to the multi-source candidate instead of the old
+# EXTENDED_ROUTED_DATASETS logic - the candidate's own gate numbers
+# beat both the base AND the extended model on every one of those
+# datasets it was evaluated against.
+#
+# Toggle this to False to revert to the pre-candidate routing (Stage-5
+# extended-reformulation for CALCE/Oxford/HUST, base model otherwise)
+# with ZERO other code changes required - every other branch below is
+# unconditional, unchanged production code.
+USE_MULTISOURCE_CANDIDATE = True
+CANDIDATE_FEATURE_COLS = CANONICAL_REL + ["cycle_idx"]  # SAME 8 HI + cycle_idx as the base model - only the fusion embedding and the XGBoost model object differ
+
+
+def _use_candidate(dataset: str | None) -> bool:
+    """True iff the multi-source candidate should be used for this
+    dataset, per the routing decision above. `dataset=None` (no
+    selection made yet) and `dataset="Uploaded"` both correctly route
+    to the candidate (every "uploaded/unknown battery" case) since
+    neither equals "NASA" or "MIT"."""
+    return USE_MULTISOURCE_CANDIDATE and dataset not in ("NASA", "MIT")
+
 HI_DESCRIPTIONS = {
     "ICHV_rel": "time spent charging near peak voltage (high-voltage/CV-tail duration), relative to this battery's own cycle-10 baseline",
     "SCV": "average capacity-vs-voltage slope during discharge",
@@ -157,6 +199,30 @@ def load_resources() -> dict:
         ocsvm_scaler = pickle.load(f)
     ocsvm_feature_cols = json.loads((PROC_DIR / "ocsvm_feature_cols.json").read_text())
 
+    # --- multi-source candidate (see USE_MULTISOURCE_CANDIDATE above) ---
+    xgb_candidate = candidate_encoder = candidate_norm_stats = candidate_medians = candidate_fusion_lookup = None
+    if USE_MULTISOURCE_CANDIDATE:
+        xgb_candidate = XGBRegressor()
+        xgb_candidate.load_model(str(MODELS_DIR / "_candidate_multisource.json"))
+        candidate_encoder = ICAEncoder(in_channels=3, embed_dim=16)
+        candidate_encoder.load_state_dict(torch.load(MODELS_DIR / "_candidate_ica_encoder.pt"))
+        candidate_encoder.eval()
+        candidate_norm_stats = json.loads((PROC_DIR / "candidate_channel_norm_stats.json").read_text())
+        _cand_med = json.loads((PROC_DIR / "candidate_multisource_medians.json").read_text())
+        candidate_medians = dict(zip(_cand_med["cols"], _cand_med["medians"]))
+        # precomputed fusion embeddings for every (dataset, battery_id, cycle_idx)
+        # this candidate encoder has already scored (Phase 2's own build) - used
+        # by the PRECOMPUTED-fallback path so it never needs to re-run the
+        # encoder live; the LIVE raw-cycle path (predict_and_explain) always
+        # re-encodes on the fly instead, using candidate_encoder/candidate_norm_stats
+        # directly, since an uploaded/live cycle has no precomputed row to look up.
+        _cand_fusion_df = pd.read_csv(PROC_DIR / "fusion_embeddings_multisource.csv")
+        _cand_fusion_vals = _cand_fusion_df[[f"fusion_{i}" for i in range(16)]].to_numpy(dtype=float)
+        candidate_fusion_lookup = {
+            (ds, bid, int(cyc)): _cand_fusion_vals[i]
+            for i, (ds, bid, cyc) in enumerate(zip(_cand_fusion_df["dataset"], _cand_fusion_df["battery_id"], _cand_fusion_df["cycle_idx"]))
+        }
+
     return {
         "norm_stats": norm_stats, "constants": constants, "joint_hi_norm": joint_hi_norm,
         "background": background, "train_medians": train_medians,
@@ -164,11 +230,34 @@ def load_resources() -> dict:
         "xgb_fusion": xgb_fusion,
         "xgb_fusion_extended": xgb_fusion_extended, "ext_medians": ext_medians,
         "ocsvm": ocsvm, "ocsvm_scaler": ocsvm_scaler, "ocsvm_feature_cols": ocsvm_feature_cols,
+        "xgb_candidate": xgb_candidate, "candidate_encoder": candidate_encoder,
+        "candidate_norm_stats": candidate_norm_stats, "candidate_medians": candidate_medians,
+        "candidate_fusion_lookup": candidate_fusion_lookup,
         # kept for StreamingDigitalTwin's constructor API (digital_twin_streaming.py) -
         # the canonical reformulated names now, not the old pre-Stage-1 set; no longer
         # used for feature-BUILDING directly (build_reformulated_hi_vector handles that)
         "bfa_selected": CANONICAL_REL,
     }
+
+
+def _candidate_soh_prediction(hi_rel_vector: np.ndarray, cycle_idx: float,
+                               fusion_emb_candidate: np.ndarray, res: dict):
+    """Shared by both predict_and_explain_precomputed and predict_and_
+    explain: builds the multi-source candidate's 25-dim feature vector
+    (the SAME 8 HI + cycle_idx as the base model - CANDIDATE_FEATURE_
+    COLS == FEATURE_COLS - only the fusion embedding and the XGBoost
+    model object differ) and scores it. Returns (pred_soh, shap_vector,
+    shap_model, shap_cols) in the same shape every other branch's SHAP
+    call site already expects."""
+    hi_vector = np.concatenate([hi_rel_vector, [float(cycle_idx)]])
+    feat_vector = np.concatenate([hi_vector, fusion_emb_candidate]).astype(float)
+    nan_mask = np.isnan(feat_vector)
+    if nan_mask.any():
+        cols = CANDIDATE_FEATURE_COLS + [f"fusion_{i}" for i in range(16)]
+        for i in np.where(nan_mask)[0]:
+            feat_vector[i] = res["candidate_medians"].get(cols[i], 0.0)
+    pred_soh = float(res["xgb_candidate"].predict(feat_vector.reshape(1, -1))[0])
+    return pred_soh, feat_vector, res["xgb_candidate"], CANDIDATE_FEATURE_COLS
 
 
 def _tree_shap_top_features(feat_vector, xgb_fusion, feature_cols, n_top=3):
@@ -606,16 +695,36 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
     hi_vector = np.concatenate([hi_rel_vector, [float(cycle_idx)]])
     feat_vector = np.concatenate([hi_vector, fusion_emb])
 
-    if dataset in EXTENDED_ROUTED_DATASETS:
+    model_variant = None
+    if _use_candidate(dataset) and res.get("xgb_candidate") is not None:
+        cand_key = (dataset, battery_id, int(cycle_idx))
+        cand_fusion = res["candidate_fusion_lookup"].get(cand_key)
+        if cand_fusion is not None:
+            pred_soh, shap_vector, shap_model, shap_cols = _candidate_soh_prediction(
+                hi_rel_vector, cycle_idx, cand_fusion, res)
+            model_variant = "multisource_candidate"
+        else:
+            # Disclosed fallback, not a silent one: this specific (dataset,
+            # battery, cycle) was never scored by the candidate encoder
+            # (e.g. a BatteryLife source never wired into PRECOMPUTED_
+            # HELDOUT_PARQUETS, or a genuinely missing row) - falls through
+            # to the SAME base-model branch every dataset used before this
+            # flag existed, exactly as if USE_MULTISOURCE_CANDIDATE were False.
+            pred_soh = float(res["xgb_fusion"].predict(feat_vector.reshape(1, -1))[0])
+            shap_vector, shap_model, shap_cols = feat_vector, res["xgb_fusion"], FEATURE_COLS
+            model_variant = "base_candidate_fallback_no_embedding"
+    elif dataset in EXTENDED_ROUTED_DATASETS:
         ext_hi_rel_vector = build_extended_reformulated_hi_vector(
             his, baseline_his, battery_medians, res["ext_medians"])
         ext_hi_vector = np.concatenate([ext_hi_rel_vector, [float(cycle_idx)]])
         ext_feat_vector = np.concatenate([ext_hi_vector, fusion_emb])
         pred_soh = float(res["xgb_fusion_extended"].predict(ext_feat_vector.reshape(1, -1))[0])
         shap_vector, shap_model, shap_cols = ext_feat_vector, res["xgb_fusion_extended"], EXTENDED_FEATURE_COLS
+        model_variant = "extended_reformulation"
     else:
         pred_soh = float(res["xgb_fusion"].predict(feat_vector.reshape(1, -1))[0])
         shap_vector, shap_model, shap_cols = feat_vector, res["xgb_fusion"], FEATURE_COLS
+        model_variant = "base"
 
     # NOTE, disclosed limitation: the conformal interval half-width below is
     # the BASE model's own calibrated figure - this routing feature swaps the
@@ -662,7 +771,7 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
         "true_soh": round(true_soh, 1) if true_soh == true_soh else None,
         "true_rul": None,
         "precomputed_fallback": True,
-        "model_variant": "extended_reformulation" if dataset in EXTENDED_ROUTED_DATASETS else "base",
+        "model_variant": model_variant,
     }
 
 
@@ -731,16 +840,34 @@ def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None
 
     feat_vector = np.concatenate([hi_vector, fusion_emb])  # ORIGINAL vector - OC-SVM always uses this, unchanged
 
-    if dataset in EXTENDED_ROUTED_DATASETS:
+    model_variant = None
+    if _use_candidate(dataset) and res.get("xgb_candidate") is not None:
+        # Live path: no precomputed lookup possible (an uploaded/streamed
+        # cycle has no saved row) - re-normalize the SAME raw tensor with
+        # the CANDIDATE's own channel_norm_stats and re-encode with the
+        # CANDIDATE's own encoder (never reuses x_norm/fusion_emb above,
+        # which are the OLD deployed encoder's - a different normalization
+        # and a different network, mixing them would be a real train/
+        # inference mismatch, not just a stylistic choice).
+        x_norm_candidate = apply_channel_norm(x_raw[None].astype(np.float32), res["candidate_norm_stats"])[0]
+        with torch.no_grad():
+            fusion_emb_candidate = res["candidate_encoder"].encode(
+                torch.tensor(x_norm_candidate[None, :, ICA_CHANNEL_SLICE])).numpy()[0]
+        pred_soh, shap_vector, shap_model, shap_cols = _candidate_soh_prediction(
+            hi_rel_vector, cycle["cycle_idx"], fusion_emb_candidate, res)
+        model_variant = "multisource_candidate"
+    elif dataset in EXTENDED_ROUTED_DATASETS:
         ext_hi_rel_vector = build_extended_reformulated_hi_vector(
             his, baseline_his, battery_medians or {}, res["ext_medians"])
         ext_hi_vector = np.concatenate([ext_hi_rel_vector, [float(cycle["cycle_idx"])]])
         ext_feat_vector = np.concatenate([ext_hi_vector, fusion_emb])
         pred_soh = float(res["xgb_fusion_extended"].predict(ext_feat_vector.reshape(1, -1))[0])
         shap_vector, shap_model, shap_cols = ext_feat_vector, res["xgb_fusion_extended"], EXTENDED_FEATURE_COLS
+        model_variant = "extended_reformulation"
     else:
         pred_soh = float(res["xgb_fusion"].predict(feat_vector.reshape(1, -1))[0])
         shap_vector, shap_model, shap_cols = feat_vector, res["xgb_fusion"], FEATURE_COLS
+        model_variant = "base"
 
     # Same disclosed limitation as predict_and_explain_precomputed: the
     # conformal half-width is the base model's own calibrated figure,
@@ -790,5 +917,5 @@ def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None
         "true_soh": None,  # filled in by the caller if ground truth is available
         "true_rul": None,
         "precomputed_fallback": False,
-        "model_variant": "extended_reformulation" if dataset in EXTENDED_ROUTED_DATASETS else "base",
+        "model_variant": model_variant,
     }

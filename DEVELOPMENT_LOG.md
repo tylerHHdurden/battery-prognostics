@@ -14512,3 +14512,171 @@ candidate's own exact norm stats), `outputs/toolkit_phase2e_ocsvm_
 sanity_check.csv` (overwritten with corrected values). No deployed
 file touched.
 
+## Wiring the routing decision into `live_inference.py`, behind `USE_MULTISOURCE_CANDIDATE`
+
+Implements the decision established above: NASA/MIT stay on the
+current deployed model (base, unchanged); every other known dataset
+(CALCE/Oxford/HUST/XJTU today - the only ones the app's own sidebar
+currently exposes, per Phase 0's Finding 3) and every "Uploaded"/
+unknown battery routes to the multi-source candidate instead of the
+old `EXTENDED_ROUTED_DATASETS` (Stage-5-extended) logic.
+
+**Implementation**: a single module-level flag, `USE_MULTISOURCE_
+CANDIDATE = True`, toggles the entire feature off with zero other code
+changes if ever needed. `_use_candidate(dataset)` centralizes the
+routing rule (`dataset not in ("NASA","MIT")`) in one place, called
+from both `predict_and_explain_precomputed` (the precomputed-fallback
+path - CALCE/Oxford/HUST/XJTU today) and `predict_and_explain` (the
+live raw-cycle path - NASA/MIT/CALCE when raw data is available, and
+the "Uploaded" mode). A new shared helper, `_candidate_soh_prediction`,
+builds the candidate's 25-dim feature vector (the SAME 8 HI + cycle_idx
+as the base model - `CANDIDATE_FEATURE_COLS == FEATURE_COLS` - only the
+fusion embedding and the XGBoost model object differ) and scores it,
+reused by both call sites rather than duplicated.
+
+**A real, disclosed subtlety handled correctly, not glossed over**: the
+candidate's fusion embeddings come from a DIFFERENT encoder
+(`_candidate_ica_encoder.pt`) trained with DIFFERENT normalization
+stats (`candidate_channel_norm_stats.json`) than the deployed model's
+own encoder - reusing the OLD encoder's embeddings for the candidate
+model would be a genuine train/inference mismatch, not a stylistic
+choice. Handled two ways: the PRECOMPUTED path looks up the candidate
+encoder's own already-computed embedding from `fusion_embeddings_
+multisource.csv` (built once, during Phase 2, keyed by dataset/
+battery_id/cycle_idx); the LIVE raw-cycle path re-normalizes the SAME
+raw tensor with the candidate's OWN stats and re-encodes with the
+candidate's OWN encoder object, never reusing `x_norm`/`fusion_emb`
+computed earlier in the same function for the OLD encoder.
+
+**Disclosed, non-silent fallback**: if `_use_candidate` is True but no
+precomputed candidate embedding exists for a specific (dataset,
+battery, cycle) - e.g. a future BatteryLife source added to
+`PRECOMPUTED_HELDOUT_PARQUETS` before its own candidate embeddings are
+built - the precomputed path falls through to the exact same base-
+model branch every dataset used before this flag existed
+(`model_variant="base_candidate_fallback_no_embedding"`, distinct from
+plain `"base"` so this specific fallback is traceable in logs/context
+dicts), rather than crashing or silently mis-scoring.
+
+**Verification, all real, none skipped**:
+1. Direct smoke test of both functions (`predict_and_explain_
+   precomputed` for CALCE/Oxford/HUST/XJTU, `predict_and_explain` for
+   NASA/CALCE/Uploaded/unknown-dataset) - all routed correctly,
+   plausible predictions, zero exceptions.
+2. `src/_regression_sweep_calce_fix.py` (this project's own established
+   AppTest sweep, unchanged) - base load + all 6 sidebar dataset
+   selections, **zero exceptions**.
+3. `src/verify_candidate_routing_production_code.py` (new - the
+   original `verify_routing_production_code.py`'s own methodology,
+   applied fresh since its hardcoded expected numbers were for the OLD
+   routing and no longer apply): 250-row random-cycle subsample per
+   dataset, through the ACTUAL wired production function. **CALCE/
+   Oxford/HUST/XJTU: 100% routed to `multisource_candidate`, 0 errors,
+   0 exceptions, subsample R2 0.93-0.99** (CALCE 0.933, Oxford 0.990,
+   HUST 0.935, XJTU 0.958). **NASA/MIT: confirmed still route to
+   `base`**, unchanged.
+
+**Confirmed nothing else changed**: `git diff --stat app.py` is EMPTY
+(zero lines touched); `src/live_inference.py`'s own diff is 131
+insertions / 4 deletions, entirely additive (new flag block, new
+resource loading, new helper function, new routing branches) except
+the 2 lines where `model_variant`'s inline expression became a
+variable reference to support the 3rd routing outcome - no existing
+logic path's own behavior changed for any case this flag doesn't touch.
+
+### Files
+
+`src/live_inference.py` (wired), `src/verify_candidate_routing_
+production_code.py` (new verification script). `app.py` untouched.
+
+## LLM health-report re-check now that `GEMINI_API_KEY`/`GROQ_API_KEY` are present - found and fixed a real, unrelated staleness bug
+
+Re-verified `generate_health_report.py`'s live report generation
+end-to-end (`.env` confirmed to hold both keys). It crashed
+immediately, before either LLM call, with an XGBoost/SHAP shape
+mismatch inside `build_report_context.py`'s `_tree_shap_top_features` -
+NOT an API-key problem.
+
+**Root cause**: `_tree_shap_top_features` still built the OLD 23-dim
+feature vector (7 `bfa_selected_features.txt` HIs, incl. `MATC` which
+isn't even in the current canonical HI set, + 16 fusion dims, no
+`cycle_idx`). `models/xgb_soh_fusion.json` has since been retrained on
+the reformulated representation (`n_features_in_ == 25`: 8
+`canonical_feature_cols(reformulated=True)` HIs + `cycle_idx` + 16
+fusion dims - exactly `live_inference.FEATURE_COLS`) as part of earlier
+work in this project; `build_report_context.py` was never updated to
+match and had been silently broken (this code path apparently not
+exercised end-to-end since that retrain).
+
+**Fix**: `_tree_shap_top_features` now imports and calls
+`live_inference.build_reformulated_hi_vector` directly (same
+`train_medians`-over-NASA/MIT-pool and same-battery-cycle-10-baseline
+convention as the real production path) instead of re-deriving a
+divergent, stale construction - one source of truth for "what does the
+fusion model's input vector look like," not two. `HI_DESCRIPTIONS` keys
+updated to match the actual (reformulated) feature names.
+
+**Verification**: `generate_report("MIT", "b1c4", 67)` end-to-end.
+TreeSHAP now runs without error (top features: `TEVI_rel`, `SCV`,
+`VIECT` - all real canonical names). Gemini call itself hit a read
+timeout on this run (network-level, not code - falls through to the
+disclosed `API_ERROR` path); Groq fallback fired exactly as designed
+and returned a genuine, coherent report referencing the correct SOH/RUL
+numbers. Confirms both providers are reachable with the current keys
+and the disclosed Gemini-fails/Groq-succeeds fallback path works, not
+just the happy path.
+
+This module (`build_report_context.py`/`get_report_context`) is
+explicitly NASA/MIT-only by design (raises for any other dataset) -
+CALCE/Oxford/HUST/XJTU chat/report generation was out of scope here and
+untouched.
+
+### Files
+
+`src/build_report_context.py` (fixed).
+
+## Correction to the OC-SVM decision: NOT moving to Research - it's a good input-sanity check, not a domain detector
+
+User correction to the "OC-SVM sanity check, rerun with the candidate's
+OWN exact normalization stats" decision above (same numbers, different
+reading of them - no re-run needed).
+
+**What was misread**: the 0% Gaussian-noise (1x/5x BMS-level) detection
+rate was treated as a failure ("blind to sensor noise"). **Corrected
+framing: 1x BMS-level noise is normal, expected data - NOT flagging it is
+CORRECT behavior**, not a miss. Read the candidate OC-SVM against what it
+is actually good at instead: **100% detection of swapped V/I columns,
+100% of capacity-scaled-x10, 100% of truncated cycles, with only a 0.6%
+in-domain false-flag rate.** That combination - catches structurally
+malformed data, leaves normal noisy data alone, low false-positive rate -
+is a genuinely good **input-sanity check** (a malformed/corrupted-upload
+detector), which is a different job than the one it was being judged
+against (a domain/anomaly detector, i.e. "is this battery/source
+unfamiliar" - a question the nearest-source trust report already answers
+better, per Phase 3's own item (c)/(d)).
+
+**Decision, corrected**: do NOT move the candidate OC-SVM to Research.
+Instead (Phase 3 scope - see `PLAN.md`, not yet implemented):
+1. Wire `models/_candidate_ocsvm.pkl` (+ its scaler) as a "data looks
+   malformed" check specifically on uploads - a plain-language message
+   listing likely causes (swapped columns, wrong units, incomplete
+   cycle), not a bare flag.
+2. Keep using the nearest-source trust report (not OC-SVM) for the
+   "unfamiliar battery/source" message - unchanged, this was already the
+   plan.
+3. Retire the CURRENTLY DEPLOYED OC-SVM's (`models/ocsvm_model.pkl`/
+   `ocsvm_scaler.pkl`) out-of-domain warning - the one that flags 100% of
+   everything non-NASA/MIT uninformatively (confirmed uninformative back
+   in the original, uncorrected Phase 2 gate-table run) - superseded by
+   items 1+2 above, which are both genuinely discriminating.
+
+Full phase spec (Phase 2B onward, including this item) now tracked in
+`PLAN.md`, written specifically so this plan survives future context
+compaction (this addendum was itself lost once already and had to be
+re-supplied).
+
+### Files
+
+None yet - this is a decision correction only; implementation is Phase 3
+scope, tracked in `PLAN.md`. `PLAN.md` (new).
+

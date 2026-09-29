@@ -46,6 +46,8 @@ from sequence_features import build_dataset_tensors, apply_channel_norm, get_cyc
 from ica_dv_dc import compute_ica_dv_dc
 from health_indicators import HI_NAMES
 from models.vlstm import VLSTM
+from stage1_common import canonical_feature_cols, BASELINE_CYCLE
+from live_inference import build_reformulated_hi_vector
 
 ROOT = Path(__file__).resolve().parents[1]
 PROC_DIR = ROOT / "data" / "processed"
@@ -54,14 +56,27 @@ PRED_DIR = PROC_DIR / "predictions"
 SOH_CONFORMAL_HALF_WIDTH = 2.367
 RUL_CONFORMAL_HALF_WIDTH = 828.7103271484375 / 2
 
+# Same 8 reformulated HI features (+ cycle_idx) the production xgb_soh_fusion.json
+# model was actually trained/retrained on (see live_inference.CANONICAL_REL /
+# FEATURE_COLS) - this module used to duplicate an older, stale 7-feature
+# (bfa_selected_features.txt) construction that no longer matches the model's
+# n_features_in_ (25: 8 HI + cycle_idx + 16 fusion dims), causing a SHAP
+# shape-mismatch crash. Kept in sync by importing the same helper live_inference
+# uses, rather than re-deriving it here.
+CANONICAL_RAW = canonical_feature_cols(reformulated=False)
+CANONICAL_REL = canonical_feature_cols(reformulated=True)
+FEATURE_COLS = CANONICAL_REL + ["cycle_idx"]
+
 HI_DESCRIPTIONS = {
-    "ICHV": "time spent charging near peak voltage (high-voltage/CV-tail duration)",
+    "ICHV_rel": "time spent charging near peak voltage (high-voltage/CV-tail duration), relative to this battery's early-life baseline",
     "SCV": "average capacity-vs-voltage slope during discharge",
     "VDEDT": "rate of voltage collapse near the end of discharge",
     "VIECT": "voltage reached at a fixed elapsed time into charging",
-    "MATC": "mean cell temperature during charging",
     "MATD": "mean cell temperature during discharging",
-    "TEVI": "time spent traversing the mid-range of the discharge voltage curve",
+    "MET": "mean cell temperature overall",
+    "TEVD_rel": "time spent traversing the end-of-discharge voltage region, relative to this battery's early-life baseline",
+    "TEVI_rel": "time spent traversing the mid-range of the discharge voltage curve, relative to this battery's early-life baseline",
+    "cycle_idx": "the cycle number itself",
 }
 
 
@@ -76,32 +91,37 @@ def _load_battery_cycles(dataset: str, battery_id: str, mit_subset: dict):
 
 
 def _tree_shap_top_features(dataset, battery_id, cycle_idx, n_top=3):
-    """Per-instance TreeSHAP on the XGBoost-fusion model's 23 features
-    (7 BFA HIs + 16 fusion embedding dims) for this exact row."""
-    with open(PROC_DIR / "bfa_selected_features.txt") as f:
-        selected = [l.strip() for l in f if l.strip()]
-
+    """Per-instance TreeSHAP on the XGBoost-fusion model's actual 25
+    features (8 reformulated canonical HIs + cycle_idx + 16 fusion
+    embedding dims - see live_inference.build_reformulated_hi_vector /
+    FEATURE_COLS, the SAME construction the live production path uses)
+    for this exact row."""
     hi_df = pd.read_parquet(PROC_DIR / "hi_table.parquet")
     row = hi_df[(hi_df["dataset"] == dataset) & (hi_df["battery_id"] == battery_id)
                 & (hi_df["cycle_idx"] == cycle_idx)]
     if row.empty:
         raise ValueError(f"no hi_table row for {dataset}/{battery_id}/cycle {cycle_idx}")
+    his = row.iloc[0].to_dict()
+
+    baseline_row = hi_df[(hi_df["dataset"] == dataset) & (hi_df["battery_id"] == battery_id)
+                          & (hi_df["cycle_idx"] == BASELINE_CYCLE)]
+    baseline_his = baseline_row.iloc[0].to_dict() if not baseline_row.empty else None
 
     fusion = pd.read_csv(PROC_DIR / "fusion_embeddings.csv")
     fusion_row = fusion[(fusion["dataset"] == dataset) & (fusion["battery_id"] == battery_id)
                         & (fusion["cycle_idx"] == cycle_idx)]
+    if fusion_row.empty:
+        raise ValueError(f"no fusion embedding for {dataset}/{battery_id}/cycle {cycle_idx}")
     fusion_cols = [c for c in fusion.columns if c.startswith("fusion_")]
 
     train_hi = hi_df[hi_df["dataset"].isin(["NASA", "MIT"])]
-    train_medians = train_hi[selected].median(numeric_only=True)
+    train_medians = train_hi[CANONICAL_RAW].median(numeric_only=True).to_dict()
 
-    feature_cols = selected + fusion_cols
-    x = row[selected].to_numpy(dtype=float, copy=True)[0]
-    for j, col in enumerate(selected):
-        if np.isnan(x[j]):
-            x[j] = train_medians[col]
+    hi_rel_vector = build_reformulated_hi_vector(his, train_medians, baseline_his)
+    hi_vector = np.concatenate([hi_rel_vector, [float(cycle_idx)]])
     x_fusion = fusion_row[fusion_cols].to_numpy(dtype=float)[0]
-    x_full = np.concatenate([x, x_fusion]).reshape(1, -1)
+    x_full = np.concatenate([hi_vector, x_fusion]).reshape(1, -1)
+    feature_cols = FEATURE_COLS + fusion_cols
 
     model = XGBRegressor()
     model.load_model(str(ROOT / "models" / "xgb_soh_fusion.json"))
