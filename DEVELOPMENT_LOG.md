@@ -12831,3 +12831,53 @@ own documented Zenodo URLs. No deployed file touched - confirmed via
 existing file under `models/` before committing: zero diff on all of
 them.
 
+## Closing the loop: item 17's zero-retrain verification (flagged, never completed, from the original 18-item pass)
+
+Item 17 (GroupNorm swap for the CNN-LSTM's BatchNorm1d layers) was
+explicitly flagged in the 18-item pass as "a genuine in-domain win, but
+needs zero-retrain verification against CALCE/Oxford/HUST/XJTU before
+it can be assessed against this project's own promotion rule." That
+verification had never actually been run. Completed here, no
+retraining involved - the already-trained checkpoint
+(`models/_experimental_cnn_lstm_groupnorm_expanded.pt`) was reloaded
+and scored zero-retrain, using the same
+`channel_norm_stats_expanded.json` it was trained with.
+
+**Baseline used for the verdict**: per this project's own governing
+rule, the relevant comparison is the TRUE currently-deployed
+XGBoost-fusion model's real numbers, from this project's own audit
+(`outputs/audit_true_deployed_baseline.csv`) - not the mislabeled
+`DEPLOYED_REFERENCE` dict corrected earlier in Research pass 2, and not
+item 17's own original BatchNorm-vs-GroupNorm CNN-LSTM comparison
+(reconfirmed here, not recomputed: GroupNorm R2=0.9757 vs. BatchNorm
+R2=0.9666 in-domain - a different, still-valid comparison within the
+CNN-LSTM family, unrelated to and unaffected by either issue).
+
+| eval set | GroupNorm CNN-LSTM R2 | TRUE deployed XGB-fusion R2 | verdict |
+|---|---|---|---|
+| CALCE | -0.5276 | 0.5679 | LOSS |
+| Oxford | -2.1626 | -2.6939 | WIN |
+| HUST | -26.0247 | -0.1523 | LOSS (severe) |
+| XJTU | -0.1980 | -1.0620 | WIN |
+
+**2 of 4 held-out sets beat the true deployed baseline, but both wins
+are wins over an already-negative baseline** (Oxford and XJTU are both
+still R2 < 0 for the GroupNorm model itself - "less negative than a
+also-negative baseline," not a genuinely strong result), and HUST is a
+severe loss (R2=-26.0). Zero-retrain generalization for this
+architecture is poor across the board; the in-domain win does not
+transfer.
+
+**Verdict: not promoted.** Item 17 stays exactly where the original
+pass left every other non-promoted item - a real, documented
+in-domain-only improvement within the CNN-LSTM family that fails this
+project's own zero-retrain generalization bar. This closes the one
+open flag left from the 18-item pass; nothing else from that pass is
+still pending.
+
+### Files
+
+`src/run_researchpass_item17_zeroretrain_verify.py`,
+`outputs/researchpass_item17_zeroretrain_verify.csv`. No deployed file
+touched.
+
