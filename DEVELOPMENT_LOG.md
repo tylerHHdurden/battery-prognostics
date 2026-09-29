@@ -14290,3 +14290,63 @@ attempt, kept for the record, NOT the adopted candidate),
 `outputs/toolkit_phase2d_balanced_gate_table.csv`,
 `outputs/toolkit_phase2d_decision.txt`. No deployed file touched.
 
+## OC-SVM sanity check - MIXED result, decision: REPLACE the in-app anomaly flag with the trust report
+
+(a) In-domain (NASA+MIT) held-out flag rate: **0.1%** - far below the
+detector's own nu=0.05 (5%) target contamination rate, meaning it's
+looser/more conservative on genuinely in-domain data than its own
+hyperparameter would suggest.
+
+(b) Per-source external flag rate (NOT the single aggregate Phase 2c
+reported): highly variable, from 0.0% (HUST) to 45.8% (rwth) - the
+candidate detector IS discriminating between sources by shift severity
+(unlike the deployed detector's useless, uniform 100%), a real,
+disclosed improvement in KIND even before judging its exact calibration.
+
+| Source | Flag rate | Source | Flag rate |
+|---|---|---|---|
+| CALCE | 3.0% | mich_exp | 13.4% |
+| Oxford | 34.8% | rwth | 45.8% |
+| HUST | 0.0% | stanford | 12.9% |
+| XJTU | 5.9% | stanford_2 | 6.8% |
+| ul_pur | 24.8% | isu_ilcc | 12.5% |
+| hnei | 0.2% | tongji | 8.3% |
+| snl | 2.4% | mich | 0.6% |
+
+(c) Synthetic corruptions of real in-domain cycles (disclosed BMS-noise
+assumption: 1x = 2mV/20mA, 5x = 10mV/100mA, stated explicitly since no
+exact spec was given) - **a genuinely mixed, honest result, not
+smoothed into one number**:
+
+| Corruption | Flag rate |
+|---|---|
+| Gaussian noise, 1x BMS level | **0.0% - NOT detected** |
+| Gaussian noise, 5x BMS level | **0.0% - NOT detected** |
+| Voltage/current columns swapped | **100.0% - detected** |
+| Capacity scaled x10 | **100.0% - detected** |
+| Truncated cycle (60% of discharge dropped) | **0.0% - NOT detected** |
+
+**The candidate OC-SVM catches severe STRUCTURAL corruptions (column
+swaps, order-of-magnitude scale errors) perfectly, but is COMPLETELY
+BLIND to sensor noise (even at 5x a disclosed BMS-level assumption) and
+to truncated/incomplete cycles** - and the undetected failure modes
+(noise, truncation) are arguably the MORE realistic real-world data-
+quality issues a battery-monitoring tool would actually encounter, vs.
+the detected ones (a column swap or 10x unit error), which are cruder,
+rarer mistakes.
+
+**Decision, per the pre-agreed rule**: the lowest corruption flag rate
+(0.0%) is NOT "well above" the in-domain baseline (0.1%) - by this
+project's own literal reading of the rule, using the corruption type
+the detector performs WORST on (not cherry-picking its best case).
+**RECOMMENDATION: REPLACE the in-app anomaly flag with the nearest-
+source trust report (Phase 3's own item (c)/(d)); move OC-SVM to the
+Research section.** This is a recommendation carried into Phase 3's
+own wiring decisions, not itself an app change here.
+
+### Files
+
+`src/run_toolkit_phase2e_ocsvm_sanity_check.py`,
+`outputs/toolkit_phase2e_ocsvm_sanity_check.csv`. No deployed file
+touched.
+
