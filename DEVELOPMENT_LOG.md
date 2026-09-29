@@ -14097,3 +14097,41 @@ processing script needed - feasibility determined by direct inspection
 of the downloaded sample's own schema plus independently-found
 published documentation. No deployed file touched.
 
+### Phase 1(b): Tongji integration - COMPLETE, 130 batteries, 59,028 cycle-rows
+
+Downloaded `Tongji.zip` (1,439,965,909 bytes - confirmed exact byte-for-
+byte match against the Zenodo API's own stated file size before
+trusting the download complete) from the SAME BatteryLife Zenodo record
+(17756951) as the 9 already-integrated sources, extracted 130 `.pkl`
+battery files, and built its HI+fusion table using the EXACT SAME,
+unchanged adapter/pipeline (`data_adapters_batterylife.iterate_
+batterylife_cycles` + `build_batterylife_hi_table.build_source`) - no
+new code needed, confirming the existing adapter genuinely generalizes
+to a new BatteryLife sub-source, not just the 9 it was originally
+verified against. 10/59,038 rows dropped for physically-impossible SOH
+(>105%/<0%, the same known mis-segmented-checkup-cycle artifact
+already documented for RWTH) - same class of issue, same disclosed
+handling, not new. **Tongji is now the largest single source in this
+project's pool by battery count (130, vs. the next-largest HUST's 77).**
+
+**Rest-period check: INCONCLUSIVE, disclosed honestly rather than
+forcing a verdict.** The same crude end-of-charge-to-start-of-discharge
+timestamp-gap heuristic used for the original 13-dataset panel produced
+a NEGATIVE median gap (-13,996.6s) for Tongji - meaning discharge
+timestamps often precede charge timestamps within the same nominal
+cycle under this project's own simple sequential-ordering assumption,
+which does not hold cleanly for Tongji's own cycle structure. This
+makes the crude heuristic's own "NO/NEGLIGIBLE" auto-verdict
+untrustworthy for this specific source - reported as a genuine
+methodology limitation, not asserted as a real finding either way. A
+proper rest-period check for Tongji would need a more careful, source-
+specific timestamp-ordering investigation, out of this phase's own
+scope.
+
+### Files
+
+`data/raw/batterylife/Tongji/` (130 extracted `.pkl` files, git-ignored
+like every other raw dataset), `data/processed/batterylife_tongji_
+merged.parquet`, `src/run_toolkit_phase1b_tongji_integration.py`. No
+deployed file touched.
+
