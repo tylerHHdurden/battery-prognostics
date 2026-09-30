@@ -60,6 +60,7 @@ from live_inference import (
     OOD_NLL_THRESHOLD, OOD_NOVEL_DETECTED, OOD_KNOWN_FALSE_ALARM, OOD_WEAK_SOURCES, OOD_NOT_DETECTED_LINE, OOD_THRESHOLD_DATE,
 )
 from trust_report import nearest_source_trust_report
+from battery_passport import build_passport, passport_json, passport_pdf, DISCLAIMER as PASSPORT_DISCLAIMER
 from generate_health_report import build_prompt, build_qa_prompt, call_llm
 from prescriptive_decision_layer import recommend
 from run_second_life_grading import grade as second_life_grade
@@ -370,7 +371,8 @@ def glossary_term(term: str) -> str:
     """Returns an inline HTML span for `term` with a native-tooltip
     definition on hover (Part D #12) - use inside st.markdown(...,
     unsafe_allow_html=True) calls, e.g. f"...{glossary_term('SOH')}..." """
-    definition = GLOSSARY.get(term, "")
+    import html as _html
+    definition = _html.escape(GLOSSARY.get(term, ""), quote=True)  # definitions contain double quotes; unescaped they broke the tag and leaked raw HTML
     return f'<span class="glossary-term" title="{definition}">{term}</span>'
 
 
@@ -659,10 +661,10 @@ def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_i
                   "data that flags anything unlike it) considers this cycle's feature vector "
                   "unlike the NASA+MIT training distribution.")
     else:
-        st.success("✅ No anomaly flagged (One-Class SVM) - this cycle's feature vector "
-                    "looks consistent with the NASA+MIT training distribution.")
-    st.caption("The anomaly detector is trained only on NASA+MIT data, so it doubles as an "
-               "early signal of out-of-domain data alongside the missing-temperature check.")
+        st.info("ℹ️ Input-sanity check (One-Class SVM): nothing unusual flagged in this cycle's feature vector. "
+                "This is not a statement that the battery is familiar or the prediction is reliable.")
+    st.caption("The one-class SVM is trained only on NASA+MIT data and here only checks the input for oddities; "
+               "the distribution-shift message above is decided by the nearest-source check, not by this detector.")
 
     st.divider()
     st.subheader("📋 Recommendation (Prescriptive Decision Layer)")
@@ -695,6 +697,40 @@ def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_i
     if deg_mode is None:
         st.caption("_Degradation-mode signature unavailable for this battery (too few "
                    "trackable cycles) - the recommendation above used SOH/RUL/grade only._")
+
+    render_passport_section(ctx, dataset, battery_id, cycles)
+
+
+def render_passport_section(ctx: dict, dataset: str, battery_id: str, cycles: list[dict] | None):
+    """Phase 3B: passport-style export (JSON + printable PDF). Research prototype, not a certified battery passport."""
+    st.divider()
+    st.subheader("🧾 Battery passport (research prototype)")
+    st.caption(PASSPORT_DISCLAIMER)
+    try:
+        n_cycles = len(cycles) if cycles else None
+        if n_cycles is None:
+            n_cycles = len(available_precomputed_cycles(dataset).get(battery_id, [])) or None
+        passport = build_passport(ctx, dataset, battery_id, n_cycles)
+    except Exception as e:
+        st.caption(f"ℹ️ Passport-style export unavailable for this selection: {e}")
+        return
+    soh, rul, tr = passport["state_of_health"], passport["expected_remaining_life"], passport["trust_status"]
+    c1, c2, c3 = st.columns(3)
+    c1.metric("State of health", f"{soh['value_percent']}%", help=f"90% interval: {soh['interval_90_percent'][0]} - {soh['interval_90_percent'][1]}")
+    c2.metric("Expected remaining life", "not shown" if rul.get("cycles") is None else f"{int(rul['cycles'])} cycles")
+    c3.metric("Cycles in data", passport["cycle_count"]["cycles_in_data"] if passport["cycle_count"]["cycles_in_data"] is not None else "n/a")
+    st.markdown(f"**Trust status:** {tr['status']}. Stated detection rate {tr['stated_detection_rate']:.1%} of unseen-source batteries, "
+                f"false-alarm rate {tr['stated_false_alarm_rate']:.1%}; weakest for {', '.join(tr['weakest_sources'])}. No guarantee.")
+    st.caption(f"Data-source provenance: {passport['battery']['data_provenance']}. Model: {passport['model_provenance']['model']}.")
+    d1, d2 = st.columns(2)
+    safe_id = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in str(battery_id))[:60]
+    d1.download_button("Download passport (JSON)", data=passport_json(passport), file_name=f"battery_passport_{safe_id}.json",
+                       mime="application/json", key=f"pp_json_{safe_id}")
+    try:
+        d2.download_button("Download passport (printable PDF)", data=passport_pdf(passport), file_name=f"battery_passport_{safe_id}.pdf",
+                           mime="application/pdf", key=f"pp_pdf_{safe_id}")
+    except Exception as e:
+        d2.caption(f"PDF export unavailable: {e}")
 
 
 def render_explainability_tab(ctx: dict):
