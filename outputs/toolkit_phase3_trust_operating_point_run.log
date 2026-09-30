@@ -1,0 +1,41 @@
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+novel batteries: 476, known held-out batteries: 91
+  AUC ratio_familiar   = 0.777
+  AUC ratio_somewhat   = 0.764
+  AUC d_nearest        = 0.858
+  AUC min_maha         = 0.884
+  AUC nll_min          = 0.896
+
+best score by AUC: nll_min (0.896). ROC excerpt:
+  TPR>=0.50: threshold -5.521 -> novel flagged 82.1%, known false-alarm 8.8%
+  TPR>=0.60: threshold -5.521 -> novel flagged 82.1%, known false-alarm 8.8%
+  TPR>=0.70: threshold -5.521 -> novel flagged 82.1%, known false-alarm 8.8%
+  TPR>=0.80: threshold -5.521 -> novel flagged 82.1%, known false-alarm 8.8%
+  TPR>=0.90: threshold -24.320 -> novel flagged 90.3%, known false-alarm 30.8%
+  TPR>=0.95: threshold -41.522 -> novel flagged 95.2%, known false-alarm 49.5%
+
+OPERATING POINT: flag if nll_min >= -5.521: novel-source batteries flagged 82.1%, known-source held-out false-alarm 8.8% (8/91); usable
+
+Per source (novel: fraction flagged; known: false-alarm fraction):
+set         known  novel
+source                  
+CALCE       0.000  0.667
+HUST        0.000  1.000
+MIT         0.000  1.000
+NASA        0.500  0.400
+Oxford      0.000  1.000
+XJTU        0.000  0.872
+hnei        0.000  1.000
+isu_ilcc    1.000  1.000
+mich        0.125  0.025
+mich_exp    0.000  1.000
+rwth        0.500  1.000
+snl         0.273  0.418
+stanford    0.000  1.000
+stanford_2  0.000  1.000
+tongji      0.038  1.000
+ul_pur      0.000  0.900
+saved models/_trust_operating_point.json

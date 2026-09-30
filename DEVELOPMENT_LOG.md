@@ -15345,3 +15345,16 @@ no large writes during OneDrive sync), `verify_swapped_parquets.py post`: for ev
 recorded corrected files, the sidecar says old_v1 with the old encoder's md5, max|fusion| < 27, the hash is unchanged after a 60 s pause
 (sync-lag guard), and the RAWX_UNNORMALIZED originals carry a DEFECTIVE sidecar. Result `outputs/toolkit_swap_verification.csv`: ALL SWAP CHECKS PASSED.
 Phase 2B had already loaded its data at start (`load_pooled_data` is called once), so the rename did not affect it.
+
+### Step 2 close-out and Step 3a: profiles rebuilt, ROC operating point, leave-source-out validation (2026-09-30 20:10-20:30)
+
+- Trust profiles rebuilt (`build_source_trust_profiles.py`, 1.9 min): `models/_source_profiles.pkl` is byte-identical to the previous build. Expected:
+  the profiles use only candidate-encoder embeddings, which the parquet bug never touched; the rebuild confirms reproducibility. Nearest-source accuracy
+  82/91 (72 familiar, 1 somewhat, 9 unfamiliar against their own calibration). Old copy: `models/_source_profiles.PRE_REBUILD_2026-09-30.pkl`.
+- ROC of novel-source vs known-source (`src/trust_operating_point.py`; 476 novel-source batteries, 91 known held-out batteries). AUC by score:
+  nll_min 0.896 (best), min_maha 0.884, d_nearest 0.858, ratio_familiar 0.777, ratio_somewhat 0.764. Operating point (lowest false-alarm rate with >= 80% novel
+  flagged): flag if nll_min >= -5.521 -> 82.1% novel flagged, 8.8% known false alarm (8/91) in-sample.
+- Honest check (`src/validate_trust_threshold_leave_source_out.py`, `outputs/toolkit_phase3_trust_threshold_leave_source_out.csv`): threshold picked WITHOUT each
+  source, applied to it. Pooled: ROC rule flags 390/476 = 81.9% of novel-source batteries with 10/91 = 11.0% known false alarms; the current rule (anything not
+  'familiar') flags 226/476 = 47.5% with 16/91 = 17.6% false alarms. Sources where fewer than half the novel batteries are flagged by the ROC rule: mich (1/40), NASA (4/10), snl (23/55).
+- Nothing deployed; app.py, live_inference.py and models/ edits remain uncommitted pending review.
