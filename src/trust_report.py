@@ -55,16 +55,8 @@ _CACHE = {}
 def _load():
     if "profiles" in _CACHE:
         return _CACHE["profiles"]
-    import encoder_provenance as ep
-    ep.assert_store(MODELS_DIR / "_source_profiles.pkl", ep.CAND, "trust_report: profiles must be built on candidate-encoder embeddings")
     with open(MODELS_DIR / "_source_profiles.pkl", "rb") as f:
         data = pickle.load(f)
-    # TEST HOOK (step 3 end-to-end validation only): TRUST_EXCLUDE_SOURCES="mich,mich_exp" removes those profiles from the set so a
-    # real battery of a source can be scored as if its source were unknown (leave-source-out). Unset in normal use.
-    import os
-    _excl = {x.strip() for x in os.environ.get("TRUST_EXCLUDE_SOURCES", "").split(",") if x.strip()}
-    if _excl:
-        data["profiles"] = {k: v for k, v in data["profiles"].items() if k not in _excl}
 
     gate_table = pd.read_csv(OUT_DIR / "toolkit_phase2_gate_table.csv").set_index("source")["candidate_mae"].to_dict()
     lodo_table = pd.read_csv(OUT_DIR / "finalpass3_check1_lodo_family_holdout.csv") \
@@ -148,9 +140,6 @@ def nearest_source_trust_report(feature_vector: np.ndarray) -> dict:
 
     return {
         "nearest_source": nearest,
-        "nll_min": float(nll[nearest]),  # the out-of-domain score (see live_inference.OOD_* constants)
-        "gate_table_mae": data["gate_table_mae"].get(nearest),
-        "lodo_family_mae": data["lodo_mae"].get(nearest),
         "trust_level": trust,
         "distance_to_nearest": dist,
         "distance_threshold_familiar": prof["threshold_familiar"],

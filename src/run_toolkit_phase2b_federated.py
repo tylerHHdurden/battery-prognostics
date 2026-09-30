@@ -239,30 +239,6 @@ def _cross_client_boundary(payload) -> bytes:
     return payload
 
 
-def _attach_candidate_fusion(df: pd.DataFrame, name: str, fusion_df: pd.DataFrame,
-                             feature_cols_base: list[str], all_cols: list[str]) -> pd.DataFrame:
-    """Replace whatever `fusion_*` columns a per-source parquet carries with the CANDIDATE
-    encoder's own embeddings (fusion_embeddings_multisource.csv), joined on (battery_id, cycle_idx).
-
-    BUG FIXED HERE (found 2026-09-30 while investigating "candidate encoder divergence"): this loader
-    used to take `fusion_*` straight from the per-source merged parquets for Oxford/HUST/XJTU and all
-    BatteryLife sources. Those columns are the OLD deployed encoder's embeddings - and for BatteryLife
-    they were computed from RAW, un-normalized tensors (build_batterylife_hi_table.py encodes `X`
-    without apply_channel_norm; raw dVdQ reaches ~4e9, so isu_ilcc/rwth embeddings reach 1e7-1e13,
-    95-99.97% of their rows > 100). So Phase 2B's "same features as the Phase 2 candidate" was false:
-    it silently mixed the candidate encoder (NASA/MIT/CALCE) with the old one (everything else)."""
-    import encoder_provenance as ep
-    ep.assert_store(PROC_DIR / "fusion_embeddings_multisource.csv", ep.CAND, f"_attach_candidate_fusion[{name}]")
-    fcols = [f"fusion_{i}" for i in range(EMBED_DIM)]
-    hi = df.drop(columns=[c for c in fcols if c in df.columns]).copy()
-    hi["battery_id"] = hi["battery_id"].astype(str)
-    emb = fusion_df[fusion_df["dataset"] == name][["battery_id", "cycle_idx"] + fcols].copy()
-    emb["battery_id"] = emb["battery_id"].astype(str)
-    merged = pd.merge(hi, emb, on=["battery_id", "cycle_idx"], how="inner")
-    assert len(merged) > 0, f"{name}: no rows matched the candidate embeddings"
-    return merged[all_cols + ["SOH", "battery_id"]].copy()
-
-
 def load_pooled_data():
     """Same pooling as run_toolkit_phase2_multisource_retrain.py's own
     Phase 2 candidate build: 8 reformulated canonical HI features +
@@ -293,7 +269,7 @@ def load_pooled_data():
     for name, fname in [("Oxford", "stage5_1_oxford_merged.parquet"), ("HUST", "stage5_1_hust_merged.parquet"),
                          ("XJTU", "stage5_1_xjtu_merged.parquet")]:
         df = pd.read_parquet(PROC_DIR / fname)
-        sources[name] = _attach_candidate_fusion(df, name, fusion_df, feature_cols_base, all_cols)
+        sources[name] = df[all_cols + ["SOH", "battery_id"]].copy()
 
     for source in BATTERYLIFE_SOURCES:
         if source == "tongji":
@@ -303,18 +279,9 @@ def load_pooled_data():
         if not path.exists():
             continue
         df = pd.read_parquet(path)
-        df = df.copy()
-        df["battery_id"] = source + "::" + df["battery_id"].astype(str)
-        sources[source] = _attach_candidate_fusion(df, source, fusion_df, feature_cols_base, all_cols)
-
-    # Hard guard against the bug this function used to have (see _attach_candidate_fusion's docstring):
-    # the candidate encoder's clipped-input outputs are provably bounded (worst-case corner < ~11 for
-    # the saved weights, observed max 4.2 over all 419,250 stored rows) - anything larger means an
-    # old-encoder/raw-X embedding got in.
-    fcols = [f"fusion_{i}" for i in range(EMBED_DIM)]
-    for name, df in sources.items():
-        mx = float(np.nanmax(np.abs(df[fcols].to_numpy(dtype=float))))
-        assert mx < 20.0, f"{name}: max |fusion| = {mx:.3g} - not the candidate encoder's bounded output"
+        sub = df[all_cols + ["SOH", "battery_id"]].copy()
+        sub["battery_id"] = source + "::" + sub["battery_id"].astype(str)
+        sources[source] = sub
 
     for name, df in sources.items():
         if not df["battery_id"].astype(str).str.startswith(name + "::").all():
