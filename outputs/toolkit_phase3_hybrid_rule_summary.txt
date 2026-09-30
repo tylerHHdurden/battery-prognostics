@@ -1,0 +1,29 @@
+Hybrid novelty rule vs ROC rule, leave-source-out (thresholds chosen without held-out source; >=80% novel target)
+
+rule             novel flagged     known false alarm
+roc            389/476 = 81.7%         10/91 = 11.0%
+a_or_level     421/476 = 88.4%         22/91 = 24.2%
+b_or_ratio     395/476 = 83.0%         12/91 = 13.2%
+c_logreg       400/476 = 84.0%         13/91 = 14.3%
+
+Per-source (novel flagged/n_novel ; known FA/n_known) for all sources:
+CALCE      nov   3 kn   1 | roc: 2/3 FA 0 | a_or_level: 3/3 FA 1 | b_or_ratio: 0/3 FA 0 | c_logreg: 3/3 FA 1
+HUST       nov  77 kn  15 | roc: 77/77 FA 0 | a_or_level: 77/77 FA 1 | b_or_ratio: 77/77 FA 0 | c_logreg: 77/77 FA 1
+MIT        nov  31 kn   6 | roc: 31/31 FA 0 | a_or_level: 31/31 FA 1 | b_or_ratio: 31/31 FA 0 | c_logreg: 31/31 FA 0
+NASA       nov  10 kn   2 | roc: 4/10 FA 1 | a_or_level: 10/10 FA 1 | b_or_ratio: 4/10 FA 1 | c_logreg: 8/10 FA 1
+Oxford     nov   8 kn   1 | roc: 8/8 FA 0 | a_or_level: 8/8 FA 0 | b_or_ratio: 8/8 FA 0 | c_logreg: 3/8 FA 0
+XJTU       nov  47 kn   9 | roc: 39/47 FA 0 | a_or_level: 39/47 FA 1 | b_or_ratio: 39/47 FA 0 | c_logreg: 47/47 FA 0
+hnei       nov  14 kn   2 | roc: 14/14 FA 0 | a_or_level: 14/14 FA 1 | b_or_ratio: 14/14 FA 0 | c_logreg: 14/14 FA 0
+isu_ilcc   nov   9 kn   1 | roc: 9/9 FA 1 | a_or_level: 9/9 FA 1 | b_or_ratio: 9/9 FA 1 | c_logreg: 9/9 FA 0
+mich       nov  40 kn   8 | roc: 1/40 FA 1 | a_or_level: 1/40 FA 1 | b_or_ratio: 1/40 FA 1 | c_logreg: 0/40 FA 0
+mich_exp   nov  18 kn   3 | roc: 18/18 FA 0 | a_or_level: 18/18 FA 1 | b_or_ratio: 18/18 FA 0 | c_logreg: 18/18 FA 0
+rwth       nov  10 kn   2 | roc: 10/10 FA 1 | a_or_level: 10/10 FA 1 | b_or_ratio: 10/10 FA 1 | c_logreg: 10/10 FA 1
+snl        nov  55 kn  11 | roc: 23/55 FA 5 | a_or_level: 48/55 FA 9 | b_or_ratio: 32/55 FA 7 | c_logreg: 26/55 FA 6
+stanford   nov   6 kn   1 | roc: 6/6 FA 0 | a_or_level: 6/6 FA 0 | b_or_ratio: 6/6 FA 0 | c_logreg: 6/6 FA 0
+stanford_2 nov   8 kn   1 | roc: 8/8 FA 0 | a_or_level: 8/8 FA 0 | b_or_ratio: 8/8 FA 0 | c_logreg: 8/8 FA 0
+tongji     nov 130 kn  26 | roc: 130/130 FA 1 | a_or_level: 130/130 FA 2 | b_or_ratio: 130/130 FA 1 | c_logreg: 130/130 FA 3
+ul_pur     nov  10 kn   2 | roc: 9/10 FA 0 | a_or_level: 9/10 FA 1 | b_or_ratio: 8/10 FA 0 | c_logreg: 10/10 FA 0
+
+a_or_level: does NOT beat ROC (pooled dNovel=+32, dFA=+12)
+b_or_ratio: does NOT beat ROC (pooled dNovel=+6, dFA=+2)
+c_logreg: does NOT beat ROC (pooled dNovel=+11, dFA=+3)

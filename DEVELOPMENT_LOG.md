@@ -15358,3 +15358,17 @@ Phase 2B had already loaded its data at start (`load_pooled_data` is called once
   source, applied to it. Pooled: ROC rule flags 390/476 = 81.9% of novel-source batteries with 10/91 = 11.0% known false alarms; the current rule (anything not
   'familiar') flags 226/476 = 47.5% with 16/91 = 17.6% false alarms. Sources where fewer than half the novel batteries are flagged by the ROC rule: mich (1/40), NASA (4/10), snl (23/55).
 - Nothing deployed; app.py, live_inference.py and models/ edits remain uncommitted pending review.
+
+### Phase 2B final (corrected rerun) and the hybrid-rule negative result (2026-09-30 evening)
+
+- Phase 2B rerun on corrected embeddings finished (106.5 min, 16/16 folds): federated bagging still does not match centralized training (best federated variant beats
+  it on at most 5/16 sources; means centralized -0.203, federated sample-weighted -3.302 / uniform -1.995 / tempered -3.732; centralized beats NASA+MIT-only on 13/16).
+  Verdict unchanged (VERIFIED negative result). Full before/after in PAPER_RESULTS.md, Phase 2B section.
+- Hybrid novelty rule (tested in the 1-hour optional slot; `src/hybrid_novelty_rule_experiment.py`, `outputs/toolkit_phase3_hybrid_rule_summary.txt`): OR with the trust level,
+  OR with the ratio score, and logistic regression all raise pooled novel detection (84.0-88.4%) only by raising known false alarms (13.2-24.2%, vs 11.0% for the ROC
+  rule), and none closes the mich gap (1/40). NEGATIVE RESULT: no hybrid clearly beats the ROC rule, so the redesign uses the plain ROC rule. (That run's ROC baseline
+  counted 389/476; the committed validation counts 390/476 - one battery, not traced.)
+- PAPER_RESULTS.md labelled after the reruns (VERIFIED / SUPERSEDED per result; snl recorded as "not distinguishable" (0.149 vs 0.154, margin 0.005), MIT -6.1 and XJTU -6.4 LODO
+  values recorded as genuine transfer failures). Four headlines changed in substance (none flipped outright): Item B clear wins 11/13 -> 10/13 with snl a tie; Item 1 label-free routing rule now
+  correct on 3/13 (was 8/13; extended model is the true winner on 10/13; deployed routing correct on 6/13, was 8/13) - not adopted, routing unchanged but worth a look;
+  Item A online conformal weaker on BatteryLife (PID+scorecaster 71.1-95.0%, was 74.3-94.7%); Item C hnei routed R2 -0.137 now below Severson's -0.087 on R2 only.
