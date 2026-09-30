@@ -54,3 +54,11 @@ python src/run_finalpass2_itemC_baseline_table.py   # depends on item B's own ou
 
 echo "=== DONE. Every outputs/finalpass*.csv referenced by PAPER_RESULTS.md has been regenerated. ==="
 echo "No file under app.py, src/live_inference.py, or models/ (excluding models/_experimental_*) was modified."
+
+echo "=== Table set 3 (toolkit pass; 16-source extension): coverage vs label budget and the other toolkit tables ==="
+# Not run by default in earlier versions. Needs the corrected BatteryLife/Tongji parquets (canonical names since 2026-09-30) and, for Phase 2B, the flwr package.
+python src/run_toolkit_phase3a_min_checkpoints.py
+python src/run_toolkit_phase2c_label_efficient.py     # coverage vs label budget (Phase 2C)
+# python src/run_toolkit_phase2b_federated.py          # federated vs centralized, about 2 hours (needs flwr)
+python src/trust_operating_point.py                    # ROC operating point for the trust-based out-of-domain rule
+python src/validate_trust_threshold_leave_source_out.py
