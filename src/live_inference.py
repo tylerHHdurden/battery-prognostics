@@ -107,22 +107,25 @@ EXT_DELTA_RAW_FEATURES = {"MATD", "VIECT"}                        # delta-reform
 # MIT gap and instead collapsed catastrophically on 15/16 sources - not
 # adopted.
 #
-# ROUTING DECISION (a DEPLOYMENT choice, made on the gate-table split -
-# NOT re-derived from, and not itself, a paper claim about
-# generalization): NASA and MIT stay on the CURRENT DEPLOYED model
-# (unchanged, exactly as before this flag existed). Every OTHER known
-# dataset (CALCE/Oxford/HUST/XJTU, any BatteryLife source if ever wired
-# into PRECOMPUTED_HELDOUT_PARQUETS below, and any "Uploaded"/unknown
-# battery) routes to the multi-source candidate instead of the old
-# EXTENDED_ROUTED_DATASETS logic - the candidate's own gate numbers
-# beat both the base AND the extended model on every one of those
-# datasets it was evaluated against.
+# ROUTING (revised 2026-10-01 so the live app matches the submitted report and PAPER_RESULTS.md):
+#   * The SIX APP DATASETS (NASA, MIT, CALCE, Oxford, HUST, XJTU) use the VALIDATED routing: extended reformulation for
+#     CALCE/Oxford/HUST, the base XGBoost-fusion model for XJTU, NASA and MIT. Validation = PAPER_RESULTS.md sec 1 (five-seed
+#     zero-retrain numbers: CALCE R2 0.749, Oxford 0.940, HUST 0.795, XJTU -1.037) and outputs/finalpass_item5a_5seed_aggregate.csv;
+#     that routing was itself selected on held-out data, so it is a deployment choice, not an unbiased result.
+#   * The multi-source candidate is used only where it was validated: batteries from the nine BatteryLife sources + Tongji and any
+#     "Uploaded"/unknown battery. What validated it: the Phase 2 gate table (outputs/toolkit_phase2_gate_table.csv), a battery-level split
+#     WITHIN each source in which the candidate beat the routed baseline on all ten of those sources. Limits, stated plainly: those
+#     sources' training batteries were in the candidate's training pool, so this is not a zero-retrain test, and the leave-one-source-out
+#     rerun (outputs/toolkit_lodo_family_holdout_rerun_corrected.csv) shows the candidate's transfer to a truly unseen source is much
+#     weaker - which is exactly what the distribution-shift message in the app says.
+#   * Why not the candidate for the six app datasets: the report and PAPER_RESULTS.md quote the routed numbers, and the candidate was
+#     never compared with them under the same zero-retrain protocol. (Gate-table wins for the candidate on CALCE/HUST/XJTU exist but
+#     are same-source battery-level splits.)
 #
-# Toggle this to False to revert to the pre-candidate routing (Stage-5
-# extended-reformulation for CALCE/Oxford/HUST, base model otherwise)
-# with ZERO other code changes required - every other branch below is
-# unconditional, unchanged production code.
+# Toggle this to False to revert to the pre-candidate routing for everything (Stage-5 extended reformulation for CALCE/Oxford/HUST,
+# base model otherwise) with ZERO other code changes required.
 USE_MULTISOURCE_CANDIDATE = True
+SIX_APP_DATASETS = ("NASA", "MIT", "CALCE", "Oxford", "HUST", "XJTU")  # validated routing, never the candidate (see the comment above)
 CANDIDATE_FEATURE_COLS = CANONICAL_REL + ["cycle_idx"]  # SAME 8 HI + cycle_idx as the base model - only the fusion embedding and the XGBoost model object differ
 
 
@@ -132,7 +135,7 @@ def _use_candidate(dataset: str | None) -> bool:
     selection made yet) and `dataset="Uploaded"` both correctly route
     to the candidate (every "uploaded/unknown battery" case) since
     neither equals "NASA" or "MIT"."""
-    return USE_MULTISOURCE_CANDIDATE and dataset not in ("NASA", "MIT")
+    return USE_MULTISOURCE_CANDIDATE and dataset not in SIX_APP_DATASETS
 
 HI_DESCRIPTIONS = {
     "ICHV_rel": "time spent charging near peak voltage (high-voltage/CV-tail duration), relative to this battery's own cycle-10 baseline",

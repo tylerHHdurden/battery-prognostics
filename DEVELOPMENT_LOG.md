@@ -15401,3 +15401,14 @@ Diff for review: `outputs/step3_diff_for_review.patch`.
   (CALCE ext 0.740 vs base 0.568; Oxford 0.953 vs -2.694; HUST 0.800 vs -0.152; XJTU base -1.062 vs ext -1.772); NASA and MIT are the training pool and cannot be scored. The label-free rule picks base for CALCE/Oxford/HUST and is wrong there.
   The 13-dataset count change comes from the nine BatteryLife rows only. PROPOSAL only: keep the six-app table unchanged; the BatteryLife rows suggest extended for hnei, snl, mich, rwth, stanford, stanford_2, isu_ilcc but that needs the full standard protocol and is outside the six-app scope.
   Routing was selected on held-out data everywhere, so it is a deployment choice, not an unbiased result. (Note: with USE_MULTISOURCE_CANDIDATE = True the app currently routes CALCE/Oxford/HUST/XJTU to the multisource candidate, which Item 1 never compared.)
+
+### Routing aligned with the submitted report (2026-10-01)
+
+`live_inference._use_candidate` now returns False for the six app datasets (NASA, MIT, CALCE, Oxford, HUST, XJTU): they use the validated routing (extended reformulation for CALCE/Oxford/HUST,
+base model for XJTU/NASA/MIT), i.e. the numbers in the submitted report and PAPER_RESULTS.md sec 1. The multisource candidate stays for BatteryLife/Tongji sources and any Uploaded battery (validated only by the
+Phase 2 gate table - a battery-level split inside sources that were in its training pool - which the code comment now says, together with the weaker leave-one-source-out transfer).
+Check (`src/verify_six_app_routing_matches_paper.py`, 400 random cycles per dataset through the production path, `outputs/toolkit_six_app_routing_check.csv`): sample MAE/RMSE vs the PAPER_RESULTS five-seed routed values:
+CALCE 6.567/11.364 (paper 6.256/10.791), Oxford 1.297/1.480 (1.431/1.639), HUST 2.517/3.126 (2.643/3.336), XJTU 6.704/8.990 (6.457/8.572) - all within the stated tolerance (2 std of the five seeds plus a 25% sampling band; the deployed models are the seed-42 models).
+6-dataset + HNEI AppTest matrix re-run (`outputs/toolkit_ood_matrix_routed.json`): 0 exceptions; RUL shown for NASA/MIT only; HNEI upload still on the candidate. The seven-of-nine BatteryLife observation from the Item 1 investigation
+(extended model truly better on hnei, snl, mich, rwth, stanford, stanford_2, isu_ilcc) is recorded as a LEAD for later, not a change.
+Pre-push audit of the 16 local commits: no data/raw, .env, uploads/ or credential patterns; largest new blob 16.6 MB (tongji parquet); total new blobs 130.8 MB.
