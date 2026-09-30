@@ -62,6 +62,7 @@ from health_indicators import compute_health_indicators, HI_NAMES
 from sequence_features import get_cycle_tensor, apply_channel_norm, CHANNEL_NAMES
 from models.vlstm import VLSTM
 from models.ica_encoder import ICAEncoder
+import encoder_provenance as ep
 from stage1_common import canonical_feature_cols, fusion_cols as _fusion_cols, DURATION_FEATURES, BASELINE_CYCLE, ICA_CHANNEL_SLICE
 from stage5_extended_reformulation import extended_canonical_feature_cols
 from run_stage1_followup_partB_joint_rul import JointSOHRULModelFusion
@@ -201,6 +202,7 @@ def load_resources() -> dict:
 
     # --- multi-source candidate (see USE_MULTISOURCE_CANDIDATE above) ---
     xgb_candidate = candidate_encoder = candidate_norm_stats = candidate_medians = candidate_fusion_lookup = None
+    candidate_fusion_range = None
     if USE_MULTISOURCE_CANDIDATE:
         xgb_candidate = XGBRegressor()
         xgb_candidate.load_model(str(MODELS_DIR / "_candidate_multisource.json"))
@@ -208,6 +210,7 @@ def load_resources() -> dict:
         candidate_encoder.load_state_dict(torch.load(MODELS_DIR / "_candidate_ica_encoder.pt"))
         candidate_encoder.eval()
         candidate_norm_stats = json.loads((PROC_DIR / "candidate_channel_norm_stats.json").read_text())
+        candidate_fusion_range = json.loads((PROC_DIR / "candidate_fusion_train_range.json").read_text())
         _cand_med = json.loads((PROC_DIR / "candidate_multisource_medians.json").read_text())
         candidate_medians = dict(zip(_cand_med["cols"], _cand_med["medians"]))
         # precomputed fusion embeddings for every (dataset, battery_id, cycle_idx)
@@ -235,6 +238,19 @@ def load_resources() -> dict:
     with open(MODELS_DIR / "_candidate_ocsvm_scaler.pkl", "rb") as f:
         candidate_ocsvm_scaler = pickle.load(f)
 
+    # Encoder-provenance guard (2026-09-30): fail LOUDLY if any model is paired with the other encoder's embeddings.
+    # Old models <-> old encoder (+ its norm stats); candidate models <-> candidate encoder + the candidate CSV lookup.
+    for _m in ["xgb_soh_fusion.json", "_experimental_xgb_soh_fusion_extended_reformulation.json",
+               "ocsvm_model.pkl", "ocsvm_scaler.pkl"]:
+        ep.assert_encoder_match(MODELS_DIR / _m, MODELS_DIR / "ica_encoder.pt", context=f"load_resources[{_m}]")
+    if USE_MULTISOURCE_CANDIDATE:
+        for _m in ["_candidate_multisource.json", "_candidate_ocsvm.pkl", "_candidate_ocsvm_scaler.pkl"]:
+            ep.assert_encoder_match(MODELS_DIR / _m, MODELS_DIR / "_candidate_ica_encoder.pt", context=f"load_resources[{_m}]")
+        ep.assert_encoder_match(MODELS_DIR / "_candidate_multisource.json", PROC_DIR / "fusion_embeddings_multisource.csv",
+                                context="load_resources[candidate fusion lookup]")
+        ep.assert_encoder_match(MODELS_DIR / "_candidate_multisource.json", PROC_DIR / "candidate_fusion_train_range.json",
+                                context="load_resources[candidate fusion range]")
+
     return {
         "norm_stats": norm_stats, "constants": constants, "joint_hi_norm": joint_hi_norm,
         "background": background, "train_medians": train_medians,
@@ -244,13 +260,131 @@ def load_resources() -> dict:
         "ocsvm": ocsvm, "ocsvm_scaler": ocsvm_scaler, "ocsvm_feature_cols": ocsvm_feature_cols,
         "xgb_candidate": xgb_candidate, "candidate_encoder": candidate_encoder,
         "candidate_norm_stats": candidate_norm_stats, "candidate_medians": candidate_medians,
-        "candidate_fusion_lookup": candidate_fusion_lookup,
+        "candidate_fusion_lookup": candidate_fusion_lookup, "candidate_fusion_range": candidate_fusion_range,
         "candidate_ocsvm": candidate_ocsvm, "candidate_ocsvm_scaler": candidate_ocsvm_scaler,
         # kept for StreamingDigitalTwin's constructor API (digital_twin_streaming.py) -
         # the canonical reformulated names now, not the old pre-Stage-1 set; no longer
         # used for feature-BUILDING directly (build_reformulated_hi_vector handles that)
         "bfa_selected": CANONICAL_REL,
     }
+
+
+RUL_TRAINING_SOURCES = {"NASA", "MIT"}  # the only sources the joint RUL model was ever trained on
+_BUILTIN_TRUST = None
+
+
+def lookup_builtin_trust(dataset: str | None, battery_id: str | None) -> dict | None:
+    """Precomputed nearest-source trust verdict (src/build_builtin_battery_trust_table.py ->
+    models/_builtin_battery_trust.csv) for a BUILT-IN battery, or None if not in the table."""
+    global _BUILTIN_TRUST
+    if _BUILTIN_TRUST is None:
+        path = MODELS_DIR / "_builtin_battery_trust.csv"
+        _BUILTIN_TRUST = {}
+        if path.exists():
+            df = pd.read_csv(path)
+            for r in df.to_dict("records"):
+                _BUILTIN_TRUST[(str(r["dataset"]), str(r["battery_id"]))] = r
+    if dataset is None or battery_id is None:
+        return None
+    return _BUILTIN_TRUST.get((str(dataset), str(battery_id)))
+
+
+# ---- Out-of-domain operating point (approved 2026-09-30) -------------------------------------------------------------
+# A battery is FLAGGED when its nearest-source Gaussian negative log-likelihood score `nll_min` (trust_report's
+# `nll_min`, computed on the battery's median 25-dim feature vector) is >= OOD_NLL_THRESHOLD.
+# How the number was chosen and validated (src/trust_operating_point.py, src/validate_trust_threshold_leave_source_out.py):
+#   NOVEL = every battery of a source scored against the profiles of all OTHER sources (its whole sibling family removed);
+#   KNOWN = each source's held-out test batteries scored against all 16 profiles. The threshold is the one with the lowest
+#   known-source false-alarm rate among those flagging >= 80% of novel batteries (ROC AUC of nll_min: 0.896).
+#   Leave-source-out check (threshold chosen WITHOUT the source it is applied to), pooled over 16 sources:
+#   390/476 = 81.9% of novel-source batteries flagged, 10/91 = 11.0% of known-source batteries falsely flagged.
+#   Per-source table: outputs/toolkit_phase3_trust_threshold_leave_source_out.csv. The old rule (anything not "familiar")
+#   flagged 47.5% (226/476). A hybrid rule (OR with the trust level / ratio score / logistic regression) was tested and
+#   rejected: it raised detection only by raising false alarms (outputs/toolkit_phase3_hybrid_rule_summary.txt).
+OOD_SCORE = "nll_min"
+OOD_NLL_THRESHOLD = -5.521444398006403
+OOD_THRESHOLD_DATE = "2026-09-30"
+OOD_VALIDATION_TABLE = "outputs/toolkit_phase3_trust_threshold_leave_source_out.csv"
+OOD_NOVEL_DETECTED = 0.819          # 390/476, leave-source-out
+OOD_KNOWN_FALSE_ALARM = 0.110       # 10/91, leave-source-out
+OOD_WEAK_SOURCES = ("mich", "NASA", "snl")  # fewer than half of these sources' novel batteries were flagged in validation
+OOD_NOT_DETECTED_LINE = ("About 1 in 5 unfamiliar batteries are not detected; check against a measured capacity when possible.")
+_TYPICAL_UNSEEN_MAE = None
+
+
+def typical_unseen_source_mae() -> float | None:
+    """Median over sources of the corrected family-holdout MAE (SOH points): the typical error on a source the model
+    has never seen. From outputs/toolkit_lodo_family_holdout_rerun_corrected.csv (rerun on corrected embeddings)."""
+    global _TYPICAL_UNSEEN_MAE
+    if _TYPICAL_UNSEEN_MAE is None:
+        p = ROOT / "outputs" / "toolkit_lodo_family_holdout_rerun_corrected.csv"
+        _TYPICAL_UNSEEN_MAE = float(pd.read_csv(p)["family_lodo_mae_corrected"].median()) if p.exists() else float("nan")
+    return _TYPICAL_UNSEEN_MAE if _TYPICAL_UNSEEN_MAE == _TYPICAL_UNSEEN_MAE else None
+
+
+def domain_verdict(trust: dict | None) -> dict:
+    """out_of_domain (= FLAGGED) is decided ONLY by the ROC rule above: nll_min >= OOD_NLL_THRESHOLD. The deployed OC-SVM
+    is still computed and returned as `anomaly_flag` for transparency but decides nothing here (it stays an input-sanity
+    check). Not flagged is NEVER presented as "trusted": the message says only that no distribution shift was detected,
+    plus the measured miss rate. RUL is shown only when the nearest source is NASA or MIT (the only sources the RUL model was
+    trained on; RUL R2=-566 on CALCE) AND the battery is not flagged."""
+    if trust is None:
+        return {"out_of_domain": True,
+                "domain_reasons": ["no nearest-source familiarity check was available for this battery, so it cannot be judged"],
+                "rul_hidden": True, "rul_hidden_reason": "no familiarity check was available for this battery",
+                "flagged": True, "errors": None}
+    nearest = trust["nearest_source"]
+    score = trust.get("nll_min")
+    flagged = True if score is None or score != score else bool(score >= OOD_NLL_THRESHOLD)
+    gate = trust.get("gate_table_mae")
+    unseen = typical_unseen_source_mae()
+    errors = {"in_domain_mae": gate, "unseen_source_typical_mae": unseen, "nearest_source": nearest,
+              "nearest_unseen_mae": trust.get("lodo_family_mae")}
+    reasons = []
+    if flagged:
+        sc = "unavailable" if score is None or score != score else f"{score:.1f}"
+        reasons.append(f"its nearest-source score ({OOD_SCORE} = {sc}) is at or above the flag threshold "
+                       f"({OOD_NLL_THRESHOLD:.1f}); nearest known source: {nearest}")
+    rul_hidden = flagged or nearest not in RUL_TRAINING_SOURCES
+    if flagged:
+        rr = "; ".join(reasons)
+    elif nearest not in RUL_TRAINING_SOURCES:
+        rr = (f"its nearest known source is {nearest}, which the RUL model was never trained on (it only saw NASA+MIT)")
+    else:
+        rr = None
+    return {"out_of_domain": flagged, "flagged": flagged, "domain_reasons": reasons, "rul_hidden": rul_hidden,
+            "rul_hidden_reason": rr, "errors": errors}
+
+
+FUSION_RANGE_TOLERANCE = 0.05  # fraction of each dim's training span allowed beyond [min, max]; measured on
+# 72,729 held-out embeddings: 0 false alarms at 5% (exact-range alone false-alarms 0.078%, 5.35% on stanford)
+
+
+def sanitize_raw_tensor_for_candidate(x_raw: np.ndarray) -> np.ndarray:
+    """The candidate encoder was TRAINED on tensors with NaN/+-Inf replaced by 0.0 BEFORE normalization
+    (run_toolkit_phase2_multisource_retrain.py). Skipping this at inference is a train/inference mismatch:
+    np.clip passes NaN straight through (the whole embedding becomes NaN, then is silently replaced
+    downstream by per-dim medians) and clips +Inf to the channel's `hi` instead of the 0.0 training saw.
+    Found on 3 of 1,118 sampled live cycles (all stanford, non-finite dVdQ)."""
+    return np.nan_to_num(x_raw, nan=0.0, posinf=0.0, neginf=0.0)
+
+
+def fusion_range_check(fusion_emb: np.ndarray, res: dict) -> tuple[bool, str | None]:
+    """Runtime guard: (ok, reason). False if any candidate fusion value is non-finite or outside the
+    candidate's TRAINING range (per-dim min/max over Phase 2 train rows, +-FUSION_RANGE_TOLERANCE*span).
+    The caller then shows "prediction unreliable for this cycle" instead of a number."""
+    rng = res.get("candidate_fusion_range")
+    f = np.asarray(fusion_emb, dtype=float)
+    if not np.all(np.isfinite(f)):
+        return False, "the encoder produced a non-finite value for this cycle"
+    if rng is None:
+        return True, None
+    lo, hi, span = np.array(rng["min"]), np.array(rng["max"]), np.array(rng["span"])
+    bad = (f < lo - FUSION_RANGE_TOLERANCE * span) | (f > hi + FUSION_RANGE_TOLERANCE * span)
+    if bad.any():
+        return False, (f"encoder output dimension(s) {np.where(bad)[0].tolist()} fall outside the range seen "
+                       f"in training")
+    return True, None
 
 
 def _candidate_soh_prediction(hi_rel_vector: np.ndarray, cycle_idx: float,
@@ -596,7 +730,8 @@ class PrecomputedStreamingTwin:
         return self._twin.drift_events
 
 
-def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: int, res: dict) -> dict:
+def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: int, res: dict,
+                                     trust: dict | None = None) -> dict:
     """Same output CONTRACT as predict_and_explain (identical dict keys,
     so every existing render_*_tab function works unchanged regardless
     of which path built ctx) - but sourced entirely from this project's
@@ -636,6 +771,8 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
                           & (hi_df["cycle_idx"] == BASELINE_CYCLE)]
         baseline_his = base_row.iloc[0].to_dict() if not base_row.empty else None
 
+        ep.assert_encoder_match(MODELS_DIR / "xgb_soh_fusion.json", PROC_DIR / "fusion_embeddings.csv",
+                                context="predict_and_explain_precomputed[NASA/MIT]")
         fusion_df = pd.read_csv(PROC_DIR / "fusion_embeddings.csv")
         frow = fusion_df[(fusion_df["battery_id"] == battery_id) & (fusion_df["cycle_idx"] == cycle_idx)]
         if frow.empty:
@@ -663,6 +800,8 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
         no_temperature = True  # CALCE has no temperature channel - documented throughout this project
 
     elif dataset in PRECOMPUTED_HELDOUT_PARQUETS:
+        ep.assert_encoder_match(MODELS_DIR / "xgb_soh_fusion.json", PROC_DIR / PRECOMPUTED_HELDOUT_PARQUETS[dataset],
+                                context=f"predict_and_explain_precomputed[{dataset}]")
         df = pd.read_parquet(PROC_DIR / PRECOMPUTED_HELDOUT_PARQUETS[dataset])
         row = df[(df["battery_id"] == battery_id) & (df["cycle_idx"] == cycle_idx)]
         if row.empty:
@@ -709,10 +848,12 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
     feat_vector = np.concatenate([hi_vector, fusion_emb])
 
     model_variant = None
+    fusion_ok, fusion_reason = True, None
     if _use_candidate(dataset) and res.get("xgb_candidate") is not None:
         cand_key = (dataset, battery_id, int(cycle_idx))
         cand_fusion = res["candidate_fusion_lookup"].get(cand_key)
         if cand_fusion is not None:
+            fusion_ok, fusion_reason = fusion_range_check(cand_fusion, res)
             pred_soh, shap_vector, shap_model, shap_cols = _candidate_soh_prediction(
                 hi_rel_vector, cycle_idx, cand_fusion, res)
             model_variant = "multisource_candidate"
@@ -752,16 +893,17 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
     ocsvm_scaled = res["ocsvm_scaler"].transform(ocsvm_feat)
     anomaly_flag = bool(res["ocsvm"].predict(ocsvm_scaled)[0] == -1)
 
-    out_of_domain = no_temperature or anomaly_flag or dataset not in ("NASA", "MIT")
-    domain_reasons = []
-    if dataset not in ("NASA", "MIT"):
-        domain_reasons.append(f"{dataset} was never part of this model's NASA/MIT training data - "
-                               f"this is a genuine zero-retrain (out-of-domain) evaluation")
+    if trust is None:
+        trust = lookup_builtin_trust(dataset, battery_id)
+    verdict = domain_verdict(trust)
+    out_of_domain, domain_reasons = verdict["out_of_domain"], verdict["domain_reasons"]
+    domain_notes = []
     if no_temperature:
-        domain_reasons.append("no temperature channel present in this dataset")
+        domain_notes.append("no temperature channel present in this dataset (informational; does not decide "
+                            "out-of-domain)")
     if anomaly_flag:
-        domain_reasons.append("the One-Class SVM flags this cycle's feature vector as unlike "
-                               "anything in the NASA+MIT training data")
+        domain_notes.append("the deployed One-Class SVM flags this cycle (informational only - it no longer "
+                            "decides out-of-domain)")
 
     top_features = _tree_shap_top_features(shap_vector, shap_model,
                                             shap_cols + [f"fusion_{i}" for i in range(16)])
@@ -779,12 +921,15 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
         "voltage_region_error": unavailable_msg,
         "anomaly_flag": anomaly_flag,
         "out_of_domain": out_of_domain,
-        "domain_reasons": domain_reasons,
+        "domain_reasons": domain_reasons, "domain_info": verdict,
         "cycle_idx": int(cycle_idx),
         "true_soh": round(true_soh, 1) if true_soh == true_soh else None,
         "true_rul": None,
         "precomputed_fallback": True,
+        "trust": trust, "domain_notes": domain_notes,
+        "rul_hidden": verdict["rul_hidden"], "rul_hidden_reason": verdict["rul_hidden_reason"],
         "model_variant": model_variant,
+        "fusion_unreliable": not fusion_ok, "fusion_unreliable_reason": fusion_reason,
     }
 
 
@@ -809,7 +954,8 @@ def build_candidate_feature_vector_for_cycle(cycle: dict, res: dict, baseline_hi
     x_raw = get_cycle_tensor(cycle, n_bins=200)
     if x_raw is None:
         return None
-    x_norm_candidate = apply_channel_norm(x_raw[None].astype(np.float32), res["candidate_norm_stats"])[0]
+    x_norm_candidate = apply_channel_norm(
+        sanitize_raw_tensor_for_candidate(x_raw)[None].astype(np.float32), res["candidate_norm_stats"])[0]
     with torch.no_grad():
         fusion_emb_candidate = res["candidate_encoder"].encode(
             torch.tensor(x_norm_candidate[None, :, ICA_CHANNEL_SLICE])).numpy()[0]
@@ -874,7 +1020,8 @@ def candidate_ocsvm_malformed_check(cycles: list[dict], res: dict, baseline_his:
 
 
 def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None,
-                         dataset: str | None = None, battery_medians: dict | None = None) -> dict:
+                         dataset: str | None = None, battery_medians: dict | None = None,
+                         trust: dict | None = None, battery_id: str | None = None) -> dict:
     """cycle: single cycle record (data_adapters convention). baseline_his:
     optional - this battery's own cycle-10 raw HI dict (see
     build_reformulated_hi_vector). Returns a full context dict for
@@ -939,6 +1086,7 @@ def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None
     feat_vector = np.concatenate([hi_vector, fusion_emb])  # ORIGINAL vector - OC-SVM always uses this, unchanged
 
     model_variant = None
+    fusion_ok, fusion_reason = True, None
     if _use_candidate(dataset) and res.get("xgb_candidate") is not None:
         # Live path: no precomputed lookup possible (an uploaded/streamed
         # cycle has no saved row) - re-normalize the SAME raw tensor with
@@ -947,10 +1095,12 @@ def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None
         # which are the OLD deployed encoder's - a different normalization
         # and a different network, mixing them would be a real train/
         # inference mismatch, not just a stylistic choice).
-        x_norm_candidate = apply_channel_norm(x_raw[None].astype(np.float32), res["candidate_norm_stats"])[0]
+        x_norm_candidate = apply_channel_norm(
+            sanitize_raw_tensor_for_candidate(x_raw)[None].astype(np.float32), res["candidate_norm_stats"])[0]
         with torch.no_grad():
             fusion_emb_candidate = res["candidate_encoder"].encode(
                 torch.tensor(x_norm_candidate[None, :, ICA_CHANNEL_SLICE])).numpy()[0]
+        fusion_ok, fusion_reason = fusion_range_check(fusion_emb_candidate, res)
         pred_soh, shap_vector, shap_model, shap_cols = _candidate_soh_prediction(
             hi_rel_vector, cycle["cycle_idx"], fusion_emb_candidate, res)
         model_variant = "multisource_candidate"
@@ -978,14 +1128,16 @@ def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None
     ocsvm_scaled = res["ocsvm_scaler"].transform(ocsvm_feat)
     anomaly_flag = bool(res["ocsvm"].predict(ocsvm_scaled)[0] == -1)
 
-    out_of_domain = no_temperature or anomaly_flag
-    domain_reasons = []
+    if trust is None:
+        trust = lookup_builtin_trust(dataset, battery_id)
+    verdict = domain_verdict(trust)
+    out_of_domain, domain_reasons = verdict["out_of_domain"], verdict["domain_reasons"]
+    domain_notes = []
     if no_temperature:
-        domain_reasons.append("no temperature channel present (this cell's data can't confirm "
-                               "it was measured the way NASA/MIT training cells were)")
+        domain_notes.append("no temperature channel present (informational; does not decide out-of-domain)")
     if anomaly_flag:
-        domain_reasons.append("the One-Class SVM flags this cycle's feature vector as unlike "
-                               "anything in the NASA+MIT training data")
+        domain_notes.append("the deployed One-Class SVM flags this cycle (informational only - it no longer "
+                            "decides out-of-domain)")
 
     top_features = _tree_shap_top_features(shap_vector, shap_model,
                                             shap_cols + [f"fusion_{i}" for i in range(16)])
@@ -1010,10 +1162,13 @@ def predict_and_explain(cycle: dict, res: dict, baseline_his: dict | None = None
         "voltage_region_error": voltage_region_error,
         "anomaly_flag": anomaly_flag,
         "out_of_domain": out_of_domain,
-        "domain_reasons": domain_reasons,
+        "domain_reasons": domain_reasons, "domain_info": verdict,
         "cycle_idx": cycle["cycle_idx"],
         "true_soh": None,  # filled in by the caller if ground truth is available
         "true_rul": None,
         "precomputed_fallback": False,
+        "trust": trust, "domain_notes": domain_notes,
+        "rul_hidden": verdict["rul_hidden"], "rul_hidden_reason": verdict["rul_hidden_reason"],
         "model_variant": model_variant,
+        "fusion_unreliable": not fusion_ok, "fusion_unreliable_reason": fusion_reason,
     }
