@@ -18,9 +18,11 @@ SRC = ["ul_pur", "hnei", "snl", "mich", "mich_exp", "rwth", "stanford", "stanfor
 
 
 def main(force=False):
-    summary = ROOT / "outputs" / "rerun_queue" / "summary.txt"
-    if not force and not (summary.exists() and "ALL DONE" in summary.read_text()):
-        sys.exit("refusing: the rerun queue has not finished (no 'ALL DONE' in outputs/rerun_queue/summary.txt); use --force to override")
+    # The first queue run was killed at the 12:33 pause; the resumed queue writes summary_resume.txt. Either log reporting ALL DONE counts.
+    logs = [ROOT / "outputs" / "rerun_queue" / n for n in ("summary.txt", "summary_resume.txt")]
+    done = any(l.exists() and "ALL DONE" in l.read_text() for l in logs)
+    if not force and not done:
+        sys.exit("refusing: the rerun queue has not finished (no 'ALL DONE' in outputs/rerun_queue/summary*.txt)")
     for s in SRC:
         canon = PROC / f"batterylife_{s}_merged.parquet"
         corrected = PROC / f"batterylife_{s}_merged_OLDENC_CORRECTED.parquet"

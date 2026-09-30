@@ -1,0 +1,25 @@
+=== Part B, item 8: external baseline comparison (BatteryLife's own published benchmark) ===
+
+TASK/METRIC MISMATCH, stated up front: BatteryLife's benchmark = early-cycle-life (EOL-cycle) prediction from the first <=100 cycles, scored by MAPE/15%-Acc. This project's protocol = continuous per-cycle SOH regression, scored by R2/RMSE. NOT the same task - no single number below should be read as 'beats' or 'loses to' the other.
+
+BatteryLife's own published aggregate numbers (context only):
+ chemistry_family  n_batteries   best_method  mape  mape_std  acc15pct  acc15pct_std
+           Li-ion          837 CPTransformer 0.184     0.003     0.573         0.016
+Li-ion (alt best)          837         CPMLP 0.179     0.003       NaN           NaN
+           Zn-ion           95 CPTransformer 0.515     0.067       NaN           NaN
+           Na-ion           31 CPTransformer 0.255     0.036       NaN           NaN
+             CALB           27 CPTransformer 0.149     0.005     0.672         0.107
+
+This project's own item-7 per-source R2 (different task/metric - shown for scale only, NOT a head-to-head comparison):
+    source  n_batteries  n_cycles  deployed_base_r2  deployed_base_rmse  extended_context_r2  extended_context_rmse
+    ul_pur           10      2245          0.043737            5.924466            -0.604769               7.674795
+      hnei           14     15155         -0.101234           18.737880             0.785262               8.274381
+       snl           55     38880          0.055590            8.105198             0.441806               6.231259
+      mich           40     19881          0.533282           15.399033             0.753806              11.184197
+  mich_exp           18      6545          0.717672            7.294182             0.308640              11.414369
+      rwth           10     22095         -0.472529           29.444537             0.503089              17.104562
+  stanford            6      5633          0.274612           18.259553             0.808959               9.370622
+stanford_2            8      8465          0.247015           18.005411             0.806231               9.133806
+  isu_ilcc            9     45229          0.113985           33.958684             0.179716              32.674767
+
+[item8] No per-source published number exists in BatteryLife's own paper to compare against directly (checked directly - results tables are aggregated by chemistry family only). Reproducing their exact early-cycle-life protocol for a genuinely comparable number was judged out of this pass's time budget - not attempted, disclosed as a real scope limit.

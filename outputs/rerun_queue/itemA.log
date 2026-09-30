@@ -1,0 +1,88 @@
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[corrected-embeddings] ul_pur: 2245 parquet rows -> 2245 rows with corrected old-encoder embeddings (max |fusion| 8.47)
+[corrected-embeddings] hnei: 15155 parquet rows -> 15155 rows with corrected old-encoder embeddings (max |fusion| 9.39)
+[corrected-embeddings] snl: 38880 parquet rows -> 38880 rows with corrected old-encoder embeddings (max |fusion| 12.32)
+[corrected-embeddings] mich: 19881 parquet rows -> 19881 rows with corrected old-encoder embeddings (max |fusion| 7.81)
+[corrected-embeddings] mich_exp: 6545 parquet rows -> 6545 rows with corrected old-encoder embeddings (max |fusion| 10.44)
+[corrected-embeddings] rwth: 22095 parquet rows -> 22095 rows with corrected old-encoder embeddings (max |fusion| 26.67)
+[corrected-embeddings] stanford: 5633 parquet rows -> 5633 rows with corrected old-encoder embeddings (max |fusion| 6.04)
+[corrected-embeddings] stanford_2: 8465 parquet rows -> 8465 rows with corrected old-encoder embeddings (max |fusion| 6.05)
+[corrected-embeddings] isu_ilcc: 45229 parquet rows -> 45229 rows with corrected old-encoder embeddings (max |fusion| 3.94)
+=== Final pass 2, item A: online conformal under drift (PID + nexCP), all 13 external datasets ===
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2943 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[itemA] q_src (base model, in-domain split-conformal half-width) = 1.1438
+[itemA] q_src (extended model, in-domain split-conformal half-width) = 0.4064
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2943 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2941 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 0 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 146122 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 0 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[itemA] CALCE: done in 3.7s (3 batteries, 2941 cycles)
+[itemA] Oxford: done in 0.5s (8 batteries, 519 cycles)
+[itemA] HUST: done in 147.0s (77 batteries, 146122 cycles)
+[itemA] XJTU: done in 12.5s (47 batteries, 19238 cycles)
+[itemA] ul_pur: done in 5.6s (10 batteries, 2245 cycles)
+[itemA] hnei: done in 13.1s (14 batteries, 15155 cycles)
+[itemA] snl: done in 33.6s (55 batteries, 38880 cycles)
+[itemA] mich: done in 13.9s (40 batteries, 19881 cycles)
+[itemA] mich_exp: done in 4.4s (18 batteries, 6545 cycles)
+[itemA] rwth: done in 21.5s (10 batteries, 22095 cycles)
+[itemA] stanford: done in 4.8s (6 batteries, 5633 cycles)
+[itemA] stanford_2: done in 7.3s (8 batteries, 8465 cycles)
+[itemA] isu_ilcc: done in 44.0s (9 batteries, 45229 cycles)
+
+=== HEADLINE (k_burnin=10, eta=0.1 / rho shown) ===
+method      PID (eta=0.1)  PID+scorecaster  nexCP (rho=0.95)  nexCP (rho=0.99)
+dataset                                                                       
+CALCE            0.848506         0.874270          0.804191          0.735143
+HUST             0.880979         0.902347          0.869964          0.850109
+Oxford           0.854214         0.904328          0.897494          0.861048
+XJTU             0.893169         0.924286          0.892263          0.908088
+hnei             0.380486         0.851682          0.632368          0.466800
+isu_ilcc         0.899400         0.950043          0.806132          0.723299
+mich             0.618705         0.710846          0.635388          0.597865
+mich_exp         0.652003         0.822310          0.692852          0.623252
+rwth             0.836554         0.922028          0.688156          0.555081
+snl              0.822828         0.912575          0.663684          0.622124
+stanford         0.894312         0.935762          0.848376          0.883546
+stanford_2       0.894931         0.933453          0.860346          0.882528
+ul_pur           0.588811         0.797669          0.742657          0.600000
+
+[itemA] TOTAL TIME: 10.55 minutes

@@ -1,0 +1,95 @@
+=== Toolkit Phase 2C: label-efficient checkpoints ===
+[phase2c] budgets=[5, 10, 20, 40], policies=[fixed_every_n, life_stage, uncertainty], PID eta=0.1 k_burnin=10, uncertainty width_threshold=2.4
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+C:\Users\manoj\OneDrive\Desktop\battery-prognostics\.venv\Lib\site-packages\mapie\utils.py:1540: UserWarning: Estimator does not appear fitted. At least one of the expected attributes is missing in : ['n_features_in_', 'classes_', 'coef_', 'feature_names_in_', 'tree_', 'estimators_', 'fitted_'].
+  warnings.warn(
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2943 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[itemA] q_src (base model, in-domain split-conformal half-width) = 1.1438
+[itemA] q_src (extended model, in-domain split-conformal half-width) = 0.4064
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2943 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2941 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 0 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 146122 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 0 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[phase2c] CALCE: 3 batteries processed across all budgets/policies (261.5s elapsed)
+[phase2c] Oxford: 8 batteries processed across all budgets/policies (261.7s elapsed)
+[phase2c] HUST: 77 batteries processed across all budgets/policies (271.3s elapsed)
+[phase2c] XJTU: 47 batteries processed across all budgets/policies (272.9s elapsed)
+[corrected-embeddings] ul_pur: 2245 parquet rows -> 2245 rows with corrected old-encoder embeddings (max |fusion| 8.47)
+[phase2c] ul_pur: 10 batteries processed across all budgets/policies (273.3s elapsed)
+[corrected-embeddings] hnei: 15155 parquet rows -> 15155 rows with corrected old-encoder embeddings (max |fusion| 9.39)
+[phase2c] hnei: 14 batteries processed across all budgets/policies (274.2s elapsed)
+[corrected-embeddings] snl: 38880 parquet rows -> 38880 rows with corrected old-encoder embeddings (max |fusion| 12.32)
+[phase2c] snl: 55 batteries processed across all budgets/policies (276.9s elapsed)
+[corrected-embeddings] mich: 19881 parquet rows -> 19881 rows with corrected old-encoder embeddings (max |fusion| 7.81)
+[phase2c] mich: 40 batteries processed across all budgets/policies (278.4s elapsed)
+[corrected-embeddings] mich_exp: 6545 parquet rows -> 6545 rows with corrected old-encoder embeddings (max |fusion| 10.44)
+[phase2c] mich_exp: 18 batteries processed across all budgets/policies (278.9s elapsed)
+[corrected-embeddings] rwth: 22095 parquet rows -> 22095 rows with corrected old-encoder embeddings (max |fusion| 26.67)
+[phase2c] rwth: 10 batteries processed across all budgets/policies (280.0s elapsed)
+[corrected-embeddings] stanford: 5633 parquet rows -> 5633 rows with corrected old-encoder embeddings (max |fusion| 6.04)
+[phase2c] stanford: 6 batteries processed across all budgets/policies (280.4s elapsed)
+[corrected-embeddings] stanford_2: 8465 parquet rows -> 8465 rows with corrected old-encoder embeddings (max |fusion| 6.05)
+[phase2c] stanford_2: 8 batteries processed across all budgets/policies (281.0s elapsed)
+[corrected-embeddings] isu_ilcc: 45229 parquet rows -> 45229 rows with corrected old-encoder embeddings (max |fusion| 3.94)
+[phase2c] isu_ilcc: 9 batteries processed across all budgets/policies (282.5s elapsed)
+
+=== SUMMARY: mean coverage by budget x policy, pooled (unweighted) across datasets ===
+ budget        policy  mean_coverage  mean_rolling_min_coverage  mean_late_life_coverage  mean_width
+      5 fixed_every_n       0.231548                   0.008022                 0.209623    6.100057
+      5    life_stage       0.187552                   0.008235                 0.172435    4.678239
+      5   uncertainty       0.219658                   0.008235                 0.207481    5.833934
+     10 fixed_every_n       0.321688                   0.008093                 0.263291    8.501473
+     10    life_stage       0.241022                   0.008164                 0.245460    6.492960
+     10   uncertainty       0.314560                   0.008397                 0.270120    8.487936
+     20 fixed_every_n       0.409549                   0.008234                 0.305370   11.877056
+     20    life_stage       0.305643                   0.008162                 0.287128    8.683921
+     20   uncertainty       0.407887                   0.008234                 0.308262   11.943691
+     40 fixed_every_n       0.495951                   0.007818                 0.361359   15.245016
+     40    life_stage       0.388794                   0.006959                 0.371247   11.560397
+     40   uncertainty       0.499142                   0.006454                 0.361845   15.306380
+
+=== Best policy per budget (by pooled mean_coverage) ===
+  budget=5: best policy=fixed_every_n, mean_coverage=0.232, mean_rolling_min_coverage=0.008
+  budget=10: best policy=fixed_every_n, mean_coverage=0.322, mean_rolling_min_coverage=0.008
+  budget=20: best policy=fixed_every_n, mean_coverage=0.410, mean_rolling_min_coverage=0.008
+  budget=40: best policy=uncertainty, mean_coverage=0.499, mean_rolling_min_coverage=0.006
+
+[phase2c] RECOMMENDATION: NONE of the tested budgets ([5, 10, 20, 40]) reached 80% pooled mean coverage under any policy - reported honestly, not forced to the largest budget as a false positive recommendation.
+
+[phase2c] TOTAL TIME: 4.71 minutes

@@ -15321,3 +15321,27 @@ labelled SUPERSEDED as each rerun lands. Item A (rerun earlier) : four built-in 
 (e.g. PID hnei 69.1 -> 38.0, ul_pur 72.8 -> 58.9) with no headline verdict flipped.
 
 **Companion deliverable:** `report/walkthrough/Project_Walkthrough.pdf` (78 pages, status-labelled) committed as aa29c2d.
+
+### Rerun queue finished (19:25-20:02) and the corrected-parquet swap (2026-09-30 evening)
+
+Resumed queue `run_queue2.sh` (summary_resume.txt): lodo_check1 (507 s), phase2c (314), phase3a (276), item1 (288), item2 (283),
+item3 (279), item5a (396), item5d (13), partB7 (14), partB8 (7), partB9 (275), check2 (359), itemE (289), itemC (2,190) - all rc=0,
+`ALL DONE 20:02`. Phase 2B (restarted from scratch, separate process) was still running at fold 12/16 when this was written.
+Before/after of every rewritten CSV: `outputs/toolkit_rerun_change_summary.csv`, `outputs/toolkit_rerun_top_movers.csv`
+(`src/summarize_rerun_changes.py`; BEFORE = git HEAD raw-X files, AFTER = corrected). Item B: `outputs/toolkit_rerun_before_after_itemB.csv`.
+
+**Item B LODO (R2, before -> after, SUPERSEDED -> corrected):** NASA 0.149 -> 0.031, MIT -4.817 -> -6.118, CALCE 0.870 -> 0.855, Oxford -0.571 -> 0.076,
+HUST 0.535 -> 0.722, XJTU -4.100 -> -6.394, ul_pur 0.488 -> 0.517, hnei 0.681 -> 0.929, snl 0.442 -> 0.149, mich 0.795 -> 0.746,
+mich_exp 0.638 -> 0.499, rwth 0.353 -> 0.505, stanford 0.997 -> 0.997, stanford_2 0.990 -> 0.990, isu_ilcc 0.800 -> 0.901.
+Verdict "LODO beats NASA+MIT-only": no flips.
+**Family-holdout (lodo_check1) after correction:** stanford 0.888 -> 0.919, stanford_2 0.858 -> 0.895 (siblings excluded), snl 0.442 -> 0.149;
+the only verdict flip is snl: corrected family-LODO R2 0.149 vs NASA+MIT-only 0.154, so snl no longer beats it (margin 0.005, within noise).
+Everything else keeps its verdict (beats: CALCE, Oxford, HUST, ul_pur, hnei, mich, rwth, stanford, stanford_2, isu_ilcc; not: NASA, MIT, XJTU, mich_exp).
+
+**Swap (decision: after the queue, no --force).** The swap script's gate now accepts either `summary.txt` or `summary_resume.txt` reporting
+ALL DONE (the first run was killed at the pause, so its log can never say it). Sequence: `verify_swapped_parquets.py pre` (sha256 of the ten
+corrected files -> `data/processed/_corrected_parquet_hashes.json`), `swap_in_corrected_batterylife_parquets.py` (no force; os.replace renames only,
+no large writes during OneDrive sync), `verify_swapped_parquets.py post`: for every one of the ten canonical parquets the sha256 and byte size equal the
+recorded corrected files, the sidecar says old_v1 with the old encoder's md5, max|fusion| < 27, the hash is unchanged after a 60 s pause
+(sync-lag guard), and the RAWX_UNNORMALIZED originals carry a DEFECTIVE sidecar. Result `outputs/toolkit_swap_verification.csv`: ALL SWAP CHECKS PASSED.
+Phase 2B had already loaded its data at start (`load_pooled_data` is called once), so the rename did not affect it.

@@ -1,0 +1,29 @@
+[queue] START lodo_check1 18:30:41
+[queue] END   lodo_check1 rc=0 secs=507 18:39:08
+[queue] START phase2c 18:39:08
+[queue] END   phase2c rc=0 secs=314 18:44:22
+[queue] START phase3a 18:44:22
+[queue] END   phase3a rc=0 secs=276 18:48:58
+[queue] START item1 18:48:58
+[queue] END   item1 rc=0 secs=288 18:53:46
+[queue] START item2 18:53:47
+[queue] END   item2 rc=0 secs=283 18:58:29
+[queue] START item3 18:58:29
+[queue] END   item3 rc=0 secs=279 19:03:09
+[queue] START item5a 19:03:09
+[queue] END   item5a rc=0 secs=396 19:09:45
+[queue] START item5d 19:09:45
+[queue] END   item5d rc=0 secs=13 19:09:59
+[queue] START partB7 19:09:59
+[queue] END   partB7 rc=0 secs=14 19:10:13
+[queue] START partB8 19:10:14
+[queue] END   partB8 rc=0 secs=7 19:10:20
+[queue] START partB9 19:10:20
+[queue] END   partB9 rc=0 secs=275 19:14:55
+[queue] START check2 19:14:55
+[queue] END   check2 rc=0 secs=359 19:20:54
+[queue] START itemE 19:20:54
+[queue] END   itemE rc=0 secs=289 19:25:43
+[queue] START itemC 19:25:43
+[queue] END   itemC rc=0 secs=2190 20:02:13
+[queue2] ALL DONE 20:02:13

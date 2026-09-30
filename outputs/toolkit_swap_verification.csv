@@ -1,0 +1,11 @@
+source,sha_matches_recorded_corrected,bytes_match,sidecar_tag,sidecar_md5_matches_old_encoder,max_abs_fusion,bounded_lt_100,rawx_marked_defective,sha_stable_after_60s
+ul_pur,True,True,old_v1,True,8.47,True,True,True
+hnei,True,True,old_v1,True,9.39,True,True,True
+snl,True,True,old_v1,True,12.32,True,True,True
+mich,True,True,old_v1,True,7.81,True,True,True
+mich_exp,True,True,old_v1,True,10.44,True,True,True
+rwth,True,True,old_v1,True,26.67,True,True,True
+stanford,True,True,old_v1,True,6.04,True,True,True
+stanford_2,True,True,old_v1,True,6.05,True,True,True
+isu_ilcc,True,True,old_v1,True,3.94,True,True,True
+tongji,True,True,old_v1,True,15.15,True,True,True
