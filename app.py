@@ -997,6 +997,36 @@ def render_health_report_tab(ctx: dict, dataset: str, battery_id: str, cycles: l
             history.append(("assistant", answer))
 
 
+def render_benchmark_explorer():
+    """Benchmark explorer (Phase 4 plan): federated vs centralized (Phase 2B) and coverage vs label budget (Phase 2C), straight from the result CSVs."""
+    st.markdown("## 📊 Benchmark explorer")
+    st.caption("Both tables are read from result files, not typed in. They cover the 16-source extension (six main datasets plus nine BatteryLife sources and Tongji), "
+               "rerun on corrected embeddings on 2026-09-30 after an embedding-normalisation bug was fixed.")
+    f2b = OUT_DIR / "toolkit_phase2b_federated_results.csv"
+    if f2b.exists():
+        d = pd.read_csv(f2b)
+        summ = pd.DataFrame({
+            "method": ["Centralized (pooled training)", "Federated bagging, sample-weighted", "Federated bagging, uniform", "Federated bagging, tempered", "NASA+MIT-only (routed)"],
+            "mean R2 over 16 held-out sources": [d["centralized_r2"].mean(), d["federated_sample_weighted_r2"].mean(), d["federated_uniform_r2"].mean(),
+                                                  d["federated_tempered_r2"].mean(), d["nasa_mit_only_r2"].mean()],
+            "median R2": [d["centralized_r2"].median(), d["federated_sample_weighted_r2"].median(), d["federated_uniform_r2"].median(),
+                          d["federated_tempered_r2"].median(), d["nasa_mit_only_r2"].median()],
+            "sources with R2 > 0": [int((d[c] > 0).sum()) for c in ["centralized_r2", "federated_sample_weighted_r2", "federated_uniform_r2", "federated_tempered_r2", "nasa_mit_only_r2"]],
+        }).round(3)
+        st.markdown("**Federated vs centralized** (Phase 2B, leave-one-source-out)")
+        st.dataframe(summ, hide_index=True, width="stretch")
+        st.caption("Status: VERIFIED negative result (corrected rerun; verdict unchanged). Federated bagging does not match centralized training; MIT is the worst case. "
+                   "Source: outputs/toolkit_phase2b_federated_results.csv, PAPER_RESULTS.md (Phase 2B).")
+    f2c = OUT_DIR / "toolkit_phase2c_label_efficient.csv"
+    if f2c.exists():
+        c = pd.read_csv(f2c)
+        piv = c.groupby(["budget", "policy"])["mean_coverage"].mean().unstack("policy").round(3)
+        st.markdown("**Coverage vs label budget** (Phase 2C; target 0.90; mean over datasets)")
+        st.dataframe(piv, width="stretch")
+        st.caption("Status: SUPERSEDED numbers (rerun on corrected embeddings), same conclusion: no tested budget reaches a usable coverage target, and life-stage weighting does not beat even spacing. "
+                   "Source: outputs/toolkit_phase2c_label_efficient.csv, PAPER_RESULTS.md (Phase 2C).")
+
+
 def render_evaluation_protocol_section():
     """
     Surfaces the 3 evaluation-protocol experiments (early-prediction test,
@@ -3444,6 +3474,8 @@ def main():
             st.markdown("## 🆚 Battery comparison mode")
             status_banner("render_battery_comparison_section:Battery comparison mode")
             render_battery_comparison_section()
+            st.divider()
+            render_benchmark_explorer()
     with tab_archive:
         if tab_archive.open:
             render_full_results_archive_tab()
