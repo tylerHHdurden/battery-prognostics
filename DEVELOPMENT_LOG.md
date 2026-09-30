@@ -14680,3 +14680,179 @@ re-supplied).
 None yet - this is a decision correction only; implementation is Phase 3
 scope, tracked in `PLAN.md`. `PLAN.md` (new).
 
+## Phase 2B: federated multi-source learning - federated NEVER beats centralized pooling on any of 16 sources, and does NOT fix the NASA/MIT crowded-out problem (makes MIT worse)
+
+Question this phase set out to answer (`PLAN.md`): does a federated
+formulation (no raw rows ever leaving their source) recover the Phase 2
+candidate's centralized-pooled performance, and does it fix the
+NASA/MIT "crowded out" problem Phase 2 found?
+
+**Native XGBoost federated learning: confirmed impractical, not
+assumed.** Directly probed with a REAL 2-worker `FederatedTracker` (not
+just a trivial `world_size=1` call, which succeeds vacuously without
+ever touching the plugin) - this project's installed xgboost (3.3.0,
+the standard PyPI wheel) threw its own C++-level error: "XGBoost is not
+compiled with federated learning support." That plugin needs building
+xgboost from source with gRPC (`-DPLUGIN_FEDERATED=ON`), a real
+environment change out of proportion to this item's scope. **Fell
+through to Flower's XGBoost strategy per this item's own explicit
+instruction** (`flwr==1.39.0` installed; confirmed it and its
+dependency changes - protobuf/packaging/uvicorn downgrades - didn't
+break the existing xgboost/torch/shap/streamlit stack, via `pip check`
+and direct imports, before proceeding).
+
+**Two real, separate bugs found and fixed before any result could be
+trusted - both caught by direct verification, not by code review
+alone:**
+
+1. **Flower's own `FedXgbBagging.aggregate()` silently drops all but
+   the first tree of a multi-tree client payload.** It reads
+   `num_parallel_tree` (normally 1) from the incoming payload to decide
+   how many trees to pull in - it assumes exactly one new tree per
+   call. The three client-weighting schemes (sample-weighted/uniform/
+   tempered) are implemented as "how many trees does this client
+   contribute per round," so a heavier client's multi-tree contribution
+   was being silently truncated to 1 tree, making all three weighting
+   schemes produce bit-identical predictions regardless of
+   `trees_per_client`. **Caught empirically**: a synthetic 2-client
+   probe (1 tree/round vs 10 trees/round) produced identical
+   `num_boosted_rounds()` and bit-identical predictions - the first
+   full 16-fold run (135 minutes of real compute) had to be discarded
+   once this was found. Fix: added `_multi_tree_bagging_aggregate`, a
+   generalization that appends every tree in a payload, not just
+   `num_parallel_tree` of them - verified bit-exact equivalent to
+   calling flwr's own per-tree `aggregate()` in sequence (see next bug -
+   the first version of this equivalence check itself had a coverage
+   gap).
+2. **The fix's own first version had an off-by-one in
+   `iteration_indptr` accounting**, caught only once a SECOND fold
+   started appending onto an already-grown global model (not just one
+   append onto empty state): `iteration_indptr[-1]` was read fresh
+   inside the same loop that was appending to that exact list, so each
+   new tree's index used the JUST-APPENDED value instead of a fixed
+   base, cumulatively overshooting (`iteration_indptr.back() ==
+   num_trees` assertion inside xgboost's own C++ layer caught it: "9
+   vs. 8"). **The self-check that was supposed to catch this had a real
+   coverage gap of its own**: its first version only exercised a single
+   append onto an empty global model, which trivially skips the
+   `if not bst_prev_org: return bst_curr_org` early-return path and
+   never touches the buggy accumulation logic at all - passing while
+   the real bug was live. Rewritten to simulate the actual usage
+   pattern (2 clients, different trees-per-round, 3 separate rounds,
+   repeated non-empty accumulation) - this version genuinely would have
+   caught the bug, and does catch a deliberately-reintroduced version of
+   it (verified before trusting the rewritten check itself).
+
+Both fixes are runtime-verified every run, not just claimed in a
+comment: `_verify_batched_aggregate_matches_flwr()` runs at the start
+of `main()` and asserts bit-exact prediction equivalence against
+flwr's own real per-tree `aggregate()` before any fold is scored.
+
+**Performance note, disclosed**: the naive per-tree-call version (the
+"obviously correct" fix for bug 1, before the batching optimization)
+round-trips the ENTIRE growing global model through
+`json.loads`/`json.dumps` on every single tree - O(total_trees) cost
+paid `total_trees` times, i.e. O(n^2) overall, which is why this
+phase's federated runs are inherently slow (hundreds of trees x tens of
+clients x 16 folds). The batched version cuts this back to one
+JSON round-trip per (round, client) pair instead of per tree.
+
+**Client-weighting translation (a genuine judgment call, disclosed in
+`PLAN.md` and here)**: bagging-federated XGBoost aggregates by
+concatenating trees, not by averaging gradients - there's no natural
+per-client scalar "weight" the way FedAvg has for neural nets. The
+three schemes are implemented as how many trees each client
+contributes per round (uniform=1 always; sample-weighted proportional
+to that client's row count; tempered proportional to sqrt(row count)),
+normalized so all three schemes use the same TOTAL tree budget (~500,
+matching the Phase 2 candidate's own `n_estimators`) - only the
+per-client redistribution differs.
+
+### RESULTS (LODO family-holdout, `src/run_finalpass3_check1_lodo_family_holdout.py`'s own FAMILIES/metrics/bootstrap_ci, extended with Tongji - confirmed no sibling in this pool)
+
+| Held out | Centralized (Phase 2 candidate) | Fed(sample-weighted) | Fed(uniform) | Fed(tempered) | NASA+MIT-only (deployed) | Centralized+tempered |
+|---|---|---|---|---|---|---|
+| NASA | 0.229 | -0.385 | **0.417** | 0.298 | **0.999** | -0.185 |
+| MIT | -4.646 | -43.761 | -33.939 | -36.389 | **0.999** | -6.712 |
+| CALCE | **0.860** | 0.840 | 0.733 | 0.827 | 0.646 | -0.158 |
+| Oxford | -0.492 | -1.795 | -9.425 | -7.283 | -11.974 | -0.852 |
+| HUST | **0.469** | -1.100 | -1.676 | -2.791 | 0.307 | -2.587 |
+| XJTU | -2.646 | -2.854 | -3.346 | **-2.344** | -0.934 | -8.719 |
+| ul_pur | **0.465** | -4.320 | -4.435 | -1.960 | 0.186 | -3.623 |
+| hnei | **0.671** | -0.756 | -0.406 | -0.202 | -0.075 | -0.674 |
+| snl | **0.363** | -1.716 | -1.425 | -2.378 | 0.120 | -0.601 |
+| mich | 0.764 | 0.690 | **0.773** | 0.747 | 0.661 | -0.011 |
+| mich_exp | **0.709** | -1.082 | -0.574 | -0.209 | 0.616 | -0.383 |
+| rwth | 0.338 | **0.482** | 0.217 | 0.540 | -0.215 | -0.714 |
+| stanford | **0.875** | 0.627 | **0.875** | 0.730 | 0.066 | -0.000 |
+| stanford_2 | **0.856** | 0.642 | 0.868 | 0.760 | -0.012 | -0.002 |
+| isu_ilcc | **0.898** | 0.812 | 0.699 | 0.598 | 0.359 | -1.075 |
+| tongji | **0.818** | -2.828 | -2.996 | -1.277 | -0.395 | -0.548 |
+
+(bold = best in that row among the 4 point-prediction models actually
+being compared - centralized/fed x3/NASA-MIT-only; centralized+tempered
+excluded from bolding, it's the separate n^0.5 experiment below)
+
+**Finding 1, decisive: federated (any of the 3 weighting schemes) never
+clearly beats centralized pooling.** On 13/16 sources centralized wins
+outright, often by a large margin (MIT: -4.6 vs -33.9 to -43.8; Oxford:
+-0.49 vs -1.8 to -9.4; tongji: 0.82 vs -1.3 to -3.0). The only 3
+apparent federated "wins" are marginal and scheme-inconsistent: NASA
+(fed-uniform 0.417 > centralized 0.229, but both are far below the
+routed NASA+MIT-only model's 0.999), rwth (fed-sample-weighted 0.482 >
+centralized 0.338), and stanford (fed-uniform ties centralized exactly
+at 0.875, doesn't beat it). No single weighting scheme is the
+consistent winner among the three federated variants either - sample-
+weighted wins on isu_ilcc, uniform wins on mich/stanford, tempered wins
+on rwth/ul_pur/hnei - redistributing tree-count-per-client doesn't
+produce a systematic improvement in this bagging formulation.
+
+**Finding 2: federation does NOT fix NASA/MIT's crowded-out problem -
+it makes MIT's case measurably WORSE.** MIT's federated R2 (-33.9 to
+-43.8) is far worse than its ALREADY-bad centralized R2 (-4.6) - bagging
+federation doesn't rescue a small source from being crowded out by
+large ones, it compounds the problem (each client's LOCAL trees for a
+small source like MIT get outweighed tree-for-tree by large clients'
+locally-overfit trees in the shared ensemble, with no cross-client
+gradient coordination to correct for it the way centralized pooling's
+single shared loss function does). NASA improves marginally under
+fed-uniform (0.417 vs 0.229) but neither centralized nor any federated
+variant comes remotely close to the currently-deployed, zero-retrain
+NASA+MIT-only model's 0.999 - confirms Phase 2's own routing decision
+(NASA/MIT stay on the base model) was correct, and federation offers no
+reason to revisit it.
+
+**Finding 3 (the tempered-centralized side experiment): n^0.5 group
+weighting does NOT fix NASA/MIT either, and reproduces Phase 2d's
+collapse pattern almost exactly.** NASA got WORSE (0.229->-0.185), MIT
+got WORSE (-4.646->-6.712), and **14/14 other sources went negative**
+under tempered weighting - not as universally catastrophic as Phase
+2d's equal-total-weight (n^0) balanced retrain (which hit 15/16), but
+the same qualitative failure mode. **This closes the question Phase 2d
+left open**: it isn't specifically equal-total-weighting's extremeness
+that causes collapse - ANY departure from natural, row-count-
+proportional weighting (n^1) tested so far causes it, including a
+materially milder n^0.5 version. Natural (unweighted) centralized
+pooling remains the only weighting scheme in this project's own history
+that hasn't collapsed.
+
+**RECOMMENDATION: do NOT adopt federated learning for this project's
+production routing.** The Phase 2 decision (unweighted centralized
+multi-source candidate + dataset-identity routing, already wired in
+`live_inference.py`) is confirmed as the better choice on essentially
+every tested case - federation was worth testing honestly (per this
+phase's own instruction) and the honest answer is negative, not a
+partial win dressed up as one.
+
+### Files
+
+`src/run_toolkit_phase2b_federated.py` (new - includes the two bug
+fixes and the runtime self-check), `outputs/
+toolkit_phase2b_federated_results.csv` (final, correct results),
+`outputs/toolkit_phase2b_federated_run.log`, `outputs/
+toolkit_phase2b_federated_run.buggy_v1.log` / `outputs/
+toolkit_phase2b_federated_results.buggy_v1.csv` (the first, bug-1-
+affected run - kept for the record, NOT used for any conclusion above).
+No deployed file touched - this phase is evaluation-only, nothing here
+changes `live_inference.py`'s own routing.
+

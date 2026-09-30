@@ -1,0 +1,31 @@
+=== Toolkit Phase 2B: federated multi-source learning ===
+[phase2b] 14 client groups: [('CALCE',), ('HUST',), ('MIT',), ('NASA',), ('Oxford',), ('XJTU',), ('hnei',), ('isu_ilcc',), ('mich', 'mich_exp'), ('rwth',), ('snl',), ('stanford', 'stanford_2'), ('tongji',), ('ul_pur',)]
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[phase2b] federated: 36 rounds x 14 clients x 1 local tree(s)/round (uniform baseline) = 504 total trees (target 500)
+[phase2b] NASA+MIT-only baseline trained (once, reused for every held-out target)
+[phase2b] held_out=NASA: centralized R2=0.229 | fed(sample_weighted)=0.417 | fed(uniform)=0.417 | fed(tempered)=0.417 | NASA+MIT-only=0.999 | centralized_tempered=-0.185 (282.3s)
+[phase2b] held_out=MIT: centralized R2=-4.646 | fed(sample_weighted)=-33.939 | fed(uniform)=-33.939 | fed(tempered)=-33.939 | NASA+MIT-only=0.999 | centralized_tempered=-6.712 (325.0s)
+[phase2b] held_out=CALCE: centralized R2=0.860 | fed(sample_weighted)=0.860 | fed(uniform)=0.733 | fed(tempered)=0.815 | NASA+MIT-only=0.646 | centralized_tempered=-0.158 (902.1s)
+[phase2b] held_out=Oxford: centralized R2=-0.492 | fed(sample_weighted)=-9.425 | fed(uniform)=-9.425 | fed(tempered)=-9.425 | NASA+MIT-only=-11.974 | centralized_tempered=-0.852 (416.6s)
+[phase2b] held_out=HUST: centralized R2=0.469 | fed(sample_weighted)=-1.676 | fed(uniform)=-1.676 | fed(tempered)=-1.676 | NASA+MIT-only=0.307 | centralized_tempered=-2.587 (473.3s)
+[phase2b] held_out=XJTU: centralized R2=-2.646 | fed(sample_weighted)=-3.346 | fed(uniform)=-3.346 | fed(tempered)=-3.346 | NASA+MIT-only=-0.934 | centralized_tempered=-8.719 (512.5s)
+[phase2b] held_out=ul_pur: centralized R2=0.465 | fed(sample_weighted)=-4.435 | fed(uniform)=-4.435 | fed(tempered)=-4.435 | NASA+MIT-only=0.186 | centralized_tempered=-3.623 (570.6s)
+[phase2b] held_out=hnei: centralized R2=0.671 | fed(sample_weighted)=-0.406 | fed(uniform)=-0.406 | fed(tempered)=-0.406 | NASA+MIT-only=-0.075 | centralized_tempered=-0.674 (569.0s)
+[phase2b] held_out=snl: centralized R2=0.363 | fed(sample_weighted)=-1.425 | fed(uniform)=-1.425 | fed(tempered)=-1.425 | NASA+MIT-only=0.120 | centralized_tempered=-0.601 (540.8s)
+[phase2b] held_out=mich: centralized R2=0.764 | fed(sample_weighted)=0.773 | fed(uniform)=0.773 | fed(tempered)=0.773 | NASA+MIT-only=0.661 | centralized_tempered=-0.011 (461.9s)
+[phase2b] held_out=mich_exp: centralized R2=0.709 | fed(sample_weighted)=-0.574 | fed(uniform)=-0.574 | fed(tempered)=-0.574 | NASA+MIT-only=0.616 | centralized_tempered=-0.383 (367.3s)
+[phase2b] held_out=rwth: centralized R2=0.338 | fed(sample_weighted)=0.217 | fed(uniform)=0.217 | fed(tempered)=0.217 | NASA+MIT-only=-0.215 | centralized_tempered=-0.714 (420.9s)
+[phase2b] held_out=stanford: centralized R2=0.875 | fed(sample_weighted)=0.875 | fed(uniform)=0.875 | fed(tempered)=0.875 | NASA+MIT-only=0.066 | centralized_tempered=-0.000 (552.4s)
+[phase2b] held_out=stanford_2: centralized R2=0.856 | fed(sample_weighted)=0.868 | fed(uniform)=0.868 | fed(tempered)=0.868 | NASA+MIT-only=-0.012 | centralized_tempered=-0.002 (552.5s)
+[phase2b] held_out=isu_ilcc: centralized R2=0.898 | fed(sample_weighted)=0.699 | fed(uniform)=0.699 | fed(tempered)=0.699 | NASA+MIT-only=0.359 | centralized_tempered=-1.075 (540.8s)
+[phase2b] held_out=tongji: centralized R2=0.818 | fed(sample_weighted)=-2.996 | fed(uniform)=-2.996 | fed(tempered)=-2.996 | NASA+MIT-only=-0.395 | centralized_tempered=-0.548 (550.4s)
+
+[phase2b] NASA/MIT tempered-centralized check (does n^0.5 group weighting fix NASA/MIT without Phase 2d's collapse?):
+    NASA: unweighted centralized R2=0.229, tempered centralized R2=-0.185, NASA+MIT-only(routed) R2=0.999
+    MIT:  unweighted centralized R2=-4.646, tempered centralized R2=-6.712, NASA+MIT-only(routed) R2=0.999
+    Other 14 sources: 14 went negative under tempered centralized weighting (Phase 2d's equal-weight collapse hit 15/16)
+
+[phase2b] TOTAL TIME: 135.39 minutes

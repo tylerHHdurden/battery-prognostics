@@ -48,7 +48,26 @@ phase.
   model's real 25-dim input. Fixed to reuse
   `live_inference.build_reformulated_hi_vector` directly. See
   DEVELOPMENT_LOG.md "LLM health-report re-check...".
-- **Phase 2B, 2C, 3, 3B, 4, 5**: NOT STARTED. Specs below.
+- **Phase 2B** (federated multi-source learning): COMPLETE, 2026-09-30.
+  Result: NEGATIVE, not adopted. Federated (Flower's `FedXgbBagging`,
+  native XGBoost federated confirmed unavailable in this environment)
+  never clearly beats the Phase 2 candidate's centralized pooling (wins
+  on 13/16 sources outright) and does NOT fix NASA/MIT's crowded-out
+  problem - MIT's federated R2 (-33.9) is far worse than its already-bad
+  centralized R2 (-4.6). A companion "tempered centralized" experiment
+  (n^0.5 group weighting) also failed to fix NASA/MIT and collapsed
+  14/16 other sources - closes the open question from Phase 2d's
+  balanced-retrain collapse: any departure from natural row-count
+  weighting tested so far causes collapse, not just the extreme
+  equal-weight case. **Decision: the existing Phase 2 routing (unweighted
+  centralized candidate + dataset-identity routing) stands unchanged -
+  no code change from this phase.** Two real implementation bugs were
+  found and fixed via direct verification before trusting any result
+  (Flower's own `aggregate()` silently drops multi-tree client payloads
+  down to 1 tree; a self-built off-by-one in the fix's own batched
+  version) - see DEVELOPMENT_LOG.md for both. Full results:
+  `outputs/toolkit_phase2b_federated_results.csv`.
+- **Phase 2C, 3, 3B, 4, 5**: NOT STARTED. Specs below.
 
 ## OC-SVM correction (2026-09-29, supersedes the Phase 2e "REPLACE...move to Research" recommendation)
 

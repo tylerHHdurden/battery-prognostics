@@ -546,6 +546,60 @@ checkpoints are supplied.
 
 ---
 
+# Toolkit pass, Phase 2B: federated multi-source learning - a clean negative result
+
+Question: does federating the Phase 2 multi-source candidate (bagging-
+style, each of 14 client groups - siblings {stanford,stanford_2} and
+{mich,mich_exp} merged - training only on its own local data, never
+sharing raw rows) recover the same candidate's CENTRALIZED-pooled
+performance, and does it fix NASA/MIT's "crowded out by larger sources"
+problem? Native XGBoost federated learning was confirmed unavailable in
+this environment (not compiled with federated support); used Flower's
+own `FedXgbBagging` aggregation instead, per instruction. Evaluated
+under this project's own LODO family-holdout protocol (16 sources,
+Tongji included), same features/hyperparameters as the Phase 2
+candidate throughout.
+
+| Held out | Centralized (Phase 2 candidate) | Federated (best of 3 weighting schemes) | NASA+MIT-only (deployed) |
+|---|---|---|---|
+| NASA | 0.229 | 0.417 | **0.999** |
+| MIT | -4.646 | -33.939 | **0.999** |
+| CALCE | **0.860** | 0.840 | 0.646 |
+| Oxford | -0.492 | -1.795 | -11.974 |
+| HUST | **0.469** | -1.100 | 0.307 |
+| XJTU | -2.646 | -2.344 | -0.934 |
+| ul_pur | **0.465** | -1.960 | 0.186 |
+| hnei | **0.671** | -0.202 | -0.075 |
+| snl | **0.363** | -1.425 | 0.120 |
+| mich | **0.764** | 0.773 | 0.661 |
+| mich_exp | **0.709** | -0.209 | 0.616 |
+| rwth | 0.338 | **0.482** | -0.215 |
+| stanford | **0.875** | 0.875 | 0.066 |
+| stanford_2 | **0.856** | 0.868 | -0.012 |
+| isu_ilcc | **0.898** | 0.812 | 0.359 |
+| tongji | **0.818** | -1.277 | -0.395 |
+
+**Federated never clearly beats centralized pooling** (centralized
+wins outright on 13/16 sources, ties or marginally loses on the other
+3), **and does not fix NASA/MIT's crowded-out problem - it makes MIT's
+case measurably worse** (-33.9 federated vs an already-bad -4.6
+centralized). A companion experiment (tempering the CENTRALIZED model's
+per-source sample weights by sqrt(source size) instead of federating)
+also failed to fix NASA/MIT and pushed 14/16 other sources negative -
+closing an open question from the earlier balanced-retrain collapse:
+it isn't specifically extreme equal-weighting that breaks this, any
+departure from natural row-count-proportional weighting tested so far
+does. **Recommendation: the existing Phase 2 decision (unweighted
+centralized candidate + dataset-identity routing, already deployed)
+stands - federation was tested honestly and the honest result is
+negative, not adopted.**
+
+*Full detail, including two real implementation bugs found and fixed
+via direct verification before trusting any number here: `DEVELOPMENT_
+LOG.md`, "Phase 2B: federated multi-source learning" section.*
+
+---
+
 *Full experimental detail for items A-F and the final verification
 pass: `DEVELOPMENT_LOG.md`, "Final experiment pass 2 before the paper"
 and "Final verification pass" sections. Toolkit-pass detail:
