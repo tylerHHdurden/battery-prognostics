@@ -81,7 +81,26 @@ phase.
   3 schedule implementations + a real no-lookahead test for the
   schedules themselves (distinct from the recursion's own existing
   test). Full results: `outputs/toolkit_phase2c_label_efficient.csv`.
-- **Phase 3, 3B, 4, 5**: NOT STARTED. Specs below.
+- **Phase 3: PARTIAL, 2026-09-30.** Done and directly verified (not
+  just code-reviewed): the `river` import guard (moved from app.py's
+  top level into `render_streaming_twin_tab`, confirmed via a real
+  simulated-absence AppTest run that the rest of the app is
+  unaffected); RUL hidden (not just captioned) for any out-of-domain
+  battery in 4 places in app.py, verified against the exact Phase 0
+  Finding 4 HNEI-upload scenario (was "3036 cycles", now "not
+  available" with a reason). **NOT done, explicitly**: the OC-SVM
+  rewiring (malformed-data check on uploads from `_candidate_
+  ocsvm.pkl`; retire the deployed OC-SVM's 100%-flagging warning) and
+  the nearest-source trust report it depends on for the "unfamiliar
+  battery" message - no trust-report module exists in this codebase
+  yet (checked directly), it needs to be built as new infrastructure,
+  not just wired. Digital-twin next-measurement UI (from Phase 2C's
+  schedule) also deferred with it. Pick up next: build the
+  nearest-source trust report first (a lookup against each known
+  source's own measured transfer error, e.g. from the Phase 2 gate
+  table / LODO results), then wire the OC-SVM correction and the
+  digital-twin UI on top of it.
+- **Phase 3B, 4, 5**: NOT STARTED. Specs below.
 
 ## OC-SVM correction (2026-09-29, supersedes the Phase 2e "REPLACE...move to Research" recommendation)
 

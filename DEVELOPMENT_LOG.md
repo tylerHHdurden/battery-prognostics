@@ -14979,3 +14979,81 @@ toolkit_phase2c_label_efficient_run.log`. No deployed file touched -
 recommended measurement" UI is Phase 3 scope per `PLAN.md`, not this
 item.
 
+## Phase 3, PARTIAL: river-import guard + RUL hidden for out-of-domain batteries - both fixed and directly verified; OC-SVM/trust-report wiring NOT yet done, reported honestly
+
+Two of Phase 3's items done this pass; the rest (OC-SVM rewiring, the
+nearest-source trust report, digital-twin next-measurement UI) are NOT
+started - stated plainly rather than left ambiguous.
+
+**1. `river` import guard (closes Phase 0's own Finding 1).** `app.py`
+used to do `from digital_twin_streaming_river import
+StreamingDigitalTwinRiver` at its own TOP LEVEL - and that module
+itself imports `river` at ITS top level - so a missing `river` package
+(an optional dependency, declared in `requirements.txt` but not
+guaranteed present in every deployment) crashed the ENTIRE app on every
+single page load, not just the one tab (Streaming Digital Twin) that
+actually needs it. Fixed: the import moved inside
+`render_streaming_twin_tab` itself (the only consumer), wrapped in a
+`try/except ImportError` that shows a plain warning and returns early,
+leaving every other tab unaffected.
+
+**Verified directly, not just code-reviewed**: simulated `river`'s
+genuine absence via `sys.modules['river'] = None` (the reliable,
+modern way to force an import failure - an earlier attempt using an
+old-style `meta_path` finder with `find_module`/`load_module` silently
+did NOT intercept anything on this project's Python 3.14, a real gap
+caught by checking the warning actually appeared, not just checking
+exception count) - confirmed BOTH that base app load has 0 exceptions
+AND that the specific "Streaming Digital Twin is unavailable" warning
+genuinely renders. Also re-ran the existing
+`_regression_sweep_calce_fix.py` (base load + all 6 datasets) with
+`river` present, confirming zero regressions from moving the import.
+
+**2. RUL hidden (not just captioned "unreliable") for any out-of-domain
+battery** - not narrowly just uploaded/unfamiliar ones, since this
+project's own direct evidence (CALCE RUL R2=-566; the HNEI upload case
+itself predicting 3036 cycles, ~9 std devs outside the RUL model's own
+training-scale distribution) shows the RUL model fails OUTRIGHT
+out-of-domain for every out-of-domain case tested, not just uploads -
+narrowing the fix to "uploads only" would have left CALCE/Oxford/HUST/
+XJTU still showing a captioned-but-visible wrong number. Fixed in 4
+places that previously showed `ctx["rul_pred"]` un-hidden with just a
+"⚠️ unreliable" caption: the Prediction tab's physical-framing text, its
+RUL metric, the Battery Comparison section's RUL metric, and the
+Health-Report tab's LLM context (so neither the generated narrative nor
+its JSON fallback leaks the hidden number either). The gated value also
+now feeds `prescriptive_decision_layer.recommend()` (confirmed already
+handles `rul=None` gracefully, by design) - so a hidden-from-display
+RUL number can no longer silently still drive a retirement/second-life
+recommendation behind the scenes.
+
+**Verified directly against the EXACT Phase 0 Finding 4 scenario**, not
+just unit-level: replayed the same HNEI upload CSV
+(`outputs/_phase0_hnei_upload_test.csv`, built by Phase 0's own audit
+script from a real HNEI battery's raw cycles) through a real AppTest
+session. Before this fix: "Predicted RUL: 3036 cycles" shown, captioned
+only as unreliable. **After**: "Predicted RUL: not available", with a
+caption explaining why (out-of-domain + the CALCE R2=-566 evidence) -
+0 exceptions. Also re-ran the full 6-dataset regression sweep clean.
+
+**NOT done this pass, stated explicitly**: the OC-SVM rewiring (wire
+`_candidate_ocsvm.pkl` as an upload "data looks malformed" check;
+retire the deployed OC-SVM's 100%-flagging out-of-domain warning) and
+the nearest-source trust report it depends on for the "unfamiliar
+battery" message. Checked directly: **no trust-report module exists
+anywhere in this codebase yet** (`grep`-confirmed) - it needs to be
+built as new infrastructure (a similarity/nearest-source lookup against
+each known source's own measured transfer error, e.g. from the Phase 2
+gate table), not just wired from an existing piece. Deliberately not
+rushed into this same pass alongside two already-verified, narrower
+fixes - picked up next. Digital-twin next-measurement UI (from Phase
+2C's own schedule) also deferred with it.
+
+### Files
+
+`app.py` (river-import guard moved into `render_streaming_twin_tab`;
+RUL-hiding logic in `render_prediction_tab`, `render_battery_comparison_
+section`, `render_health_report_tab`). No `live_inference.py` change -
+`out_of_domain`/`domain_reasons` were already computed there, this pass
+only changed how `app.py` DISPLAYS what was already available.
+
