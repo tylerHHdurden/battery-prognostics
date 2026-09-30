@@ -12,7 +12,7 @@ df["novel"] = (df["set"] == "novel").astype(int)
 TARGET = 0.80
 FEATS = ["nll_min", "min_maha", "ratio_familiar", "d_nearest"]
 
-def grid(x, n=120):
+def grid(x, n=100000):  # n large = every unique score is a candidate threshold (exact, like sklearn roc_curve); the first version used 120 quantiles, which made the ROC baseline 389/476 instead of 390/476
     u = np.unique(x)
     if len(u) > n: u = np.unique(np.quantile(x, np.linspace(0, 1, n)))
     return np.append(u, np.inf)

@@ -16,6 +16,43 @@ Process rules for every phase below (per explicit user instruction,
 **commit and push per phase**, give the user a progress update after each
 phase.
 
+## PRIORITY INTERRUPT 2026-09-30 (user-directed: do BEFORE Phase 3B/4/5) - live state, update as items close
+
+User's 3 items: (1) candidate-encoder divergence [blocking], (2) out_of_domain replacement, (3) PAPER_RESULTS labels.
+
+**KEY FINDING for item 1 (verified)**: the CANDIDATE encoder does NOT diverge (0/419,250 stored rows > 10x train p99.9,
+max |value| 4.2; output provably bounded ~<=10.4 for clipped inputs; live path matches stored embeddings to 2.9e-7 over
+1,118 sampled cycles from all 16 sources). The 1e13 values were the OLD deployed encoder's embeddings in the per-source
+parquets: `build_batterylife_hi_table.py:98` encodes RAW tensors (no apply_channel_norm; raw dVdQ ~4e9). Reproduced
+exactly (rel diff 0.0). Impact: `run_toolkit_phase2b_federated.load_pooled_data` (and so Phase 2B + the trust profiles)
+silently mixed encoders -> FIXED (`_attach_candidate_fusion` + assertions); every script that reads
+`batterylife_*_merged.parquet` fusion columns scored raw-X garbage for BatteryLife sources (list: partB item7/9,
+finalpass items 1/2/3/5a/5d, itemA/B/E, check1/check2, toolkit phase2c/3a). Rerun tool:
+`src/run_with_corrected_batterylife_embeddings.py <script>` (needs `data/processed/old_encoder_embeddings_batterylife_corrected.parquet`
+from `src/build_corrected_old_encoder_embeddings_batterylife.py`).
+Only real live-path defect: 3/1,118 sampled cycles (all stanford) had non-finite ICA cells -> NaN embedding silently
+median-imputed; FIXED (sanitize like training) + runtime guard (`fusion_range_check`, 5% span tolerance, 0 false alarms
+on 72,729 held-out rows) -> app shows "Prediction unreliable for this cycle".
+Gate table rerun: candidate columns reproduce EXACTLY; routed baseline for the 10 BatteryLife sources moves (isu_ilcc
+-0.292->-0.042, ul_pur +0.145->-0.296, ...); NO verdict flips. Artifacts: outputs/toolkit_phase2_gate_table_rerun_corrected.csv,
+toolkit_encoder_divergence_quantification.csv, toolkit_encoder_live_path_fidelity.csv.
+Trust profiles REBUILT on corrected embeddings: 90.1% (82/91) nearest-source (was 87.9% on mixed encoders);
+old artifacts kept as *.MIXED_ENCODER.*.
+
+**Item 2 (out_of_domain = trust level)**: IMPLEMENTED (live_inference.domain_verdict, models/_builtin_battery_trust.csv,
+app.py wiring). Test matrix old/new in outputs/toolkit_ood_matrix_{old,new}.json. RUL hidden for HNEI upload ONLY because I
+added a second rule (RUL hidden if nearest source not in {NASA,MIT}); under the pure spec HNEI is judged
+"nearest snl, familiar" and RUL (3036) would be SHOWN. **SAFETY FINDING**: leave-source-out validation
+(`src/validate_trust_report_novelty.py`) - only 47.5% of novel-source batteries are flagged (250/476 falsely "familiar";
+tongji 14.6%, mich 2.5%, XJTU 17%); partial history (first 30 cycles) nearest-source accuracy 76.9%. The old OC-SVM
+flagged 100%. NEEDS USER DECISION: tighten thresholds / hybrid rule (trade-off table = section C of that script).
+
+**Still pending when this was written**: Phase 2B rerun on corrected embeddings (background, ~2h; log
+outputs/toolkit_phase2b_federated_run.log; contaminated version kept as *.MIXED_ENCODER_CONTAMINATED.*); corrected
+old-encoder embedding build (background); LODO family-holdout rerun (`src/rerun_lodo_family_holdout_corrected.py`);
+Phase 2C / 3(a) / item A reruns via the corrected-embeddings runner; full regression sweep; item-3 PAPER_RESULTS edits;
+DEVELOPMENT_LOG entry; commit+push. Then Phase 3B/4/5.
+
 ## Status summary (as of 2026-09-29)
 
 - **Phase 0** (live app audit): COMPLETE. 4 findings, see DEVELOPMENT_LOG.md
@@ -350,3 +387,10 @@ update if relevant, commit + push.
   in Phase 2B, no-lookahead in Phase 2C) are real code-level `assert`s,
   verified to actually fire under a genuine violation during development
   (not just present and untested), not just prose claims.
+
+## STATUS 2026-09-30 night (supersedes the "Still pending" list in the PRIORITY INTERRUPT section above)
+- Encoder fix DONE: corrected old-encoder embeddings for all 10 BatteryLife/Tongji sources, swapped into the canonical parquets after the queue finished and hash-verified (`outputs/toolkit_swap_verification.csv`); provenance sidecars written; old models stay on the old encoder.
+- Rerun queue DONE (all scripts + Phase 2B); PAPER_RESULTS.md labelled VERIFIED/SUPERSEDED; Phase 2B verdict unchanged (negative result).
+- Step 3 DONE, awaiting push approval: out_of_domain = ROC rule (`nll_min >= -5.5214`, 81.9% novel-source detection / 11.0% false alarms, leave-source-out); neutral/amber messaging; RUL only when nearest source is NASA/MIT and not flagged; deployed OC-SVM stays an input-sanity check. Hybrid rule tested and rejected.
+- Item 1 routing investigation: propose no change to the six-app table (labelled "selected on held-out data").
+- NOT started (needs the user's approval): Phase 3B passport-style output, Phase 4 site redesign, Phase 5 release. NOTHING pushed or deployed.

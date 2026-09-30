@@ -15366,8 +15366,11 @@ Phase 2B had already loaded its data at start (`load_pooled_data` is called once
   Verdict unchanged (VERIFIED negative result). Full before/after in PAPER_RESULTS.md, Phase 2B section.
 - Hybrid novelty rule (tested in the 1-hour optional slot; `src/hybrid_novelty_rule_experiment.py`, `outputs/toolkit_phase3_hybrid_rule_summary.txt`): OR with the trust level,
   OR with the ratio score, and logistic regression all raise pooled novel detection (84.0-88.4%) only by raising known false alarms (13.2-24.2%, vs 11.0% for the ROC
-  rule), and none closes the mich gap (1/40). NEGATIVE RESULT: no hybrid clearly beats the ROC rule, so the redesign uses the plain ROC rule. (That run's ROC baseline
-  counted 389/476; the committed validation counts 390/476 - one battery, not traced.)
+  rule), and none closes the mich gap (1/40). NEGATIVE RESULT: no hybrid clearly beats the ROC rule, so the redesign uses the plain ROC rule.
+  CORRECTION (traced): the first hybrid run picked thresholds from a 120-point quantile grid, which cost one XJTU battery (39/47 instead of 40/47), so its ROC baseline read 389/476.
+  The committed validation (`validate_trust_threshold_leave_source_out.py`, exact sklearn roc_curve thresholds) and the app rule are right: 390/476 = 81.9%. The hybrid script now uses every unique
+  score as a candidate threshold and reproduces 390/476; corrected hybrid numbers: OR-with-level 422/476 = 88.7% novel flagged / 22/91 = 24.2% false alarms; OR-with-ratio 395/476 = 83.0% / 12/91 = 13.2%;
+  logistic regression 400/476 = 84.0% / 13/91 = 14.3% (the earlier '84.0-88.4%' range should read 83.0-88.7%). Verdict unchanged.
 - PAPER_RESULTS.md labelled after the reruns (VERIFIED / SUPERSEDED per result; snl recorded as "not distinguishable" (0.149 vs 0.154, margin 0.005), MIT -6.1 and XJTU -6.4 LODO
   values recorded as genuine transfer failures). Four headlines changed in substance (none flipped outright): Item B clear wins 11/13 -> 10/13 with snl a tie; Item 1 label-free routing rule now
   correct on 3/13 (was 8/13; extended model is the true winner on 10/13; deployed routing correct on 6/13, was 8/13) - not adopted, routing unchanged but worth a look;
@@ -15385,3 +15388,16 @@ Tests: 6-dataset + HNEI AppTest matrix (`outputs/toolkit_ood_matrix_roc.json`): 
 HNEI upload not flagged (its source is one of the 16 profiles; nearest source snl) and RUL hidden because snl is not NASA/MIT. Both branches of the message exercised with a distorted upload
 (`outputs/step3_flagged_vs_unflagged_check.json`, screenshots `outputs/step3_screenshot_{flagged,unflagged}.png`). Regression sweep (`_regression_sweep_calce_fix.py`): base load + 6 datasets, 0 exceptions.
 Diff for review: `outputs/step3_diff_for_review.patch`.
+
+
+### Step 3 follow-ups (2026-09-30 night): UI neutrality, real held-out-source end-to-end test, Item 1 routing investigation
+
+- UI: the "Continue normal use" box is now neutral (st.info, no green) in both cases; when flagged its text says "reduced confidence ... provisional suggestion ... check against a measured capacity"; the word "(familiar)" is gone from the upload text.
+- End-to-end test with REAL held-out sources (`src/step3_realsource_e2e.py`; the source's own profile and its sibling family are removed from the profile set through the TRUST_EXCLUDE_SOURCES test hook in trust_report.py; the battery's first 30 cycles go through the real upload path):
+  * mich battery MICH_BLForm4 (profiles mich + mich_exp removed): nll_min = -19.28 (30-cycle median; whole-history value -52.8), threshold -5.52 -> NOT flagged, nearest source ul_pur, RUL not shown (nearest is not NASA/MIT). This is one of the known misses (mich: 1/40 flagged in validation).
+  * hnei battery HNEI_18650_..._n (profile hnei removed): nll_min = -4.47 -> FLAGGED (amber warning with both error numbers, 1.31 and 5.9 SOH points), nearest source snl, RUL hidden, recommendation text "reduced confidence".
+  Evidence: `outputs/step3_realsource_e2e_{mich,hnei}.json`, screenshots `outputs/step3_real_{mich,hnei}_screenshot.png`.
+- Item 1 routing investigation (`outputs/toolkit_item1_routing_investigation.md`): the deployed routing (extended reformulation for CALCE/Oxford/HUST, base for XJTU) is right on all four scorable app datasets by R2 and MAE
+  (CALCE ext 0.740 vs base 0.568; Oxford 0.953 vs -2.694; HUST 0.800 vs -0.152; XJTU base -1.062 vs ext -1.772); NASA and MIT are the training pool and cannot be scored. The label-free rule picks base for CALCE/Oxford/HUST and is wrong there.
+  The 13-dataset count change comes from the nine BatteryLife rows only. PROPOSAL only: keep the six-app table unchanged; the BatteryLife rows suggest extended for hnei, snl, mich, rwth, stanford, stanford_2, isu_ilcc but that needs the full standard protocol and is outside the six-app scope.
+  Routing was selected on held-out data everywhere, so it is a deployment choice, not an unbiased result. (Note: with USE_MULTISOURCE_CANDIDATE = True the app currently routes CALCE/Oxford/HUST/XJTU to the multisource candidate, which Item 1 never compared.)
