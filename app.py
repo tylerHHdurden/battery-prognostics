@@ -819,7 +819,8 @@ def render_passport_section(ctx: dict, dataset: str, battery_id: str, cycles: li
         n_cycles = len(cycles) if cycles else None
         if n_cycles is None:
             n_cycles = len(available_precomputed_cycles(dataset).get(battery_id, [])) or None
-        passport = build_passport(ctx, dataset, battery_id, n_cycles)
+        _isc = st.session_state.get("last_input_sanity") if dataset == "Uploaded" else None
+        passport = build_passport(ctx, dataset, battery_id, n_cycles, input_sanity=_isc)
     except Exception as e:
         st.caption(f"ℹ️ Passport-style export unavailable for this selection: {e}")
         return
@@ -3354,6 +3355,9 @@ def main():
                 st.subheader("🔎 Upload checks")
                 with st.spinner("Checking this upload (input-sanity + nearest-source trust report)..."):
                     malformed_check = candidate_ocsvm_malformed_check(cycles, res, _baseline_his)
+                    st.session_state["last_input_sanity"] = ({"run": True, "n_flagged": malformed_check["n_flagged"], "n_checked": malformed_check["n_checked"],
+                                                              "likely_malformed": bool(malformed_check["likely_malformed"])} if malformed_check.get("available")
+                                                             else {"run": False, "note": malformed_check.get("reason", "unavailable")})
                     query_vec = _upload_query_vec
 
                 if malformed_check["available"]:

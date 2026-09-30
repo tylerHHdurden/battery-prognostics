@@ -23,7 +23,8 @@ def _r(x, n=1):
     return None if x is None else round(float(x), n)
 
 
-def build_passport(ctx: dict, dataset: str, battery_id: str, n_cycles_in_data: int | None, source_note: str | None = None) -> dict:
+def build_passport(ctx: dict, dataset: str, battery_id: str, n_cycles_in_data: int | None, source_note: str | None = None,
+                   input_sanity: dict | None = None) -> dict:
     import live_inference as li  # local import: keeps this module importable without loading models
     info = ctx.get("domain_info") or {}
     errs = info.get("errors") or {}
@@ -52,7 +53,11 @@ def build_passport(ctx: dict, dataset: str, battery_id: str, n_cycles_in_data: i
         "state_of_health": {"value_percent": _r(ctx.get("soh_pred")), "interval_90_percent": [_r(ctx.get("soh_conformal_lo")), _r(ctx.get("soh_conformal_hi"))],
                             "interval_note": ("interval calibrated on known sources; its coverage is NOT reliable for this battery" if flagged
                                               else "90% conformal interval calibrated on known sources"),
-                            "definition": "discharge capacity relative to the battery's first cycles, in percent"},
+                             "definition": "discharge capacity relative to the battery's first cycles, in percent",
+                            "interval_method": ("split conformal, 90% target (alpha = 0.1): one fixed half-width calibrated on held-out batteries of the "
+                                                "training pool and applied to every battery; it is an in-domain guarantee only and is not adaptive"),
+                            "measured_checkpoints_used": 0,
+                            "measured_checkpoints_note": "no measured capacity values are used for this battery; the estimate comes from the cycle curves only"},
         "expected_remaining_life": ({"cycles": _r(ctx.get("rul_pred"), 0), "interval_90_percent": [_r(ctx.get("rul_conformal_lo"), 0), _r(ctx.get("rul_conformal_hi"), 0)],
                                      "unit": "charge/discharge cycles to 80% SOH"} if rul_shown else
                                     {"cycles": None, "shown": False, "reason": ctx.get("rul_hidden_reason") or "not available for this battery",
@@ -65,6 +70,7 @@ def build_passport(ctx: dict, dataset: str, battery_id: str, n_cycles_in_data: i
                          "weakest_sources": list(li.OOD_WEAK_SOURCES), "not_detected_note": li.OOD_NOT_DETECTED_LINE,
                          "typical_soh_error_points": {"nearest_source_in_domain": _r(errs.get("in_domain_mae"), 2), "unseen_source_typical": _r(errs.get("unseen_source_typical_mae"), 1)},
                          "guarantee": "none - screening check only"},
+        "input_sanity_check": (input_sanity if input_sanity else {"run": False, "note": "not run: built-in dataset (the one-class SVM check is applied to uploads)"}),
         "model_provenance": {"model": routed, "encoder": encoder_tag,
                              "routing_note": "routing was selected on held-out data, so it is a deployment choice, not an unbiased test result"},
     }
@@ -115,6 +121,7 @@ def passport_pdf(p: dict) -> bytes:
     block("2. State of health")
     line(f"State of health: {soh['value_percent']} %", 11, "bold", 0.026)
     line(f"90% interval: {soh['interval_90_percent'][0]} - {soh['interval_90_percent'][1]} %")
+    for l in _wrap(f"Interval method: {soh['interval_method']}. Measured capacity checkpoints used: {soh['measured_checkpoints_used']}.", 105): line(l, 8.5, color="#555555")
     for l in _wrap(soh["interval_note"], 105): line(l, 8.5, color="#555555")
     block("3. Expected remaining life")
     if rul.get("cycles") is not None:
@@ -137,6 +144,11 @@ def passport_pdf(p: dict) -> bytes:
     if e["nearest_source_in_domain"] is not None and e["unseen_source_typical"] is not None:
         line(f"Typical SOH error (MAE, points): {e['nearest_source_in_domain']} for the nearest known source vs about {e['unseen_source_typical']} on an unseen source")
     line("Guarantee: none - this is a screening check.", 9, "bold")
+    isc = p["input_sanity_check"]
+    if isc.get("run", True) and "n_flagged" in isc:
+        line(f"Input-sanity check (one-class SVM on uploads): {isc['n_flagged']}/{isc['n_checked']} sampled cycles flagged; likely malformed: {isc['likely_malformed']}", 9)
+    else:
+        line("Input-sanity check: " + str(isc.get("note", "not available")), 9, color="#555555")
 
     block("6. Disclaimer")
     for l in _wrap(p["document"]["disclaimer"], 100): line(l, 8.5, color="#333333")

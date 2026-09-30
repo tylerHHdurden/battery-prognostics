@@ -15438,3 +15438,12 @@ Cause of the first failure confirmed from the Streamlit logs: after a hot update
 Merge commit b5a37c6 (tree identical to the staging tip that passed) pushed 00:46 IST; live app rebooted by the user (log: fresh clone, Python 3.14.7, dependencies installed with uv, server started 19:24:37 UTC, no ImportError).
 Live smoke test (`src/live_app_smoke_test.py ... live_new new`, outputs/live_smoke/live_new_*): ALL PASSED - six datasets with the passport section and the shift message, 0 exceptions, both passport downloads on NASA, Oxford and both uploads (JSON ~2.5 KB, PDF ~58 KB),
 flagged upload flagged (SOH 84.4), unflagged upload unflagged (SOH 97.3), no "trusted" claims, no green elements tied to trust (only the file-parse confirmation and static research text).
+
+### Phase 3B polish (2026-10-01 night): passport fields and research citations
+
+Passport now also carries: the interval method (split conformal, 90% target, one fixed half-width calibrated on held-out batteries of the training pool, in-domain guarantee only - matches `res["constants"]["soh_conformal_half_width"]` in live_inference),
+measured capacity checkpoints used (0: the estimate comes from cycle curves only), the input-sanity (one-class SVM) result for uploads, model/encoder provenance, nearest source with its measured transfer error, trust flag with the stated 81.9% / 11.0%, and a UTC timestamp.
+Research citations used for the field list (orientation only, no compliance claim): Regulation (EU) 2023/1542 (Article 77 and Annex XIII; EUR-Lex https://eur-lex.europa.eu/eli/reg/2023/1542/oj);
+Battery Pass consortium "Battery Passport Content Guidance" v1.0 (April 2023) https://thebatterypass.eu/assets/images/content-guidance/pdf/2023_Battery_Passport_Content_Guidance.pdf and
+"Battery Passport Content Requirements" (July 2023) https://thebatterypass.eu/assets/images/position-paper/pdf/2023_Battery_Passport_Content_Requirements.pdf.
+Fields this project cannot populate (carbon footprint, materials composition, supply-chain due diligence, etc.) are deliberately absent.
