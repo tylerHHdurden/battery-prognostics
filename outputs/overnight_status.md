@@ -3,6 +3,7 @@ Branch: site-redesign (cut from master 1d3bb23). Nothing is pushed to master; ba
 
 ## Log (newest last)
 - 01:06 branch created; status file written; delegating walkthrough (<=10 pages), addendum, docs/tests/release folder, PAPER_RESULTS labels, status-label map to subagents; site redesign (app.py) done by the main session.
+- 01:15 site redesign part 1 committed on site-redesign (bd55da9): first screen + 3 entry paths, result card, upload help, neutral colours, lazy tabs (cold render Oxford 36.2s -> 7.7s, NASA 45.3s -> 9.1s), 47 status banners, regression matrix identical (7 cases, 0 exceptions). Subagents done: addendum, PAPER_RESULTS labels, status map. Running: walkthrough, docs/tests/release folder. Next: visual check desktop+mobile on LF clone, runbook, README etc.
 
 ## Decisions made for you (conservative defaults)
 (none yet)
