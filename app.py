@@ -57,7 +57,7 @@ from live_inference import (
     load_resources, predict_and_explain, predict_and_explain_precomputed, available_precomputed_cycles,
     load_precomputed_battery_series, PrecomputedStreamingTwin,
     build_battery_trust_query_vector, candidate_ocsvm_malformed_check,
-    OOD_NLL_THRESHOLD, OOD_NOVEL_DETECTED, OOD_KNOWN_FALSE_ALARM, OOD_WEAK_SOURCES, OOD_NOT_DETECTED_LINE, OOD_THRESHOLD_DATE,
+    HOTUPDATE_PROBE, OOD_NLL_THRESHOLD, OOD_NOVEL_DETECTED, OOD_KNOWN_FALSE_ALARM, OOD_WEAK_SOURCES, OOD_NOT_DETECTED_LINE, OOD_THRESHOLD_DATE,
 )
 from trust_report import nearest_source_trust_report
 from battery_passport import build_passport, passport_json, passport_pdf, DISCLAIMER as PASSPORT_DISCLAIMER
@@ -579,6 +579,7 @@ def render_domain_banner(ctx: dict):
     NOT flagged -> a neutral note, never green and never the word "trusted", with the measured miss rate. The rule is the
     ROC rule in live_inference (nll_min >= OOD_NLL_THRESHOLD); the numbers below are its leave-source-out validation,
     not a guarantee."""
+    st.caption(f"build probe: {HOTUPDATE_PROBE}")  # TEMPORARY hot-update probe
     info = ctx.get("domain_info") or {}
     errs = info.get("errors") or {}
     validation = (f"Check validated by leaving each of 16 sources out in turn: it flagged {OOD_NOVEL_DETECTED:.1%} of batteries from "
