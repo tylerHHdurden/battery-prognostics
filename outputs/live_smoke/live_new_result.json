@@ -1,0 +1,187 @@
+{
+ "url": "https://bat-pro.streamlit.app",
+ "label": "live_new",
+ "expect": "new",
+ "failures": [],
+ "runs": [
+  {
+   "case": "dataset NASA",
+   "exceptions": 0,
+   "tabs_render": true,
+   "passport_section": true,
+   "shift_message": true,
+   "trusted_wording": [],
+   "success_alerts": [
+    "The consistent finding across every one of these cases: SCV_rel (a voltage-curve-slope rat",
+    "Yes - α/β are now genuinely asymmetric: 0.993/1.007 at epoch 0 → 0.527/1.473 by epoch 24, ",
+    "With 6x more test batteries, XGBoost's edge over VLSTM and the ensemble's dependence on XG",
+    "Deployment decision (flagged for review, not resolved on this session's own authority): th",
+    "Three of four datasets went from a genuine collapse (negative R²) to strong, usable accura",
+    "A minimal, targeted fix rescued both problems at once. Clamping that difference to a bound",
+    "Finally resolved cleanly, independent of any pool-composition experiment: a later, more su",
+    "It didn't - explanation (a) is refuted. The size-matched HUST sample behaved just like the"
+   ],
+   "downloads": {
+    "json_bytes": 2520,
+    "pdf_bytes": 57976,
+    "soh": 71.7,
+    "flagged": false,
+    "rul_cycles": null
+   },
+   "pass": true
+  },
+  {
+   "case": "dataset MIT",
+   "exceptions": 0,
+   "tabs_render": true,
+   "passport_section": true,
+   "shift_message": true,
+   "trusted_wording": [],
+   "success_alerts": [
+    "The consistent finding across every one of these cases: SCV_rel (a voltage-curve-slope rat",
+    "Yes - α/β are now genuinely asymmetric: 0.993/1.007 at epoch 0 → 0.527/1.473 by epoch 24, ",
+    "With 6x more test batteries, XGBoost's edge over VLSTM and the ensemble's dependence on XG",
+    "Deployment decision (flagged for review, not resolved on this session's own authority): th",
+    "Three of four datasets went from a genuine collapse (negative R²) to strong, usable accura",
+    "A minimal, targeted fix rescued both problems at once. Clamping that difference to a bound",
+    "Finally resolved cleanly, independent of any pool-composition experiment: a later, more su",
+    "It didn't - explanation (a) is refuted. The size-matched HUST sample behaved just like the"
+   ],
+   "pass": true
+  },
+  {
+   "case": "dataset CALCE",
+   "exceptions": 0,
+   "tabs_render": true,
+   "passport_section": true,
+   "shift_message": true,
+   "trusted_wording": [],
+   "success_alerts": [
+    "The consistent finding across every one of these cases: SCV_rel (a voltage-curve-slope rat",
+    "Yes - α/β are now genuinely asymmetric: 0.993/1.007 at epoch 0 → 0.527/1.473 by epoch 24, ",
+    "With 6x more test batteries, XGBoost's edge over VLSTM and the ensemble's dependence on XG",
+    "Deployment decision (flagged for review, not resolved on this session's own authority): th",
+    "Three of four datasets went from a genuine collapse (negative R²) to strong, usable accura",
+    "A minimal, targeted fix rescued both problems at once. Clamping that difference to a bound",
+    "Finally resolved cleanly, independent of any pool-composition experiment: a later, more su",
+    "It didn't - explanation (a) is refuted. The size-matched HUST sample behaved just like the"
+   ],
+   "pass": true
+  },
+  {
+   "case": "dataset Oxford",
+   "exceptions": 0,
+   "tabs_render": true,
+   "passport_section": true,
+   "shift_message": true,
+   "trusted_wording": [],
+   "success_alerts": [
+    "The consistent finding across every one of these cases: SCV_rel (a voltage-curve-slope rat",
+    "Yes - α/β are now genuinely asymmetric: 0.993/1.007 at epoch 0 → 0.527/1.473 by epoch 24, ",
+    "With 6x more test batteries, XGBoost's edge over VLSTM and the ensemble's dependence on XG",
+    "Deployment decision (flagged for review, not resolved on this session's own authority): th",
+    "Three of four datasets went from a genuine collapse (negative R²) to strong, usable accura",
+    "A minimal, targeted fix rescued both problems at once. Clamping that difference to a bound",
+    "Finally resolved cleanly, independent of any pool-composition experiment: a later, more su",
+    "It didn't - explanation (a) is refuted. The size-matched HUST sample behaved just like the"
+   ],
+   "downloads": {
+    "json_bytes": 2609,
+    "pdf_bytes": 58541,
+    "soh": 73.5,
+    "flagged": false,
+    "rul_cycles": null
+   },
+   "pass": true
+  },
+  {
+   "case": "dataset HUST",
+   "exceptions": 0,
+   "tabs_render": true,
+   "passport_section": true,
+   "shift_message": true,
+   "trusted_wording": [],
+   "success_alerts": [
+    "The consistent finding across every one of these cases: SCV_rel (a voltage-curve-slope rat",
+    "Yes - α/β are now genuinely asymmetric: 0.993/1.007 at epoch 0 → 0.527/1.473 by epoch 24, ",
+    "With 6x more test batteries, XGBoost's edge over VLSTM and the ensemble's dependence on XG",
+    "Deployment decision (flagged for review, not resolved on this session's own authority): th",
+    "Three of four datasets went from a genuine collapse (negative R²) to strong, usable accura",
+    "A minimal, targeted fix rescued both problems at once. Clamping that difference to a bound",
+    "Finally resolved cleanly, independent of any pool-composition experiment: a later, more su",
+    "It didn't - explanation (a) is refuted. The size-matched HUST sample behaved just like the"
+   ],
+   "pass": true
+  },
+  {
+   "case": "dataset XJTU",
+   "exceptions": 0,
+   "tabs_render": true,
+   "passport_section": true,
+   "shift_message": true,
+   "trusted_wording": [],
+   "success_alerts": [
+    "The consistent finding across every one of these cases: SCV_rel (a voltage-curve-slope rat",
+    "Yes - α/β are now genuinely asymmetric: 0.993/1.007 at epoch 0 → 0.527/1.473 by epoch 24, ",
+    "With 6x more test batteries, XGBoost's edge over VLSTM and the ensemble's dependence on XG",
+    "Deployment decision (flagged for review, not resolved on this session's own authority): th",
+    "Three of four datasets went from a genuine collapse (negative R²) to strong, usable accura",
+    "A minimal, targeted fix rescued both problems at once. Clamping that difference to a bound",
+    "Finally resolved cleanly, independent of any pool-composition experiment: a later, more su",
+    "It didn't - explanation (a) is refuted. The size-matched HUST sample behaved just like the"
+   ],
+   "pass": true
+  },
+  {
+   "case": "upload flagged_distorted",
+   "exceptions": 0,
+   "expected_message_shown": true,
+   "trusted_wording": [],
+   "success_alerts": [
+    "Parsed 30 usable cycles.",
+    "The consistent finding across every one of these cases: SCV_rel (a voltage-curve-slope rat",
+    "Yes - α/β are now genuinely asymmetric: 0.993/1.007 at epoch 0 → 0.527/1.473 by epoch 24, ",
+    "With 6x more test batteries, XGBoost's edge over VLSTM and the ensemble's dependence on XG",
+    "Deployment decision (flagged for review, not resolved on this session's own authority): th",
+    "Three of four datasets went from a genuine collapse (negative R²) to strong, usable accura",
+    "A minimal, targeted fix rescued both problems at once. Clamping that difference to a bound",
+    "Finally resolved cleanly, independent of any pool-composition experiment: a later, more su",
+    "It didn't - explanation (a) is refuted. The size-matched HUST sample behaved just like the"
+   ],
+   "downloads": {
+    "json_bytes": 2621,
+    "pdf_bytes": 57781,
+    "soh": 84.4,
+    "flagged": true,
+    "rul_cycles": null
+   },
+   "pass": true
+  },
+  {
+   "case": "upload unflagged_hnei",
+   "exceptions": 0,
+   "expected_message_shown": true,
+   "trusted_wording": [],
+   "success_alerts": [
+    "Parsed 30 usable cycles.",
+    "The consistent finding across every one of these cases: SCV_rel (a voltage-curve-slope rat",
+    "Yes - α/β are now genuinely asymmetric: 0.993/1.007 at epoch 0 → 0.527/1.473 by epoch 24, ",
+    "With 6x more test batteries, XGBoost's edge over VLSTM and the ensemble's dependence on XG",
+    "Deployment decision (flagged for review, not resolved on this session's own authority): th",
+    "Three of four datasets went from a genuine collapse (negative R²) to strong, usable accura",
+    "A minimal, targeted fix rescued both problems at once. Clamping that difference to a bound",
+    "Finally resolved cleanly, independent of any pool-composition experiment: a later, more su",
+    "It didn't - explanation (a) is refuted. The size-matched HUST sample behaved just like the"
+   ],
+   "downloads": {
+    "json_bytes": 2575,
+    "pdf_bytes": 58312,
+    "soh": 97.3,
+    "flagged": false,
+    "rul_cycles": null
+   },
+   "pass": true
+  }
+ ],
+ "all_passed": true
+}

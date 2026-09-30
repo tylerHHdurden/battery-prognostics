@@ -402,3 +402,9 @@ worktree (core.autocrlf=true) hides line-ending bugs. Recipe: `git clone --share
 `.gitattributes` now forces LF for text files; `encoder_provenance._md5` still normalises CRLF for text files as defence in depth
 (`src/verify_sidecars_vs_git_blobs.py` checks the 30 sidecars against the committed blobs). Nothing goes to master before a staging deploy of the branch passes
 `src/live_app_smoke_test.py`; tag master before every push; the live app is never the first place a change is tested.
+
+## DEPLOY RULE (2026-10-01): reboot after every push to master
+After every push to master, reboot the live app (Manage app -> three dots -> Reboot app) and wait for it to settle before testing; staging and live show a transient
+ImportError after hot updates (confirmed on staging 2026-09-30 18:58:56 UTC: "cannot import name 'HOTUPDATE_PR...' from src/live_inference.py" right after a push; the new app.py ran against the
+old live_inference still in memory). A reboot fixes it, so no importlib reload guard is needed. Sequence: tag master -> push -> reboot -> paste/inspect the log -> live smoke test
+(`python src/live_app_smoke_test.py https://bat-pro.streamlit.app <label> new`); revert with a NEW commit if the smoke test fails after the reboot.

@@ -15431,3 +15431,10 @@ Pre-push audit of the 16 local commits: no data/raw, .env, uploads/ or credentia
   Reverted with a new commit (927239c, tree = 5e92ae6). Live is healthy again on the old version (outputs/live_smoke/live_after_revert_*: six datasets, 0 exceptions).
 - Working hypothesis (NOT proven): Streamlit Cloud hot-updated the running process, so the new app.py imported names (OOD_* constants) from a stale live_inference module still in sys.modules; staging was a fresh process. Evidence: the error is at the import statement itself,
   staging with identical code passed, and the live app recovered by itself after the revert (old app.py + old module consistent again). Proposal: reproduce on staging with a trivial hot-update, then add a reload-on-ImportError guard and/or reboot the live app after every push.
+
+### Live merge, second attempt: passed after a reboot (2026-10-01)
+
+Cause of the first failure confirmed from the Streamlit logs: after a hot update the new app.py runs against the old live_inference still in memory (staging reproduced it: ImportError "cannot import name 'HOTUPDATE_PR...'" 18:58:56 UTC; my check came after it had recovered).
+Merge commit b5a37c6 (tree identical to the staging tip that passed) pushed 00:46 IST; live app rebooted by the user (log: fresh clone, Python 3.14.7, dependencies installed with uv, server started 19:24:37 UTC, no ImportError).
+Live smoke test (`src/live_app_smoke_test.py ... live_new new`, outputs/live_smoke/live_new_*): ALL PASSED - six datasets with the passport section and the shift message, 0 exceptions, both passport downloads on NASA, Oxford and both uploads (JSON ~2.5 KB, PDF ~58 KB),
+flagged upload flagged (SOH 84.4), unflagged upload unflagged (SOH 97.3), no "trusted" claims, no green elements tied to trust (only the file-parse confirmation and static research text).
