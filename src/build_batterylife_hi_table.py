@@ -1,4 +1,16 @@
 """
+FIXED 2026-09-30 (root cause of the "encoder divergence" investigation): this script used to call
+`encoder.encode(X[:, :, ICA_CHANNEL_SLICE])` on RAW tensors - no apply_channel_norm - while every other path in
+the project (training, Stage 5.1, live inference) clips + z-scores first. Raw dVdQ reaches ~4e9, so the stored
+`fusion_*` columns reached 1e7-1e13 (isu_ilcc 98%, rwth 99.98% of rows > 100). There is now exactly ONE encoding
+path, `encode_tensors`, which sanitizes (candidate only, as in training), applies the channel norm, encodes, and
+asserts the result is finite and bounded. The encoder is selectable via BATTERYLIFE_ENCODER: "old" (the DEFAULT -
+the deployed encoder that the old NASA+MIT-trained models, the deployed OC-SVM, and every other per-source parquet
+[Stage-5.1 Oxford/HUST/XJTU, CALCE, NASA/MIT fusion_embeddings.csv] were built with, so the parquets stay mutually
+consistent) or "candidate" (the multi-source encoder; its embeddings live in the sidecar
+fusion_embeddings_multisource.csv). The raw-X path no longer exists. The paragraphs below describe the original build and its "same, already-trained
+ica_encoder.pt" wording predates this fix.
+
 Builds, per BatteryLife sub-source, a merged HI+fusion feature table in
 EXACTLY the same shape as this project's existing `stage5_1_{oxford,
 hust,xjtu}_merged.parquet` files - dataset/battery_id/cycle_idx/SOH +
@@ -31,6 +43,8 @@ Range requests against the Zenodo-hosted zip's own central directory
 sources (UL_PUR, HNEI, SNL, MICH, MICH_EXP) are used in FULL - every
 battery file Zenodo actually has for them is present locally.
 """
+import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -45,16 +59,49 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "models"))
 from data_adapters_batterylife import BATTERYLIFE_DIR, batterylife_cell_ids, iterate_batterylife_cycles
 from health_indicators import compute_health_indicators, HI_NAMES
 from rul_labels import soh_per_cycle
-from sequence_features import build_dataset_tensors
+from sequence_features import build_dataset_tensors, apply_channel_norm
 from models.ica_encoder import ICAEncoder
 from stage1_common import add_reformulated_duration_features, ROOT, PROC_DIR
 from stage5_extended_reformulation import add_scv_matd_viect_reformulated
 
 ICA_CHANNEL_SLICE = slice(3, 6)
 SOURCES = ["UL_PUR", "HNEI", "SNL", "MICH", "MICH_EXP", "RWTH", "Stanford", "Stanford_2", "ISU_ILCC"]
+ENCODER_CHOICE = os.environ.get("BATTERYLIFE_ENCODER", "old")  # "old" (default) | "candidate"
+EMBED_ABS_BOUND = 30.0  # both encoders' clipped-input outputs are provably bounded well below this
 
 
-def build_source(source: str, encoder: ICAEncoder):
+def load_encoder_and_stats(choice: str = ENCODER_CHOICE):
+    """(encoder, norm_stats, sanitize). The candidate encoder was trained on tensors with NaN/Inf -> 0 BEFORE
+    normalization, so sanitize=True for it; the old deployed encoder never sanitized (sanitize=False - its
+    non-finite cells surface as NaN embeddings, exactly as in the deployed live path)."""
+    if choice == "candidate":
+        enc_path, stats_path, sanitize = "_candidate_ica_encoder.pt", "candidate_channel_norm_stats.json", True
+    elif choice == "old":
+        enc_path, stats_path, sanitize = "ica_encoder.pt", "channel_norm_stats.json", False
+    else:
+        raise ValueError(f"unknown BATTERYLIFE_ENCODER {choice!r}")
+    encoder = ICAEncoder(in_channels=3, embed_dim=16)
+    encoder.load_state_dict(torch.load(ROOT / "models" / enc_path))
+    encoder.eval()
+    norm_stats = json.loads((PROC_DIR / stats_path).read_text())
+    return encoder, norm_stats, sanitize
+
+
+def encode_tensors(X: np.ndarray, encoder: ICAEncoder, norm_stats: list, sanitize: bool) -> np.ndarray:
+    """THE single encoding path: (sanitize) -> apply_channel_norm (clip + z-score) -> encoder. Never raw X."""
+    X = X.astype(np.float32)
+    if sanitize:
+        X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)
+    Xn = apply_channel_norm(X, norm_stats)
+    with torch.no_grad():
+        emb = encoder.encode(torch.tensor(Xn[:, :, ICA_CHANNEL_SLICE], dtype=torch.float32)).numpy()
+    finite = emb[np.isfinite(emb).all(axis=1)]
+    assert len(finite) == 0 or np.abs(finite).max() < EMBED_ABS_BOUND, \
+        f"embedding max |value| {np.abs(finite).max():.3g} >= {EMBED_ABS_BOUND} - un-normalized input reached the encoder"
+    return emb
+
+
+def build_source(source: str, encoder: ICAEncoder, norm_stats: list, sanitize: bool):
     ids = batterylife_cell_ids(source)
     if not ids:
         print(f"[batterylife-build] {source}: 0 battery files present locally - skipped")
@@ -94,8 +141,7 @@ def build_source(source: str, encoder: ICAEncoder):
         if X is None:
             n_tensor_failed += 1
             continue
-        with torch.no_grad():
-            emb = encoder.encode(torch.tensor(X[:, :, ICA_CHANNEL_SLICE], dtype=torch.float32)).numpy()
+        emb = encode_tensors(X, encoder, norm_stats, sanitize)
         for i, cyc_idx in enumerate(idxs):
             frow = {"battery_id": cid, "cycle_idx": int(cyc_idx)}
             for k in range(emb.shape[1]):
@@ -146,13 +192,12 @@ def build_source(source: str, encoder: ICAEncoder):
 def main():
     t0 = time.time()
     print("=== Building BatteryLife HI+fusion tables (per source, reusing the deployed pipeline unchanged) ===")
-    encoder = ICAEncoder(in_channels=3, embed_dim=16)
-    encoder.load_state_dict(torch.load(ROOT / "models" / "ica_encoder.pt"))
-    encoder.eval()
+    encoder, norm_stats, sanitize = load_encoder_and_stats()
+    print(f"[batterylife-build] encoder = {ENCODER_CHOICE!r} (sanitize={sanitize})")
 
     summary = []
     for source in SOURCES:
-        merged = build_source(source, encoder)
+        merged = build_source(source, encoder, norm_stats, sanitize)
         if merged is None:
             continue
         merged = add_reformulated_duration_features(merged)

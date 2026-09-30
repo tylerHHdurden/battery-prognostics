@@ -83,11 +83,10 @@ def main():
     check_rest_period()
 
     print("\n[tongji] === building HI+fusion table (reusing build_batterylife_hi_table.build_source unchanged) ===")
-    encoder = ICAEncoder(in_channels=3, embed_dim=16)
-    encoder.load_state_dict(torch.load(ROOT / "models" / "ica_encoder.pt"))
-    encoder.eval()
+    from build_batterylife_hi_table import load_encoder_and_stats
+    encoder, norm_stats, sanitize = load_encoder_and_stats()
 
-    merged = build_source("Tongji", encoder)
+    merged = build_source("Tongji", encoder, norm_stats, sanitize)
     if merged is None:
         print("[tongji] FAILED to build any usable rows - stopping")
         return

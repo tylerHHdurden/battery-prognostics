@@ -15291,3 +15291,33 @@ slider's own default 80-max-cycles setting) and 0 exceptions; full
 
 `app.py` (new expander in `render_streaming_twin_tab`, one new
 import). No other file touched.
+
+
+## Resume after the report submission (2026-09-30 evening): encoder fix step 1 and rerun queue restart
+
+State found on resume: the suspended Phase 2B / regeneration processes had died with the session; no python running.
+`lodo_check1` had been killed mid-run; Item A and Item B had finished (Item B before/after still to be posted).
+
+**Step 1 (encoder fix) - done except the canonical swap.**
+- `src/build_batterylife_hi_table.py` (patched earlier): one `encode_tensors` (sanitize -> apply_channel_norm -> encoder,
+  bounded assertion); `ENCODER_CHOICE` default "old"; the raw-X call at the old line 98 no longer exists.
+- `src/regenerate_batterylife_fusion_columns.py` now takes optional source names (resume). Tongji regenerated: 59,028 rows,
+  max|fusion| 15.15, 0 rows above 10x the old encoder's NASA+MIT train p99.9, 90 NaN rows, diff vs the independent corrected
+  build 0.0. All ten BatteryLife/Tongji sources now have `batterylife_<src>_merged_OLDENC_CORRECTED.parquet` (+ `.meta.json`);
+  the stage5_1 oxford/hust/xjtu stores pass the same range check.
+- Provenance sidecars written for 19 model/embedding files (`encoder_provenance.tag_all_current_files()`): ica_encoder.pt and
+  the OLD models/stores = old_v1; _candidate_* models, `_source_profiles.pkl`, candidate CSV/range file = candidate_v1.
+  The old models were NOT migrated to the candidate encoder.
+- **Not done: the swap of the corrected parquets into the canonical filenames.** `swap_in_corrected_batterylife_parquets.py`
+  refuses until the queue log says ALL DONE; I did not override it (the override was denied by the session's safety check).
+  The rerun queue does not need the swap - it substitutes the corrected embeddings through
+  `src/run_with_corrected_batterylife_embeddings.py`. Decision for the user: swap now (nothing is reading the parquets) or after the queue.
+
+**Step 2 (rerun queue) - restarted 18:30.** `outputs/rerun_queue/run_queue2.sh` (summary in `summary_resume.txt`) runs
+lodo_check1, phase2c, phase3a, item1, item2, item3, item5a, item5d, partB7/8/9, check2, itemE, itemC in the original order;
+Phase 2B was restarted from scratch in parallel (the interrupted 12/16-fold log is kept as
+`outputs/toolkit_phase2b_federated_run_INTERRUPTED_12of16.log`). Old numbers stay in git history and PAPER_RESULTS.md and are
+labelled SUPERSEDED as each rerun lands. Item A (rerun earlier) : four built-in datasets unchanged; BatteryLife rows changed
+(e.g. PID hnei 69.1 -> 38.0, ul_pur 72.8 -> 58.9) with no headline verdict flipped.
+
+**Companion deliverable:** `report/walkthrough/Project_Walkthrough.pdf` (78 pages, status-labelled) committed as aa29c2d.
