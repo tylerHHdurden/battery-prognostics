@@ -34,8 +34,18 @@ class EncoderMismatch(AssertionError):
     pass
 
 
+_TEXT_SUFFIXES = {".json", ".csv", ".txt", ".md"}
+
+
 def _md5(path: Path) -> str:
+    """md5 of a file. Text files (json/csv/txt/md) are hashed with CRLF normalised to LF: on Windows with core.autocrlf the same
+    committed file is CRLF on disk, on Linux (Streamlit Cloud) it is LF, and a raw hash differs between the two (this caused an
+    EncoderMismatch on the live app on 2026-10-01). Binary files (.pt, .pkl, .parquet) are hashed as-is."""
+    path = Path(path)
     h = hashlib.md5()
+    if path.suffix.lower() in _TEXT_SUFFIXES:
+        h.update(path.read_bytes().replace(b"\r\n", b"\n"))
+        return h.hexdigest()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(1 << 20), b""):
             h.update(chunk)
