@@ -111,7 +111,8 @@ sources (disclosed infrastructure gap, not silently skipped).
 
 | Dataset | RUL R2 | RUL RMSE (cycles) | RUL MAE (cycles) | RUL MAPE (%) | Target RUL range (cycles) | n batteries |
 |---|---|---|---|---|---|---|
-| In-domain (TEST, reference) | 0.666 | - | - | - | mean 390.6, std 292.9 (train-fit scale) | - |
+| In-domain (TEST) - first-pass joint model (reference) | 0.666 | - | - | - | mean 390.6, std 292.9 (train-fit scale) | - |
+| In-domain (TEST) - deployed model (retrained, Stage 4) | 0.374 | 265.30 | - | - | see DEVELOPMENT_LOG.md Stage 4 step 2b | - |
 | CALCE | -566.35 | 474.2 | 421.5 | 1395.9 | 0-125, mean 5.9, std 19.9 | 3 |
 | Oxford | -1.31 | 3208.5 | 2520.0 | - | - | 8 |
 | HUST | -0.45 | 689.7 | 543.3 | - | - | 77 |
@@ -388,21 +389,23 @@ recommended for deployment.
 
 ## 11. Complete baseline table (item C) - engineered HI+fusion features dramatically beat literature early-cycle-life baselines, with one important exception
 
-| Dataset | Trivial linear | Severson variance | Attia rich | Deployed base | Routed (oracle) | Best LODO |
-|---|---|---|---|---|---|---|
-| CALCE | -0.858 | 0.077 | 0.078 | 0.749 | 0.740 | **0.870** |
-| Oxford | -7.589 | 0.169 | 0.195 | **0.940** | 0.953 | -0.571 |
-| HUST | 0.755 | -1.790 | -1.437 | 0.795 | **0.800** | 0.535 |
-| XJTU | 0.279 | -7.835 | -7.410 | **-1.037** | -1.037 | -4.100 |
-| ul_pur | -0.566 | -3.292 | -3.397 | 0.116 | 0.116 | **0.488** |
-| hnei | -2.001 | -0.087 | -0.108 | -0.038 | -0.038 | **0.681** |
-| snl | -0.550 | -0.324 | -0.275 | 0.147 | 0.147 | **0.442** |
-| mich | -0.275 | 0.241 | 0.252 | 0.573 | 0.573 | **0.795** |
-| mich_exp | -0.217 | -0.206 | -0.122 | **0.721** | 0.721 | 0.638 |
-| rwth | -0.000 | -0.000 | -0.001 | -0.485 | -0.485 | **0.353** |
-| stanford | -0.274 | 0.148 | 0.135 | 0.111 | 0.111 | **0.997** |
-| stanford_2 | -0.206 | 0.121 | 0.108 | 0.066 | 0.066 | **0.990** |
-| isu_ilcc | 0.358 | -0.989 | -1.024 | 0.140 | 0.140 | **0.800** |
+| Dataset | Trivial linear | Severson variance | Attia rich | Routed (5-seed) | True deployed base (audit) | Routed (oracle) | Best LODO |
+|---|---|---|---|---|---|---|---|
+| CALCE | -0.858 | 0.077 | 0.078 | 0.749 | 0.568 | 0.740 | **0.870** |
+| Oxford | -7.589 | 0.169 | 0.195 | **0.940** | -2.694 | 0.953 | -0.571 |
+| HUST | 0.755 | -1.790 | -1.437 | 0.795 | -0.152 | **0.800** | 0.535 |
+| XJTU | 0.279 | -7.835 | -7.410 | **-1.037** | -1.062 | -1.037 | -4.100 |
+| ul_pur | -0.566 | -3.292 | -3.397 | 0.116 | not audited | 0.116 | **0.488** |
+| hnei | -2.001 | -0.087 | -0.108 | -0.038 | not audited | -0.038 | **0.681** |
+| snl | -0.550 | -0.324 | -0.275 | 0.147 | not audited | 0.147 | **0.442** |
+| mich | -0.275 | 0.241 | 0.252 | 0.573 | not audited | 0.573 | **0.795** |
+| mich_exp | -0.217 | -0.206 | -0.122 | **0.721** | not audited | 0.721 | 0.638 |
+| rwth | -0.000 | -0.000 | -0.001 | -0.485 | not audited | -0.485 | **0.353** |
+| stanford | -0.274 | 0.148 | 0.135 | 0.111 | not audited | 0.111 | **0.997** |
+| stanford_2 | -0.206 | 0.121 | 0.108 | 0.066 | not audited | 0.066 | **0.990** |
+| isu_ilcc | 0.358 | -0.989 | -1.024 | 0.140 | not audited | 0.140 | **0.800** |
+
+**Column labels corrected 2026-09-30.** The column earlier headed "Deployed base" holds the *routed* 5-seed numbers (dataset-aware routing applied; CALCE/Oxford/HUST use the extended-reformulation model, selected on the same held-out data). The true deployed base model (`xgb_soh_fusion.json`, no routing) is the new column, from `outputs/audit_true_deployed_baseline.csv` (single fixed-seed model, so it is not a 5-seed mean; BatteryLife rows were not part of that audit). In the significance sentences below, "deployed base model" refers to the routed numbers.
 
 **Engineered HI+fusion+XGBoost dramatically outperforms Severson
 (2019)/Attia-style early-cycle-life features on cross-dataset zero-
