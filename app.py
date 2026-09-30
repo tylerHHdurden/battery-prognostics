@@ -128,7 +128,7 @@ h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
 }
 
 /* 2026-10-01 redesign: accessible contrast and focus, mobile layout (no external font request: faster first load) */
-[data-testid="stCaptionContainer"], .stCaption { color: #4a4a5a !important; }
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] *, .stCaption { color: #4a4a5a !important; }
 :focus-visible { outline: 3px solid #2166ac !important; outline-offset: 2px; }
 @media (max-width: 640px) {
     .block-container { padding-left: 0.8rem !important; padding-right: 0.8rem !important; padding-top: 2.2rem !important; }
@@ -567,7 +567,7 @@ def render_first_screen():
     c1, c2, c3 = st.columns(3)
     with c1.container(border=True):
         st.markdown("**Researcher**")
-        st.caption("Browse NASA, MIT, CALCE, Oxford, HUST or XJTU in the sidebar, then read the Explainability and Model Validation tabs. Every number carries a status label.")
+        st.caption("Browse NASA, MIT, CALCE, Oxford, HUST or XJTU in the sidebar, then read the Explainability and Model Validation tabs. Each results section carries a status label (VERIFIED or SUPERSEDED).")
     with c2.container(border=True):
         st.markdown("**EV, fleet or BMS engineer**")
         st.caption("Upload cycle data (sample file in the sidebar). Read the result card, then download the passport from the Prediction tab. Confirm any flagged battery with a measured capacity.")
