@@ -14856,3 +14856,126 @@ affected run - kept for the record, NOT used for any conclusion above).
 No deployed file touched - this phase is evaluation-only, nothing here
 changes `live_inference.py`'s own routing.
 
+## Phase 2C: label-efficient checkpoints - at 5/10/20/40 labels/battery, coverage stays far below target on most external sources; life-stage-weighted underperforms even spacing
+
+Question (`PLAN.md`): at a FIXED, EQUAL label budget per battery, which
+checkpoint-selection policy gets the best coverage/width tradeoff, and
+what's a defensible minimum-labels recommendation?
+
+**Built on `src/online_conformal.py` unchanged in its core recursion**
+(PID/nexCP, already there from Phase 3(a)) **plus three new additions**:
+`fixed_every_n_schedule`/`life_stage_schedule` (both precomputed
+upfront from a battery's own known total length only, never a label
+value) and `UncertaintyTriggeredScheduler` (reveals when the current
+conformal interval half-width crosses a threshold OR an ADWIN drift
+detector - fed only ALREADY-REVEALED residuals - fires; guarantees the
+SAME total budget as the other two policies by partitioning the
+battery into `budget` equal slots and falling back to each slot's last
+cycle if neither trigger ever fires within it). `run_batch_with_schedule`
+calls `update()` (the only label-revealing method) ONLY at chosen
+checkpoints - `interval()` still runs every cycle, unchanged.
+
+**No-lookahead, verified not assumed, for the SCHEDULES themselves**
+(a DIFFERENT property than the conformal recursion's own no-lookahead
+test, which already existed) - `test_online_conformal.py::
+test_schedule_no_lookahead`: shuffling every true label after a
+mid-slot checkpoint `t_check` must not change which cycles were chosen
+for revelation up to and including `t_check`. Fixed/life-stage pass
+trivially (proven, not just assumed, by re-running them and checking
+byte-identical output - they never look at a label at all).
+Uncertainty-triggered is the one that genuinely needs the guard, and a
+real runtime `assert cycle_idx >= self._max_cycle_seen` inside
+`UncertaintyTriggeredScheduler.should_reveal` backs it up in production
+use, not just in the test.
+
+**Scope**: reused Phase 3(a)'s own dataset routing (`get_target`) and
+the SAME 13-source external/BatteryLife scope that script already
+established (CALCE/Oxford/HUST/XJTU + 9 BatteryLife sources; Tongji
+omitted here for direct comparability with Phase 3(a)'s own existing
+numbers, predating Tongji's integration) and the SAME PID
+eta=0.1/k_burnin=10 primary configuration - not re-tuned.
+
+**Much cheaper than Phase 2B** (no model retraining at all - reuses
+already-trained base/extended models' predictions, just the O(n)
+conformal recursion + scheduling on top): full run, all 3 policies x 4
+budgets x 12 datasets (Oxford's own data didn't require the mich/
+mich_exp-style skip), **1.36 minutes total**.
+
+### RESULTS: pooled (unweighted mean across datasets)
+
+| Budget | Policy | Mean coverage | Mean rolling-min coverage | Mean late-life coverage | Mean width |
+|---|---|---|---|---|---|
+| 5 | fixed_every_n | 0.219 | 0.007 | 0.228 | 6.64 |
+| 5 | uncertainty | 0.206 | 0.007 | 0.225 | 6.33 |
+| 5 | life_stage | 0.174 | 0.007 | 0.185 | 5.01 |
+| 10 | fixed_every_n | 0.313 | 0.007 | 0.283 | 9.42 |
+| 10 | uncertainty | 0.304 | 0.007 | 0.286 | 9.33 |
+| 10 | life_stage | 0.230 | 0.007 | 0.264 | 7.05 |
+| 20 | fixed_every_n | 0.413 | 0.006 | 0.325 | 12.82 |
+| 20 | uncertainty | 0.410 | 0.007 | 0.325 | 12.88 |
+| 20 | life_stage | 0.303 | 0.007 | 0.322 | 9.79 |
+| 40 | uncertainty | **0.511** | 0.007 | 0.385 | 16.35 |
+| 40 | fixed_every_n | 0.510 | 0.006 | 0.384 | 16.36 |
+| 40 | life_stage | 0.393 | 0.007 | 0.398 | 12.45 |
+
+**Finding 1: none of the four tested budgets reach a usable coverage
+target pooled across sources** - even the best budget/policy (40
+labels, fixed_every_n/uncertainty, essentially tied) only reaches 51%
+mean coverage, far below this project's own 90% conformal target (or
+even Phase 3(a)'s 70% "trustworthy" bar). **RECOMMENDATION, stated
+honestly: at these tested budgets, no policy is close to usable
+pooled across this project's external sources - not forced into a
+false-positive "N labels is enough" claim.** Mean rolling-min coverage
+stays near-zero (~0.6-0.7%) at EVERY budget/policy - mechanistically
+expected, not a bug: between two sparse reveals the interval is frozen,
+and on these already-severely-shifted external sources (this project's
+own standing, disclosed finding throughout - RUL cross-domain R2=-566,
+OC-SVM's near-uniform flagging, etc.) drift accumulates enough within a
+gap that SOME 20-cycle window fails almost completely, for essentially
+every battery tested.
+
+**Finding 2: highly variable by source - a handful of sources DO reach
+a usable point at budget=40, most don't.** At budget=40: XJTU reaches
+76% coverage / 92% late-life coverage (47 batteries) under
+fixed_every_n; stanford/stanford_2 reach ~70% coverage (~65% late-life);
+isu_ilcc reaches 68% coverage but a strong 82-83% late-life coverage.
+At the other extreme, **hnei, rwth, and mich never exceed ~45% coverage
+even at budget=40, and their own LATE-LIFE coverage is catastrophically
+near-ZERO (0.0-0.2%)** - meaning for these three sources, the
+end-of-life interval is essentially always wrong regardless of
+checkpoint policy, the exact window that matters most for a real
+RUL-adjacent trust decision. Same qualitative pattern this project has
+found repeatedly for these same specific sources elsewhere (e.g. mich's
+own "no battery ever stabilizes" finding under FULL, every-cycle
+revelation in Phase 3(a) itself) - this is consistent with, not
+contradicting, prior findings, not a new anomaly specific to sparse
+checkpointing.
+
+**Finding 3: life-stage-weighted consistently UNDERPERFORMS the other
+two policies, on every budget and nearly every dataset** - counter to
+the naive expectation that concentrating checkpoints late in life
+(where SOH changes fastest) would help. Diagnosed, not just observed:
+concentrating budget late in life means the EARLY portion of the
+battery's life gets almost no correction at all, so the PID controller
+enters its own densely-checkpointed late-life region already carrying
+a wide, poorly-calibrated interval from a long uncorrected stretch -
+the FEW early corrections `fixed_every_n`/`uncertainty` do get appear
+more valuable for keeping the PID's own error-integral term on track
+than the extra late-life density is at fixing it after the fact.
+**Uncertainty-triggered and fixed-every-n perform almost identically
+throughout** (e.g. budget=40: 0.511 vs 0.510 pooled) - the adaptive
+trigger doesn't meaningfully beat even spacing at these budgets, though
+it is never meaningfully worse either.
+
+### Files
+
+`src/online_conformal.py` (extended - `fixed_every_n_schedule`,
+`life_stage_schedule`, `UncertaintyTriggeredScheduler`,
+`run_batch_with_schedule`), `src/test_online_conformal.py` (extended -
+`test_schedule_no_lookahead`), `src/run_toolkit_phase2c_label_efficient.py`
+(new), `outputs/toolkit_phase2c_label_efficient.csv`, `outputs/
+toolkit_phase2c_label_efficient_run.log`. No deployed file touched -
+`live_inference.py`/`app.py` unchanged; wiring the digital twin's "next
+recommended measurement" UI is Phase 3 scope per `PLAN.md`, not this
+item.
+

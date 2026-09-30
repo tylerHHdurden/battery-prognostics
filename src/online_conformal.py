@@ -157,3 +157,129 @@ def run_batch(y: np.ndarray, yhat: np.ndarray, q_src: float, method: str,
         lo[t], hi[t] = oc.interval(yhat[t], cycle_idx=c)
         oc.update(y[t], yhat[t], cycle_idx=c)
     return lo, hi
+
+
+# ---------------------------------------------------------------------------
+# Toolkit Phase 2C: label-efficient checkpoints - the model predicts every
+# cycle (via `interval()`, unchanged), but the TRUE label is only ever
+# revealed to `update()` at chosen checkpoints, not every cycle. Three
+# schedule policies, all built to respect the same no-lookahead contract
+# `OnlineConformal` itself already keeps (see module docstring): a
+# schedule's decision for cycle t may use only information available up
+# to and including t, never a later cycle's true label.
+# ---------------------------------------------------------------------------
+
+def fixed_every_n_schedule(battery_length: int, budget: int) -> list[int]:
+    """Reveal `budget` labels spaced as evenly as possible across the
+    battery's own KNOWN TOTAL LENGTH. Precomputed once, upfront, from a
+    quantity (total cycle count) this project's evaluation setting
+    already knows in advance - not from any LABEL VALUE - so this is not
+    a no-lookahead violation in the sense that property is about (using
+    a future measurement's value early), the same way a lab knowing a
+    planned test's total duration upfront isn't "cheating" the way
+    peeking at a future SOH reading would be."""
+    if budget <= 0 or battery_length <= 0:
+        return []
+    step = battery_length / budget
+    return sorted(set(min(battery_length - 1, int(round(i * step))) for i in range(budget)))
+
+
+def life_stage_schedule(battery_length: int, budget: int, gamma: float = 0.5) -> list[int]:
+    """Same upfront-only information as `fixed_every_n_schedule` (total
+    length, never a label), but concentrated late in life via gamma<1
+    (a concave power-law warp of the [0,1] budget index - checkpoint
+    spacing shrinks as cycle index grows, since SOH changes faster and
+    matters more for RUL near end-of-life)."""
+    if budget <= 0 or battery_length <= 0:
+        return []
+    denom = max(1, budget - 1)
+    fracs = [(k / denom) ** gamma for k in range(budget)]
+    return sorted(set(min(battery_length - 1, int(round(f * (battery_length - 1)))) for f in fracs))
+
+
+class UncertaintyTriggeredScheduler:
+    """Chooses which cycles get a label revealed using ONLY the current
+    conformal interval width and an ADWIN drift detector fed exclusively
+    with ALREADY-REVEALED residuals - never a future label. Guarantees
+    exactly `budget` reveals total (for a fair, equal-budget comparison
+    against the other two policies) by partitioning the battery into
+    `budget` equal-length slots upfront (same upfront-only "known total
+    length" information the other two schedules use) and revealing once
+    per slot: at the FIRST cycle in that slot where the interval
+    half-width exceeds `width_threshold` OR ADWIN signals drift,
+    otherwise at the slot's own last cycle (so every slot contributes
+    exactly one reveal even if neither trigger ever fires)."""
+
+    def __init__(self, battery_length: int, budget: int, width_threshold: float, adwin_delta: float = 0.002):
+        from river.drift import ADWIN
+        edges = np.linspace(0, battery_length, budget + 1)
+        self.slots = [(int(edges[i]), int(edges[i + 1]) - 1) for i in range(budget)]
+        self.width_threshold = width_threshold
+        self.adwin = ADWIN(delta=adwin_delta)
+        self._slot_idx = 0
+        self._max_cycle_seen = -1  # no-lookahead guard: cycles must arrive in non-decreasing order
+
+    def should_reveal(self, cycle_idx: int, current_interval_width: float) -> bool:
+        """Call once per cycle, BEFORE that cycle's true label is known -
+        current_interval_width must come from `OnlineConformal.interval()`
+        (already causal) computed at this same cycle."""
+        assert cycle_idx >= self._max_cycle_seen, \
+            f"no-lookahead violation: cycle {cycle_idx} arrived after cycle {self._max_cycle_seen}"
+        self._max_cycle_seen = cycle_idx
+        if self._slot_idx >= len(self.slots):
+            return False
+        lo, hi = self.slots[self._slot_idx]
+        if cycle_idx < lo:
+            return False
+        if cycle_idx > hi:
+            self._slot_idx += 1  # missed this slot's window - force a reveal at the next opportunity
+            return True
+        triggered = current_interval_width > self.width_threshold or self.adwin.drift_detected
+        if cycle_idx == hi or triggered:
+            self._slot_idx += 1
+            return True
+        return False
+
+    def observe_residual(self, resid: float) -> None:
+        """Call ONLY immediately after a label was actually revealed at
+        the current cycle (never for an unrevealed cycle) - feeds ADWIN
+        the residual just observed, so its own drift state is built
+        exclusively from labels already seen, same causal guarantee as
+        everything else in this module."""
+        self.adwin.update(resid)
+
+
+def run_batch_with_schedule(y: np.ndarray, yhat: np.ndarray, q_src: float, method: str,
+                             checkpoints: set[int] | None, alpha: float = ALPHA_DEFAULT,
+                             k_burnin: int = 10, cyc: np.ndarray | None = None,
+                             scheduler: "UncertaintyTriggeredScheduler | None" = None,
+                             **params) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Same per-cycle interval() contract as `run_batch`, but `update()`
+    (the ONLY method that reveals a label to the tracker) is called ONLY
+    at chosen checkpoints - every other cycle gets a real, causal
+    interval from whatever state was last updated, and nothing more.
+
+    Exactly one of `checkpoints` (a precomputed set, for the fixed/
+    life-stage schedules) or `scheduler` (for the uncertainty-triggered
+    schedule, decided cycle-by-cycle) must be given. Returns (lo, hi,
+    revealed_mask) - revealed_mask lets the caller verify the actual
+    label budget spent matches what was intended."""
+    assert (checkpoints is None) != (scheduler is None), \
+        "run_batch_with_schedule needs exactly one of checkpoints or scheduler"
+    n = len(y)
+    oc = OnlineConformal(q_src, method, alpha=alpha, k_burnin=k_burnin, **params)
+    lo, hi = np.empty(n), np.empty(n)
+    revealed = np.zeros(n, dtype=bool)
+    for t in range(n):
+        c = cyc[t] if cyc is not None else t
+        lo[t], hi[t] = oc.interval(yhat[t], cycle_idx=c)
+        if checkpoints is not None:
+            reveal = t in checkpoints
+        else:
+            reveal = scheduler.should_reveal(t, hi[t] - lo[t])
+        if reveal:
+            oc.update(y[t], yhat[t], cycle_idx=c)
+            revealed[t] = True
+            if scheduler is not None:
+                scheduler.observe_residual(abs(float(y[t]) - float(yhat[t])))
+    return lo, hi, revealed

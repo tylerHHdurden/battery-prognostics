@@ -109,8 +109,73 @@ def test_interval_is_idempotent():
     print("  PASSED\n")
 
 
+def test_schedule_no_lookahead():
+    """Toolkit Phase 2C's own no-lookahead property, distinct from
+    test_no_lookahead() above: that test verifies the CONFORMAL
+    RECURSION itself has no lookahead given a correctly-ordered call
+    sequence. This test verifies the CHECKPOINT SCHEDULES (which
+    cycle's label gets revealed at all) built on top of it don't leak
+    future label information either - shuffling every true label after
+    t_check must not change which cycles were CHOSEN for revelation up
+    to and including t_check, for all three schedule types."""
+    print("=== test_schedule_no_lookahead ===")
+    from online_conformal import (fixed_every_n_schedule, life_stage_schedule,
+                                   UncertaintyTriggeredScheduler, run_batch_with_schedule)
+    rng = np.random.default_rng(SEED)
+    n = 300
+    yhat = 90 - 0.03 * np.arange(n) + rng.normal(0, 0.3, n)
+    y = yhat + rng.normal(0, 1.0, n)
+    budget = 20
+    t_check = 155  # deliberately mid-slot (slot boundaries are multiples of 15 here), so the
+    # shuffle can actually change whether THIS slot's own remaining cycles trigger early vs. fall back
+
+    # fixed / life-stage: precomputed from battery length alone - trivially
+    # label-independent, but verified directly rather than just asserted.
+    fixed_cps = set(fixed_every_n_schedule(n, budget))
+    life_cps = set(life_stage_schedule(n, budget))
+    y_shuffled = y.copy()
+    future = y_shuffled[t_check + 1:]
+    rng.shuffle(future)
+    y_shuffled[t_check + 1:] = future
+    assert not np.array_equal(y_shuffled, y), "shuffle produced no change - vacuous test"
+    fixed_cps_2 = set(fixed_every_n_schedule(n, budget))
+    life_cps_2 = set(life_stage_schedule(n, budget))
+    assert fixed_cps == fixed_cps_2 and life_cps == life_cps_2, \
+        "fixed/life-stage schedules somehow changed - they must depend on battery length only"
+    print(f"  fixed_every_n / life_stage: schedule depends only on battery length (n={n}), "
+          f"unaffected by label shuffling - PASSED")
+
+    # uncertainty-triggered: the one that genuinely needs the guard -
+    # run once on the real labels, once on labels shuffled after t_check,
+    # and check the CHOSEN checkpoints up to t_check are identical.
+    def run_uncertainty(y_arr):
+        sched = UncertaintyTriggeredScheduler(n, budget, width_threshold=2.4)
+        _, _, revealed = run_batch_with_schedule(y_arr, yhat, q_src=1.0, method="PID",
+                                                  checkpoints=None, k_burnin=10, eta=0.1, scheduler=sched)
+        return revealed
+
+    revealed_1 = run_uncertainty(y)
+    revealed_2 = run_uncertainty(y_shuffled)
+    before_match = np.array_equal(revealed_1[:t_check + 1], revealed_2[:t_check + 1])
+    # informational only, not asserted: the trigger is a discrete threshold crossing, so it's a
+    # real possibility (not a test bug) for two different shuffled residual sequences to still land
+    # on the same reveal/no-reveal decision downstream - separately confirmed elsewhere that
+    # width_threshold genuinely changes this scheduler's output in general (varying it from 1.5 to
+    # 3.0 visibly shifts which cycles get chosen), so this scheduler is not simply ignoring its
+    # inputs; this specific run's shuffle happening not to flip any downstream decision doesn't
+    # weaken the assertion below, which is what actually matters.
+    after_differs = not np.array_equal(revealed_1[t_check + 1:], revealed_2[t_check + 1:])
+    print(f"  uncertainty-triggered: checkpoints chosen up to t_check={t_check} identical after "
+          f"shuffling future labels: {before_match} (must be True) | checkpoints after t_check "
+          f"changed: {after_differs} (informational - a discrete threshold can legitimately land on "
+          f"the same decision either way; not asserted)")
+    assert before_match, "LOOKAHEAD BUG: uncertainty-triggered schedule's early checkpoints changed"
+    print("  PASSED\n")
+
+
 if __name__ == "__main__":
     test_no_lookahead()
     test_matches_item_a_batch_functions()
     test_interval_is_idempotent()
+    test_schedule_no_lookahead()
     print("=== ALL TESTS PASSED ===")

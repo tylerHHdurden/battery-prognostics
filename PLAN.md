@@ -67,7 +67,21 @@ phase.
   down to 1 tree; a self-built off-by-one in the fix's own batched
   version) - see DEVELOPMENT_LOG.md for both. Full results:
   `outputs/toolkit_phase2b_federated_results.csv`.
-- **Phase 2C, 3, 3B, 4, 5**: NOT STARTED. Specs below.
+- **Phase 2C** (label-efficient checkpoints): COMPLETE, 2026-09-30.
+  Result: at the 4 tested budgets (5/10/20/40 labels/battery), NO
+  budget reaches a usable pooled coverage target (best case, 40 labels:
+  51% mean coverage, still far below the 90% target). Highly variable
+  by source (XJTU reaches 76%/92% late-life at budget=40; hnei/rwth/
+  mich stay near-zero late-life coverage even at 40). Life-stage-
+  weighted checkpointing consistently underperforms even spacing.
+  Uncertainty-triggered ~ties fixed-every-n throughout - the adaptive
+  trigger doesn't meaningfully help at these budgets. No forced
+  minimum-labels recommendation given - reported honestly as "none of
+  these budgets are enough." `online_conformal.py` extended with the
+  3 schedule implementations + a real no-lookahead test for the
+  schedules themselves (distinct from the recursion's own existing
+  test). Full results: `outputs/toolkit_phase2c_label_efficient.csv`.
+- **Phase 3, 3B, 4, 5**: NOT STARTED. Specs below.
 
 ## OC-SVM correction (2026-09-29, supersedes the Phase 2e "REPLACE...move to Research" recommendation)
 

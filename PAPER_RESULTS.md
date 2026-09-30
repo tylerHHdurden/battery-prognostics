@@ -600,6 +600,48 @@ LOG.md`, "Phase 2B: federated multi-source learning" section.*
 
 ---
 
+# Toolkit pass, Phase 2C: label-efficient checkpoints - no tested budget reaches a usable coverage target, and life-stage weighting underperforms even spacing
+
+At equal label budgets (5/10/20/40 true-SOH revelations per battery,
+model still predicts every cycle), compared three checkpoint-selection
+policies - fixed even spacing, life-stage-weighted (denser late in
+life), and uncertainty-triggered (reveals on conformal-interval-width
+or ADWIN drift signal, both fed only already-revealed information) -
+under this project's own PID online-conformal recursion (eta=0.1,
+k_burnin=10) and the SAME 13-source external/BatteryLife scope Phase
+3(a)'s own minimum-checkpoints work already established.
+
+| Budget | Best policy | Mean coverage (pooled) | Mean late-life coverage |
+|---|---|---|---|
+| 5 | fixed_every_n | 0.219 | 0.228 |
+| 10 | fixed_every_n | 0.313 | 0.283 |
+| 20 | fixed_every_n | 0.413 | 0.325 |
+| 40 | uncertainty (~tied with fixed_every_n) | **0.511** | 0.385 |
+
+**None of the four tested budgets reach a usable pooled coverage
+target** - even the best case (40 labels) only reaches 51% mean
+coverage, well short of this project's own 90% conformal target.
+Highly variable by source, consistent with this project's standing
+theme of severe, uneven out-of-domain shift: at budget=40, XJTU reaches
+76% coverage / 92% late-life coverage, but hnei/rwth/mich stay below
+45% coverage with **near-zero (0-0.2%) late-life coverage** - the exact
+window that matters most for a real trust decision. **Life-stage-
+weighted checkpointing consistently underperforms even spacing on
+every budget** - concentrating labels late in life starves the PID
+controller's error-correction of the early corrections it needs, so it
+enters the dense late-life region already badly miscalibrated.
+**Uncertainty-triggered and fixed-every-n perform almost identically**
+throughout - the adaptive trigger doesn't meaningfully beat simple even
+spacing at these budgets. **No forced minimum-labels recommendation is
+given** - the honest result at these tested budgets is that none of
+them are enough, reported as such rather than rounded up to a false
+positive.
+
+*Full detail: `DEVELOPMENT_LOG.md`, "Phase 2C: label-efficient
+checkpoints" section.*
+
+---
+
 *Full experimental detail for items A-F and the final verification
 pass: `DEVELOPMENT_LOG.md`, "Final experiment pass 2 before the paper"
 and "Final verification pass" sections. Toolkit-pass detail:
