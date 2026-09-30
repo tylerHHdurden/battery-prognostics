@@ -1,0 +1,94 @@
+2026-09-30 21:36:12.489 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-09-30 21:36:46.774 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-30 21:36:46.926 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+{"case": "NASA", "header": "B0005 — cycle 168 of 168", "exceptions": 0, "out_of_domain_banner": false, "neutral_no_shift_note": true, "not_detected_line_shown": true, "any_green_trusted_message": true, "banner_reason": null, "banner_has_both_error_numbers": false, "soh_metric": "71.7%", "rul_metric": "2 cycles", "rul_hidden_reason": null, "unreliable_banner": false, "secs": 49.7}
+2026-09-30 21:37:02.186 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-09-30 21:37:13.874 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-30 21:37:13.921 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+{"case": "MIT", "header": "b1c17 — cycle 855 of 855", "exceptions": 0, "out_of_domain_banner": false, "neutral_no_shift_note": true, "not_detected_line_shown": true, "any_green_trusted_message": true, "banner_reason": null, "banner_has_both_error_numbers": false, "soh_metric": "82.5%", "rul_metric": "0 cycles", "rul_hidden_reason": null, "unreliable_banner": false, "secs": 37.3}
+2026-09-30 21:37:39.443 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-09-30 21:39:42.422 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-30 21:39:42.487 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+{"case": "CALCE", "header": "CS2_35 — cycle 932 of 932", "exceptions": 0, "out_of_domain_banner": false, "neutral_no_shift_note": true, "not_detected_line_shown": true, "any_green_trusted_message": true, "banner_reason": null, "banner_has_both_error_numbers": false, "soh_metric": "54.0%", "rul_metric": "not available", "rul_hidden_reason": "ℹ️ RUL is hidden rather than shown unreliably - its nearest known source is CALCE, which the RUL model was never trained on (it only saw NASA+MIT). RUL was never validated to work outside NASA+MIT (this project's own direct evidence: CALCE RUL R2=-566, a catas", "unreliable_banner": false, "secs": 146.7}
+2026-09-30 21:40:06.124 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-09-30 21:40:08.193 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-30 21:40:08.251 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+{"case": "Oxford", "header": "Cell1 — cycle 8200", "exceptions": 0, "out_of_domain_banner": false, "neutral_no_shift_note": true, "not_detected_line_shown": true, "any_green_trusted_message": true, "banner_reason": null, "banner_has_both_error_numbers": false, "soh_metric": "73.5%", "rul_metric": "not available", "rul_hidden_reason": null, "unreliable_banner": false, "secs": 11.4}
+2026-09-30 21:40:17.483 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-09-30 21:40:20.007 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-30 21:40:20.066 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+{"case": "HUST", "header": "1-1 — cycle 1504", "exceptions": 0, "out_of_domain_banner": false, "neutral_no_shift_note": true, "not_detected_line_shown": true, "any_green_trusted_message": true, "banner_reason": null, "banner_has_both_error_numbers": false, "soh_metric": "79.3%", "rul_metric": "not available", "rul_hidden_reason": null, "unreliable_banner": false, "secs": 10.9}
+2026-09-30 21:40:28.338 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-09-30 21:40:30.205 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-30 21:40:30.239 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+{"case": "XJTU", "header": "Batch-1/2C_battery-1 — cycle 390", "exceptions": 0, "out_of_domain_banner": false, "neutral_no_shift_note": true, "not_detected_line_shown": true, "any_green_trusted_message": true, "banner_reason": null, "banner_has_both_error_numbers": false, "soh_metric": "95.2%", "rul_metric": "not available", "rul_hidden_reason": null, "unreliable_banner": false, "secs": 9.3}
+2026-09-30 21:40:37.651 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-09-30 21:40:39.002 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-30 21:40:39.038 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-30 21:40:45.932 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-09-30 21:40:45.961 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+{"case": "HNEI upload", "header": "hnei_test.csv — cycle 30 of 30", "exceptions": 0, "out_of_domain_banner": false, "neutral_no_shift_note": true, "not_detected_line_shown": true, "any_green_trusted_message": true, "banner_reason": null, "banner_has_both_error_numbers": false, "soh_metric": "97.3%", "rul_metric": "not available", "rul_hidden_reason": "ℹ️ RUL is hidden rather than shown unreliably - its nearest known source is snl, which the RUL model was never trained on (it only saw NASA+MIT). RUL was never validated to work outside NASA+MIT (this project's own direct evidence: CALCE RUL R2=-566, a catastr", "unreliable_banner": false, "secs": 16.5}

@@ -1,0 +1,42 @@
+{
+ "ul_pur": {
+  "sha256": "5f8ddd2f004606b598a986eb46bd8e467e2b6124ad690d9bbd92a1ae75358a32",
+  "bytes": 519514
+ },
+ "hnei": {
+  "sha256": "cef6fd193f3f0cf280b3c05c3d518890c19ab3505181f8fa5d24d9fe0fe7119a",
+  "bytes": 2276337
+ },
+ "snl": {
+  "sha256": "6ae02da51da8fd88919d9f8a427e470f9ad56e0edf336b7db2e379277d779949",
+  "bytes": 9439882
+ },
+ "mich": {
+  "sha256": "1e090859c640396aabcc9418b7f3635458454b114d009454c4baf86dbf4edaa9",
+  "bytes": 4484303
+ },
+ "mich_exp": {
+  "sha256": "58501c151e68e3c45bcf4f48aa0cc8dacc1c425217c0e9dd7ec3fc1ce8dafbf8",
+  "bytes": 1073221
+ },
+ "rwth": {
+  "sha256": "de63ab6662895d095ef1d8e8ed09882cec27be2cf64d8510a77f2e32263d4515",
+  "bytes": 5276798
+ },
+ "stanford": {
+  "sha256": "4d23c7ab06e1bbd589e7adbabb725a0bb1d151e3aefc4587019ad877ff2472e4",
+  "bytes": 1556388
+ },
+ "stanford_2": {
+  "sha256": "6443604880ec776f73568c91de0197b5e4ee7ae983e703c114e5df5f46f35104",
+  "bytes": 2359378
+ },
+ "isu_ilcc": {
+  "sha256": "5ad518c182ee1d909b83c60a05adbedbb9738aa6a7c8bdaa0ef2a32adf43cbee",
+  "bytes": 8292021
+ },
+ "tongji": {
+  "sha256": "1606ae890f7d013eec09185924016d7df96c79e14d2a517b0f8fc8973ff6a704",
+  "bytes": 16562544
+ }
+}

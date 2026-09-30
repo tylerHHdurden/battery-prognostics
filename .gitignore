@@ -41,3 +41,6 @@ data/processed/_calce_ica_unlabeled_cache.npy
 # (data/processed/ and models/ are all well under this - largest tracked
 # file is ~9MB - so this line should never actually match anything, but
 # keeps future large artifacts from being added by accident.)
+
+# Student report and walkthrough: contain names / register numbers - kept local only (2026-10-01)
+report/

@@ -1,0 +1,95 @@
+[
+ {
+  "case": "unflagged (HNEI upload)",
+  "exceptions": 0,
+  "amber_warning": [],
+  "neutral_info": [
+   "**No distribution shift detected.** This does not mean the prediction is trusted or guaranteed.\n\nAbout 1 in 5 unfamiliar batteries are not detected; check against a measured capacity when possible.\n\nCheck validated by leaving each of 16 sources out in turn: it flagged 81.9% of batteries from an unseen source and wrongly flagged 11.0% of batteries from known sources. It is weakest for mich, NASA, snl. It is a screening check, not a guarantee."
+  ],
+  "st_success_elements": [
+   "**Continue normal use**",
+   "**The consistent finding across every one of these cases**: `SCV_rel` (a voltage-curve-slope ratio) is the cheapest, most consistent lever DiCE finds to flip the prediction - it appears in all 5 example cases above, always moving toward the same value (≈0.8). SHAP and LIME rank feature IMPORTANCE; this is a different, complementary question - which feature is easiest to imagine changing to get a meaningfully different outcome.",
+   "**Yes - α/β are now genuinely asymmetric**: 0.993/1.007 at epoch 0 → **0.527/1.473 by epoch 24**, steadily diverging rather than moving together.",
+   "With 6x more test batteries, XGBoost's edge over VLSTM and the ensemble's dependence on XGBoost-fusion are now formally, statistically confirmed - not just large point estimates that a small sample couldn't rule noise out on. **Lean vs. Full did NOT flip** - they remain statistically indistinguishable even at 6x the battery count, which *reinforces* rather than undermines session 20's original \"ship lean\" recommendation. Full CI tables: `bootstrap_*_expanded_ci.csv`.",
+   "**Deployment decision (flagged for review, not resolved on this session's own authority): the original 32-battery lean pipeline remains the deployed default.** Every expanded-pool file is additive - nothing original was overwritten, and this dashboard's Prediction/Explainability/Digital Twin tabs are unaffected by any of this. The expanded-pool result is presented throughout this archive as a clearly-labeled separate research finding, pending explicit review before any swap.",
+   "**Three of four datasets went from a genuine collapse (negative R²) to strong, usable accuracy.** Oxford's jump in particular - from worse than a flat average to 0.953 - is one of this project's largest single improvements from any one fix.",
+   "**A minimal, targeted fix rescued both problems at once.** Clamping that difference to a bounded range before the cross-cycle branch sees it - a few lines of code, not a redesign - took CALCE from a catastrophic collapse to **R²=0.506** (within reach of the deployed model's own 0.568 CALCE score at the time), AND improved in-domain accuracy too (0.55 → 0.69), for the same underlying reason: even in-domain, occasional far-apart battery pairs were producing the same kind of runaway input.",
+   "**Finally resolved cleanly, independent of any pool-composition experiment**: a later, more surgical test took HUST - one of the two most-similar, best-behaved datasets - and cut it down to match Oxford's exact small size (8 cells), then re-ran two unrelated methods that had each shown an outsized benefit specifically on Oxford. If Oxford's benefit were really just about having FEWER cells to evaluate on, a same-sized HUST sample should show a similarly outsized effect. It didn't - the small HUST sample behaved just like the FULL 77-cell HUST dataset in both tests, not like Oxford at all. **This confirms the real mechanism is Oxford's own genuine similarity to the training data, not sample size** - the same similarity-score idea from Finding #1, now tested and confirmed a second, independent way.",
+   "**It didn't - explanation (a) is refuted.** The size-matched HUST sample behaved just like the FULL 77-cell HUST dataset in both tests, not like Oxford. Cutting HUST down to Oxford's exact size reproduced HUST's own modest, ordinary result, not Oxford's dramatic one. **Oxford's outsized benefit is a real property of how similar it is to the training data - not a statistical artifact of its small size.** This is now a closed, tested finding, not an open question.",
+   "Parsed 30 usable cycles."
+  ],
+  "st_error_elements": [
+   "**Anomaly flag**: the One-Class SVM (a model trained on typical NASA+MIT data that flags anything unlike it) considers this cycle's feature vector unlike the NA",
+   "**Reported plainly, not softened: this does not yet produce a generally useful forecasting capability.** On 4 of 5 test sets, it is statistically indistinguisha",
+   "**Original run: CNN-LSTM did not learn (R²=-0.071, worse than predicting the mean).** Root-caused, not left as a known issue: the model's raw `dVdQ` input chann",
+   "**A real methodological bug, caught by checking the numbers, not just running the code.** The first draft calibrated on the TRAIN split's own residuals (the sam",
+   "**Verdict: the \"more data fixes CALCE\" hypothesis is only PARTIALLY confirmed - reported honestly, not rounded up.** Point-prediction accuracy under domain shif",
+   "**Bug caught before trusting any result: λ=1.0 silently broke training** (validation loss got worse every epoch, early-stopping kept an essentially untrained en",
+   "**But the model is worse than BOTH baselines on BOTH tasks.** `adaptive_softmax`: SOH R²=0.091 (vs. fixed_balanced's 0.416, adaptive's 0.344); RUL R²=0.244 (vs.",
+   "**First attempt (full 7-HI+16-fusion feature space) broke something that wasn't broken.** The domain classifier hit AUC=1.0000 for calib-vs-CALCE, but ALSO AUC=",
+   "**Honest headline: quantizing the encoder was almost beside the point.** ICAEncoder is 9.15KB of a 2,854.9KB total lean-pipeline size (0.3%) - `xgb_soh_fusion.j",
+   "**Most operationally important finding: at the exact moment a real disposition decision would be made for NASA/B0018 today, this model would incorrectly certify",
+   "**Synthesis: NASA training representation is only 2.7% of training CYCLES (vs. 97.3% MIT)** despite being 11.5% of training batteries - B0018 is a mild, within-",
+   "**A genuine bug caught by \"test it actually updates\" before it ever reached the app.** With unscaled raw SOH predictions (~70-100) and a fixed SGD learning rate",
+   "**Bug 1 - empty-Capacity NASA cycles.** 2 of 34 NASA batteries (B0050, B0052) crashed the parser with `IndexError: index 0 is out of bounds for axis 0 with size",
+   "**Bug 2 - degenerate SOH baselines, up to 2177%.** BFA's baseline RMSE jumped 6.8x unexpectedly - not accepted at face value. Root cause, confirmed on NASA/B004",
+   "**Honest exception: XJTU got WORSE, not better, and this was investigated rather than left unexplained.** After the fix, every individual reformulated feature's",
+   "**One dataset (XJTU) is a genuine, standing exception, reported honestly rather than smoothed over: even under the fairer same-model-type comparison, this proje",
+   "**Initial result: two real, distinct problems, diagnosed rather than left as one vague \"it didn't work.\"** (1) A large in-domain accuracy gap vs. the deployed m",
+   "**It didn't. All four datasets got WORSE under the NASA-heavy pool - including Oxford and XJTU, the two the theory specifically predicted would improve.** Oxfor"
+  ],
+  "predicted_soh": [
+   "97.3%"
+  ],
+  "predicted_rul": [
+   "not available"
+  ]
+ },
+ {
+  "case": "flagged (distorted upload)",
+  "exceptions": 0,
+  "amber_warning": [
+   "**This battery looks unfamiliar - treat its predictions with caution.** Reasons: its nearest-source score (nll_min = 240.1) is at or above the flag threshold (-5.5); nearest known source: snl.\n\n**Two error numbers to keep in mind (SOH points, MAE):** about **1.31** for batteries like the ones the model was built on (nearest known source: snl, held-out batteries), but about **5.9** typically on a source the model has never seen (median over leave-source-out tests).\n\nRUL is hidden, and the conformal interval was calibrated on known sources so its coverage is not reliable here.\n\nCheck validated by leaving each of 16 sources out in turn: it flagged 81.9% of batteries from an unseen source and wrongly flagged 11.0% of batteries from known sources. It is weakest for mich, NASA, snl. It is a screening check, not a guarantee."
+  ],
+  "neutral_info": [],
+  "st_success_elements": [
+   "**Continue normal use**",
+   "**The consistent finding across every one of these cases**: `SCV_rel` (a voltage-curve-slope ratio) is the cheapest, most consistent lever DiCE finds to flip the prediction - it appears in all 5 example cases above, always moving toward the same value (≈0.8). SHAP and LIME rank feature IMPORTANCE; this is a different, complementary question - which feature is easiest to imagine changing to get a meaningfully different outcome.",
+   "**Yes - α/β are now genuinely asymmetric**: 0.993/1.007 at epoch 0 → **0.527/1.473 by epoch 24**, steadily diverging rather than moving together.",
+   "With 6x more test batteries, XGBoost's edge over VLSTM and the ensemble's dependence on XGBoost-fusion are now formally, statistically confirmed - not just large point estimates that a small sample couldn't rule noise out on. **Lean vs. Full did NOT flip** - they remain statistically indistinguishable even at 6x the battery count, which *reinforces* rather than undermines session 20's original \"ship lean\" recommendation. Full CI tables: `bootstrap_*_expanded_ci.csv`.",
+   "**Deployment decision (flagged for review, not resolved on this session's own authority): the original 32-battery lean pipeline remains the deployed default.** Every expanded-pool file is additive - nothing original was overwritten, and this dashboard's Prediction/Explainability/Digital Twin tabs are unaffected by any of this. The expanded-pool result is presented throughout this archive as a clearly-labeled separate research finding, pending explicit review before any swap.",
+   "**Three of four datasets went from a genuine collapse (negative R²) to strong, usable accuracy.** Oxford's jump in particular - from worse than a flat average to 0.953 - is one of this project's largest single improvements from any one fix.",
+   "**A minimal, targeted fix rescued both problems at once.** Clamping that difference to a bounded range before the cross-cycle branch sees it - a few lines of code, not a redesign - took CALCE from a catastrophic collapse to **R²=0.506** (within reach of the deployed model's own 0.568 CALCE score at the time), AND improved in-domain accuracy too (0.55 → 0.69), for the same underlying reason: even in-domain, occasional far-apart battery pairs were producing the same kind of runaway input.",
+   "**Finally resolved cleanly, independent of any pool-composition experiment**: a later, more surgical test took HUST - one of the two most-similar, best-behaved datasets - and cut it down to match Oxford's exact small size (8 cells), then re-ran two unrelated methods that had each shown an outsized benefit specifically on Oxford. If Oxford's benefit were really just about having FEWER cells to evaluate on, a same-sized HUST sample should show a similarly outsized effect. It didn't - the small HUST sample behaved just like the FULL 77-cell HUST dataset in both tests, not like Oxford at all. **This confirms the real mechanism is Oxford's own genuine similarity to the training data, not sample size** - the same similarity-score idea from Finding #1, now tested and confirmed a second, independent way.",
+   "**It didn't - explanation (a) is refuted.** The size-matched HUST sample behaved just like the FULL 77-cell HUST dataset in both tests, not like Oxford. Cutting HUST down to Oxford's exact size reproduced HUST's own modest, ordinary result, not Oxford's dramatic one. **Oxford's outsized benefit is a real property of how similar it is to the training data - not a statistical artifact of its small size.** This is now a closed, tested finding, not an open question.",
+   "Parsed 30 usable cycles."
+  ],
+  "st_error_elements": [
+   "**This data looks malformed** (30/30 sampled cycles flagged by an input-sanity check). Likely causes: swapped voltage/current columns, wrong units, or an incomp",
+   "**Anomaly flag**: the One-Class SVM (a model trained on typical NASA+MIT data that flags anything unlike it) considers this cycle's feature vector unlike the NA",
+   "**Reported plainly, not softened: this does not yet produce a generally useful forecasting capability.** On 4 of 5 test sets, it is statistically indistinguisha",
+   "**Original run: CNN-LSTM did not learn (R²=-0.071, worse than predicting the mean).** Root-caused, not left as a known issue: the model's raw `dVdQ` input chann",
+   "**A real methodological bug, caught by checking the numbers, not just running the code.** The first draft calibrated on the TRAIN split's own residuals (the sam",
+   "**Verdict: the \"more data fixes CALCE\" hypothesis is only PARTIALLY confirmed - reported honestly, not rounded up.** Point-prediction accuracy under domain shif",
+   "**Bug caught before trusting any result: λ=1.0 silently broke training** (validation loss got worse every epoch, early-stopping kept an essentially untrained en",
+   "**But the model is worse than BOTH baselines on BOTH tasks.** `adaptive_softmax`: SOH R²=0.091 (vs. fixed_balanced's 0.416, adaptive's 0.344); RUL R²=0.244 (vs.",
+   "**First attempt (full 7-HI+16-fusion feature space) broke something that wasn't broken.** The domain classifier hit AUC=1.0000 for calib-vs-CALCE, but ALSO AUC=",
+   "**Honest headline: quantizing the encoder was almost beside the point.** ICAEncoder is 9.15KB of a 2,854.9KB total lean-pipeline size (0.3%) - `xgb_soh_fusion.j",
+   "**Most operationally important finding: at the exact moment a real disposition decision would be made for NASA/B0018 today, this model would incorrectly certify",
+   "**Synthesis: NASA training representation is only 2.7% of training CYCLES (vs. 97.3% MIT)** despite being 11.5% of training batteries - B0018 is a mild, within-",
+   "**A genuine bug caught by \"test it actually updates\" before it ever reached the app.** With unscaled raw SOH predictions (~70-100) and a fixed SGD learning rate",
+   "**Bug 1 - empty-Capacity NASA cycles.** 2 of 34 NASA batteries (B0050, B0052) crashed the parser with `IndexError: index 0 is out of bounds for axis 0 with size",
+   "**Bug 2 - degenerate SOH baselines, up to 2177%.** BFA's baseline RMSE jumped 6.8x unexpectedly - not accepted at face value. Root cause, confirmed on NASA/B004",
+   "**Honest exception: XJTU got WORSE, not better, and this was investigated rather than left unexplained.** After the fix, every individual reformulated feature's",
+   "**One dataset (XJTU) is a genuine, standing exception, reported honestly rather than smoothed over: even under the fairer same-model-type comparison, this proje",
+   "**Initial result: two real, distinct problems, diagnosed rather than left as one vague \"it didn't work.\"** (1) A large in-domain accuracy gap vs. the deployed m",
+   "**It didn't. All four datasets got WORSE under the NASA-heavy pool - including Oxford and XJTU, the two the theory specifically predicted would improve.** Oxfor"
+  ],
+  "predicted_soh": [
+   "84.4%"
+  ],
+  "predicted_rul": [
+   "not available"
+  ]
+ }
+]

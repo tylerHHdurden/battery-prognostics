@@ -1,0 +1,5 @@
+source,rows,max_abs_fusion,rows_exceeding_10x_p999,rows_nan_fusion,max_diff_vs_independent_build,secs
+tongji,59028,15.149493217468262,0,90,0.0,137.0
+stage5_1_oxford,519,2.878286361694336,0,0,,
+stage5_1_hust,146122,5.5240864753723145,0,0,,
+stage5_1_xjtu,19238,11.09122085571289,0,0,,

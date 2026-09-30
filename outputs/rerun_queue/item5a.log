@@ -1,0 +1,80 @@
+[corrected-embeddings] ul_pur: 2245 parquet rows -> 2245 rows with corrected old-encoder embeddings (max |fusion| 8.47)
+[corrected-embeddings] hnei: 15155 parquet rows -> 15155 rows with corrected old-encoder embeddings (max |fusion| 9.39)
+[corrected-embeddings] snl: 38880 parquet rows -> 38880 rows with corrected old-encoder embeddings (max |fusion| 12.32)
+[corrected-embeddings] mich: 19881 parquet rows -> 19881 rows with corrected old-encoder embeddings (max |fusion| 7.81)
+[corrected-embeddings] mich_exp: 6545 parquet rows -> 6545 rows with corrected old-encoder embeddings (max |fusion| 10.44)
+[corrected-embeddings] rwth: 22095 parquet rows -> 22095 rows with corrected old-encoder embeddings (max |fusion| 26.67)
+[corrected-embeddings] stanford: 5633 parquet rows -> 5633 rows with corrected old-encoder embeddings (max |fusion| 6.04)
+[corrected-embeddings] stanford_2: 8465 parquet rows -> 8465 rows with corrected old-encoder embeddings (max |fusion| 6.05)
+[corrected-embeddings] isu_ilcc: 45229 parquet rows -> 45229 rows with corrected old-encoder embeddings (max |fusion| 3.94)
+=== Final pass item 5a: 5-seed rigor + battery-level bootstrap CIs + extended metrics ===
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2943 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2941 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 0 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 146122 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+
+[item5a] === seed=42 ===
+[item5a] seed=42 done
+
+[item5a] === seed=1 ===
+[item5a] seed=1 done
+
+[item5a] === seed=2 ===
+[item5a] seed=2 done
+
+[item5a] === seed=3 ===
+[item5a] seed=3 done
+
+[item5a] === seed=4 ===
+[item5a] seed=4 done
+
+=== 5-SEED MEAN +/- STD (routed final configuration) ===
+         dataset   r2_mean   r2_std  rmse_mean  rmse_std  mae_mean  mae_std  nrmse_pct_mean  nrmse_pct_std  nmae_pct_mean  nmae_pct_std  mape_pct_mean  mape_pct_std      n
+           CALCE  0.748756 0.012353  10.790941  0.264653  6.256021 0.255314       14.718143       0.360969       8.532806      0.348232      19.006661      0.542693   2941
+            HUST  0.795020 0.021701   3.336384  0.177881  2.642931 0.138032        3.654082       0.194820       2.894597      0.151176       2.946883      0.158570 146122
+          Oxford  0.939630 0.029914   1.638894  0.408527  1.430954 0.434164        1.864552       0.464777       1.627982      0.493944       1.669881      0.510407    519
+            XJTU -1.036732 0.216429   8.572062  0.459997  6.457266 0.212996        8.728323       0.468383       6.574976      0.216879       6.531863      0.217159  19238
+            hnei -0.137439 0.080207  19.034047  0.667398 14.669471 0.700300       28.037971       0.983105      21.608763      1.031573      28.560726      1.176928  15155
+in-domain (TEST)  0.977992 0.002968   0.716107  0.049697  0.281123 0.013704        0.741994       0.051493       0.291286      0.014200       0.316177      0.015317   5208
+        isu_ilcc  0.122624 0.012763  33.792004  0.245671 29.409447 0.140039       70.198011       0.510346      61.093882      0.290911     332.962520      3.635460  45229
+            mich  0.536289 0.019210  15.346695  0.319225  7.860614 0.342381       18.340371       0.381496       9.393983      0.409169      35.593916      0.553714  19881
+        mich_exp  0.715580 0.012313   7.319792  0.158388  4.567170 0.166284        8.147089       0.176290       5.083361      0.185078       6.824646      0.209991   6545
+            rwth -0.534557 0.086140  30.048647  0.851486 23.500403 0.549459       47.961360       1.359077      37.509553      0.877005      62.742810      1.687972  22095
+             snl  0.118191 0.055680   7.828831  0.247527  5.931526 0.226696        8.947031       0.282882       6.778731      0.259075       7.693613      0.299890  38880
+        stanford  0.290737 0.103408  18.019022  1.281938 15.295142 1.392683       21.998784       1.565072      18.673295      1.700277      29.930570      1.162624   5633
+      stanford_2  0.262704 0.112495  17.777616  1.321082 15.302977 1.464862       21.521814       1.599320      18.525983      1.773381      26.137755      1.352690   8465
+          ul_pur  0.138449 0.037008   5.622397  0.120364  3.429643 0.184023        6.050653       0.129532       3.690877      0.198040       3.993956      0.205822   2245
+
+[item5a] === battery-level bootstrap 95% CIs (seed=42 only, n_boot=1000) ===
+[item5a] in-domain (TEST): R2=0.9756 [0.9454,0.9959] | RMSE=0.7553 [0.2430,1.4823] | MAE=0.2954 [0.1558,0.6294] (n_batteries=6)
+[item5a] CALCE: R2=0.7551 [0.7211,0.8258] | RMSE=10.6556 [8.1023,12.1731] | MAE=6.2285 [4.8741,7.4211] (n_batteries=3)
+[item5a] Oxford: R2=0.9141 [0.9001,0.9274] | RMSE=2.0031 [1.7074,2.2387] | MAE=1.7732 [1.5510,1.9762] (n_batteries=8)
+[item5a] HUST: R2=0.7697 [0.7028,0.8184] | RMSE=3.5401 [3.1534,4.0058] | MAE=2.7783 [2.5438,3.0500] (n_batteries=77)
+[item5a] XJTU: R2=-0.9742 [-1.4043,-0.5928] | RMSE=8.4491 [7.5922,9.3167] | MAE=6.3995 [5.7690,7.1076] (n_batteries=47)
+[item5a] ul_pur: R2=0.1574 [0.0469,0.3117] | RMSE=5.5612 [4.4761,6.4962] | MAE=3.3815 [2.8070,3.9398] (n_batteries=10)
+[item5a] hnei: R2=-0.1443 [-0.1872,-0.1069] | RMSE=19.1006 [18.3982,19.7043] | MAE=14.8464 [14.2595,15.4084] (n_batteries=14)
+[item5a] snl: R2=0.0966 [-0.2387,0.2618] | RMSE=7.9274 [6.6705,9.5671] | MAE=5.9446 [5.2004,7.0627] (n_batteries=55)
+[item5a] mich: R2=0.5258 [0.5021,0.5467] | RMSE=15.5222 [12.7376,18.7956] | MAE=7.8838 [6.4772,9.8404] (n_batteries=40)
+[item5a] mich_exp: R2=0.7131 [0.6182,0.7985] | RMSE=7.3528 [3.9257,10.2051] | MAE=4.4536 [2.8298,6.3989] (n_batteries=18)
+[item5a] rwth: R2=-0.6078 [-0.7181,-0.5135] | RMSE=30.7668 [29.3805,32.0105] | MAE=24.0027 [22.7733,25.1074] (n_batteries=10)
+[item5a] stanford: R2=0.2566 [0.1304,0.3081] | RMSE=18.4846 [15.8882,21.3161] | MAE=15.8106 [13.9363,17.9859] (n_batteries=6)
+[item5a] stanford_2: R2=0.2288 [0.0250,0.3271] | RMSE=18.2217 [16.7143,19.9204] | MAE=15.8260 [14.7967,17.1444] (n_batteries=8)
+[item5a] isu_ilcc: R2=0.1217 [-0.3291,0.2974] | RMSE=33.8097 [19.4439,40.2545] | MAE=29.3655 [17.5127,36.3767] (n_batteries=9)
+
+[item5a] TOTAL TIME: 6.51 minutes

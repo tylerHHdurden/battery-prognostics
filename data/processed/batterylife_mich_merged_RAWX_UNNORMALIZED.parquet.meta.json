@@ -1,0 +1,5 @@
+{
+ "role": "embeddings",
+ "encoder_tag": "rawx_unnormalized_DEFECTIVE",
+ "note": "fusion_* computed from RAW un-normalized tensors (build_batterylife_hi_table.py before 2026-09-30); values reach 1e7-1e13. Kept for the record only - never load."
+}

@@ -1,0 +1,43 @@
+[corrected-embeddings] ul_pur: 2245 parquet rows -> 2245 rows with corrected old-encoder embeddings (max |fusion| 8.47)
+[corrected-embeddings] hnei: 15155 parquet rows -> 15155 rows with corrected old-encoder embeddings (max |fusion| 9.39)
+[corrected-embeddings] snl: 38880 parquet rows -> 38880 rows with corrected old-encoder embeddings (max |fusion| 12.32)
+[corrected-embeddings] mich: 19881 parquet rows -> 19881 rows with corrected old-encoder embeddings (max |fusion| 7.81)
+[corrected-embeddings] mich_exp: 6545 parquet rows -> 6545 rows with corrected old-encoder embeddings (max |fusion| 10.44)
+[corrected-embeddings] rwth: 22095 parquet rows -> 22095 rows with corrected old-encoder embeddings (max |fusion| 26.67)
+[corrected-embeddings] stanford: 5633 parquet rows -> 5633 rows with corrected old-encoder embeddings (max |fusion| 6.04)
+[corrected-embeddings] stanford_2: 8465 parquet rows -> 8465 rows with corrected old-encoder embeddings (max |fusion| 6.05)
+[corrected-embeddings] isu_ilcc: 45229 parquet rows -> 45229 rows with corrected old-encoder embeddings (max |fusion| 3.94)
+=== Final pass item 5d: BatteryLife's own early-cycle-life-prediction benchmark, reproduced ===
+
+[item5d] 125 usable batteries across 9 sources (excluded: 40 right-censored/no-EOL, 0 EOL<=100, 5 <5 cycles in first 100)
+source
+hnei          14
+isu_ilcc       9
+mich          40
+mich_exp      10
+rwth          10
+snl           24
+stanford       6
+stanford_2     8
+ul_pur         4
+[item5d] fold 1/5: train=100 test=25
+[item5d] fold 2/5: train=100 test=25
+[item5d] fold 3/5: train=100 test=25
+[item5d] fold 4/5: train=100 test=25
+[item5d] fold 5/5: train=100 test=25
+
+=== OVERALL (pooled, 5-fold out-of-fold): MAPE=0.2112 15%-Acc=0.6000 n=125 ===
+[item5d] hnei: n=14 MAPE=0.0819 15%-Acc=0.9286
+[item5d] isu_ilcc: n=9 MAPE=0.3941 15%-Acc=0.2222
+[item5d] mich: n=40 MAPE=0.1230 15%-Acc=0.8250
+[item5d] mich_exp: n=10 MAPE=0.2923 15%-Acc=0.4000
+[item5d] rwth: n=10 MAPE=0.0854 15%-Acc=0.8000
+[item5d] snl: n=24 MAPE=0.3532 15%-Acc=0.2917
+[item5d] stanford: n=6 MAPE=0.1627 15%-Acc=0.5000
+[item5d] stanford_2: n=8 MAPE=0.1711 15%-Acc=0.5000
+[item5d] ul_pur: n=4 MAPE=0.5479 15%-Acc=0.2500
+
+[item5d] BatteryLife's OWN published numbers (Part B item 8, arXiv:2502.18807 Table 3, aggregated by CHEMISTRY FAMILY not source): Li-ion MAPE=0.184/0.179 15%-Acc=0.573, Zn-ion MAPE=0.515, Na-ion MAPE=0.255, CALB MAPE=0.149 15%-Acc=0.672.
+[item5d] This IS now a genuinely comparable number (same task, same metric, this project's own features+XGBoost instead of their CPTransformer/CPMLP) - still not a strict apples-to-apples per-source comparison (their splits/exact battery sets are not reproduced, only the task/metric protocol), and the local pool is chemistry-mixed rather than family-separated the way their table is, stated plainly rather than implied away.
+
+[item5d] TOTAL TIME: 0.10 minutes
