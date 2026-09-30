@@ -20,12 +20,15 @@ with sync_playwright() as p:
     for vp_name, vp in (("desktop", {"width": 1400, "height": 1000}), ("mobile", {"width": 390, "height": 844})):
         for case, url, upload in (("oxford", "/?dataset=Oxford", None), ("upload_unflagged", "/?mode=Upload+your+own+cycle+data", "_phase0_hnei_upload_test.csv"),
                                   ("upload_flagged", "/?mode=Upload+your+own+cycle+data", "_step3_distorted_upload_test.csv")):
+            if len(sys.argv) > 3 and f"{vp_name}:{case}" != sys.argv[3]:
+                continue
             row = {"viewport": vp_name, "case": case}
             try:
                 pg = b.new_page(viewport=vp, accept_downloads=True)
                 pg.goto(BASE + url, wait_until="domcontentloaded", timeout=180000)
                 pg.get_by_role("tab", name="Showcase").first.wait_for(timeout=240000)
                 if upload:
+                    pg.wait_for_selector("input[type=file]", state="attached", timeout=180000)
                     pg.locator("input[type=file]").first.set_input_files(str(ROOT / "outputs" / upload))
                     pg.get_by_text("Result").first.wait_for(timeout=600000)
                     pg.get_by_text("Predicted SOH").first.wait_for(timeout=600000)
@@ -53,4 +56,4 @@ with sync_playwright() as p:
             res["runs"].append(row); print(row, flush=True)
     b.close()
 res["all_passed"] = all(r.get("pass") for r in res["runs"])
-(OUT / "site_visual_result.json").write_text(json.dumps(res, indent=1)); print("ALL PASSED" if res["all_passed"] else "SOME FAILED")
+(OUT / ("site_visual_result.json" if len(sys.argv) <= 3 else "site_visual_result_rerun.json")).write_text(json.dumps(res, indent=1)); print("ALL PASSED" if res["all_passed"] else "SOME FAILED")

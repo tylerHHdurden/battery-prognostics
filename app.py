@@ -564,17 +564,21 @@ def render_first_screen():
         "interval and a check for batteries unlike the ones it was built on. It is a research prototype: it cannot certify a "
         "battery, its intervals only hold for batteries similar to its training data, and RUL is shown only for NASA/MIT-like cells.**")
     st.caption("Choose a battery or upload cycle data in the sidebar. The result card comes first; the details follow below it.")
-    with st.expander("Start here: three ways to use CellSense", expanded=True):
-        c1, c2, c3 = st.columns(3)
-        c1.markdown("**Researcher**\n\n1. Browse a dataset (NASA, MIT, CALCE, Oxford, HUST, XJTU).\n"
-                    "2. Read the Explainability and Model Validation tabs for the method, the measured errors and the negative results.\n"
-                    "3. Check the status label (VERIFIED or SUPERSEDED) next to each number.")
-        c2.markdown("**EV, fleet or BMS engineer**\n\n1. Upload cycle data (a sample file is in the sidebar).\n"
-                    "2. Read the result card: SOH with its interval, and whether the battery looks unlike the training data.\n"
-                    "3. Download the passport (Prediction tab) and confirm any flagged battery with a measured capacity test.")
-        c3.markdown("**Second-life or recycler**\n\n1. Upload a battery's cycles or browse an example.\n"
-                    "2. The Health Report tab gives a plain-language grade and recommendation.\n"
-                    "3. Treat every recommendation as provisional: SOH here is an estimate, not a measurement.")
+    c1, c2, c3 = st.columns(3)
+    with c1.container(border=True):
+        st.markdown("**Researcher**")
+        st.caption("Browse NASA, MIT, CALCE, Oxford, HUST or XJTU in the sidebar, then read the Explainability and Model Validation tabs. Every number carries a status label.")
+    with c2.container(border=True):
+        st.markdown("**EV, fleet or BMS engineer**")
+        st.caption("Upload cycle data (sample file in the sidebar). Read the result card, then download the passport from the Prediction tab. Confirm any flagged battery with a measured capacity.")
+    with c3.container(border=True):
+        st.markdown("**Second-life or recycler**")
+        st.caption("Upload a battery's cycles or browse an example. The Health Report tab gives a plain-language grade; treat it as provisional, because SOH here is an estimate.")
+    with st.expander("Step-by-step for each path"):
+        d1, d2, d3 = st.columns(3)
+        d1.markdown("1. Browse a dataset in the sidebar.\n2. Read the result card, then the Explainability tab (why this prediction).\n3. Model Validation and Full Results Archive hold the measured errors, negative results and status labels (VERIFIED / SUPERSEDED).")
+        d2.markdown("1. Choose *Upload your own cycle data*; download the sample file to see the format.\n2. Upload your CSV; check the column guide if an error appears.\n3. Read the trust state in the result card; if it says unfamiliar, treat SOH as a rough estimate.\n4. Prediction tab, bottom: passport (JSON / PDF).")
+        d3.markdown("1. Upload the battery's cycles, or browse an example.\n2. Health Report tab: grade and recommendation with the rules that fired.\n3. Never use the output as a certificate; measure capacity before reuse or recycling decisions.")
     with st.expander("What SOH, RUL and the 90% interval mean"):
         render_about_section()
 
@@ -3279,6 +3283,7 @@ def main():
     else:
         if using_precomputed:
             st.header(f"{battery_id} — cycle {selected_cycle_idx}")
+            result_slot = st.container()
             st.caption("No raw voltage/current curve to plot for this cycle in this deployment "
                        "(see the sidebar note) - the prediction below is still computed live "
                        "from real model weights on this battery's precomputed features.")
@@ -3287,6 +3292,7 @@ def main():
                 ctx = predict_and_explain_precomputed(dataset, battery_id, selected_cycle_idx, res)
         else:
             st.header(f"{battery_id} — cycle {selected_cycle['cycle_idx']} of {len(cycles)}")
+            result_slot = st.container()  # the result card is filled in here once the prediction exists, above the raw-curve plot
 
             fig, ax = plt.subplots(figsize=(8, 3))
             ax.plot(selected_cycle["discharge"]["t"], selected_cycle["discharge"]["V"])
@@ -3338,9 +3344,10 @@ def main():
                     true_soh = round(float(row.iloc[0]["SOH"]), 1)
                     true_rul = int(row.iloc[0]["RUL"])
 
-            if not ctx.get("fusion_unreliable"):
-                render_result_card(ctx)
-            render_domain_banner(ctx)
+            with result_slot:
+                if not ctx.get("fusion_unreliable"):
+                    render_result_card(ctx)
+                render_domain_banner(ctx)
 
             if dataset == "Uploaded":
                 st.divider()
