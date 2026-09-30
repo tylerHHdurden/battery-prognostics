@@ -1,0 +1,9 @@
+{'dataset': 'CALCE', 'n_scored': 400, 'candidate_used': False, 'sample_mae': 6.567, 'sample_rmse': 11.364, 'sample_r2': 0.723, 'paper_mae': 6.256, 'paper_mae_std': 0.255, 'paper_rmse': 10.791, 'secs': 177, 'mae_within_2std_of_paper': True, 'rmse_within_2std_of_paper': True}
+{'dataset': 'Oxford', 'n_scored': 400, 'candidate_used': False, 'sample_mae': 1.297, 'sample_rmse': 1.48, 'sample_r2': 0.955, 'paper_mae': 1.431, 'paper_mae_std': 0.434, 'paper_rmse': 1.639, 'secs': 138, 'mae_within_2std_of_paper': True, 'rmse_within_2std_of_paper': True}
+{'dataset': 'HUST', 'n_scored': 400, 'candidate_used': False, 'sample_mae': 2.517, 'sample_rmse': 3.126, 'sample_r2': 0.803, 'paper_mae': 2.643, 'paper_mae_std': 0.138, 'paper_rmse': 3.336, 'secs': 155, 'mae_within_2std_of_paper': True, 'rmse_within_2std_of_paper': True}
+{'dataset': 'XJTU', 'n_scored': 400, 'candidate_used': False, 'sample_mae': 6.704, 'sample_rmse': 8.99, 'sample_r2': -1.308, 'paper_mae': 6.457, 'paper_mae_std': 0.213, 'paper_rmse': 8.572, 'secs': 140, 'mae_within_2std_of_paper': True, 'rmse_within_2std_of_paper': True}
+dataset  n_scored  candidate_used  sample_mae  sample_rmse  sample_r2  paper_mae  paper_mae_std  paper_rmse  secs  mae_within_2std_of_paper  rmse_within_2std_of_paper
+  CALCE       400           False       6.567       11.364      0.723      6.256          0.255      10.791   177                      True                       True
+ Oxford       400           False       1.297        1.480      0.955      1.431          0.434       1.639   138                      True                       True
+   HUST       400           False       2.517        3.126      0.803      2.643          0.138       3.336   155                      True                       True
+   XJTU       400           False       6.704        8.990     -1.308      6.457          0.213       8.572   140                      True                       True

@@ -1,0 +1,5 @@
+[queue] START itemA 12:09:34
+[queue] END   itemA rc=0 secs=643 12:20:17
+[queue] START itemB 12:20:17
+[queue] END   itemB rc=0 secs=538 12:29:15
+[queue] START lodo_check1 12:29:15

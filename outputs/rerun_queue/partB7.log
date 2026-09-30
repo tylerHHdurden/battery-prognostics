@@ -1,0 +1,47 @@
+[corrected-embeddings] ul_pur: 2245 parquet rows -> 2245 rows with corrected old-encoder embeddings (max |fusion| 8.47)
+[corrected-embeddings] hnei: 15155 parquet rows -> 15155 rows with corrected old-encoder embeddings (max |fusion| 9.39)
+[corrected-embeddings] snl: 38880 parquet rows -> 38880 rows with corrected old-encoder embeddings (max |fusion| 12.32)
+[corrected-embeddings] mich: 19881 parquet rows -> 19881 rows with corrected old-encoder embeddings (max |fusion| 7.81)
+[corrected-embeddings] mich_exp: 6545 parquet rows -> 6545 rows with corrected old-encoder embeddings (max |fusion| 10.44)
+[corrected-embeddings] rwth: 22095 parquet rows -> 22095 rows with corrected old-encoder embeddings (max |fusion| 26.67)
+[corrected-embeddings] stanford: 5633 parquet rows -> 5633 rows with corrected old-encoder embeddings (max |fusion| 6.04)
+[corrected-embeddings] stanford_2: 8465 parquet rows -> 8465 rows with corrected old-encoder embeddings (max |fusion| 6.05)
+[corrected-embeddings] isu_ilcc: 45229 parquet rows -> 45229 rows with corrected old-encoder embeddings (max |fusion| 3.94)
+=== Part B, item 7: zero-retrain eval of the CURRENT deployed setup on new BatteryLife sources ===
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2943 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[item7] ul_pur (10 batteries, 2245 cycles): CURRENT DEPLOYED (base model, actual routing) R2=0.0437 RMSE=5.9245 | extended-reformulation model (context only, NOT currently routed here) R2=-0.6048 RMSE=7.6748
+[item7] hnei (14 batteries, 15155 cycles): CURRENT DEPLOYED (base model, actual routing) R2=-0.1012 RMSE=18.7379 | extended-reformulation model (context only, NOT currently routed here) R2=0.7853 RMSE=8.2744
+[item7] snl (55 batteries, 38880 cycles): CURRENT DEPLOYED (base model, actual routing) R2=0.0556 RMSE=8.1052 | extended-reformulation model (context only, NOT currently routed here) R2=0.4418 RMSE=6.2313
+[item7] mich (40 batteries, 19881 cycles): CURRENT DEPLOYED (base model, actual routing) R2=0.5333 RMSE=15.3990 | extended-reformulation model (context only, NOT currently routed here) R2=0.7538 RMSE=11.1842
+[item7] mich_exp (18 batteries, 6545 cycles): CURRENT DEPLOYED (base model, actual routing) R2=0.7177 RMSE=7.2942 | extended-reformulation model (context only, NOT currently routed here) R2=0.3086 RMSE=11.4144
+[item7] rwth (10 batteries, 22095 cycles): CURRENT DEPLOYED (base model, actual routing) R2=-0.4725 RMSE=29.4445 | extended-reformulation model (context only, NOT currently routed here) R2=0.5031 RMSE=17.1046
+[item7] stanford (6 batteries, 5633 cycles): CURRENT DEPLOYED (base model, actual routing) R2=0.2746 RMSE=18.2596 | extended-reformulation model (context only, NOT currently routed here) R2=0.8090 RMSE=9.3706
+[item7] stanford_2 (8 batteries, 8465 cycles): CURRENT DEPLOYED (base model, actual routing) R2=0.2470 RMSE=18.0054 | extended-reformulation model (context only, NOT currently routed here) R2=0.8062 RMSE=9.1338
+[item7] isu_ilcc (9 batteries, 45229 cycles): CURRENT DEPLOYED (base model, actual routing) R2=0.1140 RMSE=33.9587 | extended-reformulation model (context only, NOT currently routed here) R2=0.1797 RMSE=32.6748
+
+=== Item 7 FULL RESULTS ===
+    source  n_batteries  n_cycles  deployed_base_r2  deployed_base_rmse  extended_context_r2  extended_context_rmse
+    ul_pur           10      2245          0.043737            5.924466            -0.604769               7.674795
+      hnei           14     15155         -0.101234           18.737880             0.785262               8.274381
+       snl           55     38880          0.055590            8.105198             0.441806               6.231259
+      mich           40     19881          0.533282           15.399033             0.753806              11.184197
+  mich_exp           18      6545          0.717672            7.294182             0.308640              11.414369
+      rwth           10     22095         -0.472529           29.444537             0.503089              17.104562
+  stanford            6      5633          0.274612           18.259553             0.808959               9.370622
+stanford_2            8      8465          0.247015           18.005411             0.806231               9.133806
+  isu_ilcc            9     45229          0.113985           33.958684             0.179716              32.674767
+
+[item7] For reference, the EXISTING 4 held-out sets' CURRENT deployed (routed) numbers: {'in-domain (fixed split)': 0.974, 'CALCE': 0.74, 'Oxford': 0.953, 'HUST': 0.8, 'XJTU': -1.062}
+
+[item7] TOTAL TIME: 0.13 minutes

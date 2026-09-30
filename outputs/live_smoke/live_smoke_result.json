@@ -1,0 +1,34 @@
+{
+ "url": "https://bat-pro.streamlit.app",
+ "runs": [
+  {
+   "case": "NASA",
+   "error": "TimeoutError('Locator.wait_for: Timeout 180000ms exceeded.\\nCall log:\\n  - waiting for get_by_role(\"tab\", name=\"Prediction\").first to be visible\\n')"
+  },
+  {
+   "case": "MIT",
+   "error": "TimeoutError('Locator.wait_for: Timeout 180000ms exceeded.\\nCall log:\\n  - waiting for get_by_role(\"tab\", name=\"Prediction\").first to be visible\\n')"
+  },
+  {
+   "case": "CALCE",
+   "error": "TimeoutError('Locator.wait_for: Timeout 180000ms exceeded.\\nCall log:\\n  - waiting for get_by_role(\"tab\", name=\"Prediction\").first to be visible\\n')"
+  },
+  {
+   "case": "Oxford",
+   "error": "TimeoutError('Locator.wait_for: Timeout 180000ms exceeded.\\nCall log:\\n  - waiting for get_by_role(\"tab\", name=\"Prediction\").first to be visible\\n')"
+  },
+  {
+   "case": "HUST",
+   "error": "TimeoutError('Locator.wait_for: Timeout 180000ms exceeded.\\nCall log:\\n  - waiting for get_by_role(\"tab\", name=\"Prediction\").first to be visible\\n')"
+  },
+  {
+   "case": "XJTU",
+   "error": "TimeoutError('Locator.wait_for: Timeout 180000ms exceeded.\\nCall log:\\n  - waiting for get_by_role(\"tab\", name=\"Prediction\").first to be visible\\n')"
+  },
+  {
+   "case": "upload (HNEI, real)",
+   "error": "TimeoutError('Page.wait_for_selector: Timeout 180000ms exceeded.\\nCall log:\\n  - waiting for locator(\"input[type=file]\")\\n')"
+  }
+ ],
+ "new_version_detected_after_s": null
+}

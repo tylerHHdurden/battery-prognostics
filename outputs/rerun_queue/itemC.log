@@ -1,0 +1,165 @@
+[corrected-embeddings] ul_pur: 2245 parquet rows -> 2245 rows with corrected old-encoder embeddings (max |fusion| 8.47)
+[corrected-embeddings] hnei: 15155 parquet rows -> 15155 rows with corrected old-encoder embeddings (max |fusion| 9.39)
+[corrected-embeddings] snl: 38880 parquet rows -> 38880 rows with corrected old-encoder embeddings (max |fusion| 12.32)
+[corrected-embeddings] mich: 19881 parquet rows -> 19881 rows with corrected old-encoder embeddings (max |fusion| 7.81)
+[corrected-embeddings] mich_exp: 6545 parquet rows -> 6545 rows with corrected old-encoder embeddings (max |fusion| 10.44)
+[corrected-embeddings] rwth: 22095 parquet rows -> 22095 rows with corrected old-encoder embeddings (max |fusion| 26.67)
+[corrected-embeddings] stanford: 5633 parquet rows -> 5633 rows with corrected old-encoder embeddings (max |fusion| 6.04)
+[corrected-embeddings] stanford_2: 8465 parquet rows -> 8465 rows with corrected old-encoder embeddings (max |fusion| 6.05)
+[corrected-embeddings] isu_ilcc: 45229 parquet rows -> 45229 rows with corrected old-encoder embeddings (max |fusion| 3.94)
+=== Final pass 2, item C: complete baseline table on all 13 external datasets ===
+[itemC] trivial linear baseline: SOH = 98.863 + -0.00757*cycle_idx
+[itemC] building Severson-style features for the 42-battery pool + all 13 held-out sets...
+[severson-feat] NASA/B0005: 168 cycles
+[severson-feat] NASA/B0006: 168 cycles
+[severson-feat] NASA/B0007: 168 cycles
+[severson-feat] NASA/B0018: 132 cycles
+[severson-feat] MIT/b1c20: 532 cycles
+[severson-feat] MIT/b1c43: 649 cycles
+[severson-feat] MIT/b1c32: 729 cycles
+[severson-feat] MIT/b1c17: 855 cycles
+[severson-feat] MIT/b1c22: 889 cycles
+[severson-feat] MIT/b1c41: 1049 cycles
+[severson-feat] MIT/b1c4: 1225 cycles
+[severson-feat] MIT/b2c1: 169 cycles
+[severson-feat] MIT/b2c42: 491 cycles
+[severson-feat] MIT/b2c13: 519 cycles
+[severson-feat] MIT/b2c24: 523 cycles
+[severson-feat] MIT/b2c32: 543 cycles
+[severson-feat] MIT/b2c9: 1059 cycles
+[severson-feat] MIT/b3c28: 539 cycles
+[severson-feat] MIT/b3c13: 814 cycles
+[severson-feat] MIT/b3c14: 856 cycles
+[severson-feat] MIT/b3c0: 1007 cycles
+[severson-feat] MIT/b3c35: 1091 cycles
+[severson-feat] MIT/b3c33: 1282 cycles
+[severson-feat] MIT/b3c38: 1933 cycles
+[severson-feat] MIT/b4c9: 529 cycles
+[severson-feat] MIT/b4c36: 713 cycles
+[severson-feat] MIT/b4c39: 761 cycles
+[severson-feat] MIT/b4c21: 903 cycles
+[severson-feat] MIT/b4c0: 982 cycles
+[severson-feat] MIT/b4c5: 1067 cycles
+[severson-feat] MIT/b4c38: 1230 cycles
+[severson-feat] RECOVERED NASA/B0036: 194 cycles
+[severson-feat] RECOVERED NASA/B0038: 35 cycles
+[severson-feat] RECOVERED NASA/B0039: 35 cycles
+[severson-feat] RECOVERED NASA/B0040: 35 cycles
+[severson-feat] RECOVERED NASA/B0041: 25 cycles
+[severson-feat] RECOVERED NASA/B0051: 22 cycles
+[severson-feat] RECOVERED MIT/b1c0: 1187 cycles
+[severson-feat] RECOVERED MIT/b1c18: 688 cycles
+[severson-feat] RECOVERED MIT/b2c12: 489 cycles
+[severson-feat] RECOVERED MIT/b2c44: 477 cycles
+[itemC]   ul_pur: 2245 severson rows, 10 batteries
+[itemC]   hnei: 15155 severson rows, 14 batteries
+[itemC]   snl: 96204 severson rows, 61 batteries
+[itemC]   mich: 19881 severson rows, 40 batteries
+[itemC]   mich_exp: 6545 severson rows, 18 batteries
+[itemC]   rwth: 22920 severson rows, 10 batteries
+[itemC]   stanford: 9534 severson rows, 10 batteries
+[itemC]   stanford_2: 10967 severson rows, 10 batteries
+[itemC]   isu_ilcc: 45231 severson rows, 9 batteries
+[itemC] severson_variance in-domain: R2=0.5653
+[itemC] attia_rich in-domain: R2=0.5829
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2943 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 2941 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 0 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 146122 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[extended-reformulation] SCV -> SCV_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MET -> MET_rel (ratio): 0 batteries used median-fallback baseline, 0 non-finite output values
+[extended-reformulation] MATD -> MATD_rel (delta): 0 non-finite output values
+[extended-reformulation] VIECT -> VIECT_rel (delta): 0 non-finite output values
+[itemC] CALCE: trivial=-0.8578 severson=0.0774 attia=0.0776 base=0.7488 routed(ORACLE)=0.7397 best_lodo=0.8547922564939842
+[itemC] Oxford: trivial=-7.5889 severson=0.1693 attia=0.1953 base=0.9396 routed(ORACLE)=0.9533 best_lodo=0.075636219589242
+[itemC] HUST: trivial=0.7553 severson=-1.7902 attia=-1.4365 base=0.7950 routed(ORACLE)=0.8000 best_lodo=0.7215468086424603
+[itemC] XJTU: trivial=0.2795 severson=-7.8354 attia=-7.4097 base=-1.0367 routed(ORACLE)=-1.0367 best_lodo=-6.394131474002276
+[itemC] ul_pur: trivial=-0.5659 severson=-3.2921 attia=-3.3971 base=0.1161 routed(ORACLE)=0.1161 best_lodo=0.5168286128867887
+[itemC] hnei: trivial=-2.0010 severson=-0.0872 attia=-0.1084 base=-0.0377 routed(ORACLE)=-0.0377 best_lodo=0.9294504501689596
+[itemC] snl: trivial=-0.5503 severson=-0.3242 attia=-0.2754 base=0.1465 routed(ORACLE)=0.1465 best_lodo=0.149015568025192
+[itemC] mich: trivial=-0.2752 severson=0.2409 attia=0.2516 base=0.5728 routed(ORACLE)=0.5728 best_lodo=0.7460543003209072
+[itemC] mich_exp: trivial=-0.2174 severson=-0.2057 attia=-0.1216 base=0.7206 routed(ORACLE)=0.7206 best_lodo=0.4994943457646468
+[itemC] rwth: trivial=-0.0003 severson=-0.0005 attia=-0.0006 base=-0.4847 routed(ORACLE)=-0.4847 best_lodo=0.5050754633588195
+[itemC] stanford: trivial=-0.2739 severson=0.1480 attia=0.1349 base=0.1113 routed(ORACLE)=0.1113 best_lodo=0.9966711595567248
+[itemC] stanford_2: trivial=-0.2057 severson=0.1209 attia=0.1075 base=0.0655 routed(ORACLE)=0.0655 best_lodo=0.9901747349636232
+[itemC] isu_ilcc: trivial=0.3581 severson=-0.9890 attia=-1.0241 base=0.1401 routed(ORACLE)=0.1401 best_lodo=0.9005856342205326
+
+=== PAIRED TESTS: deployed base model vs. each baseline (battery-level MAE) ===
+   dataset baseline_compared  n_batteries  base_model_mean_mae  baseline_mean_mae  mean_mae_diff_base_minus_baseline  bootstrap_ci_lo  bootstrap_ci_hi  wilcoxon_stat   wilcoxon_p  base_significantly_better
+     CALCE    trivial_linear            3            10.395099          21.862575                         -11.467476       -12.949291       -10.006872            0.0 2.500000e-01                      False
+     CALCE severson_variance            3            10.395099          13.713208                          -3.318109        -5.174915        -1.635556            0.0 2.500000e-01                      False
+     CALCE        attia_rich            3            10.395099          13.703132                          -3.308033        -5.149151        -1.638010            0.0 2.500000e-01                      False
+    Oxford    trivial_linear            8            12.512649          15.567614                          -3.054965        -6.269897         0.442181            7.0 1.484375e-01                      False
+    Oxford severson_variance            8            12.512649           5.284261                           7.228388         6.609725         7.798762            0.0 7.812500e-03                      False
+    Oxford        attia_rich            8            12.512649           5.184424                           7.328225         6.738649         7.883954            0.0 7.812500e-03                      False
+      HUST    trivial_linear           77             5.706035           2.854480                           2.851555         2.457339         3.259824           20.0 5.383436e-14                      False
+      HUST severson_variance           77             5.706035          11.043843                          -5.337808        -5.815010        -4.847350            0.0 2.462831e-14                       True
+      HUST        attia_rich           77             5.706035          10.282683                          -4.576648        -5.031780        -4.093775            3.0 2.771145e-14                       True
+      XJTU    trivial_linear           47             6.858646           4.465261                           2.393385         1.424934         3.435592          141.0 1.614205e-06                      False
+      XJTU severson_variance           47             6.858646          17.527062                         -10.668416       -11.268503       -10.037551            0.0 1.421085e-14                       True
+      XJTU        attia_rich           47             6.858646          17.015130                         -10.156484       -10.790112        -9.494395            0.0 1.421085e-14                       True
+    ul_pur    trivial_linear           10             3.455791           5.378157                          -1.922366        -3.532623        -0.726834            0.0 1.953125e-03                       True
+    ul_pur severson_variance           10             3.455791          11.669491                          -8.213700        -9.469713        -7.086702            0.0 1.953125e-03                       True
+    ul_pur        attia_rich           10             3.455791          11.761409                          -8.305618        -9.583314        -7.103878            0.0 1.953125e-03                       True
+      hnei    trivial_linear           14            14.798947          26.804075                         -12.005129       -12.395122       -11.599577            0.0 1.220703e-04                       True
+      hnei severson_variance           14            14.798947          15.348707                          -0.549760        -0.866248        -0.247641            9.0 4.028320e-03                       True
+      hnei        attia_rich           14            14.798947          15.446858                          -0.647911        -0.963601        -0.349217            4.0 8.544922e-04                       True
+       snl    trivial_linear           55             6.700559          12.756378                          -6.055818        -7.791166        -4.495855           78.0 6.712831e-09                       True
+       snl severson_variance           55             6.700559           8.350908                          -1.650348        -2.928882        -0.363946          486.0 1.733578e-02                       True
+       snl        attia_rich           55             6.700559           8.197627                          -1.497068        -2.749626        -0.240904          502.0 2.473920e-02                       True
+      mich    trivial_linear           40             8.035817          14.071028                          -6.035211        -6.973757        -5.256434            0.0 1.818989e-12                       True
+      mich severson_variance           40             8.035817          15.120217                          -7.084400        -7.360384        -6.836800            0.0 1.818989e-12                       True
+      mich        attia_rich           40             8.035817          14.768147                          -6.732330        -7.024545        -6.472607            0.0 1.818989e-12                       True
+  mich_exp    trivial_linear           18             4.028945           9.135906                          -5.106962        -6.975698        -3.362527            2.0 2.288818e-05                       True
+  mich_exp severson_variance           18             4.028945          12.574678                          -8.545733       -11.304151        -5.787116            0.0 7.629395e-06                       True
+  mich_exp        attia_rich           18             4.028945          12.069527                          -8.040582       -10.655520        -5.439824            0.0 7.629395e-06                       True
+      rwth    trivial_linear           10            22.843587          38.847844                         -16.004256       -21.178416       -10.765198            0.0 1.953125e-03                       True
+      rwth severson_variance           10            22.843587          33.702426                         -10.858839       -16.074841        -5.555829            1.0 3.906250e-03                       True
+      rwth        attia_rich           10            22.843587          34.288885                         -11.445298       -16.618280        -6.135678            0.0 1.953125e-03                       True
+  stanford    trivial_linear            6            15.556629          13.871390                           1.685239         0.538056         2.642911            1.0 6.250000e-02                      False
+  stanford severson_variance            6            15.556629          12.582709                           2.973921         2.161848         3.541277            0.0 3.125000e-02                      False
+  stanford        attia_rich            6            15.556629          12.479902                           3.076727         2.218556         3.680855            0.0 3.125000e-02                      False
+stanford_2    trivial_linear            8            15.733902          12.861697                           2.872205         0.680011         5.136532            5.0 7.812500e-02                      False
+stanford_2 severson_variance            8            15.733902          11.736185                           3.997717         2.390142         5.771792            0.0 7.812500e-03                      False
+stanford_2        attia_rich            8            15.733902          11.630221                           4.103681         2.481547         5.866752            0.0 7.812500e-03                      False
+  isu_ilcc    trivial_linear            9            23.084885          19.112512                           3.972373        -1.604036        10.097705           15.0 4.257812e-01                      False
+  isu_ilcc severson_variance            9            23.084885          26.136762                          -3.051877        -9.906196         3.416899           18.0 6.523438e-01                      False
+  isu_ilcc        attia_rich            9            23.084885          26.451401                          -3.366516       -10.290273         3.207478           18.0 6.523438e-01                      False
+
+=== FULL BASELINE TABLE ===
+   dataset  trivial_linear_r2  severson_variance_r2  attia_rich_r2  deployed_base_r2  routed_oracle_selected_r2  best_lodo_r2
+     CALCE          -0.857786              0.077400       0.077647          0.748756                   0.739702      0.854792
+    Oxford          -7.588877              0.169282       0.195345          0.939630                   0.953262      0.075636
+      HUST           0.755338             -1.790168      -1.436522          0.795020                   0.800007      0.721547
+      XJTU           0.279460             -7.835449      -7.409684         -1.036732                  -1.036732     -6.394131
+    ul_pur          -0.565935             -3.292149      -3.397066          0.116107                   0.116107      0.516829
+      hnei          -2.001018             -0.087238      -0.108367         -0.037714                  -0.037714      0.929450
+       snl          -0.550348             -0.324228      -0.275397          0.146501                   0.146501      0.149016
+      mich          -0.275177              0.240888       0.251583          0.572789                   0.572789      0.746054
+  mich_exp          -0.217405             -0.205668      -0.121551          0.720633                   0.720633      0.499494
+      rwth          -0.000259             -0.000467      -0.000625         -0.484674                  -0.484674      0.505075
+  stanford          -0.273918              0.147997       0.134888          0.111290                   0.111290      0.996671
+stanford_2          -0.205716              0.120936       0.107526          0.065504                   0.065504      0.990175
+  isu_ilcc           0.358074             -0.988964      -1.024121          0.140112                   0.140112      0.900586
+
+[itemC] TOTAL TIME: 36.37 minutes

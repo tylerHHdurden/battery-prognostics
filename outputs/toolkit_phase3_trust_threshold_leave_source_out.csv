@@ -1,0 +1,17 @@
+held_out_source,threshold_chosen_without_source,n_novel,novel_flagged_roc,n_known,known_false_alarm_roc,novel_flagged_current_rule,known_false_alarm_current_rule
+CALCE,-5.521,3,2,1,0,3,1
+HUST,-9.515,77,77,15,0,40,1
+MIT,-5.521,31,31,6,0,14,1
+NASA,-5.521,10,4,2,1,10,1
+Oxford,-5.521,8,8,1,0,5,0
+XJTU,-5.363,47,40,9,0,8,1
+hnei,-5.521,14,14,2,0,14,1
+isu_ilcc,-5.521,9,9,1,1,9,0
+mich,-5.521,40,1,8,1,1,1
+mich_exp,-5.521,18,18,3,0,17,1
+rwth,-5.521,10,10,2,1,10,1
+snl,-5.69,55,23,11,5,47,4
+stanford,-5.521,6,6,1,0,6,0
+stanford_2,-5.521,8,8,1,0,8,0
+tongji,-9.515,130,130,26,1,15,1
+ul_pur,-5.521,10,9,2,0,0,1
