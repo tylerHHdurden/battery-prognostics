@@ -15412,3 +15412,13 @@ CALCE 6.567/11.364 (paper 6.256/10.791), Oxford 1.297/1.480 (1.431/1.639), HUST 
 6-dataset + HNEI AppTest matrix re-run (`outputs/toolkit_ood_matrix_routed.json`): 0 exceptions; RUL shown for NASA/MIT only; HNEI upload still on the candidate. The seven-of-nine BatteryLife observation from the Item 1 investigation
 (extended model truly better on hnei, snl, mich, rwth, stanford, stanford_2, isu_ilcc) is recorded as a LEAD for later, not a change.
 Pre-push audit of the 16 local commits: no data/raw, .env, uploads/ or credential patterns; largest new blob 16.6 MB (tongji parquet); total new blobs 130.8 MB.
+
+### Pre-push checks and Phase 3B (2026-10-01)
+
+- Fresh clone of the local branch into a temp folder + clean virtualenv from requirements-lock.txt (Python 3.14.2, with the PyTorch CPU index for torch==2.13.0+cpu): the first run FAILED because
+  `data/processed/candidate_fusion_train_range.json` (used by the runtime guard) was untracked; it and `old_encoder_embeddings_batterylife_corrected.parquet` (19.5 MB) were added, sidecars included.
+  Second run: `load_resources` ok; one production prediction per dataset (NASA, MIT, CALCE, Oxford, HUST, XJTU) ok with no data/raw present; full app via AppTest for the six datasets + one BatteryLife (HNEI) upload, 0 exceptions;
+  passport build + JSON/PDF export ok; repo root asserted inside the clone (`src/fresh_clone_smoke_test.py`). Files over 30 MB in the tree: only `fusion_embeddings_multisource.csv` (78.7 MB), already on origin since d98cc9d.
+- Phase 3B: `src/battery_passport.py` + a passport section in the Prediction tab (JSON + printable PDF, matplotlib only): state of health with 90% interval, expected remaining life (only when the nearest source is NASA/MIT and not flagged), cycle count,
+  trust status with its stated 81.9% / 11.0% and weak sources, data-source and model provenance, research-prototype disclaimer; no green/"trusted" wording. Also fixed: glossary tooltips leaked raw HTML (double quotes in the title attribute),
+  and the green "No anomaly flagged" box (OC-SVM) is now a neutral input-sanity message. Screenshots and the files the app serves: `outputs/passport_samples/`.
