@@ -15372,3 +15372,16 @@ Phase 2B had already loaded its data at start (`load_pooled_data` is called once
   values recorded as genuine transfer failures). Four headlines changed in substance (none flipped outright): Item B clear wins 11/13 -> 10/13 with snl a tie; Item 1 label-free routing rule now
   correct on 3/13 (was 8/13; extended model is the true winner on 10/13; deployed routing correct on 6/13, was 8/13) - not adopted, routing unchanged but worth a look;
   Item A online conformal weaker on BatteryLife (PID+scorecaster 71.1-95.0%, was 74.3-94.7%); Item C hnei routed R2 -0.137 now below Severson's -0.087 on R2 only.
+
+### Step 3 built, NOT committed (2026-09-30 evening): trust-level out_of_domain = ROC rule, graded messaging
+
+Approved operating point: flag if `nll_min >= -5.521444` (81.9% novel-source detection, 11.0% false alarms, leave-source-out; constants and the validation procedure are documented
+in `src/live_inference.py` next to `OOD_NLL_THRESHOLD`). Built (uncommitted, awaiting diff approval): `trust_report.nearest_source_trust_report` now returns `nll_min`, `gate_table_mae`,
+`lodo_family_mae`; `models/_builtin_battery_trust.csv` rebuilt with those columns; `live_inference.domain_verdict` implements the rule (flagged -> out_of_domain, RUL hidden; RUL shown only when the nearest source is NASA or
+MIT AND not flagged; the deployed OC-SVM stays an input-sanity check, `anomaly_flag` only); `app.py` `render_domain_banner`: flagged -> amber warning with both error numbers (nearest-source in-domain MAE and the median corrected
+family-holdout MAE, 5.9 SOH points, on unseen sources), RUL hidden; not flagged -> neutral "No distribution shift detected", never green/"trusted", plus the line "About 1 in 5 unfamiliar batteries are not detected; check against a measured capacity when possible.",
+with the 81.9%/11.0% figures and the weak sources (mich, NASA, snl) and "not a guarantee".
+Tests: 6-dataset + HNEI AppTest matrix (`outputs/toolkit_ood_matrix_roc.json`): 0 exceptions; none of the six built-in datasets is flagged (they are known sources), RUL shown only for NASA and MIT,
+HNEI upload not flagged (its source is one of the 16 profiles; nearest source snl) and RUL hidden because snl is not NASA/MIT. Both branches of the message exercised with a distorted upload
+(`outputs/step3_flagged_vs_unflagged_check.json`, screenshots `outputs/step3_screenshot_{flagged,unflagged}.png`). Regression sweep (`_regression_sweep_calce_fix.py`): base load + 6 datasets, 0 exceptions.
+Diff for review: `outputs/step3_diff_for_review.patch`.
