@@ -394,3 +394,11 @@ update if relevant, commit + push.
 - Step 3 DONE, awaiting push approval: out_of_domain = ROC rule (`nll_min >= -5.5214`, 81.9% novel-source detection / 11.0% false alarms, leave-source-out); neutral/amber messaging; RUL only when nearest source is NASA/MIT and not flagged; deployed OC-SVM stays an input-sanity check. Hybrid rule tested and rejected.
 - Item 1 routing investigation: propose no change to the six-app table (labelled "selected on held-out data").
 - NOT started (needs the user's approval): Phase 3B passport-style output, Phase 4 site redesign, Phase 5 release. NOTHING pushed or deployed.
+
+## VERIFICATION RULE (2026-10-01, after the live EncoderMismatch incident)
+Every verification of the app or of any provenance/hash logic MUST run on a Unix-line-ending clone, because Streamlit Cloud runs Linux and a Windows
+worktree (core.autocrlf=true) hides line-ending bugs. Recipe: `git clone --shared -c core.autocrlf=false -b <branch> . <tmp>` (no CR in text files; check with
+`grep -c $'\r' data/processed/channel_norm_stats.json` = 0), then run `src/fresh_clone_smoke_test.py` with the clone as cwd; never verify only in the working directory.
+`.gitattributes` now forces LF for text files; `encoder_provenance._md5` still normalises CRLF for text files as defence in depth
+(`src/verify_sidecars_vs_git_blobs.py` checks the 30 sidecars against the committed blobs). Nothing goes to master before a staging deploy of the branch passes
+`src/live_app_smoke_test.py`; tag master before every push; the live app is never the first place a change is tested.
