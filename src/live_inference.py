@@ -305,7 +305,6 @@ def lookup_builtin_trust(dataset: str | None, battery_id: str | None) -> dict | 
 #   flagged 47.5% (226/476). A hybrid rule (OR with the trust level / ratio score / logistic regression) was tested and
 #   rejected: it raised detection only by raising false alarms (outputs/toolkit_phase3_hybrid_rule_summary.txt).
 OOD_SCORE = "nll_min"
-HOTUPDATE_PROBE = "probe-2026-10-01"  # TEMPORARY: staging hot-update reproduction only
 OOD_NLL_THRESHOLD = -5.521444398006403
 OOD_THRESHOLD_DATE = "2026-09-30"
 OOD_VALIDATION_TABLE = "outputs/toolkit_phase3_trust_threshold_leave_source_out.csv"
