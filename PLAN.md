@@ -131,8 +131,16 @@ phase.
     it would silently regress every upload with a temperature channel
     to "in-domain" (would have undone this same pass's own RUL-hiding
     fix for exactly the case it exists to catch). Deferred as its own
-    careful, separately-tested change. Digital-twin next-measurement
-    UI (Phase 2C's schedule) also still deferred.
+    careful, separately-tested change - this is the ONE Phase 3 item
+    still outstanding.
+  - Digital-twin next-measurement UI: DONE. A "Recommended measurement
+    schedule" expander in the Streaming Digital Twin tab shows Phase
+    2C's own fixed_every_n schedule (its best-performing policy) for a
+    20-label budget - informational only, does not change the demo's
+    own existing dense-revelation corrector behavior. Includes Phase
+    2C's own coverage-limitation caveat directly in the UI text, not
+    just in the log. Verified via AppTest (0 exceptions, correct
+    computed schedule) + a clean regression sweep re-run.
 - **Phase 3B, 4, 5**: NOT STARTED. Specs below.
 
 ## OC-SVM correction (2026-09-29, supersedes the Phase 2e "REPLACE...move to Research" recommendation)

@@ -15251,3 +15251,43 @@ untouched, still loaded, still used for its existing role - only
 `out_of_domain`'s SOURCE of truth for uploads specifically was
 identified as needing a follow-up change, not changed here.
 
+## Phase 3 continued: digital-twin recommended-measurement schedule (Phase 2C's fixed_every_n)
+
+Closes the last remaining Phase 3 item from `PLAN.md` that did not carry
+the `out_of_domain` risk the OC-SVM/RUL work above was deliberately
+deferred for.
+
+Added a "[schedule icon] Recommended measurement schedule" expander to the Streaming
+Digital Twin tab, shown alongside the existing stream-length/delay
+controls: computes `online_conformal.fixed_every_n_schedule` (Phase
+2C's own best-performing policy - tied with uncertainty-triggered, but
+simpler and equally good, per that phase's own validation) for a
+budget of 20 labels (the middle of Phase 2C's 4 tested budgets) across
+the configured stream length, and lists the specific recommended
+checkpoint cycles.
+
+**Deliberately INFORMATIONAL only, not wired into the corrector's own
+behavior**: the streaming demo below still reveals every cycle's true
+SOH to the online corrector, exactly as it already did (that dense-
+revelation behavior is this tab's own existing, disclosed design - see
+its own caption at the top of the tab - and changing it would be a
+real behavioral change to an already-verified feature, out of this
+item's own narrow scope). The schedule is descriptive information
+about what Phase 2C found, not a control that gates what data this
+demo actually uses.
+
+**Honest caveat included in the UI itself, not just in this log**:
+directly states Phase 2C's own finding that even the largest tested
+budget (40 labels) reached only ~51% average coverage against the 90%
+target - so this is "the best available checkpoint placement," not a
+claim that 20 labels is actually sufficient.
+
+**Verification**: AppTest confirms the expander renders with the
+correct computed schedule ("20 labels across 85 cycles" for the
+slider's own default 80-max-cycles setting) and 0 exceptions; full
+6-dataset regression sweep re-run clean.
+
+### Files
+
+`app.py` (new expander in `render_streaming_twin_tab`, one new
+import). No other file touched.

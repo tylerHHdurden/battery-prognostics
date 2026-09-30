@@ -2690,6 +2690,30 @@ def render_streaming_twin_tab(res: dict):
     with col_b:
         delay = st.slider("Simulated per-cycle arrival delay (seconds)", 0.0, 0.2, 0.02, step=0.01)
 
+    # Phase 2C's own recommended-checkpoint schedule (fixed_every_n - found to perform
+    # essentially identically to the adaptive uncertainty-triggered policy at these budgets,
+    # so the simpler one is shown here), computed for INFORMATION only - this demo's own
+    # corrector still updates on every streamed cycle's true SOH, unchanged from its existing,
+    # already-verified behavior; this does NOT gate what the corrector actually sees.
+    from online_conformal import fixed_every_n_schedule
+    _stream_len = 5 + max_cycles
+    _budget = 20  # the middle of Phase 2C's own tested budgets (5/10/20/40)
+    _checkpoints = fixed_every_n_schedule(_stream_len, _budget)
+    with st.expander(f"📋 Recommended measurement schedule ({_budget} labels across {_stream_len} cycles, "
+                      f"Phase 2C's fixed-spacing policy)"):
+        st.caption(
+            "Which cycles this project's own label-efficient-checkpoints research (Phase 2C) "
+            "would recommend actually measuring true SOH at, if only a LIMITED number of "
+            "measurements were available - shown for information, not applied to the demo "
+            "below (which still reveals every cycle's true SOH, its own existing, disclosed "
+            "design). **Honest caveat, not glossed over**: Phase 2C's own validation found that "
+            "even the largest tested budget (40 labels) reached only ~51% average coverage "
+            "against a 90% target on this project's external sources - a recommended schedule "
+            "is the best AVAILABLE checkpoint placement, not a guarantee that this few "
+            "measurements is actually enough."
+        )
+        st.write(", ".join(str(c) for c in _checkpoints))
+
     if st.button("▶ Start streaming simulation", key="stream_start"):
         # Same graceful-degradation pattern as the sidebar's "Browse
         # existing battery" path (session 12): check availability FIRST
