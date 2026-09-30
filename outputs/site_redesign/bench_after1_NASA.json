@@ -1,0 +1,10 @@
+{
+ "label": "after1_NASA",
+ "dataset": "NASA",
+ "cold_s": 9.1,
+ "cold_exceptions": 0,
+ "cold_elements": 29,
+ "warm_s": 0.8,
+ "warm_exceptions": 0,
+ "warm_elements": 29
+}

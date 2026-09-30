@@ -1,0 +1,202 @@
+[
+ {
+  "source": "ul_pur",
+  "n_batteries": 10,
+  "missing_trust": 0,
+  "missing_cand_lookup": 0,
+  "variants": [
+   "multisource_candidate"
+  ],
+  "first_battery": "ul_pur::UL-PUR_N10-EX9_18650_NCA_23C_0-100_0.5-0.5C_i",
+  "cycle": 194,
+  "soh": 84.3,
+  "true": 84.9,
+  "flagged_first": false,
+  "nearest": "ul_pur",
+  "flagged_batteries": "0/10",
+  "rul_shown_any": 0,
+  "passport_model": "multi-source candidate model",
+  "passport_rul_shown": false,
+  "mae_last_cycle": 1.89
+ },
+ {
+  "source": "hnei",
+  "n_batteries": 14,
+  "missing_trust": 0,
+  "missing_cand_lookup": 0,
+  "variants": [
+   "multisource_candidate"
+  ],
+  "first_battery": "hnei::HNEI_18650_NMC_LCO_25C_0-100_0.5-1.5C_a",
+  "cycle": 1102,
+  "soh": 42.1,
+  "true": 40.9,
+  "flagged_first": false,
+  "nearest": "hnei",
+  "flagged_batteries": "0/14",
+  "rul_shown_any": 0,
+  "passport_model": "multi-source candidate model",
+  "passport_rul_shown": false,
+  "mae_last_cycle": 1.98
+ },
+ {
+  "source": "snl",
+  "n_batteries": 55,
+  "missing_trust": 0,
+  "missing_cand_lookup": 0,
+  "variants": [
+   "multisource_candidate"
+  ],
+  "first_battery": "snl::SNL_18650_LFP_15C_0-100_0.5-2C_b",
+  "cycle": 3754,
+  "soh": 92.1,
+  "true": 90.7,
+  "flagged_first": true,
+  "nearest": "snl",
+  "flagged_batteries": "18/55",
+  "rul_shown_any": 0,
+  "passport_model": "multi-source candidate model",
+  "passport_rul_shown": false,
+  "mae_last_cycle": 3.67
+ },
+ {
+  "source": "mich",
+  "n_batteries": 40,
+  "missing_trust": 0,
+  "missing_cand_lookup": 0,
+  "variants": [
+   "multisource_candidate"
+  ],
+  "first_battery": "mich::MICH_BLForm10_pouch_NMC_25C_0-100_1-1C_j",
+  "cycle": 459,
+  "soh": 3.3,
+  "true": 4.2,
+  "flagged_first": false,
+  "nearest": "mich",
+  "flagged_batteries": "1/40",
+  "rul_shown_any": 0,
+  "passport_model": "multi-source candidate model",
+  "passport_rul_shown": false,
+  "mae_last_cycle": 3.54
+ },
+ {
+  "source": "mich_exp",
+  "n_batteries": 18,
+  "missing_trust": 0,
+  "missing_cand_lookup": 0,
+  "variants": [
+   "multisource_candidate"
+  ],
+  "first_battery": "mich_exp::MICH_01R_pouch_NMC_25C_0-100_0.2-0.2C",
+  "cycle": 379,
+  "soh": 77.5,
+  "true": 70.7,
+  "flagged_first": false,
+  "nearest": "mich_exp",
+  "flagged_batteries": "0/18",
+  "rul_shown_any": 0,
+  "passport_model": "multi-source candidate model",
+  "passport_rul_shown": false,
+  "mae_last_cycle": 5.37
+ },
+ {
+  "source": "rwth",
+  "n_batteries": 10,
+  "missing_trust": 0,
+  "missing_cand_lookup": 0,
+  "variants": [
+   "multisource_candidate"
+  ],
+  "first_battery": "rwth::RWTH_003",
+  "cycle": 2421,
+  "soh": 23.1,
+  "true": 21.7,
+  "flagged_first": false,
+  "nearest": "rwth",
+  "flagged_batteries": "1/10",
+  "rul_shown_any": 0,
+  "passport_model": "multi-source candidate model",
+  "passport_rul_shown": false,
+  "mae_last_cycle": 1.33
+ },
+ {
+  "source": "stanford",
+  "n_batteries": 6,
+  "missing_trust": 0,
+  "missing_cand_lookup": 0,
+  "variants": [
+   "multisource_candidate"
+  ],
+  "first_battery": "stanford::Stanford_Nova_Regular_192",
+  "cycle": 933,
+  "soh": 37.9,
+  "true": 38.9,
+  "flagged_first": false,
+  "nearest": "stanford",
+  "flagged_batteries": "0/6",
+  "rul_shown_any": 0,
+  "passport_model": "multi-source candidate model",
+  "passport_rul_shown": false,
+  "mae_last_cycle": 3.38
+ },
+ {
+  "source": "stanford_2",
+  "n_batteries": 8,
+  "missing_trust": 0,
+  "missing_cand_lookup": 0,
+  "variants": [
+   "multisource_candidate"
+  ],
+  "first_battery": "stanford_2::Stanford_Nova_Regular_106",
+  "cycle": 1042,
+  "soh": 58.4,
+  "true": 51.4,
+  "flagged_first": false,
+  "nearest": "stanford",
+  "flagged_batteries": "0/8",
+  "rul_shown_any": 0,
+  "passport_model": "multi-source candidate model",
+  "passport_rul_shown": false,
+  "mae_last_cycle": 3.9
+ },
+ {
+  "source": "isu_ilcc",
+  "n_batteries": 9,
+  "missing_trust": 0,
+  "missing_cand_lookup": 0,
+  "variants": [
+   "multisource_candidate"
+  ],
+  "first_battery": "isu_ilcc::ISU-ILCC_G12C3",
+  "cycle": 2972,
+  "soh": 63.4,
+  "true": 64.5,
+  "flagged_first": true,
+  "nearest": "isu_ilcc",
+  "flagged_batteries": "9/9",
+  "rul_shown_any": 0,
+  "passport_model": "multi-source candidate model",
+  "passport_rul_shown": false,
+  "mae_last_cycle": 0.89
+ },
+ {
+  "source": "tongji",
+  "n_batteries": 130,
+  "missing_trust": 0,
+  "missing_cand_lookup": 0,
+  "variants": [
+   "multisource_candidate"
+  ],
+  "first_battery": "tongji::Tongji1_CY25-025_1--1",
+  "cycle": 488,
+  "soh": 77.0,
+  "true": 77.2,
+  "flagged_first": false,
+  "nearest": "tongji",
+  "flagged_batteries": "3/130",
+  "rul_shown_any": 0,
+  "passport_model": "multi-source candidate model",
+  "passport_rul_shown": false,
+  "mae_last_cycle": 0.81
+ }
+]

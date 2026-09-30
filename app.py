@@ -54,7 +54,7 @@ from data_adapters import (
     nasa_data_available, mit_data_available, calce_data_available,
 )
 from live_inference import (
-    load_resources, predict_and_explain, predict_and_explain_precomputed, available_precomputed_cycles,
+    load_resources, predict_and_explain, predict_and_explain_precomputed, available_precomputed_cycles, EXTENSION_SOURCES,
     load_precomputed_battery_series, PrecomputedStreamingTwin,
     build_battery_trust_query_vector, candidate_ocsvm_malformed_check,
     OOD_NLL_THRESHOLD, OOD_NOVEL_DETECTED, OOD_KNOWN_FALSE_ALARM, OOD_WEAK_SOURCES, OOD_NOT_DETECTED_LINE, OOD_THRESHOLD_DATE,
@@ -1084,7 +1084,7 @@ def _comparison_picker(label_prefix: str, key_prefix: str):
     even though the SAME precomputed-inference path Prediction/
     Explainability/Health Report already use (since the Phase 0 fix)
     is equally available here. Wired in now, not a separate mechanism."""
-    _dataset_options = ["NASA", "MIT", "CALCE", "Oxford", "HUST", "XJTU"]
+    _dataset_options = ["NASA", "MIT", "CALCE", "Oxford", "HUST", "XJTU"] + list(EXTENSION_SOURCES)
     dataset = st.selectbox(f"{label_prefix} dataset", _dataset_options, key=f"{key_prefix}_dataset")
     available = {"NASA": nasa_data_available, "MIT": mit_data_available,
                  "CALCE": calce_data_available}.get(dataset, lambda: False)()
@@ -3203,7 +3203,7 @@ def main():
         selected_cycle_idx = None
 
         if mode == "Browse existing battery":
-            _dataset_options = ["NASA", "MIT", "CALCE", "Oxford", "HUST", "XJTU"]
+            _dataset_options = ["NASA", "MIT", "CALCE", "Oxford", "HUST", "XJTU"] + list(EXTENSION_SOURCES)
             dataset = st.selectbox("Dataset", _dataset_options,
                                     index=_qp_index(_dataset_options, "dataset"))
             qp["dataset"] = dataset
@@ -3250,7 +3250,11 @@ def main():
                     battery_id = st.selectbox("Battery", _battery_options,
                                                index=_qp_index(_battery_options, "battery"))
                     qp["battery"] = battery_id
-                    if dataset not in ("NASA", "MIT"):
+                    if dataset in EXTENSION_SOURCES:
+                        st.caption("⚠️ Extension source: predicted by the 16-source candidate model, which saw batteries "
+                                   "of this source in training; leave-one-source-out transfer to a truly unseen source "
+                                   "is much weaker (see the trust message).")
+                    elif dataset not in ("NASA", "MIT"):
                         st.caption(f"ℹ️ {dataset} was never part of this model's training data - "
                                    f"every prediction shown is a genuine zero-retrain evaluation.")
                     st.caption("ℹ️ This deployment doesn't have this battery's raw cycling data, "

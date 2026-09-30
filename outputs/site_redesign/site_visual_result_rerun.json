@@ -1,0 +1,23 @@
+{
+ "runs": [
+  {
+   "viewport": "desktop",
+   "case": "upload_flagged",
+   "horizontal_scroll": false,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green_elements": 0,
+   "result_card_visible": true,
+   "pass": true
+  }
+ ],
+ "all_passed": true
+}

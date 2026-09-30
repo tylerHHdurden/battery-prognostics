@@ -1,0 +1,10 @@
+{
+ "label": "before_NASA",
+ "dataset": "NASA",
+ "cold_s": 45.3,
+ "cold_exceptions": 0,
+ "cold_elements": 396,
+ "warm_s": 14.0,
+ "warm_exceptions": 0,
+ "warm_elements": 396
+}

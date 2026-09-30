@@ -1,0 +1,352 @@
+[
+ {
+  "source": "ul_pur",
+  "battery": "ul_pur::UL-PUR_N10-EX9_18650_NCA_23C_0-100_0.5-0.5C_i",
+  "exceptions": [],
+  "ext_caption": true,
+  "flagged": false,
+  "soh_metrics": [
+   [
+    "Predicted SOH",
+    "84.9%"
+   ],
+   [
+    "Predicted RUL",
+    "not available"
+   ],
+   [
+    "Ensemble R\u00b2 (first pass)",
+    "0.917"
+   ],
+   [
+    "Lean pipeline speedup",
+    "52x"
+   ],
+   [
+    "CALCE static coverage (first pass)",
+    "6.1%"
+   ],
+   [
+    "B0018 MAE, online-corrected",
+    "2.86 pp"
+   ]
+  ],
+  "downloads": 0,
+  "passport_header": false
+ },
+ {
+  "source": "hnei",
+  "battery": "hnei::HNEI_18650_NMC_LCO_25C_0-100_0.5-1.5C_a",
+  "exceptions": [],
+  "ext_caption": true,
+  "flagged": false,
+  "soh_metrics": [
+   [
+    "Predicted SOH",
+    "89.3%"
+   ],
+   [
+    "Predicted RUL",
+    "not available"
+   ],
+   [
+    "Ensemble R\u00b2 (first pass)",
+    "0.917"
+   ],
+   [
+    "Lean pipeline speedup",
+    "52x"
+   ],
+   [
+    "CALCE static coverage (first pass)",
+    "6.1%"
+   ],
+   [
+    "B0018 MAE, online-corrected",
+    "2.86 pp"
+   ]
+  ],
+  "downloads": 0,
+  "passport_header": false
+ },
+ {
+  "source": "snl",
+  "battery": "snl::SNL_18650_LFP_15C_0-100_0.5-2C_b",
+  "exceptions": [],
+  "ext_caption": true,
+  "flagged": true,
+  "soh_metrics": [
+   [
+    "Predicted SOH",
+    "92.1%"
+   ],
+   [
+    "Predicted RUL",
+    "not available"
+   ],
+   [
+    "Ensemble R\u00b2 (first pass)",
+    "0.917"
+   ],
+   [
+    "Lean pipeline speedup",
+    "52x"
+   ],
+   [
+    "CALCE static coverage (first pass)",
+    "6.1%"
+   ],
+   [
+    "B0018 MAE, online-corrected",
+    "2.86 pp"
+   ]
+  ],
+  "downloads": 0,
+  "passport_header": false
+ },
+ {
+  "source": "mich",
+  "battery": "mich::MICH_BLForm10_pouch_NMC_25C_0-100_1-1C_j",
+  "exceptions": [],
+  "ext_caption": true,
+  "flagged": false,
+  "soh_metrics": [
+   [
+    "Predicted SOH",
+    "96.6%"
+   ],
+   [
+    "Predicted RUL",
+    "not available"
+   ],
+   [
+    "Ensemble R\u00b2 (first pass)",
+    "0.917"
+   ],
+   [
+    "Lean pipeline speedup",
+    "52x"
+   ],
+   [
+    "CALCE static coverage (first pass)",
+    "6.1%"
+   ],
+   [
+    "B0018 MAE, online-corrected",
+    "2.86 pp"
+   ]
+  ],
+  "downloads": 0,
+  "passport_header": false
+ },
+ {
+  "source": "mich_exp",
+  "battery": "mich_exp::MICH_01R_pouch_NMC_25C_0-100_0.2-0.2C",
+  "exceptions": [],
+  "ext_caption": true,
+  "flagged": false,
+  "soh_metrics": [
+   [
+    "Predicted SOH",
+    "89.7%"
+   ],
+   [
+    "Predicted RUL",
+    "not available"
+   ],
+   [
+    "Ensemble R\u00b2 (first pass)",
+    "0.917"
+   ],
+   [
+    "Lean pipeline speedup",
+    "52x"
+   ],
+   [
+    "CALCE static coverage (first pass)",
+    "6.1%"
+   ],
+   [
+    "B0018 MAE, online-corrected",
+    "2.86 pp"
+   ]
+  ],
+  "downloads": 0,
+  "passport_header": false
+ },
+ {
+  "source": "rwth",
+  "battery": "rwth::RWTH_003",
+  "exceptions": [],
+  "ext_caption": true,
+  "flagged": false,
+  "soh_metrics": [
+   [
+    "Predicted SOH",
+    "91.9%"
+   ],
+   [
+    "Predicted RUL",
+    "not available"
+   ],
+   [
+    "Ensemble R\u00b2 (first pass)",
+    "0.917"
+   ],
+   [
+    "Lean pipeline speedup",
+    "52x"
+   ],
+   [
+    "CALCE static coverage (first pass)",
+    "6.1%"
+   ],
+   [
+    "B0018 MAE, online-corrected",
+    "2.86 pp"
+   ]
+  ],
+  "downloads": 0,
+  "passport_header": false
+ },
+ {
+  "source": "stanford",
+  "battery": "stanford::Stanford_Nova_Regular_192",
+  "exceptions": [],
+  "ext_caption": true,
+  "flagged": false,
+  "soh_metrics": [
+   [
+    "Predicted SOH",
+    "98.8%"
+   ],
+   [
+    "Predicted RUL",
+    "not available"
+   ],
+   [
+    "Ensemble R\u00b2 (first pass)",
+    "0.917"
+   ],
+   [
+    "Lean pipeline speedup",
+    "52x"
+   ],
+   [
+    "CALCE static coverage (first pass)",
+    "6.1%"
+   ],
+   [
+    "B0018 MAE, online-corrected",
+    "2.86 pp"
+   ]
+  ],
+  "downloads": 0,
+  "passport_header": false
+ },
+ {
+  "source": "stanford_2",
+  "battery": "stanford_2::Stanford_Nova_Regular_106",
+  "exceptions": [],
+  "ext_caption": true,
+  "flagged": false,
+  "soh_metrics": [
+   [
+    "Predicted SOH",
+    "99.2%"
+   ],
+   [
+    "Predicted RUL",
+    "not available"
+   ],
+   [
+    "Ensemble R\u00b2 (first pass)",
+    "0.917"
+   ],
+   [
+    "Lean pipeline speedup",
+    "52x"
+   ],
+   [
+    "CALCE static coverage (first pass)",
+    "6.1%"
+   ],
+   [
+    "B0018 MAE, online-corrected",
+    "2.86 pp"
+   ]
+  ],
+  "downloads": 0,
+  "passport_header": false
+ },
+ {
+  "source": "isu_ilcc",
+  "battery": "isu_ilcc::ISU-ILCC_G12C3",
+  "exceptions": [],
+  "ext_caption": true,
+  "flagged": true,
+  "soh_metrics": [
+   [
+    "Predicted SOH",
+    "96.2%"
+   ],
+   [
+    "Predicted RUL",
+    "not available"
+   ],
+   [
+    "Ensemble R\u00b2 (first pass)",
+    "0.917"
+   ],
+   [
+    "Lean pipeline speedup",
+    "52x"
+   ],
+   [
+    "CALCE static coverage (first pass)",
+    "6.1%"
+   ],
+   [
+    "B0018 MAE, online-corrected",
+    "2.86 pp"
+   ]
+  ],
+  "downloads": 0,
+  "passport_header": false
+ },
+ {
+  "source": "tongji",
+  "battery": "tongji::Tongji1_CY25-025_1--1",
+  "exceptions": [],
+  "ext_caption": true,
+  "flagged": false,
+  "soh_metrics": [
+   [
+    "Predicted SOH",
+    "91.6%"
+   ],
+   [
+    "Predicted RUL",
+    "not available"
+   ],
+   [
+    "Ensemble R\u00b2 (first pass)",
+    "0.917"
+   ],
+   [
+    "Lean pipeline speedup",
+    "52x"
+   ],
+   [
+    "CALCE static coverage (first pass)",
+    "6.1%"
+   ],
+   [
+    "B0018 MAE, online-corrected",
+    "2.86 pp"
+   ]
+  ],
+  "downloads": 0,
+  "passport_header": false
+ }
+]

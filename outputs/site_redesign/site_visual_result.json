@@ -1,0 +1,114 @@
+{
+ "runs": [
+  {
+   "viewport": "desktop",
+   "case": "oxford",
+   "horizontal_scroll": false,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green_elements": 0,
+   "result_card_visible": true,
+   "pass": true
+  },
+  {
+   "viewport": "desktop",
+   "case": "upload_unflagged",
+   "horizontal_scroll": false,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green_elements": 0,
+   "result_card_visible": true,
+   "sample_download_bytes": 2655230,
+   "pass": true
+  },
+  {
+   "viewport": "desktop",
+   "case": "upload_flagged",
+   "horizontal_scroll": false,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green_elements": 0,
+   "result_card_visible": true,
+   "pass": true
+  },
+  {
+   "viewport": "mobile",
+   "case": "oxford",
+   "horizontal_scroll": false,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green_elements": 0,
+   "result_card_visible": true,
+   "pass": true
+  },
+  {
+   "viewport": "mobile",
+   "case": "upload_unflagged",
+   "horizontal_scroll": false,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green_elements": 0,
+   "result_card_visible": true,
+   "pass": true
+  },
+  {
+   "viewport": "mobile",
+   "case": "upload_flagged",
+   "horizontal_scroll": false,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green_elements": 0,
+   "result_card_visible": true,
+   "pass": true
+  }
+ ],
+ "all_passed": true
+}

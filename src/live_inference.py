@@ -560,6 +560,19 @@ PRECOMPUTED_HELDOUT_PARQUETS = {
     "HUST": "stage5_1_hust_merged.parquet",
     "XJTU": "stage5_1_xjtu_merged.parquet",
 }
+# Extension sources (Phase 4): the nine BatteryLife sources + Tongji, served ONLY from precomputed data and ONLY via the
+# multisource candidate (see _use_candidate). Parquet battery_ids are raw; the app / candidate-lookup / trust-table id is
+# f"{source}::{raw}" (see _precomputed_df).
+EXTENSION_SOURCES = ("ul_pur", "hnei", "snl", "mich", "mich_exp", "rwth", "stanford", "stanford_2", "isu_ilcc", "tongji")
+PRECOMPUTED_HELDOUT_PARQUETS.update({s: f"batterylife_{s}_merged.parquet" for s in EXTENSION_SOURCES})
+
+
+def _precomputed_df(dataset: str) -> pd.DataFrame:
+    df = pd.read_parquet(PROC_DIR / PRECOMPUTED_HELDOUT_PARQUETS[dataset])
+    if dataset in EXTENSION_SOURCES:
+        df = df.copy()
+        df["battery_id"] = f"{dataset}::" + df["battery_id"].astype(str)
+    return df
 
 
 def _calce_fusion_embeddings(battery_id: str, encoder, norm_stats: list[dict]) -> np.ndarray | None:
@@ -631,7 +644,7 @@ def available_precomputed_cycles(dataset: str) -> dict[str, list[int]]:
                 out.setdefault(bid, []).append(int(cyc))
         return {k: sorted(v) for k, v in out.items()}
     if dataset in PRECOMPUTED_HELDOUT_PARQUETS:
-        df = pd.read_parquet(PROC_DIR / PRECOMPUTED_HELDOUT_PARQUETS[dataset])
+        df = _precomputed_df(dataset)
         out = {}
         for bid, cyc in zip(df["battery_id"], df["cycle_idx"]):
             out.setdefault(bid, []).append(int(cyc))
@@ -674,7 +687,7 @@ def load_precomputed_battery_series(dataset: str, battery_id: str, res: dict) ->
             out.append({"cycle_idx": int(row["cycle_idx"]), "his": row.to_dict(),
                         "true_soh": float(row["SOH"]), "fusion_emb": all_emb[pos]})
     elif dataset in PRECOMPUTED_HELDOUT_PARQUETS:
-        df = pd.read_parquet(PROC_DIR / PRECOMPUTED_HELDOUT_PARQUETS[dataset])
+        df = _precomputed_df(dataset)
         sub = df[df["battery_id"] == battery_id].sort_values("cycle_idx")
         for _, row in sub.iterrows():
             out.append({"cycle_idx": int(row["cycle_idx"]), "his": row.to_dict(),
@@ -805,7 +818,7 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
     elif dataset in PRECOMPUTED_HELDOUT_PARQUETS:
         ep.assert_encoder_match(MODELS_DIR / "xgb_soh_fusion.json", PROC_DIR / PRECOMPUTED_HELDOUT_PARQUETS[dataset],
                                 context=f"predict_and_explain_precomputed[{dataset}]")
-        df = pd.read_parquet(PROC_DIR / PRECOMPUTED_HELDOUT_PARQUETS[dataset])
+        df = _precomputed_df(dataset)
         row = df[(df["battery_id"] == battery_id) & (df["cycle_idx"] == cycle_idx)]
         if row.empty:
             return {"error": f"No precomputed data for {dataset}/{battery_id} cycle {cycle_idx}."}

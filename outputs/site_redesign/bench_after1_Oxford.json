@@ -1,0 +1,10 @@
+{
+ "label": "after1_Oxford",
+ "dataset": "Oxford",
+ "cold_s": 7.7,
+ "cold_exceptions": 0,
+ "cold_elements": 30,
+ "warm_s": 0.5,
+ "warm_exceptions": 0,
+ "warm_elements": 30
+}
