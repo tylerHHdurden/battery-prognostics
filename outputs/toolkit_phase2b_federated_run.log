@@ -7,26 +7,26 @@
 [stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
 [phase2b] federated: 36 rounds x 14 clients x 1 local tree(s)/round (uniform baseline) = 504 total trees (target 500)
 [phase2b] NASA+MIT-only baseline trained (once, reused for every held-out target)
-[phase2b] held_out=NASA: centralized R2=-0.108 | fed(sample_weighted)=-0.181 | fed(uniform)=0.073 | fed(tempered)=-0.039 | NASA+MIT-only=0.999 | centralized_tempered=-0.185 (591.5s)
-[phase2b] held_out=MIT: centralized R2=-2.639 | fed(sample_weighted)=-26.864 | fed(uniform)=-27.172 | fed(tempered)=-52.581 | NASA+MIT-only=0.999 | centralized_tempered=-6.712 (565.2s)
-[phase2b] held_out=CALCE: centralized R2=0.865 | fed(sample_weighted)=0.774 | fed(uniform)=0.934 | fed(tempered)=0.865 | NASA+MIT-only=0.646 | centralized_tempered=-0.158 (569.6s)
-[phase2b] held_out=Oxford: centralized R2=-2.324 | fed(sample_weighted)=-18.589 | fed(uniform)=-3.973 | fed(tempered)=-4.488 | NASA+MIT-only=-9.111 | centralized_tempered=-0.852 (591.3s)
-[phase2b] held_out=HUST: centralized R2=0.347 | fed(sample_weighted)=-3.292 | fed(uniform)=-1.043 | fed(tempered)=-1.448 | NASA+MIT-only=0.079 | centralized_tempered=-2.587 (597.4s)
-[phase2b] held_out=XJTU: centralized R2=-5.438 | fed(sample_weighted)=-2.949 | fed(uniform)=-1.122 | fed(tempered)=-1.759 | NASA+MIT-only=-0.206 | centralized_tempered=-8.719 (564.6s)
-[phase2b] held_out=ul_pur: centralized R2=0.544 | fed(sample_weighted)=-2.731 | fed(uniform)=-1.017 | fed(tempered)=-0.993 | NASA+MIT-only=-0.049 | centralized_tempered=-3.623 (423.3s)
-[phase2b] held_out=hnei: centralized R2=0.724 | fed(sample_weighted)=-0.151 | fed(uniform)=-0.024 | fed(tempered)=0.001 | NASA+MIT-only=-0.778 | centralized_tempered=-0.674 (272.8s)
-[phase2b] held_out=snl: centralized R2=0.048 | fed(sample_weighted)=-0.740 | fed(uniform)=-0.631 | fed(tempered)=-0.505 | NASA+MIT-only=-0.429 | centralized_tempered=-0.601 (275.5s)
-[phase2b] held_out=mich: centralized R2=0.743 | fed(sample_weighted)=0.829 | fed(uniform)=0.688 | fed(tempered)=0.810 | NASA+MIT-only=0.463 | centralized_tempered=-0.011 (269.4s)
-[phase2b] held_out=mich_exp: centralized R2=0.624 | fed(sample_weighted)=0.034 | fed(uniform)=-0.549 | fed(tempered)=0.028 | NASA+MIT-only=0.464 | centralized_tempered=-0.383 (268.0s)
-[phase2b] held_out=rwth: centralized R2=0.011 | fed(sample_weighted)=0.755 | fed(uniform)=0.477 | fed(tempered)=0.643 | NASA+MIT-only=-0.773 | centralized_tempered=-0.714 (272.5s)
-[phase2b] held_out=stanford: centralized R2=0.901 | fed(sample_weighted)=0.324 | fed(uniform)=0.792 | fed(tempered)=0.299 | NASA+MIT-only=0.521 | centralized_tempered=-0.000 (263.6s)
-[phase2b] held_out=stanford_2: centralized R2=0.874 | fed(sample_weighted)=0.207 | fed(uniform)=0.761 | fed(tempered)=0.213 | NASA+MIT-only=0.499 | centralized_tempered=-0.002 (274.6s)
-[phase2b] held_out=isu_ilcc: centralized R2=0.839 | fed(sample_weighted)=0.600 | fed(uniform)=0.762 | fed(tempered)=0.821 | NASA+MIT-only=0.314 | centralized_tempered=-1.075 (244.9s)
-[phase2b] held_out=tongji: centralized R2=0.740 | fed(sample_weighted)=-0.865 | fed(uniform)=-0.872 | fed(tempered)=-1.583 | NASA+MIT-only=-1.080 | centralized_tempered=-0.548 (237.4s)
+[phase2b] held_out=NASA: centralized R2=0.229 | fed(sample_weighted)=-0.385 | fed(uniform)=0.417 | fed(tempered)=0.298 | NASA+MIT-only=0.999 | centralized_tempered=-0.185 (583.2s)
+[phase2b] held_out=MIT: centralized R2=-4.646 | fed(sample_weighted)=-43.761 | fed(uniform)=-33.939 | fed(tempered)=-36.389 | NASA+MIT-only=0.999 | centralized_tempered=-6.712 (20716.4s)
+[phase2b] held_out=CALCE: centralized R2=0.860 | fed(sample_weighted)=0.840 | fed(uniform)=0.733 | fed(tempered)=0.827 | NASA+MIT-only=0.646 | centralized_tempered=-0.158 (274.0s)
+[phase2b] held_out=Oxford: centralized R2=-0.492 | fed(sample_weighted)=-1.795 | fed(uniform)=-9.425 | fed(tempered)=-7.283 | NASA+MIT-only=-11.974 | centralized_tempered=-0.852 (279.0s)
+[phase2b] held_out=HUST: centralized R2=0.469 | fed(sample_weighted)=-1.100 | fed(uniform)=-1.676 | fed(tempered)=-2.791 | NASA+MIT-only=0.307 | centralized_tempered=-2.587 (302.5s)
+[phase2b] held_out=XJTU: centralized R2=-2.646 | fed(sample_weighted)=-2.854 | fed(uniform)=-3.346 | fed(tempered)=-2.344 | NASA+MIT-only=-0.934 | centralized_tempered=-8.719 (318.3s)
+[phase2b] held_out=ul_pur: centralized R2=0.465 | fed(sample_weighted)=-4.320 | fed(uniform)=-4.435 | fed(tempered)=-1.960 | NASA+MIT-only=0.186 | centralized_tempered=-3.623 (262.3s)
+[phase2b] held_out=hnei: centralized R2=0.671 | fed(sample_weighted)=-0.756 | fed(uniform)=-0.406 | fed(tempered)=-0.202 | NASA+MIT-only=-0.075 | centralized_tempered=-0.674 (252.2s)
+[phase2b] held_out=snl: centralized R2=0.363 | fed(sample_weighted)=-1.716 | fed(uniform)=-1.425 | fed(tempered)=-2.378 | NASA+MIT-only=0.120 | centralized_tempered=-0.601 (243.0s)
+[phase2b] held_out=mich: centralized R2=0.764 | fed(sample_weighted)=0.690 | fed(uniform)=0.773 | fed(tempered)=0.747 | NASA+MIT-only=0.661 | centralized_tempered=-0.011 (242.3s)
+[phase2b] held_out=mich_exp: centralized R2=0.709 | fed(sample_weighted)=-1.082 | fed(uniform)=-0.574 | fed(tempered)=-0.209 | NASA+MIT-only=0.616 | centralized_tempered=-0.383 (248.4s)
+[phase2b] held_out=rwth: centralized R2=0.338 | fed(sample_weighted)=0.482 | fed(uniform)=0.217 | fed(tempered)=0.540 | NASA+MIT-only=-0.215 | centralized_tempered=-0.714 (355.0s)
+[phase2b] held_out=stanford: centralized R2=0.875 | fed(sample_weighted)=0.627 | fed(uniform)=0.875 | fed(tempered)=0.730 | NASA+MIT-only=0.066 | centralized_tempered=-0.000 (473.4s)
+[phase2b] held_out=stanford_2: centralized R2=0.856 | fed(sample_weighted)=0.642 | fed(uniform)=0.868 | fed(tempered)=0.760 | NASA+MIT-only=-0.012 | centralized_tempered=-0.002 (597.4s)
+[phase2b] held_out=isu_ilcc: centralized R2=0.898 | fed(sample_weighted)=0.812 | fed(uniform)=0.699 | fed(tempered)=0.598 | NASA+MIT-only=0.359 | centralized_tempered=-1.075 (572.4s)
+[phase2b] held_out=tongji: centralized R2=0.818 | fed(sample_weighted)=-2.828 | fed(uniform)=-2.996 | fed(tempered)=-1.277 | NASA+MIT-only=-0.395 | centralized_tempered=-0.548 (579.3s)
 
 [phase2b] NASA/MIT tempered-centralized check (does n^0.5 group weighting fix NASA/MIT without Phase 2d's collapse?):
-    NASA: unweighted centralized R2=-0.108, tempered centralized R2=-0.185, NASA+MIT-only(routed) R2=0.999
-    MIT:  unweighted centralized R2=-2.639, tempered centralized R2=-6.712, NASA+MIT-only(routed) R2=0.999
+    NASA: unweighted centralized R2=0.229, tempered centralized R2=-0.185, NASA+MIT-only(routed) R2=0.999
+    MIT:  unweighted centralized R2=-4.646, tempered centralized R2=-6.712, NASA+MIT-only(routed) R2=0.999
     Other 14 sources: 14 went negative under tempered centralized weighting (Phase 2d's equal-weight collapse hit 15/16)
 
-[phase2b] TOTAL TIME: 106.54 minutes
+[phase2b] TOTAL TIME: 441.69 minutes

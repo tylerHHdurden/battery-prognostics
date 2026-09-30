@@ -57,10 +57,8 @@ from live_inference import (
     load_resources, predict_and_explain, predict_and_explain_precomputed, available_precomputed_cycles,
     load_precomputed_battery_series, PrecomputedStreamingTwin,
     build_battery_trust_query_vector, candidate_ocsvm_malformed_check,
-    OOD_NLL_THRESHOLD, OOD_NOVEL_DETECTED, OOD_KNOWN_FALSE_ALARM, OOD_WEAK_SOURCES, OOD_NOT_DETECTED_LINE, OOD_THRESHOLD_DATE,
 )
 from trust_report import nearest_source_trust_report
-from battery_passport import build_passport, passport_json, passport_pdf, DISCLAIMER as PASSPORT_DISCLAIMER
 from generate_health_report import build_prompt, build_qa_prompt, call_llm
 from prescriptive_decision_layer import recommend
 from run_second_life_grading import grade as second_life_grade
@@ -371,8 +369,7 @@ def glossary_term(term: str) -> str:
     """Returns an inline HTML span for `term` with a native-tooltip
     definition on hover (Part D #12) - use inside st.markdown(...,
     unsafe_allow_html=True) calls, e.g. f"...{glossary_term('SOH')}..." """
-    import html as _html
-    definition = _html.escape(GLOSSARY.get(term, ""), quote=True)  # definitions contain double quotes; unescaped they broke the tag and leaked raw HTML
+    definition = GLOSSARY.get(term, "")
     return f'<span class="glossary-term" title="{definition}">{term}</span>'
 
 
@@ -574,33 +571,6 @@ def _compute_degradation_mode(dataset: str, battery_id: str, cycles: list[dict] 
         return None
 
 
-def render_domain_banner(ctx: dict):
-    """Distribution-shift message (approved 2026-09-30). FLAGGED -> amber warning with both error numbers and RUL hidden.
-    NOT flagged -> a neutral note, never green and never the word "trusted", with the measured miss rate. The rule is the
-    ROC rule in live_inference (nll_min >= OOD_NLL_THRESHOLD); the numbers below are its leave-source-out validation,
-    not a guarantee."""
-    info = ctx.get("domain_info") or {}
-    errs = info.get("errors") or {}
-    validation = (f"Check validated by leaving each of 16 sources out in turn: it flagged {OOD_NOVEL_DETECTED:.1%} of batteries from "
-                  f"an unseen source and wrongly flagged {OOD_KNOWN_FALSE_ALARM:.1%} of batteries from known sources. It is weakest "
-                  f"for {', '.join(OOD_WEAK_SOURCES)}. It is a screening check, not a guarantee.")
-    if ctx["out_of_domain"]:
-        in_dom, unseen = errs.get("in_domain_mae"), errs.get("unseen_source_typical_mae")
-        nearest = errs.get("nearest_source")
-        err_line = ""
-        if in_dom is not None and unseen is not None:
-            err_line = (f"\n\n**Two error numbers to keep in mind (SOH points, MAE):** about **{in_dom:.2f}** for batteries like the ones "
-                        f"the model was built on (nearest known source: {nearest}, held-out batteries), but about **{unseen:.1f}** "
-                        f"typically on a source the model has never seen (median over leave-source-out tests).")
-        st.warning("⚠️ **This battery looks unfamiliar - treat its predictions with caution.** Reasons: "
-                   + "; ".join(ctx["domain_reasons"]) + "." + err_line
-                   + "\n\nRUL is hidden, and the conformal interval was calibrated on known sources so its coverage is not reliable here."
-                   + "\n\n" + validation)
-    else:
-        st.info("ℹ️ **No distribution shift detected.** This does not mean the prediction is trusted or guaranteed.\n\n"
-                + OOD_NOT_DETECTED_LINE + "\n\n" + validation)
-
-
 def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_id: str, cycles: list[dict] | None):
     st.caption("Live predictions for the currently-selected cycle, computed fresh from "
                "trained model weights (no retraining happens in this app).")
@@ -612,7 +582,7 @@ def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_i
     # out-of-domain, not just "somewhat less accurately." Computed ONCE here and reused for
     # the framing text, the metric below, and the recommendation engine, so a hidden-from-
     # display number never silently still drives a retirement/second-life recommendation.
-    rul_display = None if ctx.get("rul_hidden", ctx["out_of_domain"]) else ctx["rul_pred"]
+    rul_display = None if ctx["out_of_domain"] else ctx["rul_pred"]
 
     icon_col, framing_col = st.columns([1, 2])
     with icon_col:
@@ -638,12 +608,13 @@ def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_i
             st.metric("Predicted RUL", "not available")
             if ctx["rul_pred"] is None:
                 reason = ctx.get("rul_unavailable_reason") or "RUL needs this cycle raw curve, which is not available here."
-            elif ctx.get("rul_hidden_reason"):
-                reason = ("RUL is hidden rather than shown unreliably - " + ctx["rul_hidden_reason"]
-                          + ". RUL was never validated to work outside NASA+MIT (this project's own direct "
-                            "evidence: CALCE RUL R2=-566, a catastrophic cross-domain failure).")
+            elif ctx["domain_reasons"]:
+                reason = ("this battery is out-of-domain, so RUL is hidden rather than shown "
+                           "unreliably - " + "; ".join(ctx["domain_reasons"]) + ". RUL was never "
+                           "validated to work outside NASA+MIT (this project's own direct "
+                           "evidence: CALCE RUL R2=-566, a catastrophic cross-domain failure).")
             else:
-                reason = "RUL is hidden rather than shown unreliably for this battery."
+                reason = "this battery is out-of-domain, so RUL is hidden rather than shown unreliably."
             st.caption(f"ℹ️ {reason}")
         else:
             delta = None if true_rul is None else round(rul_display - true_rul)
@@ -661,10 +632,10 @@ def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_i
                   "data that flags anything unlike it) considers this cycle's feature vector "
                   "unlike the NASA+MIT training distribution.")
     else:
-        st.info("ℹ️ Input-sanity check (One-Class SVM): nothing unusual flagged in this cycle's feature vector. "
-                "This is not a statement that the battery is familiar or the prediction is reliable.")
-    st.caption("The one-class SVM is trained only on NASA+MIT data and here only checks the input for oddities; "
-               "the distribution-shift message above is decided by the nearest-source check, not by this detector.")
+        st.success("✅ No anomaly flagged (One-Class SVM) - this cycle's feature vector "
+                    "looks consistent with the NASA+MIT training distribution.")
+    st.caption("The anomaly detector is trained only on NASA+MIT data, so it doubles as an "
+               "early signal of out-of-domain data alongside the missing-temperature check.")
 
     st.divider()
     st.subheader("📋 Recommendation (Prescriptive Decision Layer)")
@@ -676,61 +647,23 @@ def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_i
     deg_mode = _compute_degradation_mode(dataset, battery_id, cycles)
     rec = recommend(ctx["soh_pred"], rul_display, grade, deg_mode)
     _REC_STYLE = {
-        "Continue normal use": (st.info, "🔹"),  # neutral on purpose: never a green "all clear" box
+        "Continue normal use": (st.success, "🟢"),
         "Monitor closely": (st.info, "🟡"),
         "Candidate for second-life": (st.warning, "🔵"),
         "Recommend retirement": (st.error, "🔴"),
     }
     widget, icon = _REC_STYLE.get(rec.action, (st.info, "ℹ️"))
-    if ctx["out_of_domain"]:
-        widget(f"{icon} **{rec.action}** - reduced confidence. This battery looks unfamiliar (see the warning above), so treat "
-               f"this as a provisional suggestion built from predictions that may be off by several SOH points; check it against a "
-               f"measured capacity before acting on it.")
-    else:
-        widget(f"{icon} **{rec.action}**")
+    widget(f"{icon} **{rec.action}**")
     with st.expander("Why - the specific rules that fired"):
         for line in rec.reasoning:
             st.markdown(f"- {line}")
     if ctx["out_of_domain"]:
-        st.caption("⚠️ This battery was flagged as unfamiliar above - the recommendation carries the same reduced "
-                   "confidence as the predictions it is built from.")
+        st.caption("⚠️ This battery was flagged out-of-domain above - treat this "
+                   "recommendation with the same reduced confidence as the predictions "
+                   "it's built from.")
     if deg_mode is None:
         st.caption("_Degradation-mode signature unavailable for this battery (too few "
                    "trackable cycles) - the recommendation above used SOH/RUL/grade only._")
-
-    render_passport_section(ctx, dataset, battery_id, cycles)
-
-
-def render_passport_section(ctx: dict, dataset: str, battery_id: str, cycles: list[dict] | None):
-    """Phase 3B: passport-style export (JSON + printable PDF). Research prototype, not a certified battery passport."""
-    st.divider()
-    st.subheader("🧾 Battery passport (research prototype)")
-    st.caption(PASSPORT_DISCLAIMER)
-    try:
-        n_cycles = len(cycles) if cycles else None
-        if n_cycles is None:
-            n_cycles = len(available_precomputed_cycles(dataset).get(battery_id, [])) or None
-        passport = build_passport(ctx, dataset, battery_id, n_cycles)
-    except Exception as e:
-        st.caption(f"ℹ️ Passport-style export unavailable for this selection: {e}")
-        return
-    soh, rul, tr = passport["state_of_health"], passport["expected_remaining_life"], passport["trust_status"]
-    c1, c2, c3 = st.columns(3)
-    c1.metric("State of health", f"{soh['value_percent']}%", help=f"90% interval: {soh['interval_90_percent'][0]} - {soh['interval_90_percent'][1]}")
-    c2.metric("Expected remaining life", "not shown" if rul.get("cycles") is None else f"{int(rul['cycles'])} cycles")
-    c3.metric("Cycles in data", passport["cycle_count"]["cycles_in_data"] if passport["cycle_count"]["cycles_in_data"] is not None else "n/a")
-    st.markdown(f"**Trust status:** {tr['status']}. Stated detection rate {tr['stated_detection_rate']:.1%} of unseen-source batteries, "
-                f"false-alarm rate {tr['stated_false_alarm_rate']:.1%}; weakest for {', '.join(tr['weakest_sources'])}. No guarantee.")
-    st.caption(f"Data-source provenance: {passport['battery']['data_provenance']}. Model: {passport['model_provenance']['model']}.")
-    d1, d2 = st.columns(2)
-    safe_id = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in str(battery_id))[:60]
-    d1.download_button("Download passport (JSON)", data=passport_json(passport), file_name=f"battery_passport_{safe_id}.json",
-                       mime="application/json", key=f"pp_json_{safe_id}")
-    try:
-        d2.download_button("Download passport (printable PDF)", data=passport_pdf(passport), file_name=f"battery_passport_{safe_id}.pdf",
-                           mime="application/pdf", key=f"pp_pdf_{safe_id}")
-    except Exception as e:
-        d2.caption(f"PDF export unavailable: {e}")
 
 
 def render_explainability_tab(ctx: dict):
@@ -823,7 +756,7 @@ def render_health_report_tab(ctx: dict, dataset: str, battery_id: str, cycles: l
     # out-of-domain batteries, so neither the generated report nor the JSON fallback below
     # leaks an untrustworthy RUL number the Prediction tab has already decided to hide.
     context_for_llm = dict(ctx)
-    if ctx.get("rul_hidden", ctx["out_of_domain"]):
+    if ctx["out_of_domain"]:
         context_for_llm["rul_pred"] = None
     context_for_llm["battery_id"] = battery_id
     context_for_llm["dataset"] = dataset
@@ -1000,9 +933,9 @@ def render_battery_comparison_section():
 
     res = get_resources()
     with st.spinner("Running live inference for both batteries..."):
-        ctx_a = (predict_and_explain(cyc_a, res, baseline_his=base_his_a, dataset=ds_a, battery_id=bid_a) if mode_a == "live"
+        ctx_a = (predict_and_explain(cyc_a, res, baseline_his=base_his_a, dataset=ds_a) if mode_a == "live"
                   else predict_and_explain_precomputed(ds_a, bid_a, cyc_a, res))
-        ctx_b = (predict_and_explain(cyc_b, res, baseline_his=base_his_b, dataset=ds_b, battery_id=bid_b) if mode_b == "live"
+        ctx_b = (predict_and_explain(cyc_b, res, baseline_his=base_his_b, dataset=ds_b) if mode_b == "live"
                   else predict_and_explain_precomputed(ds_b, bid_b, cyc_b, res))
 
     col_a, col_b = st.columns(2)
@@ -1024,7 +957,7 @@ def render_battery_comparison_section():
             # Same rule as the Prediction tab: RUL hidden (not just warned about) for
             # out-of-domain batteries - RUL was never validated to work outside NASA+MIT
             # (this project's own direct evidence: CALCE RUL R2=-566).
-            cmp_rul_display = None if ctx.get("rul_hidden", ctx["out_of_domain"]) else ctx["rul_pred"]
+            cmp_rul_display = None if ctx["out_of_domain"] else ctx["rul_pred"]
             if cmp_rul_display is None:
                 st.metric("RUL", "not available", help=GLOSSARY["RUL"])
             else:
@@ -3146,25 +3079,7 @@ def main():
                 from stage1_common import BASELINE_CYCLE as _BASELINE_CYCLE
                 _baseline_cycle = next((c for c in cycles if c["cycle_idx"] == _BASELINE_CYCLE), cycles[0])
                 _baseline_his = _compute_his(_baseline_cycle)
-                _upload_trust = None
-                _upload_query_vec = None
-                if dataset == "Uploaded":
-                    # Battery-level familiarity verdict (median over up to 30 sampled cycles), computed ONCE
-                    # per upload and used both to decide out_of_domain below and for the "Upload checks"
-                    # display - the trust report, not the deployed OC-SVM, decides out_of_domain.
-                    _cache_key = f"upload_trust::{battery_id}::{len(cycles)}"
-                    if _cache_key not in st.session_state:
-                        _qv = build_battery_trust_query_vector(cycles, res, _baseline_his)
-                        _tr = None
-                        if _qv is not None:
-                            try:
-                                _tr = nearest_source_trust_report(_qv)
-                            except Exception:
-                                _tr = None
-                        st.session_state[_cache_key] = (_qv, _tr)
-                    _upload_query_vec, _upload_trust = st.session_state[_cache_key]
-                ctx = predict_and_explain(selected_cycle, res, baseline_his=_baseline_his, dataset=dataset,
-                                          trust=_upload_trust, battery_id=battery_id)
+                ctx = predict_and_explain(selected_cycle, res, baseline_his=_baseline_his, dataset=dataset)
 
         if "error" in ctx:
             st.error(ctx["error"])
@@ -3181,14 +3096,24 @@ def main():
                     true_soh = round(float(row.iloc[0]["SOH"]), 1)
                     true_rul = int(row.iloc[0]["RUL"])
 
-            render_domain_banner(ctx)
+            if ctx["out_of_domain"]:
+                st.error(
+                    "🚨 **OUT-OF-DOMAIN — conformal interval reliability NOT guaranteed.** 🚨\n\n"
+                    "Reasons: " + "; ".join(ctx["domain_reasons"]) + ".\n\n"
+                    "The CALCE zero-retrain evaluation found the exact failure mode this warning "
+                    "exists to prevent: the conformal interval shown in the Prediction tab looked "
+                    "**identically confident** in-domain and out-of-domain (same fixed width, "
+                    "±2.37 SOH points either way), while actual empirical coverage collapsed from "
+                    "95.6% (NASA/MIT) to just 6.1% (CALCE). Treat any interval below as decorative, "
+                    "not a real confidence guarantee, for this battery."
+                )
 
             if dataset == "Uploaded":
                 st.divider()
                 st.subheader("🔎 Upload checks")
                 with st.spinner("Checking this upload (input-sanity + nearest-source trust report)..."):
                     malformed_check = candidate_ocsvm_malformed_check(cycles, res, _baseline_his)
-                    query_vec = _upload_query_vec
+                    query_vec = build_battery_trust_query_vector(cycles, res, _baseline_his)
 
                 if malformed_check["available"]:
                     if malformed_check["likely_malformed"]:
@@ -3207,13 +3132,13 @@ def main():
                 else:
                     st.caption(f"ℹ️ Input-sanity check unavailable: {malformed_check['reason']}")
 
-                if query_vec is not None and _upload_trust is not None:
+                if query_vec is not None:
                     try:
-                        trust = _upload_trust
-                        trust_emoji = "🔎"  # neutral on purpose: a familiar-looking upload is never shown as green/"trusted"
+                        trust = nearest_source_trust_report(query_vec)
+                        trust_emoji = {"familiar": "🟢", "somewhat_familiar": "🟡", "unfamiliar": "🔴"}[trust["trust_level"]]
                         st.markdown(
                             f"{trust_emoji} **Nearest known source: {trust['nearest_source']}** "
-                            f"- trained on "
+                            f"({trust['trust_level'].replace('_', ' ')}) - trained on "
                             f"{trust['n_train_batteries_for_nearest']} batteries of that source."
                         )
                         st.caption(
@@ -3228,20 +3153,6 @@ def main():
                         st.caption(f"ℹ️ Nearest-source trust report unavailable: {e}")
                 else:
                     st.caption("ℹ️ Nearest-source trust report unavailable: too few usable cycles.")
-
-            # Runtime guard (2026-09-30 encoder-divergence item): if the candidate encoder's output for
-            # THIS cycle is non-finite or outside the range seen in training, show no number at all -
-            # ctx = None makes every ctx-dependent tab below (Prediction/Explainability/Health Report)
-            # skip rendering for this cycle instead of showing a plausible-looking wrong value.
-            if ctx.get("fusion_unreliable"):
-                st.error(
-                    "⚠️ **Prediction unreliable for this cycle** - "
-                    + (ctx.get("fusion_unreliable_reason") or "the model's internal features fall outside "
-                                                             "what it saw in training")
-                    + ". No SOH/RUL number is shown for this cycle rather than a plausible-looking wrong "
-                      "one - try a different cycle."
-                )
-                ctx = None
 
     tab_showcase, tab_prediction, tab_explain, tab_report, tab_stream, tab_world_model, tab_validation, tab_archive = st.tabs(
         ["🎬 Showcase", "🔮 Prediction", "🔍 Explainability", "📝 Health Report",
