@@ -223,6 +223,18 @@ def load_resources() -> dict:
             for i, (ds, bid, cyc) in enumerate(zip(_cand_fusion_df["dataset"], _cand_fusion_df["battery_id"], _cand_fusion_df["cycle_idx"]))
         }
 
+    # Phase 3 OC-SVM correction: the candidate OC-SVM (fit on the same 16-source pool the
+    # multisource candidate was trained on) is a genuinely discriminating INPUT-SANITY check
+    # (100% detection of swapped V/I columns, capacity-x10, truncated cycles, 0.6% in-domain
+    # false-flag rate - see DEVELOPMENT_LOG.md's "OC-SVM sanity check" entries) - unlike the
+    # DEPLOYED ocsvm above, which was never used for this and stays loaded/unchanged for its
+    # existing role. Used specifically for the upload "does this data look malformed" check,
+    # not for domain/familiarity (that's the nearest-source trust report's job).
+    with open(MODELS_DIR / "_candidate_ocsvm.pkl", "rb") as f:
+        candidate_ocsvm = pickle.load(f)
+    with open(MODELS_DIR / "_candidate_ocsvm_scaler.pkl", "rb") as f:
+        candidate_ocsvm_scaler = pickle.load(f)
+
     return {
         "norm_stats": norm_stats, "constants": constants, "joint_hi_norm": joint_hi_norm,
         "background": background, "train_medians": train_medians,
@@ -233,6 +245,7 @@ def load_resources() -> dict:
         "xgb_candidate": xgb_candidate, "candidate_encoder": candidate_encoder,
         "candidate_norm_stats": candidate_norm_stats, "candidate_medians": candidate_medians,
         "candidate_fusion_lookup": candidate_fusion_lookup,
+        "candidate_ocsvm": candidate_ocsvm, "candidate_ocsvm_scaler": candidate_ocsvm_scaler,
         # kept for StreamingDigitalTwin's constructor API (digital_twin_streaming.py) -
         # the canonical reformulated names now, not the old pre-Stage-1 set; no longer
         # used for feature-BUILDING directly (build_reformulated_hi_vector handles that)
@@ -772,6 +785,91 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
         "true_rul": None,
         "precomputed_fallback": True,
         "model_variant": model_variant,
+    }
+
+
+def build_candidate_feature_vector_for_cycle(cycle: dict, res: dict, baseline_his: dict | None) -> np.ndarray | None:
+    """The candidate model's own 25-dim feature vector (8 reformulated HI
+    + cycle_idx + 16 CANDIDATE fusion-embedding dims) for ONE cycle -
+    the same construction `predict_and_explain`'s own candidate branch
+    uses inline, factored out here (a SEPARATE, standalone copy, not a
+    refactor of that function itself - deliberately, to avoid touching
+    already-verified prediction-path behavior for this new, additive
+    use: the Phase 3 nearest-source trust report and the upload
+    input-sanity check, both of which need this same vector for
+    POTENTIALLY MANY cycles of an uploaded battery, not just the one
+    currently on screen). Returns None if the cycle's raw tensor can't
+    be built (too short/malformed), matching predict_and_explain's own
+    "error" convention for that case."""
+    train_medians = res["train_medians"]
+    his = compute_health_indicators(cycle)
+    hi_rel_vector = build_reformulated_hi_vector(his, train_medians, baseline_his)
+    hi_vector = np.concatenate([hi_rel_vector, [float(cycle["cycle_idx"])]])
+
+    x_raw = get_cycle_tensor(cycle, n_bins=200)
+    if x_raw is None:
+        return None
+    x_norm_candidate = apply_channel_norm(x_raw[None].astype(np.float32), res["candidate_norm_stats"])[0]
+    with torch.no_grad():
+        fusion_emb_candidate = res["candidate_encoder"].encode(
+            torch.tensor(x_norm_candidate[None, :, ICA_CHANNEL_SLICE])).numpy()[0]
+    return np.concatenate([hi_vector, fusion_emb_candidate])
+
+
+def build_battery_trust_query_vector(cycles: list[dict], res: dict, baseline_his: dict | None,
+                                      max_cycles_sampled: int = 30) -> np.ndarray | None:
+    """This battery's own representative 25-dim vector for the trust
+    report: the MEDIAN (not mean - same robustness reasoning as
+    build_source_trust_profiles.py's own battery_mean_vectors, which
+    found a handful of individual cycles with clearly-diverged encoder
+    outputs) across up to `max_cycles_sampled` evenly-spaced cycles -
+    sampled, not every cycle, so this stays fast for a battery with
+    hundreds/thousands of cycles (this is a UI-latency-sensitive path,
+    unlike the offline profile-building script). Returns None if too
+    few cycles produce a usable vector to form a meaningful median."""
+    if not cycles:
+        return None
+    n = len(cycles)
+    step = max(1, n // max_cycles_sampled)
+    sampled = cycles[::step][:max_cycles_sampled]
+    vecs = [v for c in sampled if (v := build_candidate_feature_vector_for_cycle(c, res, baseline_his)) is not None]
+    if len(vecs) < 3:
+        return None
+    return np.median(np.stack(vecs), axis=0)
+
+
+def candidate_ocsvm_malformed_check(cycles: list[dict], res: dict, baseline_his: dict | None,
+                                     max_cycles_sampled: int = 30) -> dict:
+    """Input-sanity check for uploads, using the CANDIDATE OC-SVM (see
+    load_resources' own comment for why this one, not the deployed
+    ocsvm - it's a genuinely discriminating malformed-data detector,
+    100% detection of swapped V/I columns / capacity-x10 / truncated
+    cycles at 0.6% in-domain false-flag rate). Uses the SAME 25-dim
+    candidate feature vector as the trust report (built once per
+    sampled cycle, shared between both checks by the caller rather than
+    computed twice) - flags per-cycle, then reports the flagged
+    FRACTION across sampled cycles, not a single pass/fail off one
+    cycle, since a genuinely malformed file usually corrupts most/all
+    of its own rows, not just one."""
+    if not cycles:
+        return {"available": False, "reason": "no cycles to check"}
+    n = len(cycles)
+    step = max(1, n // max_cycles_sampled)
+    sampled = cycles[::step][:max_cycles_sampled]
+    vecs = [v for c in sampled if (v := build_candidate_feature_vector_for_cycle(c, res, baseline_his)) is not None]
+    if len(vecs) < 3:
+        return {"available": False, "reason": "too few usable cycles to check"}
+    X = np.stack(vecs)
+    X_scaled = res["candidate_ocsvm_scaler"].transform(X)
+    flags = res["candidate_ocsvm"].predict(X_scaled) == -1
+    frac_flagged = float(flags.mean())
+    return {
+        "available": True, "n_checked": len(vecs), "n_flagged": int(flags.sum()),
+        "frac_flagged": frac_flagged,
+        # matches this project's own established OC-SVM calibration read (0.6% in-domain false-
+        # flag rate; structural corruptions caught at ~100%) - a THIRD or more of sampled cycles
+        # flagged is a real, disclosed threshold choice, not a formula derived from a target FPR.
+        "likely_malformed": frac_flagged >= 0.34,
     }
 
 

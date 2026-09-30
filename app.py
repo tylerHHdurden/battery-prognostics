@@ -56,7 +56,9 @@ from data_adapters import (
 from live_inference import (
     load_resources, predict_and_explain, predict_and_explain_precomputed, available_precomputed_cycles,
     load_precomputed_battery_series, PrecomputedStreamingTwin,
+    build_battery_trust_query_vector, candidate_ocsvm_malformed_check,
 )
+from trust_report import nearest_source_trust_report
 from generate_health_report import build_prompt, build_qa_prompt, call_llm
 from prescriptive_decision_layer import recommend
 from run_second_life_grading import grade as second_life_grade
@@ -3081,6 +3083,52 @@ def main():
                     "95.6% (NASA/MIT) to just 6.1% (CALCE). Treat any interval below as decorative, "
                     "not a real confidence guarantee, for this battery."
                 )
+
+            if dataset == "Uploaded":
+                st.divider()
+                st.subheader("🔎 Upload checks")
+                with st.spinner("Checking this upload (input-sanity + nearest-source trust report)..."):
+                    malformed_check = candidate_ocsvm_malformed_check(cycles, res, _baseline_his)
+                    query_vec = build_battery_trust_query_vector(cycles, res, _baseline_his)
+
+                if malformed_check["available"]:
+                    if malformed_check["likely_malformed"]:
+                        st.error(
+                            f"🚩 **This data looks malformed** ({malformed_check['n_flagged']}/"
+                            f"{malformed_check['n_checked']} sampled cycles flagged by an input-"
+                            f"sanity check). Likely causes: swapped voltage/current columns, wrong "
+                            f"units, or an incomplete/truncated cycle - check the CSV against the "
+                            f"documented column format above. This is a DATA-QUALITY check, not a "
+                            f"domain/familiarity judgment - see the trust report below for that."
+                        )
+                    else:
+                        st.caption(f"✅ Input-sanity check: {malformed_check['n_flagged']}/"
+                                   f"{malformed_check['n_checked']} sampled cycles flagged - "
+                                   f"data looks structurally well-formed.")
+                else:
+                    st.caption(f"ℹ️ Input-sanity check unavailable: {malformed_check['reason']}")
+
+                if query_vec is not None:
+                    try:
+                        trust = nearest_source_trust_report(query_vec)
+                        trust_emoji = {"familiar": "🟢", "somewhat_familiar": "🟡", "unfamiliar": "🔴"}[trust["trust_level"]]
+                        st.markdown(
+                            f"{trust_emoji} **Nearest known source: {trust['nearest_source']}** "
+                            f"({trust['trust_level'].replace('_', ' ')}) - trained on "
+                            f"{trust['n_train_batteries_for_nearest']} batteries of that source."
+                        )
+                        st.caption(
+                            f"That source's own MEASURED error on this project's evaluation "
+                            f"({trust['measured_mae_source']}): MAE={trust['measured_mae']:.2f} SOH "
+                            f"points. This is the closest this project can honestly say about how "
+                            f"trustworthy a prediction for THIS battery is likely to be - not a "
+                            f"guarantee, a measured transfer error for the nearest battery "
+                            f"population this project has actually evaluated."
+                        )
+                    except Exception as e:
+                        st.caption(f"ℹ️ Nearest-source trust report unavailable: {e}")
+                else:
+                    st.caption("ℹ️ Nearest-source trust report unavailable: too few usable cycles.")
 
     tab_showcase, tab_prediction, tab_explain, tab_report, tab_stream, tab_world_model, tab_validation, tab_archive = st.tabs(
         ["🎬 Showcase", "🔮 Prediction", "🔍 Explainability", "📝 Health Report",

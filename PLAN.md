@@ -81,25 +81,58 @@ phase.
   3 schedule implementations + a real no-lookahead test for the
   schedules themselves (distinct from the recursion's own existing
   test). Full results: `outputs/toolkit_phase2c_label_efficient.csv`.
-- **Phase 3: PARTIAL, 2026-09-30.** Done and directly verified (not
-  just code-reviewed): the `river` import guard (moved from app.py's
-  top level into `render_streaming_twin_tab`, confirmed via a real
-  simulated-absence AppTest run that the rest of the app is
-  unaffected); RUL hidden (not just captioned) for any out-of-domain
-  battery in 4 places in app.py, verified against the exact Phase 0
-  Finding 4 HNEI-upload scenario (was "3036 cycles", now "not
-  available" with a reason). **NOT done, explicitly**: the OC-SVM
-  rewiring (malformed-data check on uploads from `_candidate_
-  ocsvm.pkl`; retire the deployed OC-SVM's 100%-flagging warning) and
-  the nearest-source trust report it depends on for the "unfamiliar
-  battery" message - no trust-report module exists in this codebase
-  yet (checked directly), it needs to be built as new infrastructure,
-  not just wired. Digital-twin next-measurement UI (from Phase 2C's
-  schedule) also deferred with it. Pick up next: build the
-  nearest-source trust report first (a lookup against each known
-  source's own measured transfer error, e.g. from the Phase 2 gate
-  table / LODO results), then wire the OC-SVM correction and the
-  digital-twin UI on top of it.
+- **Phase 3: PARTIAL, updated 2026-09-30.** Done and directly verified
+  (not just code-reviewed):
+  - `river` import guard (app.py top-level import moved into
+    `render_streaming_twin_tab`; simulated-absence AppTest confirmed
+    the rest of the app is unaffected).
+  - RUL hidden (not just captioned) for any out-of-domain battery in 4
+    places in app.py; verified against the exact Phase 0 Finding 4
+    HNEI-upload scenario (was "3036 cycles", now "not available").
+  - **Nearest-source trust report built from scratch**
+    (`src/build_source_trust_profiles.py` + `src/trust_report.py`,
+    `models/_source_profiles.pkl`) - Mahalanobis/LedoitWolf-shrinkage
+    Gaussian profiles per source, log-likelihood nearest-source
+    comparison, gate-table/LODO-family-holdout measured-MAE lookup.
+    **4 real bugs found and fixed along the way** (all via direct
+    validation, not code review): (1) raw-distance cross-profile
+    comparison was badly biased - MIT's huge covariance made it a
+    "black hole" (11% validation accuracy); fixed via log-likelihood
+    comparison. (2) one raw feature (`VDEDT`, std~13,000) dominated
+    every covariance estimate; fixed via pooled feature standardization
+    - together these two fixes brought accuracy to 87.9%
+    (log-likelihood, used) / 92.3% (raw distance). (3) LedoitWolf's own
+    automatic shrinkage degenerated to a SINGULAR covariance for
+    small-n sources (CALCE, 2 training batteries); fixed via a
+    MIN_SHRINKAGE=0.3 floor. (4) the query-time module didn't re-apply
+    NaN imputation, so a real battery's NaN HI value silently produced
+    a confidently-wrong "distance=0.0, familiar" result instead of an
+    error; fixed via shared imputation + hard finite-value assertions.
+    **Also found, disclosed, NOT fixed here (separate scope - the
+    deployed Phase 2 candidate encoder's own output)**: a handful of
+    specific (battery, cycle) rows in `fusion_embeddings_multisource.
+    csv` have clearly-diverged encoder values (`isu_ilcc::ISU-ILCC_G27C4`,
+    8837 cycles, median `fusion_9`=32M across its own cycles - more
+    than half its cycles affected, not one stray row; similar single-
+    cycle outliers in ul_pur/hnei/rwth) - flagged for a future pass.
+  - **Candidate OC-SVM wired as the upload input-sanity check**
+    (`models/_candidate_ocsvm.pkl`, now loaded in `load_resources()`);
+    trust report shown alongside it for the "unfamiliar battery"
+    question. Verified via AppTest against the real HNEI upload CSV: 0
+    exceptions, correct "not malformed" + "nearest source XJTU,
+    unfamiliar, MAE=10.54" result.
+  - **NOT done, explicitly, and why**: retiring the DEPLOYED
+    (non-candidate) OC-SVM's role in `live_inference.py`'s core
+    `out_of_domain` boolean was investigated and DELIBERATELY not
+    changed - `predict_and_explain` (live path, used by NASA/MIT/
+    CALCE/uploads) has NO dataset-based out-of-domain check at all,
+    it relies ENTIRELY on `no_temperature or anomaly_flag`; removing
+    OC-SVM's role there without the trust report properly REPLACING
+    it would silently regress every upload with a temperature channel
+    to "in-domain" (would have undone this same pass's own RUL-hiding
+    fix for exactly the case it exists to catch). Deferred as its own
+    careful, separately-tested change. Digital-twin next-measurement
+    UI (Phase 2C's schedule) also still deferred.
 - **Phase 3B, 4, 5**: NOT STARTED. Specs below.
 
 ## OC-SVM correction (2026-09-29, supersedes the Phase 2e "REPLACE...move to Research" recommendation)

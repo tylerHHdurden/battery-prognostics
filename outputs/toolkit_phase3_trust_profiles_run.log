@@ -1,0 +1,74 @@
+=== Building nearest-source trust profiles ===
+[stage1-duration] WARNING: 4 batteries have no cycle_idx==10 row at all: ['B0038', 'B0039', 'B0040', 'B0041'] - falling back to each such battery's own first available cycle as baseline.
+[stage1-duration] ICHV -> ICHV_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVD -> TEVD_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[stage1-duration] TEVI -> TEVI_rel: 0 batteries used median-fallback baseline, 0 non-finite output values (of 29705 rows)
+[trust] 16 sources loaded, 25-dim feature vector (8 HI + cycle_idx + 16 fusion dims)
+[trust] imputed 217344 NaN cells across all sources with pooled column medians
+[trust] standardizing all 25 dims with pooled train-battery mean/std (largest raw std was 2410370.2 on 'fusion_9')
+[trust] NASA: 10 batteries (8 train / 2 test), shrinkage=0.633 (auto=0.633), log|cov|=-21.24
+[trust] MIT: 31 batteries (25 train / 6 test), shrinkage=0.300 (auto=0.163) (floor applied), log|cov|=-52.36
+[trust] CALCE: 3 batteries (2 train / 1 test), shrinkage=0.300 (auto=0.000) (floor applied), log|cov|=-226.65
+[trust] Oxford: 8 batteries (7 train / 1 test), shrinkage=0.300 (auto=0.133) (floor applied), log|cov|=-104.20
+[trust] HUST: 77 batteries (62 train / 15 test), shrinkage=0.300 (auto=0.074) (floor applied), log|cov|=-97.06
+[trust] XJTU: 47 batteries (38 train / 9 test), shrinkage=0.300 (auto=0.247) (floor applied), log|cov|=-66.51
+[trust] ul_pur: 10 batteries (8 train / 2 test), shrinkage=0.300 (auto=0.280) (floor applied), log|cov|=-92.76
+[trust] hnei: 14 batteries (12 train / 2 test), shrinkage=0.304 (auto=0.304), log|cov|=-182.29
+[trust] snl: 55 batteries (44 train / 11 test), shrinkage=0.414 (auto=0.414), log|cov|=-12.86
+[trust] mich: 40 batteries (32 train / 8 test), shrinkage=0.300 (auto=0.016) (floor applied), log|cov|=-163.80
+[trust] mich_exp: 18 batteries (15 train / 3 test), shrinkage=0.300 (auto=0.237) (floor applied), log|cov|=-80.57
+[trust] rwth: 10 batteries (8 train / 2 test), shrinkage=0.300 (auto=0.153) (floor applied), log|cov|=-77.52
+[trust] stanford: 6 batteries (5 train / 1 test), shrinkage=0.300 (auto=0.173) (floor applied), log|cov|=-196.63
+[trust] stanford_2: 8 batteries (7 train / 1 test), shrinkage=0.409 (auto=0.409), log|cov|=-132.75
+[trust] isu_ilcc: 9 batteries (8 train / 1 test), shrinkage=0.688 (auto=0.688), log|cov|=48.52
+[trust] tongji: 130 batteries (104 train / 26 test), shrinkage=0.300 (auto=0.159) (floor applied), log|cov|=-65.04
+
+[trust] === calibration: per-source distance percentiles from own held-out batteries ===
+[trust]   NASA: n_test=2, own-distance range=[1.15,3.71], p95=3.58 (familiar<=), p99=3.68 (somewhat_familiar<=)
+[trust]   MIT: n_test=6, own-distance range=[1.02,1.79], p95=1.76 (familiar<=), p99=1.78 (somewhat_familiar<=)
+[trust]   CALCE: n_test=1, own-distance range=[15.88,15.88], p95=15.88 (familiar<=), p99=15.88 (somewhat_familiar<=) (SMALL-N CAVEAT: based on a single test battery)
+[trust]   Oxford: n_test=1, own-distance range=[2.24,2.24], p95=2.24 (familiar<=), p99=2.24 (somewhat_familiar<=) (SMALL-N CAVEAT: based on a single test battery)
+[trust]   HUST: n_test=15, own-distance range=[1.36,2.79], p95=2.68 (familiar<=), p99=2.77 (somewhat_familiar<=)
+[trust]   XJTU: n_test=9, own-distance range=[1.28,3.19], p95=2.98 (familiar<=), p99=3.15 (somewhat_familiar<=)
+[trust]   ul_pur: n_test=2, own-distance range=[1.84,2.94], p95=2.89 (familiar<=), p99=2.93 (somewhat_familiar<=)
+[trust]   hnei: n_test=2, own-distance range=[2.13,2.31], p95=2.30 (familiar<=), p99=2.31 (somewhat_familiar<=)
+[trust]   snl: n_test=11, own-distance range=[1.03,6.35], p95=5.66 (familiar<=), p99=6.21 (somewhat_familiar<=)
+[trust]   mich: n_test=8, own-distance range=[1.37,84.65], p95=56.53 (familiar<=), p99=79.03 (somewhat_familiar<=)
+[trust]   mich_exp: n_test=3, own-distance range=[1.74,2.67], p95=2.67 (familiar<=), p99=2.67 (somewhat_familiar<=)
+[trust]   rwth: n_test=2, own-distance range=[1.18,22.08], p95=21.04 (familiar<=), p99=21.87 (somewhat_familiar<=)
+[trust]   stanford: n_test=1, own-distance range=[3.63,3.63], p95=3.63 (familiar<=), p99=3.63 (somewhat_familiar<=) (SMALL-N CAVEAT: based on a single test battery)
+[trust]   stanford_2: n_test=1, own-distance range=[1.21,1.21], p95=1.21 (familiar<=), p99=1.21 (somewhat_familiar<=) (SMALL-N CAVEAT: based on a single test battery)
+[trust]   isu_ilcc: n_test=1, own-distance range=[1.29,1.29], p95=1.29 (familiar<=), p99=1.29 (somewhat_familiar<=) (SMALL-N CAVEAT: based on a single test battery)
+[trust]   tongji: n_test=26, own-distance range=[0.72,6.35], p95=4.97 (familiar<=), p99=6.05 (somewhat_familiar<=)
+
+[trust] saved models/_source_profiles.pkl (16 source profiles)
+
+[trust] === validation: nearest-source assignment + confusion table ===
+
+[trust] Overall accuracy - RAW DISTANCE (broken): 84/91 (92.3%)  |  LOG-LIKELIHOOD (fixed): 80/91 (87.9%)
+
+[trust] Confusion (LOG-LIKELIHOOD, the corrected/used method) - rows=true source, off-diagonal misassignments only shown per row:
+  CALCE: 0/1 correct | misassigned to: NASA:1
+  HUST: 15/15 correct | misassigned to: none
+  MIT: 6/6 correct | misassigned to: none
+  NASA: 1/2 correct | misassigned to: XJTU:1
+  Oxford: 1/1 correct | misassigned to: none
+  XJTU: 9/9 correct | misassigned to: none
+  hnei: 2/2 correct | misassigned to: none
+  isu_ilcc: 1/1 correct | misassigned to: none
+  mich: 7/8 correct | misassigned to: NASA:1
+  mich_exp: 3/3 correct | misassigned to: none
+  rwth: 1/2 correct | misassigned to: isu_ilcc:1
+  snl: 5/11 correct | misassigned to: XJTU:3, ul_pur:2, MIT:1
+  stanford: 1/1 correct | misassigned to: none
+  stanford_2: 0/1 correct | misassigned to: stanford:1
+  tongji: 26/26 correct | misassigned to: none
+  ul_pur: 2/2 correct | misassigned to: none
+
+[trust] Trust-level breakdown (of correctly log-likelihood-assigned test batteries, i.e. testing each source's own calibration against ITSELF):
+trust_level
+familiar             70
+unfamiliar            9
+somewhat_familiar     1
+
+[trust] TOTAL TIME: 2.50 minutes

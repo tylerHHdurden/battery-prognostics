@@ -15057,3 +15057,197 @@ section`, `render_health_report_tab`). No `live_inference.py` change -
 `out_of_domain`/`domain_reasons` were already computed there, this pass
 only changed how `app.py` DISPLAYS what was already available.
 
+## Phase 3 continued: nearest-source trust report built (new infrastructure) + wired, candidate OC-SVM wired as the upload input-sanity check
+
+Picks up exactly where the prior Phase 3 entry left off. Full,
+unabridged account of what was built, what broke, and how each break
+was found and fixed - three real bugs in the trust-report engine
+itself, one real pre-existing data-quality finding, all surfaced by
+this work's own validation step, not by code review.
+
+### Building `models/_source_profiles.pkl` (`src/build_source_trust_profiles.py`, new)
+
+Per source: a Gaussian profile (mean + LedoitWolf-shrinkage covariance)
+of the SAME 25-dim feature vector `live_inference.py` builds (8
+reformulated HI + cycle_idx + 16 CANDIDATE fusion-embedding dims),
+ONE POINT PER BATTERY (that battery's own aggregate across its
+cycles - see the median-vs-mean finding below), fit on each source's
+OWN training batteries (`split_utils.battery_level_split`,
+test_every=5, this project's established convention, with a manual
+"at least 1 test battery" fallback for sources too small for the
+stride to select one - CALCE's 3 batteries need this, confirmed
+directly). Calibration: each source's own held-out batteries' distances
+to ITS OWN profile become that source's 95th/99th-percentile trust
+thresholds.
+
+**Bug 1: raw "smallest Mahalanobis distance wins" is a badly biased
+cross-profile comparator, and it showed up immediately** - the first
+pass got only **11% nearest-source validation accuracy (10/91)**, with
+MIT acting as a "black hole" that most other sources' test batteries
+got misassigned to. Diagnosed, not just observed: MIT's covariance
+log-determinant was 378, vs. HUST's 95, XJTU's 64, NASA's 26 - orders
+of magnitude looser, so its raw Mahalanobis "ruler" under-penalizes
+almost everything regardless of true fit quality. **Fix**: the
+nearest-source decision uses each profile's full Gaussian negative
+log-likelihood (Mahalanobis^2 + log|covariance|) instead of raw
+distance - the correct comparator across differently-scaled Gaussians.
+The per-source familiar/somewhat_familiar/unfamiliar THRESHOLD check
+(a same-profile self-comparison, never cross-profile) stays raw
+Mahalanobis distance, exactly as specified - it was never the biased
+part.
+
+**Bug 2: one raw feature dimension had a wildly different scale from
+every other**, discovered while investigating bug 1's root cause:
+`VDEDT` has std ~13,000 (raw range -33,197 to +53,097) vs. every fusion
+embedding dim's std < 1 - a single unnormalized raw-unit HI dimension
+was dominating every covariance estimate on its own, MIT's worst of
+all (its own battery pool happens to include near-end-of-life cells
+with extreme VDEDT values). **Fix**: standardized all 25 dims with
+POOLED, train-battery-only mean/std across all 16 sources together (a
+single shared scale - the whole point is comparing different sources
+on the same footing, not per-source rescaling). Combined with the
+log-likelihood fix, accuracy jumped to **92.3% (raw distance) / 87.9%
+(log-likelihood)** - both now strong; log-likelihood selected for
+production as the statistically correct comparator, not the
+marginally-higher raw-distance number (the ~4pp gap is well within
+noise given n=91 test batteries, several sources contributing just 1).
+
+**Bug 3 (found DURING investigation of the above, independent
+finding): LedoitWolf's own automatic shrinkage estimate is unreliable
+when n_train batteries is small relative to 25 dimensions** - true for
+MOST sources here (CALCE has only 2 training batteries for a 25-dim
+space). CALCE's automatic shrinkage estimated ~0.000 and produced a
+genuinely SINGULAR covariance matrix (`np.linalg.inv` raised
+`LinAlgError: Singular matrix` directly, not a subtle wobble). **Fix**:
+a manually-enforced `MIN_SHRINKAGE=0.3` floor on top of LedoitWolf's
+own estimate, using the same identity-scaled shrinkage target
+sklearn's own formula uses.
+
+**A genuine, disclosed pre-existing DATA-QUALITY finding, not a bug in
+this new code**: while diagnosing an unrelated remaining large-scale
+dimension (`fusion_10`, then `fusion_9`), found that
+`fusion_embeddings_multisource.csv` (the Phase 2 candidate encoder's
+own output, already deployed in `live_inference.py`'s routing) has a
+handful of specific (battery, cycle) rows with clearly-diverged encoder
+outputs - e.g. `isu_ilcc::ISU-ILCC_G27C4` (8,837 cycles) has a MEDIAN
+`fusion_9` value of 32 million across its own cycles (meaning MORE THAN
+HALF its cycles are affected, not one stray row), and single extreme
+values were found in specific cycles of `ul_pur`, `hnei`, and `rwth`
+too. Not investigated further or fixed here (out of this item's own
+scope - it's the DEPLOYED candidate encoder's own output, a Phase 2
+artifact, not this trust-report script's) - flagged plainly for a
+future pass. **This trust report's OWN aggregation was hardened
+against it regardless**: `battery_mean_vectors` switched from MEAN to
+MEDIAN across a battery's cycles (a mean lets ONE extreme row poison an
+entire battery's profile; a median doesn't) - directly confirmed this
+particular battery's contamination no longer survives into its own
+median vector.
+
+**Final validation (log-likelihood, the method actually used) - 87.9%
+overall (80/91)**: HUST 15/15, MIT 6/6, XJTU 9/9, tongji 26/26, Oxford
+1/1, isu_ilcc 1/1, mich_exp 3/3, ul_pur 2/2, hnei 2/2, stanford 1/1 all
+perfect or near-perfect; CALCE 0/1 (misassigned to NASA - its own
+single test battery, the small-n caveat already disclosed for its
+calibration threshold too), NASA 1/2, mich 7/8, rwth 1/2, snl 5/11,
+stanford_2 0/1 the remaining imperfect cases, all on small-n sources.
+Full confusion tables (both the broken raw-distance version and the
+corrected log-likelihood one, so the fix's own effect is itself
+verified not asserted) saved to `outputs/`.
+
+### Query-time module (`src/trust_report.py`, new) - a 4th bug found here, also fixed
+
+`nearest_source_trust_report(feature_vector)`: standardizes the query
+vector with the SAME saved scale, scores it against all 16 profiles via
+log-likelihood, applies the raw-distance threshold check against the
+nearest profile for trust level, and looks up that source's MEASURED
+error - gate-table MAE (`toolkit_phase2_gate_table.csv`'s own
+`candidate_mae`) if "familiar", the stricter LODO family-holdout MAE
+(`finalpass3_check1_lodo_family_holdout.csv`'s `family_lodo_mae`)
+otherwise, per the spec. Tongji predates that LODO file (Phase 1(b)
+integration came after it) - falls back to Phase 2B's own
+`centralized_mae` for tongji specifically, itself a genuine
+LODO-family-holdout MAE computed later across all 16 sources -
+disclosed, not silently substituted.
+
+**Bug 4: the query path didn't re-apply the same NaN imputation the
+profile-BUILDING path used.** Caught by a real smoke-test query (a
+genuine HUST battery with a NaN MET value, not a synthetic edge case):
+the NaN propagated through the quadratic form to NaN, and
+`max(0.0, nan)` - meant only to clip tiny floating-point noise -
+silently returned exactly `0.0`, producing a CONFIDENTLY WRONG
+"nearest_source: NASA, distance: 0.0, familiar" result for a HUST
+battery. Fixed: `_prepare_vector` now imputes NaN/Inf with the SAME
+pooled column medians the profiles were built from (added to the
+saved pickle), and `_mahalanobis`/`_neg_log_likelihood` now `assert
+np.isfinite(...)` on the raw quadratic form BEFORE any clamping, so a
+future NaN would crash loudly instead of silently reporting a
+plausible-looking wrong answer. Re-verified after the fix: the same
+HUST battery now correctly resolves to `nearest_source: HUST`.
+
+### Wired into `app.py`'s upload flow
+
+Two new `live_inference.py` functions
+(`build_candidate_feature_vector_for_cycle`, `build_battery_
+trust_query_vector`, `candidate_ocsvm_malformed_check`) - standalone,
+NOT a refactor of the already-verified `predict_and_explain`, to avoid
+any risk of changing its existing behavior - sample up to 30
+evenly-spaced cycles of an uploaded battery, build each one's candidate
+25-dim vector, and MEDIAN-aggregate (same robustness reasoning as the
+profile-builder).
+
+**Candidate OC-SVM wired as the upload input-sanity check** (`models/
+_candidate_ocsvm.pkl` + its scaler, now loaded in `load_resources()`):
+flags the FRACTION of sampled cycles the candidate OC-SVM considers
+anomalous; >=34% flagged is read as "this data looks malformed" (a
+disclosed threshold choice, not a formula - matches this project's own
+established calibration: 100% detection of swapped columns/capacity-
+x10/truncated cycles, 0.6% in-domain false-flag rate). **The nearest-
+source trust report is shown alongside it** for the "unfamiliar
+battery" question - a different question than "is this data
+malformed," per the spec.
+
+**NOT done in this pass, stated explicitly**: retiring the DEPLOYED
+(non-candidate) OC-SVM's role in the core `out_of_domain` computation
+in `live_inference.py` was investigated and DELIBERATELY NOT changed
+here - found that `predict_and_explain` (the live raw-cycle path used
+by NASA/MIT/CALCE/uploads) has NO dataset-based out-of-domain check at
+all, unlike `predict_and_explain_precomputed` - it relies ENTIRELY on
+`no_temperature or anomaly_flag` for that determination. Removing
+`anomaly_flag`'s role there without a replacement would make EVERY
+upload with a temperature channel present silently register as
+in-domain (a real regression, would have silently undone this same
+session's own RUL-hiding fix for exactly the HNEI-upload case it was
+built to catch). The new trust report should properly REPLACE OC-SVM's
+role in that core boolean, not just supplement it - deferred as its
+own careful, separately-tested change rather than risked at the tail
+of an already-large pass touching the same shared function RUL-hiding
+depends on.
+
+**Verification, all real, none skipped**: full 6-dataset AppTest
+regression sweep re-run clean (0 exceptions, base load + NASA/MIT/
+CALCE/Oxford/HUST/XJTU). Direct upload test replaying the same real
+HNEI CSV used throughout this session's own Phase 0/Phase 3 work: 0
+exceptions, input-sanity check correctly reports 0/30 sampled cycles
+flagged (genuine HNEI data correctly NOT flagged as malformed), trust
+report correctly shows "Nearest known source: XJTU (unfamiliar)" with
+its measured LODO-family-holdout MAE (10.54 SOH points) - the honest,
+measured answer for a genuinely novel source, not a fabricated
+confidence number.
+
+### Files
+
+`src/build_source_trust_profiles.py` (new), `src/trust_report.py`
+(new), `models/_source_profiles.pkl` (new artifact), `src/
+live_inference.py` (loads `_candidate_ocsvm.pkl`/scaler; three new
+standalone functions, `predict_and_explain` itself untouched),
+`app.py` (new "Upload checks" section, two new imports). `outputs/
+toolkit_phase3_trust_report_validation.csv`, `outputs/
+toolkit_phase3_trust_report_confusion.csv` (log-likelihood, used),
+`outputs/toolkit_phase3_trust_report_confusion_raw_distance_broken.csv`
+(kept for the record, NOT used for any conclusion), `outputs/
+toolkit_phase3_trust_profiles_run.log`. Deployed
+`models/ocsvm_model.pkl`/`ocsvm_scaler.pkl` (the non-candidate one)
+untouched, still loaded, still used for its existing role - only
+`out_of_domain`'s SOURCE of truth for uploads specifically was
+identified as needing a follow-up change, not changed here.
+
