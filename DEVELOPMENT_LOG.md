@@ -15422,3 +15422,12 @@ Pre-push audit of the 16 local commits: no data/raw, .env, uploads/ or credentia
 - Phase 3B: `src/battery_passport.py` + a passport section in the Prediction tab (JSON + printable PDF, matplotlib only): state of health with 90% interval, expected remaining life (only when the nearest source is NASA/MIT and not flagged), cycle count,
   trust status with its stated 81.9% / 11.0% and weak sources, data-source and model provenance, research-prototype disclaimer; no green/"trusted" wording. Also fixed: glossary tooltips leaked raw HTML (double quotes in the title attribute),
   and the green "No anomaly flagged" box (OC-SVM) is now a neutral input-sanity message. Screenshots and the files the app serves: `outputs/passport_samples/`.
+
+### Staging passed, live merge failed and was reverted (2026-10-01)
+
+- Staging (https://bat-pro-stage.streamlit.app, step3-work 75617a1): ALL PASSED - six datasets (0 exceptions, passport section and shift message on each), both passport downloads on NASA, Oxford and both uploads (JSON ~2.5 KB, PDF ~58 KB),
+  flagged upload (distorted real file) and unflagged upload (real HNEI file) show the right message, no green/"trusted" claim (only static research text in other tabs and the file-parse confirmation are green). Evidence: outputs/live_smoke/staging_*.
+- Merge to master (tag pre-step3b-rollback = 5e92ae6; merge commit 4078359 with exactly the tested tree) -> live bat-pro.streamlit.app raised `ImportError` at app.py line 56 (`from live_inference import (...)`) for 10+ minutes.
+  Reverted with a new commit (927239c, tree = 5e92ae6). Live is healthy again on the old version (outputs/live_smoke/live_after_revert_*: six datasets, 0 exceptions).
+- Working hypothesis (NOT proven): Streamlit Cloud hot-updated the running process, so the new app.py imported names (OOD_* constants) from a stale live_inference module still in sys.modules; staging was a fresh process. Evidence: the error is at the import statement itself,
+  staging with identical code passed, and the live app recovered by itself after the revert (old app.py + old module consistent again). Proposal: reproduce on staging with a trivial hot-update, then add a reload-on-ImportError guard and/or reboot the live app after every push.
