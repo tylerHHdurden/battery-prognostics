@@ -44,3 +44,6 @@ data/processed/_calce_ica_unlabeled_cache.npy
 
 # Student report and walkthrough: contain names / register numbers - kept local only (2026-10-01)
 report/
+
+# Open-release drafts: kept local until the release decision (CITATION.cff contains names) - 2026-10-01
+release/
