@@ -112,10 +112,33 @@ decision after this was found.
 
 ## Files
 
-- `requirements-lock.txt` - exact pinned package versions (`pip freeze`
-  output), companion to the existing `requirements.txt`.
-- `scripts/reproduce_paper.sh` - regenerates every `PAPER_RESULTS.md`
-  table from scratch by re-running this project's own scripts in order.
-- `DATA_AVAILABILITY.md` - every dataset source, access method, and
-  license/terms, as documented at the point each was integrated into
-  this project.
+- `requirements.txt` - the direct dependencies, pinned (what Streamlit Cloud installs). Every third-party
+  package imported by `app.py` and the modules it reaches (`src/live_inference.py`, `src/battery_passport.py`, ...)
+  is listed, including `pyarrow` (needed by `pandas.read_parquet`; it is also pulled in by Streamlit).
+  It also lists some packages the app does not import (for example `lime`, `dice_ml`, `gplearn`, `tabpfn`, `beep`)
+  that are only used by research scripts.
+- `requirements-lock.txt` - the full `pip freeze` of the environment used (adds Streamlit's own dependencies).
+- **Python version**: developed and deployed on Python 3.14 (the `.venv` is 3.14.2). `runtime.txt` says
+  `python-3.11`, which is stale: Streamlit Cloud takes the Python version from the app's settings, not from this
+  file, and the pinned versions (numpy 2.4, pandas 3.0, torch 2.13) need a recent Python. Use 3.14.
+- `tests/` - quick smoke tests: `python -m pytest tests -q` (about 10-35 s).
+- `scripts/reproduce_paper.sh` - re-runs the final-pass scripts (`src/run_finalpass*.py`) that regenerate the
+  `outputs/finalpass*.csv` tables in `PAPER_RESULTS.md` sections 1-12. It does **not** regenerate the later "toolkit"
+  tables (trust threshold, label-efficient checkpoints, minimum checkpoints); those come from
+  `src/run_toolkit_*.py`, `src/trust_operating_point.py` and `src/validate_trust_threshold_leave_source_out.py`
+  (see the "Rerun status log" at the end of `PAPER_RESULTS.md`). It also needs the raw datasets in
+  `data/raw/` (git-ignored; see `DATA_AVAILABILITY.md`) and the processed files already in the repository.
+- `src/fresh_clone_smoke_test.py`, `src/verify_sidecars_vs_git_blobs.py` - checks intended for a fresh clone
+  (models load, one prediction per built-in dataset, passport export, encoder-provenance hashes).
+- `DATA_AVAILABILITY.md` - every dataset source, access method, and license/terms, as documented at the point
+  each was integrated into this project.
+
+Quick start (from a fresh clone):
+
+```bash
+python -m venv .venv
+.venv/Scripts/activate            # Windows; on Linux/macOS: source .venv/bin/activate
+pip install -r requirements.txt   # or requirements-lock.txt for the exact full environment
+python -m pytest tests -q
+streamlit run app.py
+```

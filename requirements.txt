@@ -71,3 +71,4 @@ river==0.26.1
 dice_ml==0.12
 gplearn==0.4.3
 tabpfn==9.0.0
+pyarrow==24.0.0

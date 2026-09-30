@@ -35,7 +35,13 @@ Status tags used below:
   to the number of digits printed) after the rerun.
 - **SUPERSEDED** - the BatteryLife-source numbers were replaced by the corrected rerun values (current CSVs). The old value is
   kept as "(before ...)" or in a "before" column. Built-in rows in the same table are VERIFIED unless stated.
-- **PAUSED/RUNNING** - not finished; do not cite.
+- **PAUSED/RUNNING** - not finished; do not cite. (No table below currently carries this label: the rerun queue finished.)
+- **INVALIDATED** - the number is known to be wrong/contaminated and must not be cited. (No table below currently carries this label;
+  the old mixed-encoder Phase 2B table is labelled SUPERSEDED and kept for the record.)
+
+**Labelling convention (added 2026-10-01).** Every table carries a "Table status" line directly above it, a per-row "Status" column and a
+"Source file" column (file names relative to `outputs/`), plus a "Source:" line under it. Where a table mixes statuses the Status column
+gives the label per row. Audit note: `outputs/site_redesign/paper_results_labelling_note.md`.
 
 Where a headline verdict changed, it is stated in a "Rerun verdict check" line under the section. Summary of all
 scripts: the "Rerun status log 2026-09-30" at the end of this file.
@@ -51,22 +57,26 @@ R2, RMSE, MAE in % SOH (SOH is stored on a 0-100 scale).
 **Status: in-domain/CALCE/Oxford/HUST/XJTU rows VERIFIED (identical to the pre-rerun table); the 9 BatteryLife rows are
 SUPERSEDED by the corrected rerun (`outputs/finalpass_item5a_5seed_aggregate.csv`); pre-rerun value in parentheses.**
 
-| Dataset | R2 (mean +/- std) | RMSE (mean +/- std) | MAE (mean +/- std) | n cycles |
-|---|---|---|---|---|
-| In-domain (TEST) | 0.978 +/- 0.003 | 0.716 +/- 0.050 | 0.281 +/- 0.014 | 5,208 |
-| CALCE | 0.749 +/- 0.012 | 10.791 +/- 0.265 | 6.256 +/- 0.255 | 2,941 |
-| Oxford | 0.940 +/- 0.030 | 1.639 +/- 0.409 | 1.431 +/- 0.434 | 519 |
-| HUST | 0.795 +/- 0.022 | 3.336 +/- 0.178 | 2.643 +/- 0.138 | 146,122 |
-| XJTU | -1.037 +/- 0.216 | 8.572 +/- 0.460 | 6.457 +/- 0.213 | 19,238 |
-| ul_pur (BatteryLife) | 0.138 +/- 0.037 (before 0.116) | 5.622 +/- 0.120 (before 5.689) | 3.430 +/- 0.184 (before 3.675) | 2,245 |
-| hnei (BatteryLife) | -0.137 +/- 0.080 (before -0.038) | 19.034 +/- 0.667 (before 18.180) | 14.669 +/- 0.700 (before 13.966) | 15,155 |
-| snl (BatteryLife) | 0.118 +/- 0.056 (before 0.147) | 7.829 +/- 0.248 (before 7.703) | 5.932 +/- 0.227 (before 5.752) | 38,880 |
-| mich (BatteryLife) | 0.536 +/- 0.019 (before 0.573) | 15.347 +/- 0.319 (before 14.727) | 7.861 +/- 0.342 (before 7.837) | 19,881 |
-| mich_exp (BatteryLife) | 0.716 +/- 0.012 (before 0.721) | 7.320 +/- 0.158 (before 7.254) | 4.567 +/- 0.166 (before 4.539) | 6,545 |
-| rwth (BatteryLife) | -0.535 +/- 0.086 (before -0.485) | 30.049 +/- 0.851 (before 29.558) | 23.500 +/- 0.549 (before 23.072) | 22,095 |
-| stanford (BatteryLife) | 0.291 +/- 0.103 (before 0.111) | 18.019 +/- 1.282 (before 20.183) | 15.295 +/- 1.393 (before 17.827) | 5,633 |
-| stanford_2 (BatteryLife) | 0.263 +/- 0.112 (before 0.066) | 17.778 +/- 1.321 (before 20.027) | 15.303 +/- 1.465 (before 17.988) | 8,465 |
-| isu_ilcc (BatteryLife) | 0.123 +/- 0.013 (before 0.140) | 33.792 +/- 0.246 (before 33.450) | 29.409 +/- 0.140 (before 29.737) | 45,229 |
+**Table status (per-row in the Status column): VERIFIED for the 5 built-in rows, SUPERSEDED for the 9 BatteryLife rows.**
+
+| Dataset | R2 (mean +/- std) | RMSE (mean +/- std) | MAE (mean +/- std) | n cycles | Status | Source file |
+|---|---|---|---|---|---|---|
+| In-domain (TEST) | 0.978 +/- 0.003 | 0.716 +/- 0.050 | 0.281 +/- 0.014 | 5,208 | VERIFIED | finalpass_item5a_5seed_aggregate.csv |
+| CALCE | 0.749 +/- 0.012 | 10.791 +/- 0.265 | 6.256 +/- 0.255 | 2,941 | VERIFIED | finalpass_item5a_5seed_aggregate.csv |
+| Oxford | 0.940 +/- 0.030 | 1.639 +/- 0.409 | 1.431 +/- 0.434 | 519 | VERIFIED | finalpass_item5a_5seed_aggregate.csv |
+| HUST | 0.795 +/- 0.022 | 3.336 +/- 0.178 | 2.643 +/- 0.138 | 146,122 | VERIFIED | finalpass_item5a_5seed_aggregate.csv |
+| XJTU | -1.037 +/- 0.216 | 8.572 +/- 0.460 | 6.457 +/- 0.213 | 19,238 | VERIFIED | finalpass_item5a_5seed_aggregate.csv |
+| ul_pur (BatteryLife) | 0.138 +/- 0.037 (before 0.116) | 5.622 +/- 0.120 (before 5.689) | 3.430 +/- 0.184 (before 3.675) | 2,245 | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| hnei (BatteryLife) | -0.137 +/- 0.080 (before -0.038) | 19.034 +/- 0.667 (before 18.180) | 14.669 +/- 0.700 (before 13.966) | 15,155 | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| snl (BatteryLife) | 0.118 +/- 0.056 (before 0.147) | 7.829 +/- 0.248 (before 7.703) | 5.932 +/- 0.227 (before 5.752) | 38,880 | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| mich (BatteryLife) | 0.536 +/- 0.019 (before 0.573) | 15.347 +/- 0.319 (before 14.727) | 7.861 +/- 0.342 (before 7.837) | 19,881 | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| mich_exp (BatteryLife) | 0.716 +/- 0.012 (before 0.721) | 7.320 +/- 0.158 (before 7.254) | 4.567 +/- 0.166 (before 4.539) | 6,545 | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| rwth (BatteryLife) | -0.535 +/- 0.086 (before -0.485) | 30.049 +/- 0.851 (before 29.558) | 23.500 +/- 0.549 (before 23.072) | 22,095 | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| stanford (BatteryLife) | 0.291 +/- 0.103 (before 0.111) | 18.019 +/- 1.282 (before 20.183) | 15.295 +/- 1.393 (before 17.827) | 5,633 | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| stanford_2 (BatteryLife) | 0.263 +/- 0.112 (before 0.066) | 17.778 +/- 1.321 (before 20.027) | 15.303 +/- 1.465 (before 17.988) | 8,465 | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| isu_ilcc (BatteryLife) | 0.123 +/- 0.013 (before 0.140) | 33.792 +/- 0.246 (before 33.450) | 29.409 +/- 0.140 (before 29.737) | 45,229 | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+
+Source: outputs/finalpass_item5a_5seed_aggregate.csv (corrected rerun; "before" values = same file at git commit c56ddcb).
 
 XJTU is by far the least seed-stable held-out result (std=0.216 on R2),
 consistent with this project's own repeated prior finding that it is
@@ -84,22 +94,26 @@ NRMSE/NMAE = RMSE or MAE as a percentage of the dataset's own mean SOH.
 
 **Status: in-domain/CALCE/Oxford/HUST/XJTU rows VERIFIED; the 9 BatteryLife rows SUPERSEDED (corrected rerun values, pre-rerun in parentheses).**
 
-| Dataset | NRMSE (%) | NMAE (%) | MAPE (%) |
-|---|---|---|---|
-| In-domain (TEST) | 0.742 | 0.291 | 0.316 |
-| CALCE | 14.718 | 8.533 | 19.007 |
-| Oxford | 1.865 | 1.628 | 1.670 |
-| HUST | 3.654 | 2.895 | 2.947 |
-| XJTU | 8.728 | 6.575 | 6.532 |
-| ul_pur | 6.051 (before 6.123) | 3.691 (before 3.955) | 3.994 (before 4.251) |
-| hnei | 28.038 (before 26.780) | 21.609 (before 20.572) | 28.561 (before 27.215) |
-| snl | 8.947 (before 8.804) | 6.779 (before 6.573) | 7.694 (before 7.438) |
-| mich | 18.340 (before 17.599) | 9.394 (before 9.365) | 35.594 (before 34.333) |
-| mich_exp | 8.147 (before 8.074) | 5.083 (before 5.052) | 6.825 (before 6.758) |
-| rwth | 47.961 (before 47.178) | 37.510 (before 36.826) | 62.743 (before 61.700) |
-| stanford | 21.999 (before 24.641) | 18.673 (before 21.765) | 29.931 (before 32.020) |
-| stanford_2 | 21.522 (before 24.245) | 18.526 (before 21.777) | 26.138 (before 28.553) |
-| isu_ilcc | 70.198 (before 69.489) | 61.094 (before 61.775) | 332.963 (before 324.315) |
+**Table status (per-row in the Status column): VERIFIED for the 5 built-in rows, SUPERSEDED for the 9 BatteryLife rows.**
+
+| Dataset | NRMSE (%) | NMAE (%) | MAPE (%) | Status | Source file |
+|---|---|---|---|---|---|
+| In-domain (TEST) | 0.742 | 0.291 | 0.316 | VERIFIED | finalpass_item5a_5seed_aggregate.csv |
+| CALCE | 14.718 | 8.533 | 19.007 | VERIFIED | finalpass_item5a_5seed_aggregate.csv |
+| Oxford | 1.865 | 1.628 | 1.670 | VERIFIED | finalpass_item5a_5seed_aggregate.csv |
+| HUST | 3.654 | 2.895 | 2.947 | VERIFIED | finalpass_item5a_5seed_aggregate.csv |
+| XJTU | 8.728 | 6.575 | 6.532 | VERIFIED | finalpass_item5a_5seed_aggregate.csv |
+| ul_pur | 6.051 (before 6.123) | 3.691 (before 3.955) | 3.994 (before 4.251) | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| hnei | 28.038 (before 26.780) | 21.609 (before 20.572) | 28.561 (before 27.215) | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| snl | 8.947 (before 8.804) | 6.779 (before 6.573) | 7.694 (before 7.438) | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| mich | 18.340 (before 17.599) | 9.394 (before 9.365) | 35.594 (before 34.333) | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| mich_exp | 8.147 (before 8.074) | 5.083 (before 5.052) | 6.825 (before 6.758) | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| rwth | 47.961 (before 47.178) | 37.510 (before 36.826) | 62.743 (before 61.700) | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| stanford | 21.999 (before 24.641) | 18.673 (before 21.765) | 29.931 (before 32.020) | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| stanford_2 | 21.522 (before 24.245) | 18.526 (before 21.777) | 26.138 (before 28.553) | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+| isu_ilcc | 70.198 (before 69.489) | 61.094 (before 61.775) | 332.963 (before 324.315) | SUPERSEDED | finalpass_item5a_5seed_aggregate.csv |
+
+Source: outputs/finalpass_item5a_5seed_aggregate.csv (columns nrmse_pct_mean, nmae_pct_mean, mape_pct_mean; "before" = same file at git commit c56ddcb).
 
 MAPE is disproportionately large for isu_ilcc/mich/stanford/stanford_2
 specifically - diagnosed as a near-zero-SOH-value artifact in the MAPE
@@ -115,22 +129,26 @@ Resampling BATTERIES (the real unit of independence), not rows.
 
 **Status: in-domain/CALCE/Oxford/HUST/XJTU rows VERIFIED; the 9 BatteryLife rows SUPERSEDED (`outputs/finalpass_item5a_bootstrap_ci.csv`, corrected rerun; pre-rerun point estimate in parentheses).**
 
-| Dataset | n batteries | R2 [95% CI] | RMSE [95% CI] | MAE [95% CI] |
-|---|---|---|---|---|
-| In-domain (TEST) | 6 | 0.976 [0.945, 0.996] | 0.755 [0.243, 1.482] | 0.295 [0.156, 0.629] |
-| CALCE | 3 | 0.755 [0.721, 0.826] | 10.656 [8.102, 12.173] | 6.229 [4.874, 7.421] |
-| Oxford | 8 | 0.914 [0.900, 0.927] | 2.003 [1.707, 2.239] | 1.773 [1.551, 1.976] |
-| HUST | 77 | 0.770 [0.703, 0.818] | 3.540 [3.153, 4.006] | 2.778 [2.544, 3.050] |
-| XJTU | 47 | -0.974 [-1.404, -0.593] | 8.449 [7.592, 9.317] | 6.400 [5.769, 7.108] |
-| ul_pur | 10 | 0.157 [0.047, 0.312] (before 0.140) | 5.561 [4.476, 6.496] (before 5.618) | 3.381 [2.807, 3.940] (before 3.705) |
-| hnei | 14 | -0.144 [-0.187, -0.107] (before -0.106) | 19.101 [18.398, 19.704] (before 18.776) | 14.846 [14.259, 15.408] (before 14.544) |
-| snl | 55 | 0.097 [-0.239, 0.262] (before 0.110) | 7.927 [6.670, 9.567] (before 7.867) | 5.945 [5.200, 7.063] (before 5.723) |
-| mich | 40 | 0.526 [0.502, 0.547] (before 0.544) | 15.522 [12.738, 18.796] (before 15.222) | 7.884 [6.477, 9.840] (before 8.325) |
-| mich_exp | 18 | 0.713 [0.618, 0.799] (before 0.702) | 7.353 [3.926, 10.205] (before 7.490) | 4.454 [2.830, 6.399] (before 4.492) |
-| rwth | 10 | -0.608 [-0.718, -0.513] (before -0.554) | 30.767 [29.380, 32.011] (before 30.243) | 24.003 [22.773, 25.107] (before 23.480) |
-| stanford | 6 | 0.257 [0.130, 0.308] (before 0.030) | 18.485 [15.888, 21.316] (before 21.115) | 15.811 [13.936, 17.986] (before 18.842) |
-| stanford_2 | 8 | 0.229 [0.025, 0.327] (before -0.028) | 18.222 [16.714, 19.920] (before 21.035) | 15.826 [14.797, 17.144] (before 19.096) |
-| isu_ilcc | 9 | 0.122 [-0.329, 0.297] (before 0.129) | 33.810 [19.444, 40.254] (before 33.670) | 29.365 [17.513, 36.377] (before 29.993) |
+**Table status (per-row in the Status column): VERIFIED for the 5 built-in rows, SUPERSEDED for the 9 BatteryLife rows.**
+
+| Dataset | n batteries | R2 [95% CI] | RMSE [95% CI] | MAE [95% CI] | Status | Source file |
+|---|---|---|---|---|---|---|
+| In-domain (TEST) | 6 | 0.976 [0.945, 0.996] | 0.755 [0.243, 1.482] | 0.295 [0.156, 0.629] | VERIFIED | finalpass_item5a_bootstrap_ci.csv |
+| CALCE | 3 | 0.755 [0.721, 0.826] | 10.656 [8.102, 12.173] | 6.229 [4.874, 7.421] | VERIFIED | finalpass_item5a_bootstrap_ci.csv |
+| Oxford | 8 | 0.914 [0.900, 0.927] | 2.003 [1.707, 2.239] | 1.773 [1.551, 1.976] | VERIFIED | finalpass_item5a_bootstrap_ci.csv |
+| HUST | 77 | 0.770 [0.703, 0.818] | 3.540 [3.153, 4.006] | 2.778 [2.544, 3.050] | VERIFIED | finalpass_item5a_bootstrap_ci.csv |
+| XJTU | 47 | -0.974 [-1.404, -0.593] | 8.449 [7.592, 9.317] | 6.400 [5.769, 7.108] | VERIFIED | finalpass_item5a_bootstrap_ci.csv |
+| ul_pur | 10 | 0.157 [0.047, 0.312] (before 0.140) | 5.561 [4.476, 6.496] (before 5.618) | 3.381 [2.807, 3.940] (before 3.705) | SUPERSEDED | finalpass_item5a_bootstrap_ci.csv |
+| hnei | 14 | -0.144 [-0.187, -0.107] (before -0.106) | 19.101 [18.398, 19.704] (before 18.776) | 14.846 [14.259, 15.408] (before 14.544) | SUPERSEDED | finalpass_item5a_bootstrap_ci.csv |
+| snl | 55 | 0.097 [-0.239, 0.262] (before 0.110) | 7.927 [6.670, 9.567] (before 7.867) | 5.945 [5.200, 7.063] (before 5.723) | SUPERSEDED | finalpass_item5a_bootstrap_ci.csv |
+| mich | 40 | 0.526 [0.502, 0.547] (before 0.544) | 15.522 [12.738, 18.796] (before 15.222) | 7.884 [6.477, 9.840] (before 8.325) | SUPERSEDED | finalpass_item5a_bootstrap_ci.csv |
+| mich_exp | 18 | 0.713 [0.618, 0.799] (before 0.702) | 7.353 [3.926, 10.205] (before 7.490) | 4.454 [2.830, 6.399] (before 4.492) | SUPERSEDED | finalpass_item5a_bootstrap_ci.csv |
+| rwth | 10 | -0.608 [-0.718, -0.513] (before -0.554) | 30.767 [29.380, 32.011] (before 30.243) | 24.003 [22.773, 25.107] (before 23.480) | SUPERSEDED | finalpass_item5a_bootstrap_ci.csv |
+| stanford | 6 | 0.257 [0.130, 0.308] (before 0.030) | 18.485 [15.888, 21.316] (before 21.115) | 15.811 [13.936, 17.986] (before 18.842) | SUPERSEDED | finalpass_item5a_bootstrap_ci.csv |
+| stanford_2 | 8 | 0.229 [0.025, 0.327] (before -0.028) | 18.222 [16.714, 19.920] (before 21.035) | 15.826 [14.797, 17.144] (before 19.096) | SUPERSEDED | finalpass_item5a_bootstrap_ci.csv |
+| isu_ilcc | 9 | 0.122 [-0.329, 0.297] (before 0.129) | 33.810 [19.444, 40.254] (before 33.670) | 29.365 [17.513, 36.377] (before 29.993) | SUPERSEDED | finalpass_item5a_bootstrap_ci.csv |
+
+Source: outputs/finalpass_item5a_bootstrap_ci.csv ("before" = same file at git commit c56ddcb).
 
 Datasets with fewer than ~10 batteries (in-domain, CALCE, Oxford,
 stanford, stanford_2, isu_ilcc, ul_pur, rwth, mich_exp) carry
@@ -152,14 +170,18 @@ sources (disclosed infrastructure gap, not silently skipped).
 **Status: VERIFIED - not in the rerun change summary.** This section scores only CALCE/Oxford/HUST/XJTU (no BatteryLife embeddings are
 read), and none of its files appear among the rewritten CSVs in `outputs/toolkit_rerun_change_summary.csv`. No verdict changed.
 
-| Dataset | RUL R2 | RUL RMSE (cycles) | RUL MAE (cycles) | RUL MAPE (%) | Target RUL range (cycles) | n batteries |
-|---|---|---|---|---|---|---|
-| In-domain (TEST) - first-pass joint model (reference) | 0.666 | - | - | - | mean 390.6, std 292.9 (train-fit scale) | - |
-| In-domain (TEST) - deployed model (retrained, Stage 4) | 0.374 | 265.30 | - | - | see DEVELOPMENT_LOG.md Stage 4 step 2b | - |
-| CALCE | -566.35 | 474.2 | 421.5 | 1395.9 | 0-125, mean 5.9, std 19.9 | 3 |
-| Oxford | -1.31 | 3208.5 | 2520.0 | - | - | 8 |
-| HUST | -0.45 | 689.7 | 543.3 | - | - | 77 |
-| XJTU | -78.46 | 1538.8 | 1017.9 | - | - | 47 |
+**Table status: VERIFIED (all rows; built-in datasets only, none in the rerun change summary).**
+
+| Dataset | RUL R2 | RUL RMSE (cycles) | RUL MAE (cycles) | RUL MAPE (%) | Target RUL range (cycles) | n batteries | Status | Source file |
+|---|---|---|---|---|---|---|---|---|
+| In-domain (TEST) - first-pass joint model (reference) | 0.666 | - | - | - | mean 390.6, std 292.9 (train-fit scale) | - | VERIFIED | source not recorded in outputs/ (value quoted from DEVELOPMENT_LOG.md, session 41 Part B) |
+| In-domain (TEST) - deployed model (retrained, Stage 4) | 0.374 | 265.30 | - | - | see DEVELOPMENT_LOG.md Stage 4 step 2b | - | VERIFIED | stage4_step2b_summary.csv |
+| CALCE | -566.35 | 474.2 | 421.5 | 1395.9 | 0-125, mean 5.9, std 19.9 | 3 | VERIFIED | finalpass_item5c_rul_crossdomain.csv; finalpass_checkB_rul_diagnostic.csv (MAPE, target range) |
+| Oxford | -1.31 | 3208.5 | 2520.0 | - | - | 8 | VERIFIED | finalpass_item5c_rul_crossdomain.csv |
+| HUST | -0.45 | 689.7 | 543.3 | - | - | 77 | VERIFIED | finalpass_item5c_rul_crossdomain.csv |
+| XJTU | -78.46 | 1538.8 | 1017.9 | - | - | 47 | VERIFIED | finalpass_item5c_rul_crossdomain.csv |
+
+Source: outputs/finalpass_item5c_rul_crossdomain.csv, outputs/finalpass_checkB_rul_diagnostic.csv, outputs/stage4_step2b_summary.csv. The first-pass joint-model R2 0.666 has source not recorded in outputs/ (DEVELOPMENT_LOG.md only); its "mean 390.6, std 292.9" scale matches the training_rul_mean/std columns of finalpass_checkB_rul_diagnostic.csv.
 
 **RUL prediction fails far more catastrophically under domain shift
 than SOH prediction does, for the exact same 4 datasets and the same
@@ -194,10 +216,14 @@ locally-available BatteryLife sources (125 usable batteries).
 
 **Status: SUPERSEDED - BatteryLife-only task, rerun on corrected embeddings (`outputs/finalpass_item5d_summary.csv`); pre-rerun value in parentheses (pre-rerun CSV c56ddcb).**
 
-| Metric | This work (HI+XGBoost) | BatteryLife published (Li-ion, CPTransformer/CPMLP) |
-|---|---|---|
-| MAPE | 0.211 (before 0.213) | 0.184 / 0.179 |
-| 15%-Acc | 0.600 (before 0.576) | 0.573 |
+**Table status: SUPERSEDED (this-work column, corrected rerun); the published-benchmark column is a fixed literature value.**
+
+| Metric | This work (HI+XGBoost) | BatteryLife published (Li-ion, CPTransformer/CPMLP) | Status | Source file |
+|---|---|---|---|---|
+| MAPE | 0.211 (before 0.213) | 0.184 / 0.179 | SUPERSEDED (this-work column; published column is a literature constant) | finalpass_item5d_summary.csv (this work); partB_item8_batterylife_published_benchmark.csv (published) |
+| 15%-Acc | 0.600 (before 0.576) | 0.573 | SUPERSEDED (this-work column; published column is a literature constant) | finalpass_item5d_summary.csv (this work); partB_item8_batterylife_published_benchmark.csv (published) |
+
+Source: outputs/finalpass_item5d_summary.csv (OVERALL pooled row: mape 0.2112, acc15pct 0.600); outputs/partB_item8_batterylife_published_benchmark.csv (Li-ion CPTransformer 0.184/0.573, CPMLP 0.179).
 
 **A simple hand-engineered-feature + XGBoost approach is essentially
 tied on 15%-Acc and only modestly worse on MAPE against a purpose-built
@@ -222,22 +248,26 @@ convention this project has always shipped.
 those sources changed; corrected values = the k=0 column of `outputs/finalpass_item3_coverage_pivot.csv`, pre-rerun in parentheses). Widths are unchanged (k=0 width 2.288 on every
 BatteryLife source, `finalpass_item3_width_pivot.csv`).**
 
-| Dataset | Coverage | Avg. width (% SOH) | n |
-|---|---|---|---|
-| In-domain (TEST) | 97.9% | 2.288 | 3,462 |
-| CALCE | 4.3% | 0.813 | 2,941 |
-| Oxford | 5.4% | 0.813 | 519 |
-| HUST | 8.5% | 0.813 | 146,122 |
-| XJTU | 11.0% | 2.288 | 19,238 |
-| ul_pur | 39.6% (before 21.6%) | 2.288 | 2,245 |
-| hnei | 14.2% (before 19.0%) | 2.288 | 15,155 |
-| snl | 11.1% (before 11.7%) | 2.288 | 38,880 |
-| mich | 30.2% (before 16.2%) | 2.288 | 19,881 |
-| mich_exp | 33.4% (before 34.1%) | 2.288 | 6,545 |
-| rwth | 4.6% (before 4.7%) | 2.288 | 22,095 |
-| stanford | 1.7% (before 1.5%) | 2.288 | 5,633 |
-| stanford_2 | 1.8% (before 1.6%) | 2.288 | 8,465 |
-| isu_ilcc | 1.5% (before 1.3%) | 2.288 | 45,229 |
+**Table status (per-row in the Status column): VERIFIED for the 5 built-in rows, SUPERSEDED for the 9 BatteryLife coverage values.**
+
+| Dataset | Coverage | Avg. width (% SOH) | n | Status | Source file |
+|---|---|---|---|---|---|
+| In-domain (TEST) | 97.9% | 2.288 | 3,462 | VERIFIED | finalpass_item5e_conformal_consolidated.csv |
+| CALCE | 4.3% | 0.813 | 2,941 | VERIFIED | finalpass_item5e_conformal_consolidated.csv |
+| Oxford | 5.4% | 0.813 | 519 | VERIFIED | finalpass_item5e_conformal_consolidated.csv |
+| HUST | 8.5% | 0.813 | 146,122 | VERIFIED | finalpass_item5e_conformal_consolidated.csv |
+| XJTU | 11.0% | 2.288 | 19,238 | VERIFIED | finalpass_item5e_conformal_consolidated.csv |
+| ul_pur | 39.6% (before 21.6%) | 2.288 | 2,245 | SUPERSEDED | finalpass_item3_coverage_pivot.csv (k=0 coverage); finalpass_item3_width_pivot.csv (width); finalpass_item5e_conformal_consolidated.csv (n, "before" coverage) |
+| hnei | 14.2% (before 19.0%) | 2.288 | 15,155 | SUPERSEDED | finalpass_item3_coverage_pivot.csv (k=0 coverage); finalpass_item3_width_pivot.csv (width); finalpass_item5e_conformal_consolidated.csv (n, "before" coverage) |
+| snl | 11.1% (before 11.7%) | 2.288 | 38,880 | SUPERSEDED | finalpass_item3_coverage_pivot.csv (k=0 coverage); finalpass_item3_width_pivot.csv (width); finalpass_item5e_conformal_consolidated.csv (n, "before" coverage) |
+| mich | 30.2% (before 16.2%) | 2.288 | 19,881 | SUPERSEDED | finalpass_item3_coverage_pivot.csv (k=0 coverage); finalpass_item3_width_pivot.csv (width); finalpass_item5e_conformal_consolidated.csv (n, "before" coverage) |
+| mich_exp | 33.4% (before 34.1%) | 2.288 | 6,545 | SUPERSEDED | finalpass_item3_coverage_pivot.csv (k=0 coverage); finalpass_item3_width_pivot.csv (width); finalpass_item5e_conformal_consolidated.csv (n, "before" coverage) |
+| rwth | 4.6% (before 4.7%) | 2.288 | 22,095 | SUPERSEDED | finalpass_item3_coverage_pivot.csv (k=0 coverage); finalpass_item3_width_pivot.csv (width); finalpass_item5e_conformal_consolidated.csv (n, "before" coverage) |
+| stanford | 1.7% (before 1.5%) | 2.288 | 5,633 | SUPERSEDED | finalpass_item3_coverage_pivot.csv (k=0 coverage); finalpass_item3_width_pivot.csv (width); finalpass_item5e_conformal_consolidated.csv (n, "before" coverage) |
+| stanford_2 | 1.8% (before 1.6%) | 2.288 | 8,465 | SUPERSEDED | finalpass_item3_coverage_pivot.csv (k=0 coverage); finalpass_item3_width_pivot.csv (width); finalpass_item5e_conformal_consolidated.csv (n, "before" coverage) |
+| isu_ilcc | 1.5% (before 1.3%) | 2.288 | 45,229 | SUPERSEDED | finalpass_item3_coverage_pivot.csv (k=0 coverage); finalpass_item3_width_pivot.csv (width); finalpass_item5e_conformal_consolidated.csv (n, "before" coverage) |
+
+Source: outputs/finalpass_item5e_conformal_consolidated.csv (built-in rows; n; pre-rerun BatteryLife coverage = the "before" values), outputs/finalpass_item3_coverage_pivot.csv (column 0 = corrected BatteryLife coverage), outputs/finalpass_item3_width_pivot.csv. Note: item5e holds the PRE-rerun BatteryLife coverage, so the corrected values are only in the item3 pivot.
 
 **Only 1 of 14 rows (in-domain itself) reaches within 10 percentage
 points of the 90% target.** This project's conformal interval should
@@ -326,21 +356,25 @@ No lookahead (structurally guaranteed in code).
 `finalpass2_itemA_pid_results.csv`, `finalpass2_itemA_nexcp_results.csv`; pre-rerun value in parentheses). The static column is the corrected k=0 coverage of
 `finalpass_item3_coverage_pivot.csv` (the static column inside `finalpass3_check2_labelfree_vs_online.csv` was NOT recomputed and still shows the pre-rerun static numbers).**
 
-| Dataset | Static split-conformal (baseline) | PID (eta=0.1) | PID+scorecaster | nexCP (rho=0.95) | nexCP (rho=0.99) |
-|---|---|---|---|---|---|
-| CALCE | 4.3% | 84.9% | 87.4% | 80.4% | 73.5% |
-| Oxford | 5.4% | 85.4% | 90.4% | 89.7% | 86.1% |
-| HUST | 8.5% | 88.1% | 90.2% | 87.0% | 85.0% |
-| XJTU | 11.0% | 89.3% | 92.4% | 89.2% | 90.8% |
-| ul_pur | 39.6% (21.6%) | 58.9% (72.8%) | 79.8% (83.3%) | 74.3% (79.7%) | 60.0% (72.5%) |
-| hnei | 14.2% (19.0%) | 38.0% (69.1%) | 85.2% (89.4%) | 63.2% (71.2%) | 46.7% (56.8%) |
-| snl | 11.1% (11.7%) | 82.3% (84.0%) | 91.3% (91.3%) | 66.4% (63.1%) | 62.2% (59.7%) |
-| mich | 30.2% (16.2%) | 61.9% (64.4%) | 71.1% (74.3%) | 63.5% (64.8%) | 59.8% (61.4%) |
-| mich_exp | 33.4% (34.1%) | 65.2% (69.1%) | 82.2% (83.4%) | 69.3% (70.1%) | 62.3% (64.2%) |
-| rwth | 4.6% (4.7%) | 83.7% (79.9%) | 92.2% (91.6%) | 68.8% (78.2%) | 55.5% (57.0%) |
-| stanford | 1.7% (1.5%) | 89.4% (89.7%) | 93.6% (93.5%) | 84.8% (86.0%) | 88.4% (89.8%) |
-| stanford_2 | 1.8% (1.6%) | 89.5% (89.7%) | 93.3% (93.4%) | 86.0% (86.5%) | 88.3% (89.0%) |
-| isu_ilcc | 1.5% (1.3%) | 89.9% (90.0%) | 95.0% (94.7%) | 80.6% (82.5%) | 72.3% (73.9%) |
+**Table status (per-row in the Status column): VERIFIED for CALCE/Oxford/HUST/XJTU, SUPERSEDED for the 9 BatteryLife rows.**
+
+| Dataset | Static split-conformal (baseline) | PID (eta=0.1) | PID+scorecaster | nexCP (rho=0.95) | nexCP (rho=0.99) | Status | Source file |
+|---|---|---|---|---|---|---|---|
+| CALCE | 4.3% | 84.9% | 87.4% | 80.4% | 73.5% | VERIFIED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+| Oxford | 5.4% | 85.4% | 90.4% | 89.7% | 86.1% | VERIFIED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+| HUST | 8.5% | 88.1% | 90.2% | 87.0% | 85.0% | VERIFIED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+| XJTU | 11.0% | 89.3% | 92.4% | 89.2% | 90.8% | VERIFIED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+| ul_pur | 39.6% (21.6%) | 58.9% (72.8%) | 79.8% (83.3%) | 74.3% (79.7%) | 60.0% (72.5%) | SUPERSEDED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+| hnei | 14.2% (19.0%) | 38.0% (69.1%) | 85.2% (89.4%) | 63.2% (71.2%) | 46.7% (56.8%) | SUPERSEDED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+| snl | 11.1% (11.7%) | 82.3% (84.0%) | 91.3% (91.3%) | 66.4% (63.1%) | 62.2% (59.7%) | SUPERSEDED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+| mich | 30.2% (16.2%) | 61.9% (64.4%) | 71.1% (74.3%) | 63.5% (64.8%) | 59.8% (61.4%) | SUPERSEDED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+| mich_exp | 33.4% (34.1%) | 65.2% (69.1%) | 82.2% (83.4%) | 69.3% (70.1%) | 62.3% (64.2%) | SUPERSEDED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+| rwth | 4.6% (4.7%) | 83.7% (79.9%) | 92.2% (91.6%) | 68.8% (78.2%) | 55.5% (57.0%) | SUPERSEDED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+| stanford | 1.7% (1.5%) | 89.4% (89.7%) | 93.6% (93.5%) | 84.8% (86.0%) | 88.4% (89.8%) | SUPERSEDED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+| stanford_2 | 1.8% (1.6%) | 89.5% (89.7%) | 93.3% (93.4%) | 86.0% (86.5%) | 88.3% (89.0%) | SUPERSEDED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+| isu_ilcc | 1.5% (1.3%) | 89.9% (90.0%) | 95.0% (94.7%) | 80.6% (82.5%) | 72.3% (73.9%) | SUPERSEDED | finalpass_item3_coverage_pivot.csv (static, k=0); finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP) |
+
+Source: outputs/finalpass2_itemA_headline_comparison.csv (PID, PID+scorecaster, nexCP; also finalpass2_itemA_pid_results.csv / finalpass2_itemA_nexcp_results.csv), outputs/finalpass_item3_coverage_pivot.csv (static column, k=0).
 
 **Every dataset improves dramatically; PID+scorecaster is the best of the four tested configurations on all 13 (per the CSV; the pre-rerun text said 12/13), several reaching 90-95% from a low-single-digit starting point.**
 This beats every prior conformal method tried in this project's
@@ -397,23 +431,27 @@ XGBoost-fusion trained on the pooled union of 14 sources, evaluated
 zero-retrain on the 15th (held-out) source, same features/
 hyperparameters as the deployed model, no tuning on the held-out set.
 
-| Held-out | LODO R2 [95% CI] (corrected) | Before | NASA+MIT-only R2 (corrected; before) | Delta (corrected) |
-|---|---|---|---|---|
-| CALCE | 0.855 [0.804,0.939] | 0.870 | 0.560 (0.568) | +0.295 |
-| Oxford | 0.076 [-0.377,0.349] | -0.571 | -3.598 (-2.694) | +3.673 |
-| HUST | 0.722 [0.672,0.759] | 0.535 | -0.027 (-0.152) | +0.749 |
-| XJTU | -6.394 [-7.578,-5.049] | -4.100 | -1.556 (-1.062) | **-4.838 (worse)** |
-| ul_pur | 0.517 [0.442,0.636] | 0.488 | 0.265 (0.116) | +0.252 |
-| hnei | 0.929 [0.923,0.937] | 0.681 | 0.070 (-0.038) | +0.860 |
-| snl | 0.149 [-0.213,0.336] | 0.442 | 0.154 (0.147) | **-0.005 (not distinguishable)** |
-| mich | 0.746 [0.726,0.768] | 0.795 | 0.565 (0.573) | +0.181 |
-| mich_exp | 0.499 [-0.523,0.725] | 0.638 | 0.731 (0.721) | **-0.232 (worse)** |
-| rwth | 0.505 [0.469,0.540] | 0.353 | -0.152 (-0.485) | +0.657 |
-| stanford | ~~0.997~~ **0.919** [0.776,0.985] (sibling-holdout corrected, see CHECK 1) | ~~0.997~~ 0.889 | 0.299 (0.111) | +0.621 |
-| stanford_2 | ~~0.990~~ **0.895** [0.626,0.993] (sibling-holdout corrected, see CHECK 1) | ~~0.990~~ 0.858 | 0.220 (0.066) | +0.675 |
-| isu_ilcc | 0.901 [0.611,0.948] | 0.800 | 0.053 (0.140) | +0.848 |
-| NASA (held out, no comparable baseline) | 0.031 [-0.350,0.225] | 0.149 | - | - |
-| MIT (held out, no comparable baseline) | -6.118 [-11.357,-3.360] | -4.817 | - | - |
+**Table status: SUPERSEDED (every row changed in the rerun; per-row in the Status column).**
+
+| Held-out | LODO R2 [95% CI] (corrected) | Before | NASA+MIT-only R2 (corrected; before) | Delta (corrected) | Status | Source file |
+|---|---|---|---|---|---|---|
+| CALCE | 0.855 [0.804,0.939] | 0.870 | 0.560 (0.568) | +0.295 | SUPERSEDED | finalpass2_itemB_lodo_results.csv (LODO R2, CI); toolkit_lodo_family_holdout_rerun_corrected.csv (NASA+MIT-only corrected); toolkit_rerun_before_after_itemB.csv (before) |
+| Oxford | 0.076 [-0.377,0.349] | -0.571 | -3.598 (-2.694) | +3.673 | SUPERSEDED | finalpass2_itemB_lodo_results.csv (LODO R2, CI); toolkit_lodo_family_holdout_rerun_corrected.csv (NASA+MIT-only corrected); toolkit_rerun_before_after_itemB.csv (before) |
+| HUST | 0.722 [0.672,0.759] | 0.535 | -0.027 (-0.152) | +0.749 | SUPERSEDED | finalpass2_itemB_lodo_results.csv (LODO R2, CI); toolkit_lodo_family_holdout_rerun_corrected.csv (NASA+MIT-only corrected); toolkit_rerun_before_after_itemB.csv (before) |
+| XJTU | -6.394 [-7.578,-5.049] | -4.100 | -1.556 (-1.062) | **-4.838 (worse)** | SUPERSEDED | finalpass2_itemB_lodo_results.csv (LODO R2, CI); toolkit_lodo_family_holdout_rerun_corrected.csv (NASA+MIT-only corrected); toolkit_rerun_before_after_itemB.csv (before) |
+| ul_pur | 0.517 [0.442,0.636] | 0.488 | 0.265 (0.116) | +0.252 | SUPERSEDED | finalpass2_itemB_lodo_results.csv (LODO R2, CI); toolkit_lodo_family_holdout_rerun_corrected.csv (NASA+MIT-only corrected); toolkit_rerun_before_after_itemB.csv (before) |
+| hnei | 0.929 [0.923,0.937] | 0.681 | 0.070 (-0.038) | +0.860 | SUPERSEDED | finalpass2_itemB_lodo_results.csv (LODO R2, CI); toolkit_lodo_family_holdout_rerun_corrected.csv (NASA+MIT-only corrected); toolkit_rerun_before_after_itemB.csv (before) |
+| snl | 0.149 [-0.213,0.336] | 0.442 | 0.154 (0.147) | **-0.005 (not distinguishable)** | SUPERSEDED | finalpass2_itemB_lodo_results.csv (LODO R2, CI); toolkit_lodo_family_holdout_rerun_corrected.csv (NASA+MIT-only corrected); toolkit_rerun_before_after_itemB.csv (before) |
+| mich | 0.746 [0.726,0.768] | 0.795 | 0.565 (0.573) | +0.181 | SUPERSEDED | finalpass2_itemB_lodo_results.csv (LODO R2, CI); toolkit_lodo_family_holdout_rerun_corrected.csv (NASA+MIT-only corrected); toolkit_rerun_before_after_itemB.csv (before) |
+| mich_exp | 0.499 [-0.523,0.725] | 0.638 | 0.731 (0.721) | **-0.232 (worse)** | SUPERSEDED | finalpass2_itemB_lodo_results.csv (LODO R2, CI); toolkit_lodo_family_holdout_rerun_corrected.csv (NASA+MIT-only corrected); toolkit_rerun_before_after_itemB.csv (before) |
+| rwth | 0.505 [0.469,0.540] | 0.353 | -0.152 (-0.485) | +0.657 | SUPERSEDED | finalpass2_itemB_lodo_results.csv (LODO R2, CI); toolkit_lodo_family_holdout_rerun_corrected.csv (NASA+MIT-only corrected); toolkit_rerun_before_after_itemB.csv (before) |
+| stanford | ~~0.997~~ **0.919** [0.776,0.985] (sibling-holdout corrected, see CHECK 1) | ~~0.997~~ 0.889 | 0.299 (0.111) | +0.621 | SUPERSEDED | toolkit_lodo_family_holdout_rerun_corrected.csv (family LODO, CI, NASA+MIT-only, "before" = family_lodo_r2_original); finalpass2_itemB_lodo_results.csv (struck plain value) |
+| stanford_2 | ~~0.990~~ **0.895** [0.626,0.993] (sibling-holdout corrected, see CHECK 1) | ~~0.990~~ 0.858 | 0.220 (0.066) | +0.675 | SUPERSEDED | toolkit_lodo_family_holdout_rerun_corrected.csv (family LODO, CI, NASA+MIT-only, "before" = family_lodo_r2_original); finalpass2_itemB_lodo_results.csv (struck plain value) |
+| isu_ilcc | 0.901 [0.611,0.948] | 0.800 | 0.053 (0.140) | +0.848 | SUPERSEDED | finalpass2_itemB_lodo_results.csv (LODO R2, CI); toolkit_lodo_family_holdout_rerun_corrected.csv (NASA+MIT-only corrected); toolkit_rerun_before_after_itemB.csv (before) |
+| NASA (held out, no comparable baseline) | 0.031 [-0.350,0.225] | 0.149 | - | - | SUPERSEDED | finalpass2_itemB_lodo_results.csv; toolkit_rerun_before_after_itemB.csv (before) |
+| MIT (held out, no comparable baseline) | -6.118 [-11.357,-3.360] | -4.817 | - | - | SUPERSEDED | finalpass2_itemB_lodo_results.csv; toolkit_rerun_before_after_itemB.csv (before) |
+
+Source: outputs/finalpass2_itemB_lodo_results.csv, outputs/toolkit_lodo_family_holdout_rerun_corrected.csv, outputs/toolkit_rerun_before_after_itemB.csv (pre-rerun: outputs/finalpass3_check1_side_by_side.csv). The NASA+MIT-only "before" values in parentheses are the hard-coded column of the family-holdout CSV.
 
 **Source diversity helps transfer on 10/13 comparable targets (before: 11/13), often
 dramatically** (stanford/stanford_2 jump from ~0.22-0.30 to ~0.90-0.92
@@ -489,21 +527,25 @@ relationship / no AUC-based selective prediction" conclusion stands.
 corrected `finalpass_item5a_5seed_aggregate.csv` (BatteryLife sources are routed to the base model, so oracle = routed there). Paired tests
 (`finalpass2_itemC_paired_tests.csv`) were recomputed from the rerun predictions.**
 
-| Dataset | Trivial linear | Severson variance | Attia rich | Routed (5-seed) | True deployed base (audit) | Routed (oracle) | Best LODO |
-|---|---|---|---|---|---|---|---|
-| CALCE | -0.858 | 0.077 | 0.078 | 0.749 | 0.568 | 0.740 | **0.855** (before 0.870) |
-| Oxford | -7.589 | 0.169 | 0.195 | **0.940** | -2.694 | 0.953 | 0.076 (before -0.571) |
-| HUST | 0.755 | -1.790 | -1.437 | 0.795 | -0.152 | **0.800** | 0.722 (before 0.535) |
-| XJTU | 0.279 | -7.835 | -7.410 | **-1.037** | -1.062 | -1.037 | -6.394 (before -4.100) |
-| ul_pur | -0.566 | -3.292 | -3.397 | 0.138 (before 0.116) | not audited | 0.138 | **0.517** (before 0.488) |
-| hnei | -2.001 | -0.087 | -0.108 | -0.137 (before -0.038) | not audited | -0.137 | **0.929** (before 0.681) |
-| snl | -0.550 | -0.324 | -0.275 | 0.118 (before 0.147) | not audited | 0.118 | **0.149** (before 0.442) |
-| mich | -0.275 | 0.241 | 0.252 | 0.536 (before 0.573) | not audited | 0.536 | **0.746** (before 0.795) |
-| mich_exp | -0.217 | -0.206 | -0.122 | **0.716** (before 0.721) | not audited | 0.716 | 0.499 (before 0.638) |
-| rwth | -0.000 | -0.000 | -0.001 | -0.535 (before -0.485) | not audited | -0.535 | **0.505** (before 0.353) |
-| stanford | -0.274 | 0.148 | 0.135 | 0.291 (before 0.111) | not audited | 0.291 | **0.997** (before 0.997) |
-| stanford_2 | -0.206 | 0.121 | 0.108 | 0.263 (before 0.066) | not audited | 0.263 | **0.990** (before 0.990) |
-| isu_ilcc | 0.358 | -0.989 | -1.024 | 0.123 (before 0.140) | not audited | 0.123 | **0.901** (before 0.800) |
+**Table status (per-row in the Status column): SUPERSEDED (BatteryLife rows, and the Best LODO column everywhere); trivial/Severson/Attia and audit columns VERIFIED.**
+
+| Dataset | Trivial linear | Severson variance | Attia rich | Routed (5-seed) | True deployed base (audit) | Routed (oracle) | Best LODO | Status | Source file |
+|---|---|---|---|---|---|---|---|---|---|
+| CALCE | -0.858 | 0.077 | 0.078 | 0.749 | 0.568 | 0.740 | **0.855** (before 0.870) | SUPERSEDED (Best LODO column only; other columns VERIFIED) | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+| Oxford | -7.589 | 0.169 | 0.195 | **0.940** | -2.694 | 0.953 | 0.076 (before -0.571) | SUPERSEDED (Best LODO column only; other columns VERIFIED) | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+| HUST | 0.755 | -1.790 | -1.437 | 0.795 | -0.152 | **0.800** | 0.722 (before 0.535) | SUPERSEDED (Best LODO column only; other columns VERIFIED) | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+| XJTU | 0.279 | -7.835 | -7.410 | **-1.037** | -1.062 | -1.037 | -6.394 (before -4.100) | SUPERSEDED (Best LODO column only; other columns VERIFIED) | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+| ul_pur | -0.566 | -3.292 | -3.397 | 0.138 (before 0.116) | not audited | 0.138 | **0.517** (before 0.488) | SUPERSEDED | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+| hnei | -2.001 | -0.087 | -0.108 | -0.137 (before -0.038) | not audited | -0.137 | **0.929** (before 0.681) | SUPERSEDED | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+| snl | -0.550 | -0.324 | -0.275 | 0.118 (before 0.147) | not audited | 0.118 | **0.149** (before 0.442) | SUPERSEDED | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+| mich | -0.275 | 0.241 | 0.252 | 0.536 (before 0.573) | not audited | 0.536 | **0.746** (before 0.795) | SUPERSEDED | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+| mich_exp | -0.217 | -0.206 | -0.122 | **0.716** (before 0.721) | not audited | 0.716 | 0.499 (before 0.638) | SUPERSEDED | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+| rwth | -0.000 | -0.000 | -0.001 | -0.535 (before -0.485) | not audited | -0.535 | **0.505** (before 0.353) | SUPERSEDED | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+| stanford | -0.274 | 0.148 | 0.135 | 0.291 (before 0.111) | not audited | 0.291 | **0.997** (before 0.997) | SUPERSEDED | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+| stanford_2 | -0.206 | 0.121 | 0.108 | 0.263 (before 0.066) | not audited | 0.263 | **0.990** (before 0.990) | SUPERSEDED | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+| isu_ilcc | 0.358 | -0.989 | -1.024 | 0.123 (before 0.140) | not audited | 0.123 | **0.901** (before 0.800) | SUPERSEDED | finalpass2_itemC_baseline_table.csv (trivial, Severson, Attia, built-in routed oracle); finalpass_item5a_5seed_aggregate.csv (routed 5-seed; BatteryLife oracle); audit_true_deployed_baseline.csv (audit, built-in only); finalpass2_itemB_lodo_results.csv (Best LODO, plain) |
+
+Source: outputs/finalpass2_itemC_baseline_table.csv, outputs/finalpass_item5a_5seed_aggregate.csv, outputs/audit_true_deployed_baseline.csv, outputs/finalpass2_itemB_lodo_results.csv. Caveat: the Best LODO column for stanford/stanford_2 (0.997/0.990) is the PLAIN value; use the sibling-holdout 0.919/0.895 from section 9.
 
 **Column labels corrected 2026-09-30.** The column earlier headed "Deployed base" holds the *routed* 5-seed numbers (dataset-aware routing applied; CALCE/Oxford/HUST use the extended-reformulation model, selected on the same held-out data). The true deployed base model (`xgb_soh_fusion.json`, no routing) is the new column, from `outputs/audit_true_deployed_baseline.csv` (single fixed-seed model, so it is not a 5-seed mean; BatteryLife rows were not part of that audit). In the significance sentences below, "deployed base model" refers to the routed numbers.
 
@@ -546,21 +588,25 @@ synthetic data and 3 real battery traces (CALCE, HUST, isu_ilcc).
 **(b) Label-free vs. online, one table** (the label-feedback
 requirement made explicit):
 
-| Dataset | Static (label-free) | PID (needs labels) | nexCP 0.95 (needs labels) | nexCP 0.99 (needs labels) |
-|---|---|---|---|---|
-| CALCE | 4.3% | 84.9% | 80.4% | 73.5% |
-| Oxford | 5.4% | 85.4% | 89.7% | 86.1% |
-| HUST | 8.5% | 88.1% | 87.0% | 85.0% |
-| XJTU | 11.0% | 89.3% | 89.2% | 90.8% |
-| ul_pur | 39.6% (21.6%) | 58.9% (72.8%) | 74.3% (79.7%) | 60.0% (72.5%) |
-| hnei | 14.2% (19.0%) | 38.0% (69.1%) | 63.2% (71.2%) | 46.7% (56.8%) |
-| snl | 11.1% (11.7%) | 82.3% (84.0%) | 66.4% (63.1%) | 62.2% (59.7%) |
-| mich | 30.2% (16.2%) | 61.9% (64.4%) | 63.5% (64.8%) | 59.8% (61.4%) |
-| mich_exp | 33.4% (34.1%) | 65.2% (69.1%) | 69.3% (70.1%) | 62.3% (64.2%) |
-| rwth | 4.6% (4.7%) | 83.7% (79.9%) | 68.8% (78.2%) | 55.5% (57.0%) |
-| stanford | 1.7% (1.5%) | 89.4% (89.7%) | 84.8% (86.0%) | 88.4% (89.8%) |
-| stanford_2 | 1.8% (1.6%) | 89.5% (89.7%) | 86.0% (86.5%) | 88.3% (89.0%) |
-| isu_ilcc | 1.5% (1.3%) | 89.9% (90.0%) | 80.6% (82.5%) | 72.3% (73.9%) |
+**Table status (per-row in the Status column): VERIFIED for CALCE/Oxford/HUST/XJTU, SUPERSEDED for the 9 BatteryLife rows.**
+
+| Dataset | Static (label-free) | PID (needs labels) | nexCP 0.95 (needs labels) | nexCP 0.99 (needs labels) | Status | Source file |
+|---|---|---|---|---|---|---|
+| CALCE | 4.3% | 84.9% | 80.4% | 73.5% | VERIFIED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+| Oxford | 5.4% | 85.4% | 89.7% | 86.1% | VERIFIED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+| HUST | 8.5% | 88.1% | 87.0% | 85.0% | VERIFIED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+| XJTU | 11.0% | 89.3% | 89.2% | 90.8% | VERIFIED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+| ul_pur | 39.6% (21.6%) | 58.9% (72.8%) | 74.3% (79.7%) | 60.0% (72.5%) | SUPERSEDED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+| hnei | 14.2% (19.0%) | 38.0% (69.1%) | 63.2% (71.2%) | 46.7% (56.8%) | SUPERSEDED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+| snl | 11.1% (11.7%) | 82.3% (84.0%) | 66.4% (63.1%) | 62.2% (59.7%) | SUPERSEDED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+| mich | 30.2% (16.2%) | 61.9% (64.4%) | 63.5% (64.8%) | 59.8% (61.4%) | SUPERSEDED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+| mich_exp | 33.4% (34.1%) | 65.2% (69.1%) | 69.3% (70.1%) | 62.3% (64.2%) | SUPERSEDED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+| rwth | 4.6% (4.7%) | 83.7% (79.9%) | 68.8% (78.2%) | 55.5% (57.0%) | SUPERSEDED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+| stanford | 1.7% (1.5%) | 89.4% (89.7%) | 84.8% (86.0%) | 88.4% (89.8%) | SUPERSEDED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+| stanford_2 | 1.8% (1.6%) | 89.5% (89.7%) | 86.0% (86.5%) | 88.3% (89.0%) | SUPERSEDED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+| isu_ilcc | 1.5% (1.3%) | 89.9% (90.0%) | 80.6% (82.5%) | 72.3% (73.9%) | SUPERSEDED | finalpass3_check2_labelfree_vs_online.csv (PID, nexCP); finalpass_item3_coverage_pivot.csv (static, k=0) |
+
+Source: outputs/finalpass3_check2_labelfree_vs_online.csv (PID, nexCP columns), outputs/finalpass_item3_coverage_pivot.csv (static column; the static column inside the check2 CSV is stale/pre-rerun).
 
 **(c) Life-stage of the rolling-20 zero-coverage window** (7/13
 datasets affected, same 7 after the rerun; PID rows of `finalpass3_check2_lifestage.csv`): after the rerun **72% of affected battery-
@@ -607,6 +653,23 @@ rerun); **SUPERSEDED** = the numbers were replaced by the corrected rerun values
 - **Domain-classifier AUC has no reliable relationship with outcomes** once shift is this severe (item E) - SUPERSEDED numbers (Spearman -0.297 / 0.416 / 0.026, all CIs span zero), same clean negative result.
 - **Label-free routing (item 1) is not usable** - SUPERSEDED: rule 3/13 correct vs always-extended 10/13 (before: tie at 8/13). Do not headline the old "ties the naive baseline" wording.
 - **BatteryLife benchmark reproduction (section 5): 15%-Acc 0.600, MAPE 0.211 - SUPERSEDED** (before 0.576 / 0.213); published 0.573 / 0.184-0.179.
+- **Toolkit pass (Phases 3a / 2B / 2C) - headline only as follows.** Phase 2B federated bagging does not match centralized pooling (AFTER: best federated variant beats centralized on at most 5/16 sources) - **VERIFIED** negative result on corrected embeddings (old mixed-encoder table SUPERSEDED, do not cite). Phase 3a "no single safe minimum-checkpoints number, mich 0/40 stable, pooled p75 ~1310 cycles" - **SUPERSEDED** numbers (before 1297), same conclusion. Phase 2C "no tested label budget reaches a usable coverage target (best 0.499)" - **SUPERSEDED** number (before 0.511), same conclusion.
+
+**Status and source of each headline above** (labels as in the bullets; files relative to `outputs/`):
+
+| Headline | Status | Source file |
+|---|---|---|
+| Built-in dataset numbers, sections 1-3, 4, 6, CHECK A/B | VERIFIED | finalpass_item5a_5seed_aggregate.csv; finalpass_item5a_bootstrap_ci.csv; finalpass_item5e_conformal_consolidated.csv; finalpass_item5c_rul_crossdomain.csv; finalpass_checkA_conformal_diagnostic.csv; finalpass_checkB_rul_diagnostic.csv |
+| Online conformal (item A): static 1.5-39.6% -> PID+scorecaster 71.1-95.0% | SUPERSEDED (BatteryLife rows; built-in rows VERIFIED) | finalpass2_itemA_headline_comparison.csv; finalpass_item3_coverage_pivot.csv |
+| No-lookahead test; 7/13 rolling-20 zero-coverage count; width 60-63% of range (XJTU/isu_ilcc/rwth) | VERIFIED (7/13 count and the 3 wide datasets unchanged; rwth/isu_ilcc width values SUPERSEDED) | finalpass3_check2_width_and_coverage.csv; finalpass3_check2_lifestage.csv |
+| LODO 10/13 wins; stanford 0.919 / stanford_2 0.895; snl tie | SUPERSEDED | finalpass2_itemB_lodo_results.csv; toolkit_lodo_family_holdout_rerun_corrected.csv; toolkit_rerun_before_after_itemB.csv |
+| MIT held out R2 -6.118; XJTU -6.394 vs -1.556 | SUPERSEDED | finalpass2_itemB_lodo_results.csv; toolkit_lodo_family_holdout_rerun_corrected.csv |
+| Beats Severson/Attia on 8/13 (Oxford MAE exception) | VERIFIED | finalpass2_itemC_baseline_table.csv; finalpass2_itemC_paired_tests.csv; audit_true_deployed_baseline.csv |
+| Domain-classifier AUC has no reliable relationship with outcomes | SUPERSEDED | finalpass2_itemE_correlations.csv; finalpass2_itemE_source_threshold.csv; finalpass2_itemE_risk_coverage.csv |
+| Label-free routing not usable (3/13 vs 10/13) | SUPERSEDED | finalpass_item1_labelfree_routing.csv |
+| BatteryLife benchmark 15%-Acc 0.600, MAPE 0.211 | SUPERSEDED | finalpass_item5d_summary.csv; partB_item8_batterylife_published_benchmark.csv |
+| Toolkit Phase 2B (federated bagging negative) | VERIFIED | toolkit_phase2b_federated_results.csv |
+| Toolkit Phase 3a / Phase 2C | SUPERSEDED | toolkit_phase3a_min_checkpoints.csv; toolkit_phase2c_label_efficient.csv |
 
 ---
 
@@ -624,21 +687,25 @@ counted separately, not papered over with a misleading number.
 
 **Status: Oxford/XJTU/CALCE/HUST rows VERIFIED (identical to the pre-rerun table); the 9 BatteryLife rows SUPERSEDED by the corrected rerun (`outputs/toolkit_phase3a_min_checkpoints.csv`, `outputs/rerun_queue/phase3a.log`); pre-rerun value in parentheses.**
 
-| Dataset | Median checkpoints | Mean | Batteries reaching stability | Batteries that never stabilize |
-|---|---|---|---|---|
-| Oxford | 22 | 22 | 4/8 | 4/8 |
-| XJTU | 25 | 34 | 46/47 | 1/47 |
-| isu_ilcc | 25 (25) | 25 (25) | 9/9 | 0/9 |
-| stanford_2 | 25 (26) | 207 (203) | 8/8 | 0/8 |
-| ul_pur | 77.5 (60) | 77.5 (60) | 2/10 | 8/10 |
-| stanford | 138.5 (26) | 347 (308) | 6/6 | 0/6 |
-| mich_exp | 312 (250) | 255 (243) | 6/18 (was 7/18) | 12/18 (was 11/18) |
-| snl | 407 (391) | 802 (842) | 24/55 (was 28/55) | 31/55 (was 27/55) |
-| CALCE | 985 | 985 | 2/3 | 1/3 |
-| hnei | 1043.5 (992) | 1044 (1001) | 2/14 (was 5/14) | 12/14 (was 9/14) |
-| HUST | 1324 | 1095 | 67/77 | 10/77 |
-| rwth | 2044 (2018) | 1579 (1482) | 10/10 (was 9/10) | 0/10 (was 1/10) |
-| **mich** | **N/A - no battery ever stabilizes** | - | 0/40 | **40/40** |
+**Table status (per-row in the Status column): VERIFIED for Oxford/XJTU/CALCE/HUST, SUPERSEDED for the 9 BatteryLife rows.**
+
+| Dataset | Median checkpoints | Mean | Batteries reaching stability | Batteries that never stabilize | Status | Source file |
+|---|---|---|---|---|---|---|
+| Oxford | 22 | 22 | 4/8 | 4/8 | VERIFIED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+| XJTU | 25 | 34 | 46/47 | 1/47 | VERIFIED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+| isu_ilcc | 25 (25) | 25 (25) | 9/9 | 0/9 | SUPERSEDED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+| stanford_2 | 25 (26) | 207 (203) | 8/8 | 0/8 | SUPERSEDED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+| ul_pur | 77.5 (60) | 77.5 (60) | 2/10 | 8/10 | SUPERSEDED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+| stanford | 138.5 (26) | 347 (308) | 6/6 | 0/6 | SUPERSEDED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+| mich_exp | 312 (250) | 255 (243) | 6/18 (was 7/18) | 12/18 (was 11/18) | SUPERSEDED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+| snl | 407 (391) | 802 (842) | 24/55 (was 28/55) | 31/55 (was 27/55) | SUPERSEDED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+| CALCE | 985 | 985 | 2/3 | 1/3 | VERIFIED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+| hnei | 1043.5 (992) | 1044 (1001) | 2/14 (was 5/14) | 12/14 (was 9/14) | SUPERSEDED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+| HUST | 1324 | 1095 | 67/77 | 10/77 | VERIFIED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+| rwth | 2044 (2018) | 1579 (1482) | 10/10 (was 9/10) | 0/10 (was 1/10) | SUPERSEDED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+| **mich** | **N/A - no battery ever stabilizes** | - | 0/40 | **40/40** | SUPERSEDED | toolkit_phase3a_min_checkpoints.csv (rerun_queue/phase3a.log) |
+
+Source: outputs/toolkit_phase3a_min_checkpoints.csv (log: outputs/rerun_queue/phase3a.log).
 
 **Overall (pooled across every battery that reached a stable point,
 n=186 after the rerun; before n=193): median = 65 cycles (before 62), 75th percentile = 1310 cycles (before 1297).**
@@ -668,15 +735,19 @@ The table further below is the pre-rerun (mixed-encoder) table, kept for the rec
 `outputs/toolkit_phase2b_federated_results.csv`; the interrupted first attempt is kept as `outputs/toolkit_phase2b_federated_run_INTERRUPTED_12of16.log`.
 The method is federated *bagging* (Flower FedXgbBagging aggregation, lossy by construction); histogram-based federated GBDT is lossless by construction and was not run.
 
-| Held-out R2 across the 16 sources | BEFORE (SUPERSEDED, mixed encoders) | AFTER (corrected rerun) |
-|---|---|---|
-| Centralized (pooled): mean / median / sources with R2 > 0 | 0.033 / 0.570 / 13 | -0.203 / 0.584 / 12 |
-| Federated, sample-weighted: mean / median / sources > 0 | -3.532 / -0.919 / 6 | -3.302 / -0.166 / 7 |
-| Federated, uniform: mean / median / sources > 0 | -3.353 / -0.490 / 7 | -1.995 / -0.287 / 7 |
-| Federated, tempered: mean / median / sources > 0 | -3.146 / -0.205 / 7 | -3.732 / -0.019 / 8 |
-| NASA+MIT-only routed: mean / median / sources > 0 | -0.540 / 0.153 / 10 | -0.465 / 0.197 / 9 |
-| Federated beats centralized (sample-weighted / uniform / tempered) | 1 / 4 / 3 of 16 | 3 / 4 / 5 of 16 |
-| Centralized beats NASA+MIT-only | 13 of 16 | 13 of 16 |
+**Table status: VERIFIED (AFTER column, corrected rerun; negative result confirmed); the BEFORE column is SUPERSEDED.**
+
+| Held-out R2 across the 16 sources | BEFORE (SUPERSEDED, mixed encoders) | AFTER (corrected rerun) | Status | Source file |
+|---|---|---|---|---|
+| Centralized (pooled): mean / median / sources with R2 > 0 | 0.033 / 0.570 / 13 | -0.203 / 0.584 / 12 | VERIFIED (AFTER column); SUPERSEDED (BEFORE column) | toolkit_phase2b_federated_results.csv (AFTER); toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv (BEFORE) |
+| Federated, sample-weighted: mean / median / sources > 0 | -3.532 / -0.919 / 6 | -3.302 / -0.166 / 7 | VERIFIED (AFTER column); SUPERSEDED (BEFORE column) | toolkit_phase2b_federated_results.csv (AFTER); toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv (BEFORE) |
+| Federated, uniform: mean / median / sources > 0 | -3.353 / -0.490 / 7 | -1.995 / -0.287 / 7 | VERIFIED (AFTER column); SUPERSEDED (BEFORE column) | toolkit_phase2b_federated_results.csv (AFTER); toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv (BEFORE) |
+| Federated, tempered: mean / median / sources > 0 | -3.146 / -0.205 / 7 | -3.732 / -0.019 / 8 | VERIFIED (AFTER column); SUPERSEDED (BEFORE column) | toolkit_phase2b_federated_results.csv (AFTER); toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv (BEFORE) |
+| NASA+MIT-only routed: mean / median / sources > 0 | -0.540 / 0.153 / 10 | -0.465 / 0.197 / 9 | VERIFIED (AFTER column); SUPERSEDED (BEFORE column) | toolkit_phase2b_federated_results.csv (AFTER); toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv (BEFORE) |
+| Federated beats centralized (sample-weighted / uniform / tempered) | 1 / 4 / 3 of 16 | 3 / 4 / 5 of 16 | VERIFIED (AFTER column); SUPERSEDED (BEFORE column) | toolkit_phase2b_federated_results.csv (AFTER); toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv (BEFORE) |
+| Centralized beats NASA+MIT-only | 13 of 16 | 13 of 16 | VERIFIED (AFTER column); SUPERSEDED (BEFORE column) | toolkit_phase2b_federated_results.csv (AFTER); toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv (BEFORE) |
+
+Source: outputs/toolkit_phase2b_federated_results.csv (AFTER); outputs/toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv (BEFORE); log outputs/toolkit_phase2b_federated_run.log.
 
 Corrected verdict: no federated variant matches centralized training (the best federated variant beats it on at most 5 of 16 held-out sources); MIT stays the worst case
 (centralized R2 -2.639, federated sample-weighted -26.864, tempered -52.581); centralized still beats NASA+MIT-only on 13 of 16. Federated bagging is NOT adopted. Same verdict as before.
@@ -694,24 +765,28 @@ under this project's own LODO family-holdout protocol (16 sources,
 Tongji included), same features/hyperparameters as the Phase 2
 candidate throughout.
 
-| Held out | Centralized (Phase 2 candidate) | Federated (best of 3 weighting schemes) | NASA+MIT-only (deployed) |
-|---|---|---|---|
-| NASA | 0.229 | 0.417 | **0.999** |
-| MIT | -4.646 | -33.939 | **0.999** |
-| CALCE | **0.860** | 0.840 | 0.646 |
-| Oxford | -0.492 | -1.795 | -11.974 |
-| HUST | **0.469** | -1.100 | 0.307 |
-| XJTU | -2.646 | -2.344 | -0.934 |
-| ul_pur | **0.465** | -1.960 | 0.186 |
-| hnei | **0.671** | -0.202 | -0.075 |
-| snl | **0.363** | -1.425 | 0.120 |
-| mich | **0.764** | 0.773 | 0.661 |
-| mich_exp | **0.709** | -0.209 | 0.616 |
-| rwth | 0.338 | **0.482** | -0.215 |
-| stanford | **0.875** | 0.875 | 0.066 |
-| stanford_2 | **0.856** | 0.868 | -0.012 |
-| isu_ilcc | **0.898** | 0.812 | 0.359 |
-| tongji | **0.818** | -1.277 | -0.395 |
+**Table status: SUPERSEDED (pre-rerun, mixed-encoder table kept for the record; do not cite).**
+
+| Held out | Centralized (Phase 2 candidate) | Federated (best of 3 weighting schemes) | NASA+MIT-only (deployed) | Status | Source file |
+|---|---|---|---|---|---|
+| NASA | 0.229 | 0.417 | **0.999** | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| MIT | -4.646 | -33.939 | **0.999** | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| CALCE | **0.860** | 0.840 | 0.646 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| Oxford | -0.492 | -1.795 | -11.974 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| HUST | **0.469** | -1.100 | 0.307 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| XJTU | -2.646 | -2.344 | -0.934 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| ul_pur | **0.465** | -1.960 | 0.186 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| hnei | **0.671** | -0.202 | -0.075 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| snl | **0.363** | -1.425 | 0.120 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| mich | **0.764** | 0.773 | 0.661 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| mich_exp | **0.709** | -0.209 | 0.616 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| rwth | 0.338 | **0.482** | -0.215 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv - CONFLICT: best federated 0.482 here vs 0.540 in CSV |
+| stanford | **0.875** | 0.875 | 0.066 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| stanford_2 | **0.856** | 0.868 | -0.012 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| isu_ilcc | **0.898** | 0.812 | 0.359 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+| tongji | **0.818** | -1.277 | -0.395 | SUPERSEDED | toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv |
+
+Source: outputs/toolkit_phase2b_federated_results.MIXED_ENCODER_CONTAMINATED.csv (federated column = best of the three weighting schemes per row). CONFLICT flagged on the rwth row (0.482 here vs 0.540 in the CSV); number left unchanged.
 
 **Federated never clearly beats centralized pooling** (centralized
 wins outright on 13/16 sources, ties or marginally loses on the other
@@ -747,12 +822,16 @@ k_burnin=10) and the SAME 13-source external/BatteryLife scope Phase
 
 **Status: SUPERSEDED - the pooled means include 9 BatteryLife sources and were rerun on corrected embeddings (`outputs/toolkit_phase2c_label_efficient.csv`, `outputs/rerun_queue/phase2c.log`); pre-rerun value in parentheses. CALCE/Oxford/HUST/XJTU per-source values are identical to before.**
 
-| Budget | Best policy | Mean coverage (pooled) | Mean late-life coverage |
-|---|---|---|---|
-| 5 | fixed_every_n | 0.232 (before 0.219) | 0.210 (before 0.228) |
-| 10 | fixed_every_n | 0.322 (before 0.313) | 0.263 (before 0.283) |
-| 20 | fixed_every_n | 0.410 (before 0.413) | 0.305 (before 0.325) |
-| 40 | uncertainty (~tied with fixed_every_n, 0.496) | **0.499** (before 0.511) | 0.362 (before 0.385) |
+**Table status: SUPERSEDED (pooled means include 9 BatteryLife sources, corrected rerun).**
+
+| Budget | Best policy | Mean coverage (pooled) | Mean late-life coverage | Status | Source file |
+|---|---|---|---|---|---|
+| 5 | fixed_every_n | 0.232 (before 0.219) | 0.210 (before 0.228) | SUPERSEDED | toolkit_phase2c_label_efficient.csv (rerun_queue/phase2c.log) |
+| 10 | fixed_every_n | 0.322 (before 0.313) | 0.263 (before 0.283) | SUPERSEDED | toolkit_phase2c_label_efficient.csv (rerun_queue/phase2c.log) |
+| 20 | fixed_every_n | 0.410 (before 0.413) | 0.305 (before 0.325) | SUPERSEDED | toolkit_phase2c_label_efficient.csv (rerun_queue/phase2c.log) |
+| 40 | uncertainty (~tied with fixed_every_n, 0.496) | **0.499** (before 0.511) | 0.362 (before 0.385) | SUPERSEDED | toolkit_phase2c_label_efficient.csv (rerun_queue/phase2c.log) |
+
+Source: outputs/toolkit_phase2c_label_efficient.csv (pooled = mean over the 13 sources per budget/policy; log outputs/rerun_queue/phase2c.log).
 
 **None of the four tested budgets reach a usable pooled coverage
 target** - even the best case (40 labels) only reaches 51% mean
@@ -794,25 +873,29 @@ Corrected-embedding rerun of everything that read the BatteryLife/Tongji embeddi
 and `run_queue2.sh` (resumed 18:30, ALL DONE 20:02, every step rc=0; `outputs/rerun_queue/summary_resume.txt`). Changed-cell counts: `outputs/toolkit_rerun_change_summary.csv`.
 "Verdict changes" is the outcome of comparing the before/after numbers in this file, not merely whether cells moved.
 
-| Script | Status | Verdict changes |
-|---|---|---|
-| Item A online conformal (`finalpass2_itemA_*`; secs 8, 12b) | rerun, done (643 s) | none flipped; PID+scorecaster min 74.3% -> 71.1% (mich); plain PID hnei 69.1% -> 38.0%, ul_pur 72.8% -> 58.9% (weaker, direction holds). CALCE/Oxford/HUST/XJTU VERIFIED |
-| Item B LODO (`finalpass2_itemB_lodo_results.csv`; sec 9) | rerun, done (538 s) | count of clear wins 11/13 -> 10/13: snl 0.442 -> 0.149 vs NASA+MIT-only 0.154 (margin 0.005, not distinguishable); no verdict_flipped in `toolkit_rerun_before_after_itemB.csv`; MIT -4.817 -> -6.118 and XJTU -4.100 -> -6.394 stay failures |
-| `lodo_check1` family holdout (sec 9 CHECK 1) | rerun, done (507 s) | stanford 0.889 -> 0.919, stanford_2 0.858 -> 0.895; same 10 clear wins in plain and family settings; snl tie |
-| Phase 2C label-efficient (`toolkit_phase2c_label_efficient.csv`) | rerun, done (314 s) | none (best 0.499 vs 0.511 before; no budget reaches target) |
-| Phase 3a min checkpoints (`toolkit_phase3a_min_checkpoints.csv`) | rerun, done (276 s) | none (pooled median 62 -> 65, p75 1297 -> 1310; mich still 0/40) |
-| Item 1 label-free routing (`finalpass_item1_*`; sec 7) | rerun, done (288 s) | rule correct 8/13 -> 3/13; extended model now true winner on 10/13 (was 8/13); rule no longer ties always-extended (3/13 vs 10/13); not adopted (unchanged decision) |
-| Item 2 cycle_idx ablation (`finalpass_item2_*`; sec 7) | rerun, done (283 s) | none (cycle_idx effect +0.0421 -> +0.0617; worse on 3/13, was 5/13) |
-| Item 3 few-shot conformal (`finalpass_item3_*`; secs 6, 7) | rerun, done (279 s) | none (mean coverage k=0 -> 50: 10.8% -> 13.4% before, 12.9% -> 15.2% after) |
-| Item 5a 5-seed / bootstrap (`finalpass_item5a_*`; secs 1-3) | rerun, done (396 s) | none (no BatteryLife R2 changed sign; stanford/stanford_2 bootstrap CIs now above zero) |
-| Item 5d BatteryLife benchmark (`finalpass_item5d_*`; sec 5) | rerun, done (13 s) | none (15%-Acc 0.576 -> 0.600 vs published 0.573; MAPE 0.213 -> 0.211 vs 0.184/0.179) |
-| Part B item 7 zero-retrain eval (`partB_item7_zeroretrain_eval.csv`) | rerun, done (14 s); not a PAPER_RESULTS section | extended-vs-base R2 moved on all 9 BatteryLife sources; no verdict statement in this file depends on it beyond item 1 |
-| Part B item 8 | rerun, done (7 s) | no rewritten CSV in the change summary |
-| Part B item 9 pool-expansion retrain (`partB_item9_pool_expansion_retrain.csv`) | rerun, done (275 s); not a PAPER_RESULTS section | in-domain/CALCE WIN and Oxford/HUST/XJTU LOSS verdicts unchanged (Oxford R2 -1.456 -> -0.127, HUST 0.542 -> 0.683, XJTU -4.268 -> -7.336) |
-| CHECK 2 online conformal verification (`finalpass3_check2_*`; sec 12) | rerun, done (359 s) | none (7/13 zero-window datasets, mich 40/40, same 3 too-wide datasets; late-life share 88% -> 72%). Static column in the CSV not recomputed |
-| Item E shift diagnostics (`finalpass2_itemE_*`; sec 10) | rerun, done (289 s) | none (Spearman -0.201/0.248/-0.195 -> -0.297/0.416/0.026, all CIs span zero; abstention 100% on 13/13) |
-| Item C baseline table + paired tests (`finalpass2_itemC_*`; sec 11) | rerun, done (2,190 s) | none (8/13 significantly better, Oxford exception unchanged); hnei routed R2 -0.137 now below Severson -0.087 on R2 |
-| Trust profiles / trust report validation (`toolkit_phase3_trust_*`; no PAPER_RESULTS section) | profiles rebuilt (byte-identical `_source_profiles.pkl`); validation CSV rewritten | not assessed in this file - see DEVELOPMENT_LOG.md "Step 2 close-out and Step 3a" |
-| Phase 2B federated (`toolkit_phase2b_federated_*`; restarted 18:30) | done, 16/16 folds, 106.5 min; transcribed above | none - federated bagging still does not match centralized (VERIFIED negative result) |
-| Sections not rerun: 4 (RUL), item 4, CHECK A, CHECK B | VERIFIED (not in the change summary) | none |
+**Table status: VERIFIED (log of completed reruns, all rc=0; the numbers it quotes carry their own labels in sections 1-12).**
+
+| Script | Status | Verdict changes | Status | Source file |
+|---|---|---|---|---|
+| Item A online conformal (`finalpass2_itemA_*`; secs 8, 12b) | rerun, done (643 s) | none flipped; PID+scorecaster min 74.3% -> 71.1% (mich); plain PID hnei 69.1% -> 38.0%, ul_pur 72.8% -> 58.9% (weaker, direction holds). CALCE/Oxford/HUST/XJTU VERIFIED | VERIFIED | rerun_queue/itemA.log (+ rerun_queue/summary_resume.txt) |
+| Item B LODO (`finalpass2_itemB_lodo_results.csv`; sec 9) | rerun, done (538 s) | count of clear wins 11/13 -> 10/13: snl 0.442 -> 0.149 vs NASA+MIT-only 0.154 (margin 0.005, not distinguishable); no verdict_flipped in `toolkit_rerun_before_after_itemB.csv`; MIT -4.817 -> -6.118 and XJTU -4.100 -> -6.394 stay failures | VERIFIED | rerun_queue/itemB.log (+ rerun_queue/summary_resume.txt) |
+| `lodo_check1` family holdout (sec 9 CHECK 1) | rerun, done (507 s) | stanford 0.889 -> 0.919, stanford_2 0.858 -> 0.895; same 10 clear wins in plain and family settings; snl tie | VERIFIED | rerun_queue/lodo_check1.log (+ rerun_queue/summary_resume.txt) |
+| Phase 2C label-efficient (`toolkit_phase2c_label_efficient.csv`) | rerun, done (314 s) | none (best 0.499 vs 0.511 before; no budget reaches target) | VERIFIED | rerun_queue/phase2c.log (+ rerun_queue/summary_resume.txt) |
+| Phase 3a min checkpoints (`toolkit_phase3a_min_checkpoints.csv`) | rerun, done (276 s) | none (pooled median 62 -> 65, p75 1297 -> 1310; mich still 0/40) | VERIFIED | rerun_queue/phase3a.log (+ rerun_queue/summary_resume.txt) |
+| Item 1 label-free routing (`finalpass_item1_*`; sec 7) | rerun, done (288 s) | rule correct 8/13 -> 3/13; extended model now true winner on 10/13 (was 8/13); rule no longer ties always-extended (3/13 vs 10/13); not adopted (unchanged decision) | VERIFIED | rerun_queue/item1.log (+ rerun_queue/summary_resume.txt) |
+| Item 2 cycle_idx ablation (`finalpass_item2_*`; sec 7) | rerun, done (283 s) | none (cycle_idx effect +0.0421 -> +0.0617; worse on 3/13, was 5/13) | VERIFIED | rerun_queue/item2.log (+ rerun_queue/summary_resume.txt) |
+| Item 3 few-shot conformal (`finalpass_item3_*`; secs 6, 7) | rerun, done (279 s) | none (mean coverage k=0 -> 50: 10.8% -> 13.4% before, 12.9% -> 15.2% after) | VERIFIED | rerun_queue/item3.log (+ rerun_queue/summary_resume.txt) |
+| Item 5a 5-seed / bootstrap (`finalpass_item5a_*`; secs 1-3) | rerun, done (396 s) | none (no BatteryLife R2 changed sign; stanford/stanford_2 bootstrap CIs now above zero) | VERIFIED | rerun_queue/item5a.log (+ rerun_queue/summary_resume.txt) |
+| Item 5d BatteryLife benchmark (`finalpass_item5d_*`; sec 5) | rerun, done (13 s) | none (15%-Acc 0.576 -> 0.600 vs published 0.573; MAPE 0.213 -> 0.211 vs 0.184/0.179) | VERIFIED | rerun_queue/item5d.log (+ rerun_queue/summary_resume.txt) |
+| Part B item 7 zero-retrain eval (`partB_item7_zeroretrain_eval.csv`) | rerun, done (14 s); not a PAPER_RESULTS section | extended-vs-base R2 moved on all 9 BatteryLife sources; no verdict statement in this file depends on it beyond item 1 | VERIFIED | rerun_queue/partB7.log (+ rerun_queue/summary_resume.txt) |
+| Part B item 8 | rerun, done (7 s) | no rewritten CSV in the change summary | VERIFIED | rerun_queue/partB8.log (+ rerun_queue/summary_resume.txt) |
+| Part B item 9 pool-expansion retrain (`partB_item9_pool_expansion_retrain.csv`) | rerun, done (275 s); not a PAPER_RESULTS section | in-domain/CALCE WIN and Oxford/HUST/XJTU LOSS verdicts unchanged (Oxford R2 -1.456 -> -0.127, HUST 0.542 -> 0.683, XJTU -4.268 -> -7.336) | VERIFIED | rerun_queue/partB9.log (+ rerun_queue/summary_resume.txt) |
+| CHECK 2 online conformal verification (`finalpass3_check2_*`; sec 12) | rerun, done (359 s) | none (7/13 zero-window datasets, mich 40/40, same 3 too-wide datasets; late-life share 88% -> 72%). Static column in the CSV not recomputed | VERIFIED | rerun_queue/check2.log (+ rerun_queue/summary_resume.txt) |
+| Item E shift diagnostics (`finalpass2_itemE_*`; sec 10) | rerun, done (289 s) | none (Spearman -0.201/0.248/-0.195 -> -0.297/0.416/0.026, all CIs span zero; abstention 100% on 13/13) | VERIFIED | rerun_queue/itemE.log (+ rerun_queue/summary_resume.txt) |
+| Item C baseline table + paired tests (`finalpass2_itemC_*`; sec 11) | rerun, done (2,190 s) | none (8/13 significantly better, Oxford exception unchanged); hnei routed R2 -0.137 now below Severson -0.087 on R2 | VERIFIED | rerun_queue/itemC.log (+ rerun_queue/summary_resume.txt) |
+| Trust profiles / trust report validation (`toolkit_phase3_trust_*`; no PAPER_RESULTS section) | profiles rebuilt (byte-identical `_source_profiles.pkl`); validation CSV rewritten | not assessed in this file - see DEVELOPMENT_LOG.md "Step 2 close-out and Step 3a" | VERIFIED | toolkit_phase3_trust_profiles_run.log (+ rerun_queue/summary_resume.txt) |
+| Phase 2B federated (`toolkit_phase2b_federated_*`; restarted 18:30) | done, 16/16 folds, 106.5 min; transcribed above | none - federated bagging still does not match centralized (VERIFIED negative result) | VERIFIED | toolkit_phase2b_federated_run.log (+ rerun_queue/summary_resume.txt) |
+| Sections not rerun: 4 (RUL), item 4, CHECK A, CHECK B | VERIFIED (not in the change summary) | none | VERIFIED | toolkit_rerun_change_summary.csv (+ rerun_queue/summary_resume.txt) |
+
+Source: outputs/rerun_queue/summary_resume.txt and the per-step logs in outputs/rerun_queue/ (plus the CSVs named in the Script column).
 
