@@ -88,13 +88,12 @@ st.set_page_config(page_title="CellSense", page_icon="🔋", layout="wide")
 # --------------------------------------------------------------------------
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 html, body, [class*="css"] {
-    font-family: 'Inter', -apple-system, sans-serif;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
-    font-family: 'Outfit', sans-serif !important;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important;
     font-weight: 600 !important;
 }
 
@@ -126,6 +125,19 @@ h1, h2, h3, h4, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 {
 }
 .stButton > button:active {
     background-color: #0f3f6b !important;
+}
+
+/* 2026-10-01 redesign: accessible contrast and focus, mobile layout (no external font request: faster first load) */
+[data-testid="stCaptionContainer"], .stCaption { color: #4a4a5a !important; }
+:focus-visible { outline: 3px solid #2166ac !important; outline-offset: 2px; }
+@media (max-width: 640px) {
+    .block-container { padding-left: 0.8rem !important; padding-right: 0.8rem !important; padding-top: 2.2rem !important; }
+    h1 { font-size: 1.6rem !important; }
+    h2 { font-size: 1.3rem !important; }
+    [data-testid="stMetricValue"] { font-size: 1.5rem !important; }
+    [data-testid="stHorizontalBlock"] { gap: 0.6rem !important; }
+    [data-baseweb="tab-list"] { overflow-x: auto; }
+    [data-testid="stDataFrame"], .stTable { overflow-x: auto; }
 }
 
 /* Session 32 (site Phase 2) additions below - kept in this same block
@@ -527,6 +539,99 @@ def battery_physical_framing(soh_pct: float, rul_cycles: int | None) -> str:
             f"note above) - the health percentage itself is still a real, live prediction.")
 
 
+@st.cache_data(show_spinner=False)
+def _status_banners() -> dict:
+    f = ROOT / "data" / "status_banners.json"
+    try:
+        return json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
+    except Exception:
+        return {}
+
+
+def status_banner(key: str):
+    """One-line status label (VERIFIED / SUPERSEDED / historical) above a results section; text from data/status_banners.json,
+    built from PAPER_RESULTS.md (2026-09-30) by outputs/site_redesign/status_labels_map.md."""
+    txt = _status_banners().get(key)
+    if txt:
+        st.caption("🏷️ " + txt)
+
+
+def render_first_screen():
+    """First screen (2026-10-01 redesign): what the tool does and what it cannot do, in one sentence, then three entry paths."""
+    st.title("🔋 CellSense")
+    st.markdown(
+        "**CellSense estimates how healthy a lithium-ion battery is (SOH) and how many cycles it has left (RUL), with a 90% "
+        "interval and a check for batteries unlike the ones it was built on. It is a research prototype: it cannot certify a "
+        "battery, its intervals only hold for batteries similar to its training data, and RUL is shown only for NASA/MIT-like cells.**")
+    st.caption("Choose a battery or upload cycle data in the sidebar. The result card comes first; the details follow below it.")
+    with st.expander("Start here: three ways to use CellSense", expanded=True):
+        c1, c2, c3 = st.columns(3)
+        c1.markdown("**Researcher**\n\n1. Browse a dataset (NASA, MIT, CALCE, Oxford, HUST, XJTU).\n"
+                    "2. Read the Explainability and Model Validation tabs for the method, the measured errors and the negative results.\n"
+                    "3. Check the status label (VERIFIED or SUPERSEDED) next to each number.")
+        c2.markdown("**EV, fleet or BMS engineer**\n\n1. Upload cycle data (a sample file is in the sidebar).\n"
+                    "2. Read the result card: SOH with its interval, and whether the battery looks unlike the training data.\n"
+                    "3. Download the passport (Prediction tab) and confirm any flagged battery with a measured capacity test.")
+        c3.markdown("**Second-life or recycler**\n\n1. Upload a battery's cycles or browse an example.\n"
+                    "2. The Health Report tab gives a plain-language grade and recommendation.\n"
+                    "3. Treat every recommendation as provisional: SOH here is an estimate, not a measurement.")
+    with st.expander("What SOH, RUL and the 90% interval mean"):
+        render_about_section()
+
+
+def render_result_card(ctx: dict):
+    """Result card at the top: SOH with its 90% interval, RUL only under the existing condition, the trust state in plain
+    words with the validated detection figures, and where the passport is. Details (banner, checks, tabs) follow below."""
+    flagged = bool(ctx["out_of_domain"])
+    rul_display = None if ctx.get("rul_hidden", ctx["out_of_domain"]) else ctx["rul_pred"]
+    with st.container(border=True):
+        st.markdown("#### Result")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Predicted SOH", f"{ctx['soh_pred']}%", help="State of health: remaining capacity as a percentage of the battery's early capacity.")
+        c1.caption(f"90% interval {ctx['soh_conformal_lo']}% to {ctx['soh_conformal_hi']}%"
+                   + (" - not reliable for this battery" if flagged else ""))
+        c2.metric("Predicted RUL", "not available" if rul_display is None else f"{rul_display} cycles",
+                  help="Remaining useful life: cycles until 80% SOH. Shown only when the nearest known source is NASA or MIT and the battery is not flagged.")
+        if rul_display is None:
+            c2.caption("Not shown: " + (ctx.get("rul_hidden_reason") or ctx.get("rul_unavailable_reason") or "not available for this battery")[:150])
+        else:
+            c2.caption(f"90% interval {ctx['rul_conformal_lo']} to {ctx['rul_conformal_hi']} cycles")
+        with c3:
+            st.markdown("**Trust state**")
+            if flagged:
+                st.markdown(":orange[**Unfamiliar battery - treat with caution.**]")
+            else:
+                st.markdown("**No distribution shift detected.** This is not a guarantee.")
+            st.caption(f"The check flags {OOD_NOVEL_DETECTED:.1%} of batteries from an unseen source and wrongly flags {OOD_KNOWN_FALSE_ALARM:.1%} "
+                       f"of known ones; weakest for {', '.join(OOD_WEAK_SOURCES)}.")
+        st.caption("Passport (JSON and printable PDF, research prototype): Prediction tab, bottom of the page.")
+
+
+@st.cache_data(show_spinner=False)
+def _sample_upload_bytes() -> bytes | None:
+    f = ROOT / "data" / "sample" / "cellsense_sample_upload.csv"
+    return f.read_bytes() if f.exists() else None
+
+
+def render_upload_help():
+    """Upload flow help: downloadable sample file and a column guide."""
+    data = _sample_upload_bytes()
+    if data is not None:
+        st.download_button("Download a sample file", data=data, file_name="cellsense_sample_upload.csv", mime="text/csv",
+                           help="30 real cycles from one battery, in the exact format expected.")
+    with st.expander("Column guide"):
+        st.markdown(
+            "| column | meaning | unit |\n|---|---|---|\n"
+            "| `cycle_idx` | cycle number (1, 2, 3 ...) | integer |\n"
+            "| `phase` | `charge` or `discharge` | text |\n"
+            "| `time_s` | time within the cycle | seconds |\n"
+            "| `voltage_v` | terminal voltage | volts |\n"
+            "| `current_a` | current; **positive on charge, negative on discharge** | amperes |\n"
+            "| `temperature_c` | optional | degrees C |\n\n"
+            "Each cycle needs at least 2 charge rows and 2 discharge rows; cycles without them are skipped. About 10 or more cycles work best "
+            "(the sample has 30). If your current sign is reversed, flip `current_a` before uploading. This is a public demo: do not upload confidential data.")
+
+
 def render_about_section():
     st.markdown(
         f"**About this dashboard**: this tool estimates a lithium-ion battery's current "
@@ -797,7 +902,7 @@ def render_explainability_tab(ctx: dict):
             changed = ast.literal_eval(row["changed_features"])
             parts = [f"**{feat}**: {frm:.3g} → {to:.3g}" for feat, (frm, to) in changed.items()]
             st.markdown(f"- Counterfactual {i+1} (predicted SOH {row['cf_pred']:.1f}%): " + ", ".join(parts))
-        st.success(
+        st.info(
             "**The consistent finding across every one of these cases**: `SCV_rel` (a "
             "voltage-curve-slope ratio) is the cheapest, most consistent lever DiCE finds to "
             "flip the prediction - it appears in all 5 example cases above, always moving "
@@ -904,6 +1009,7 @@ def render_evaluation_protocol_section():
 
     with st.expander("📊 Evaluation protocol: early-prediction / drop-branch / bagging experiments",
                       expanded=True):
+        status_banner("render_evaluation_protocol_section:Evaluation protocol: early-prediction / drop-branch / bagging experiments")
         st.markdown("**1. Early-prediction test** (first 20% of each battery's cycles)")
         st.warning("R² goes negative here (early-life SOH has almost no variance to "
                    "explain), but RMSE/MAE actually *improve* - use RMSE/MAE, not R², "
@@ -1102,7 +1208,7 @@ def render_pipeline_diagram():
     cols = st.columns(len(_PIPELINE_STAGES))
     for col, (label, key, number) in zip(cols, _PIPELINE_STAGES):
         with col:
-            if st.button(label, key=f"pipeline_stage_{key}", use_container_width=True):
+            if st.button(label, key=f"pipeline_stage_{key}", width="stretch"):
                 st.session_state["archive_jump_target"] = key
             st.caption(number)
     st.divider()
@@ -1154,6 +1260,7 @@ def render_full_results_archive_tab():
     st.caption("Every plot and metrics table already produced by the pipeline, organized by "
                "phase and collapsed by default - expand whichever phase you want to inspect. "
                "Nothing here is recomputed; this is a read-only view of files on disk.")
+    status_banner("render_full_results_archive_tab:Full Results Archive")
 
     render_pipeline_diagram()
     _jump = st.session_state.get("archive_jump_target")
@@ -1199,6 +1306,7 @@ def render_full_results_archive_tab():
     )
 
     with st.expander("1️⃣ BFA Feature Selection", expanded=(_jump == "bfa")):
+        status_banner("render_full_results_archive_tab:BFA Feature Selection")
         st.markdown(f"Feature selection via {glossary_term('BFA')}.", unsafe_allow_html=True)
         _safe_image(OUT_DIR / "phase1_bfa_convergence.png",
                      "BFA (Butterfly-inspired) feature-selection convergence: best fitness "
@@ -1206,6 +1314,7 @@ def render_full_results_archive_tab():
                      "iterations. Converged on 7 of 16 candidate Health Indicators.")
 
     with st.expander("2️⃣ SOH Fade Examples & ICA/DV/DC Example"):
+        status_banner("render_full_results_archive_tab:SOH Fade Examples & ICA/DV/DC Example")
         _safe_image(OUT_DIR / "phase1_soh_fade_examples.png",
                      "Sample SOH-vs-cycle fade curves for NASA, CALCE, and MIT cells, with "
                      "the 80% end-of-life threshold marked.")
@@ -1216,6 +1325,7 @@ def render_full_results_archive_tab():
 
     with st.expander("3️⃣ Base Learner Training (incl. the CNN-LSTM root-cause fix)",
                       expanded=(_jump == "base_learners")):
+        status_banner("render_full_results_archive_tab:Base Learner Training (incl. the CNN-LSTM root-cause fix)")
         st.error(
             "**Original run: CNN-LSTM did not learn (R²=-0.071, worse than predicting the "
             "mean).** Root-caused, not left as a known issue: the model's raw `dVdQ` input "
@@ -1283,6 +1393,7 @@ def render_full_results_archive_tab():
         )
 
     with st.expander("4️⃣ Stacking Ensemble", expanded=(_jump == "ensemble")):
+        status_banner("render_full_results_archive_tab:Stacking Ensemble")
         _safe_image(OUT_DIR / "phase3_stacking_parity_plot.png",
                      "Predicted vs. true SOH scatter for the Stacking-Ridge ensemble on the "
                      "test set - points near the diagonal are accurate predictions.")
@@ -1294,6 +1405,7 @@ def render_full_results_archive_tab():
                     "on the test set.", head=20)
 
     with st.expander("5️⃣ Feature Fusion", expanded=(_jump == "fusion")):
+        status_banner("render_full_results_archive_tab:Feature Fusion")
         _safe_table(PRED_DIR / "xgb_fusion_metrics.csv",
                     "XGBoost with the ICA/DV/DC fusion embedding added (23 features total) - "
                     "RMSE improves from 1.478 (no fusion) to 1.392.")
@@ -1303,6 +1415,7 @@ def render_full_results_archive_tab():
                     "actually serves.")
 
     with st.expander("6️⃣ Physics-Informed Loss Experiment"):
+        status_banner("render_full_results_archive_tab:Physics-Informed Loss Experiment")
         _safe_table(PRED_DIR / "deep_models_physics_metrics.csv",
                     "The 3 deep models retrained with an added monotonicity-penalty loss "
                     "term (λ=0.1).")
@@ -1312,6 +1425,7 @@ def render_full_results_archive_tab():
                 "throughout.")
 
     with st.expander("7️⃣ Joint SOH+RUL Ablation (incl. the log_sigma Clamp Fix)"):
+        status_banner("render_full_results_archive_tab:Joint SOH+RUL Ablation (incl. the log_sigma Clamp Fix)")
         st.info(
             "**Divergence found and fixed (session 2).** The unconstrained "
             "homoscedastic-uncertainty `adaptive` variant's learned α/β weights grew "
@@ -1350,6 +1464,7 @@ def render_full_results_archive_tab():
         )
 
     with st.expander("8️⃣ SHAP Explainability", expanded=(_jump == "shap")):
+        status_banner("render_full_results_archive_tab:SHAP Explainability")
         st.markdown(f"Feature-attribution analysis via {glossary_term('SHAP')}.", unsafe_allow_html=True)
         _safe_image(OUT_DIR / "phase5_shap_xgboost_ranking.png",
                      "Mean |SHAP| bar chart for XGBoost's 7 BFA-selected Health Indicator "
@@ -1374,6 +1489,7 @@ def render_full_results_archive_tab():
 
     with st.expander("9️⃣ Split-Conformal Prediction (incl. the 27.1% calibration bug)",
                       expanded=(_jump == "conformal")):
+        status_banner("render_full_results_archive_tab:Split-Conformal Prediction (incl. the 27.1% calibration bug)")
         st.error(
             "**A real methodological bug, caught by checking the numbers, not just running "
             "the code.** The first draft calibrated on the TRAIN split's own residuals (the "
@@ -1398,6 +1514,7 @@ def render_full_results_archive_tab():
                     "see DEVELOPMENT_LOG.md for the RUL conformal investigation).")
 
     with st.expander("🔟 CALCE Zero-Retrain Evaluation"):
+        status_banner("render_full_results_archive_tab:CALCE Zero-Retrain Evaluation")
         _safe_table(PRED_DIR / "calce_zero_retrain_metrics.csv",
                     "The fusion ensemble's SOH accuracy on CALCE cells with ZERO retraining "
                     "- a genuine out-of-domain test (different chemistry/format, no "
@@ -1444,6 +1561,7 @@ def render_full_results_archive_tab():
                    "this dashboard serves (see the Dataset Expansion section below).")
 
     with st.expander("1️⃣1️⃣ Dashboard v1 (OC-SVM + Negative-RUL Bugs)"):
+        status_banner("render_full_results_archive_tab:Dashboard v1 (OC-SVM + Negative-RUL Bugs)")
         st.markdown("No standalone metrics CSV for this session - both findings summarized "
                     "here in text, matching how they were logged in DEVELOPMENT_LOG.md.")
         st.info(
@@ -1471,6 +1589,7 @@ def render_full_results_archive_tab():
                    "(correctly flagged anomalous and out-of-domain).")
 
     with st.expander("1️⃣2️⃣ Health Report Examples (Claude → Gemini)"):
+        status_banner("render_full_results_archive_tab:Health Report Examples (Claude → Gemini)")
         st.caption("5 saved example reports from `outputs/health_reports_examples.json` - "
                    "generated by the same prompt/LLM chain the Health Report tab uses live, "
                    "shown here as readable text rather than raw JSON.")
@@ -1502,6 +1621,7 @@ def render_full_results_archive_tab():
             st.info("_(health_reports_examples.json not available)_")
 
     with st.expander(f"{_section_num(13)} 3 Evaluation-Protocol Experiments"):
+        status_banner("render_full_results_archive_tab:3 Evaluation-Protocol Experiments")
         st.caption("Same 3 experiments as the 🧪 Model Validation tab, included here too so "
                    "the archive is a complete, standalone record - all evaluation-only, no "
                    "base learner retrained.")
@@ -1524,6 +1644,7 @@ def render_full_results_archive_tab():
                     "useful diversity for this dataset.")
 
     with st.expander(f"{_section_num(14)} RUL Conformal Coverage Investigation"):
+        status_banner("render_full_results_archive_tab:RUL Conformal Coverage Investigation")
         st.info(
             "**Finding 1: the 88.9% coverage figure was stale, not a live bug.** Re-running "
             "the calibration script unmodified against the documented split now gives "
@@ -1543,6 +1664,7 @@ def render_full_results_archive_tab():
         _safe_table(OUT_DIR / "conformal_coverage.csv", "Current (corrected, 93.0%) RUL coverage, alongside SOH's.")
 
     with st.expander(f"{_section_num(15)} MMD Domain Adaptation"):
+        status_banner("render_full_results_archive_tab:MMD Domain Adaptation")
         st.markdown(f"{glossary_term('MMD')} alignment on the fusion embedding, retrained "
                     f"against CALCE's UNLABELED inputs only (zero label leakage) - does it "
                     f"fix the CALCE collapse from session 5?", unsafe_allow_html=True)
@@ -1564,10 +1686,11 @@ def render_full_results_archive_tab():
                     "here slightly worsens, the conformal miscalibration problem.")
 
     with st.expander(f"{_section_num(16)} Softmax-Normalized Adaptive Loss Weighting"):
+        status_banner("render_full_results_archive_tab:Softmax-Normalized Adaptive Loss Weighting")
         st.caption("Constrains (α,β) = 2·softmax(s_α, s_β), pinning α+β=2 so one weight can "
                    "only rise at the other's direct expense - does this fix the α=β=2.028 "
                    "collapse from the log_sigma-clamped `adaptive` variant above?")
-        st.success("**Yes - α/β are now genuinely asymmetric**: 0.993/1.007 at epoch 0 → "
+        st.info("**Yes - α/β are now genuinely asymmetric**: 0.993/1.007 at epoch 0 → "
                    "**0.527/1.473 by epoch 24**, steadily diverging rather than moving together.")
         st.error(
             "**But the model is worse than BOTH baselines on BOTH tasks.** "
@@ -1581,6 +1704,7 @@ def render_full_results_archive_tab():
                     "Same table as section 7️⃣, now including the adaptive_softmax row.")
 
     with st.expander(f"{_section_num(17)} LIME Cross-Validation of TreeSHAP"):
+        status_banner("render_full_results_archive_tab:LIME Cross-Validation of TreeSHAP")
         st.markdown(f"For 5 sampled test-set predictions per model, does an entirely "
                     f"independent explanation method ({glossary_term('LIME')}'s local-linear "
                     f"surrogate) agree with TreeSHAP's exact game-theoretic attribution?",
@@ -1593,6 +1717,7 @@ def render_full_results_archive_tab():
                     "in every single top-3 from both methods, 10/10).")
 
     with st.expander(f"{_section_num(18)} Knee-Point Detection"):
+        status_banner("render_full_results_archive_tab:Knee-Point Detection")
         st.caption("Curvature-based knee detection (Savitzky-Golay derivatives, "
                    "κ=|y''|/(1+y'²)^1.5) on predicted vs. true SOH curves, matching the "
                    "BatteryGPT reference definition.")
@@ -1613,6 +1738,7 @@ def render_full_results_archive_tab():
         )
 
     with st.expander(f"{_section_num(19)} CNN-BiGRU as a 5th Base Learner"):
+        status_banner("render_full_results_archive_tab:CNN-BiGRU as a 5th Base Learner")
         st.caption("Same 4-branch CNN front end as CNN-LSTM, feeding a Bidirectional GRU "
                    "instead of a unidirectional LSTM - a genuine test, reported either way.")
         _safe_table(PRED_DIR / "cnn_bigru_metrics.csv",
@@ -1626,6 +1752,7 @@ def render_full_results_archive_tab():
         _safe_image(OUT_DIR / "phase2_cnn_bigru_training_curves.png", "CNN-BiGRU training curves.")
 
     with st.expander(f"{_section_num(20)} Consolidated Convergence Comparison"):
+        status_banner("render_full_results_archive_tab:Consolidated Convergence Comparison")
         _safe_image(OUT_DIR / "phase8_convergence_comparison.png",
                      "Training-loss-vs-epoch overlay, all 4 deep models on one chart.")
         st.caption("PiFormer converges fastest (best epoch 12 of 40) but stops earliest "
@@ -1637,6 +1764,7 @@ def render_full_results_archive_tab():
                    "weakest base learner throughout.")
 
     with st.expander(f"{_section_num(21)} Domain-Shift-Aware Conformal Prediction"):
+        status_banner("render_full_results_archive_tab:Domain-Shift-Aware Conformal Prediction")
         st.caption("Weighted split-conformal (Tibshirani et al. 2019): calibration "
                    "residuals reweighted by a covariate-shift density ratio from a "
                    "logistic-regression domain classifier - does this fix CALCE's coverage?")
@@ -1665,6 +1793,7 @@ def render_full_results_archive_tab():
         )
 
     with st.expander(f"{_section_num(22)} \"Lean\" Deployment vs. the Full 5-Branch Ensemble"):
+        status_banner("render_full_results_archive_tab:\"Lean\" Deployment vs. the Full 5-Branch Ensemble")
         _safe_table(OUT_DIR / "lean_vs_full_comparison.csv",
                     "LEAN (XGBoost-fusion only) matches or slightly beats FULL (5-branch + "
                     "Ridge meta) on accuracy (R² 0.91715 vs. 0.91688), while being "
@@ -1675,6 +1804,7 @@ def render_full_results_archive_tab():
                     "**Recommendation: ship LEAN.**")
 
     with st.expander(f"{_section_num(23)} Bootstrap Confidence Intervals"):
+        status_banner("render_full_results_archive_tab:Bootstrap Confidence Intervals")
         st.caption("2,000-resample percentile bootstrap CIs at BOTH cycle-level (literal "
                    "request, but pseudo-replicated - ~5,208 autocorrelated cycles treated "
                    "as independent) and battery-level (cluster bootstrap over the 6 test "
@@ -1705,7 +1835,7 @@ def render_full_results_archive_tab():
             {"comparison (battery-level)": "Lean vs. Full", "32-battery": "NOT significant (CI incl. 0)",
              "204-battery": "STILL NOT significant (CI incl. 0)", "changed?": "unchanged"},
         ]), hide_index=True, width="stretch")
-        st.success(
+        st.info(
             "With 6x more test batteries, XGBoost's edge over VLSTM and the ensemble's "
             "dependence on XGBoost-fusion are now formally, statistically confirmed - not "
             "just large point estimates that a small sample couldn't rule noise out on. "
@@ -1716,6 +1846,7 @@ def render_full_results_archive_tab():
         )
 
     with st.expander(f"{_section_num(24)} NASA EIS Features as Candidate Health Indicators"):
+        status_banner("render_full_results_archive_tab:NASA EIS Features as Candidate Health Indicators")
         st.caption("NASA's .mat files carry already-fitted equivalent-circuit impedance "
                    "parameters (Re, Rct) - tested honestly against BFA's existing 7 features.")
         try:
@@ -1734,6 +1865,7 @@ def render_full_results_archive_tab():
         )
 
     with st.expander(f"{_section_num(25)} Degradation-Mode Analysis (dV/dQ Peak-Tracking)"):
+        status_banner("render_full_results_archive_tab:Degradation-Mode Analysis (dV/dQ Peak-Tracking)")
         st.caption("Inspired by DVA degradation-mode literature (Bloom et al. 2005; "
                    "Dubarry et al. 2012) - peak position shift ↔ LLI, height loss ↔ LAM. "
                    "Explicitly NOT a validated LLI/LAM decomposition (no half-cell reference "
@@ -1751,6 +1883,7 @@ def render_full_results_archive_tab():
                    "baselining height on the median of the first/last 5 tracked cycles.")
 
     with st.expander(f"{_section_num(26)} Model Quantization / TinyML Feasibility"):
+        status_banner("render_full_results_archive_tab:Model Quantization / TinyML Feasibility")
         _safe_table(OUT_DIR / "model_quantization_summary.csv",
                     "FP16 (5.90KB) actually beats INT8 (6.12KB) in absolute size for this "
                     "tiny 1,665-parameter encoder - INT8's per-channel calibration metadata "
@@ -1767,6 +1900,7 @@ def render_full_results_archive_tab():
         )
 
     with st.expander(f"{_section_num(27)} Second-Life Grading Classifier"):
+        status_banner("render_full_results_archive_tab:Second-Life Grading Classifier")
         st.caption("Pure post-processing on lean-pipeline SOH predictions: ≥80% Primary EV "
                    "use, 50-80% Second-life candidate, <50% Recycle only. Overall grading "
                    "agreement: 98.75% of 5,208 test cycles.")
@@ -1787,6 +1921,7 @@ def render_full_results_archive_tab():
                     "second-life bracket rather than staying almost entirely primary-use.")
 
     with st.expander(f"{_section_num(28)} Sensor-Noise Robustness"):
+        status_banner("render_full_results_archive_tab:Sensor-Noise Robustness")
         st.caption("Gaussian noise on every raw V/I/T sample, 3 levels (1x/2x/5x BMS-grade). "
                    "Ground-truth SOH left unperturbed to isolate prediction degradation.")
         _safe_table(OUT_DIR / "sensor_noise_robustness_summary.csv",
@@ -1804,6 +1939,7 @@ def render_full_results_archive_tab():
                     "Per-cycle predictions at every noise level.", head=20)
 
     with st.expander(f"{_section_num(29)} B0018 Root-Cause Analysis"):
+        status_banner("render_full_results_archive_tab:B0018 Root-Cause Analysis")
         st.caption("Four angles converging on one root cause: NASA's cycling protocol and "
                    "training representation differ fundamentally from MIT's.")
         _safe_table(OUT_DIR / "b0018_rootcause_lifetime.csv",
@@ -1855,6 +1991,7 @@ def render_full_results_archive_tab():
         )
 
     with st.expander(f"{_section_num(30)} Streaming Digital Twin (Online Learning)"):
+        status_banner("render_full_results_archive_tab:Streaming Digital Twin (Online Learning)")
         st.caption("Simulation-stage only - replays already-recorded test-battery cycles "
                    "with an artificial per-cycle delay. NOT connected to real hardware. "
                    "See the 🌊 Streaming Digital Twin tab for the live version of this.")
@@ -1887,6 +2024,7 @@ def render_full_results_archive_tab():
                 "See the Stage 6 section below for the full head-to-head comparison.")
 
     with st.expander(f"{_section_num(31)} Adaptive Conformal Inference (ACI)"):
+        status_banner("render_full_results_archive_tab:Adaptive Conformal Inference (ACI)")
         st.markdown(f"Replaces session 28's fixed-alpha sliding-window conformal mechanism "
                     f"with {glossary_term('ACI')} (Gibbs & Candès 2021) - the SGDRegressor "
                     f"corrector itself is completely UNCHANGED (confirmed by identical MAE "
@@ -1914,6 +2052,7 @@ def render_full_results_archive_tab():
 
     with st.expander(f"{_section_num(32)} Dataset Expansion Phase 1: 32 → 204 Batteries",
                       expanded=(_jump == "dataset_expansion")):
+        status_banner("render_full_results_archive_tab:Dataset Expansion Phase 1: 32 → 204 Batteries")
         st.caption("Directly tests this project's own repeated hypothesis (sessions 19, 21, "
                    "27): is battery count, not architecture, the real bottleneck behind the "
                    "CALCE domain-shift collapse and B0018's weak performance? Zero new data "
@@ -1971,7 +2110,7 @@ def render_full_results_archive_tab():
             "results are folded into their respective sections above, each clearly "
             "labeled as this session's research finding."
         )
-        st.success(
+        st.info(
             "**Deployment decision (flagged for review, not resolved on this session's own "
             "authority): the original 32-battery lean pipeline remains the deployed "
             "default.** Every expanded-pool file is additive - nothing original was "
@@ -1988,6 +2127,7 @@ def render_full_results_archive_tab():
 
     with st.expander(f"{_section_num(33)} The Reformulation Fix: Protocol-Invariant Features",
                       expanded=(_jump == "reformulation")):
+        status_banner("render_full_results_archive_tab:The Reformulation Fix: Protocol-Invariant Features")
         st.caption("Why several of the raw Health Indicators needed to be rewritten as "
                    "ratios rather than raw values before this model could generalize across "
                    "datasets.")
@@ -2021,7 +2161,7 @@ def render_full_results_archive_tab():
                    "essentially unaffected (0.974 → 0.973) - this fix is specifically about "
                    "generalization to data the model has never seen, not about the training "
                    "distribution itself.")
-        st.success(
+        st.info(
             "**Three of four datasets went from a genuine collapse (negative R²) to "
             "strong, usable accuracy.** Oxford's jump in particular - from worse than a flat "
             "average to 0.953 - is one of this project's largest single improvements from "
@@ -2043,6 +2183,7 @@ def render_full_results_archive_tab():
 
     with st.expander(f"{_section_num(34)} Zero-Retrain Generalization: Four Datasets, Never Trained On",
                       expanded=(_jump == "four_dataset_suite")):
+        status_banner("render_full_results_archive_tab:Zero-Retrain Generalization: Four Datasets, Never Trained On")
         st.caption("The same \"never seen during training\" test already run on CALCE, now "
                    "run identically on three more independent public datasets (Oxford, HUST, "
                    "XJTU) - different labs, different cycling protocols, and in XJTU's case, a "
@@ -2076,6 +2217,7 @@ def render_full_results_archive_tab():
 
     with st.expander(f"{_section_num(35)} CALCE Conformal Coverage: Every Attempt, Consolidated",
                       expanded=(_jump == "calce_conformal_consolidated")):
+        status_banner("render_full_results_archive_tab:CALCE Conformal Coverage: Every Attempt, Consolidated")
         st.caption("This project's single most-studied unsolved problem: getting CALCE's "
                    "prediction INTERVALS (not just point predictions) to cover the true value "
                    "90% of the time, the way they reliably do in-domain.")
@@ -2121,6 +2263,7 @@ def render_full_results_archive_tab():
 
     with st.expander(f"{_section_num(36)} Comparing Against Published Methods (Severson, Attia)",
                       expanded=(_jump == "baseline_comparison")):
+        status_banner("render_full_results_archive_tab:Comparing Against Published Methods (Severson, Attia)")
         st.caption("Two well-known published battery-life-prediction methods, implemented "
                    "faithfully from their own papers and run through this project's exact "
                    "evaluation protocol - not a strawman comparison.")
@@ -2169,6 +2312,7 @@ def render_full_results_archive_tab():
 
     with st.expander(f"{_section_num(37)} BatLiNet: An Experimental Deep-Learning Alternative",
                       expanded=(_jump == "batlinet")):
+        status_banner("render_full_results_archive_tab:BatLiNet: An Experimental Deep-Learning Alternative")
         st.caption("A completely different architecture (inter-cell deep learning, reimplemented "
                    "from a 2025 Nature Machine Intelligence paper) tried as an alternative to "
                    "this project's deployed XGBoost pipeline. Experimental only - never deployed.")
@@ -2205,7 +2349,7 @@ def render_full_results_archive_tab():
             "performance monotonically, catastrophically worse, confirming this specific "
             "mechanism (not a generic \"domain shift is hard\" story) was the cause."
         )
-        st.success(
+        st.info(
             "**A minimal, targeted fix rescued both problems at once.** Clamping that "
             "difference to a bounded range before the cross-cycle branch sees it - a few lines "
             "of code, not a redesign - took CALCE from a catastrophic collapse to **R²=0.506** "
@@ -2223,6 +2367,7 @@ def render_full_results_archive_tab():
 
     with st.expander(f"{_section_num(38)} Does a Dataset's Similarity to Training Data Predict How It Responds to Change?",
                       expanded=(_jump == "auc_transfer")):
+        status_banner("render_full_results_archive_tab:Does a Dataset's Similarity to Training Data Predict How It Responds to Change?")
         st.caption("A recurring, tested finding: a simple similarity score, computed before any "
                    "retraining, predicts which held-out datasets will move in which direction "
                    "when the training data changes - including a case where an intuitive-"
@@ -2270,7 +2415,7 @@ def render_full_results_archive_tab():
             "something else about a dataset's own similarity to training data was still doing "
             "real work."
         )
-        st.success(
+        st.info(
             "**Finally resolved cleanly, independent of any pool-composition experiment**: a "
             "later, more surgical test took HUST - one of the two most-similar, best-behaved "
             "datasets - and cut it down to match Oxford's exact small size (8 cells), then "
@@ -2286,6 +2431,7 @@ def render_full_results_archive_tab():
 
     with st.expander(f"{_section_num(39)} Three Speculative Architectures, Reported Honestly",
                       expanded=(_jump == "stage7_summary")):
+        status_banner("render_full_results_archive_tab:Three Speculative Architectures, Reported Honestly")
         st.caption("The most speculative tier of this project's improvement work: three "
                    "genuinely new architectures never attempted in this codebase before, none "
                    "of which cleared the bar for deployment - reported with the same directness "
@@ -2328,6 +2474,7 @@ def render_full_results_archive_tab():
 
     with st.expander(f"{_section_num(40)} World Model: Forecasting a Future, Not Just a Point",
                       expanded=(_jump == "world_model")):
+        status_banner("render_full_results_archive_tab:World Model: Forecasting a Future, Not Just a Point")
         st.info("🔮 **This section now has its own dedicated tab** - see \"World Model\" in the "
                 "main tab bar, right next to the Streaming Digital Twin, for the full writeup "
                 "and the branching-trajectory visualization. Kept as a pointer here rather than "
@@ -2335,6 +2482,7 @@ def render_full_results_archive_tab():
 
     with st.expander(f"{_section_num(41)} The Oxford Pattern: One Dataset, Four Independent Surprises",
                       expanded=(_jump == "oxford_pattern")):
+        status_banner("render_full_results_archive_tab:The Oxford Pattern: One Dataset, Four Independent Surprises")
         st.caption("The single most interesting recurring anomaly in this project's later "
                    "work - now resolved, with a tested explanation rather than a shrug.")
         st.markdown(
@@ -2361,7 +2509,7 @@ def render_full_results_archive_tab():
             "the small HUST sample should show a similarly outsized swing, purely from having "
             "fewer cells to evaluate on."
         )
-        st.success(
+        st.info(
             "**It didn't - explanation (a) is refuted.** The size-matched HUST sample behaved "
             "just like the FULL 77-cell HUST dataset in both tests, not like Oxford. Cutting "
             "HUST down to Oxford's exact size reproduced HUST's own modest, ordinary result, "
@@ -2372,6 +2520,7 @@ def render_full_results_archive_tab():
 
     with st.expander(f"{_section_num(42)} A Data-Quality Detective Story: B0044, B0045, and B0053",
                       expanded=(_jump == "artifact_detective")):
+        status_banner("render_full_results_archive_tab:A Data-Quality Detective Story: B0044, B0045, and B0053")
         st.caption("Three NASA batteries that each looked suspicious at some point in this "
                    "project's history - investigated individually, with three genuinely "
                    "different conclusions, rather than assumed to share one cause.")
@@ -2439,6 +2588,7 @@ def render_full_results_archive_tab():
 
     st.divider()
     with st.expander("📜 Session-history browser (raw DEVELOPMENT_LOG.md, all sections)"):
+        status_banner("render_full_results_archive_tab:Session-history browser (raw DEVELOPMENT_LOG.md, all sections)")
         render_session_history_browser()
 
 
@@ -2563,11 +2713,11 @@ def render_headline_numbers():
     # SAME reliable, no-JS-dependency widget every other real number in
     # this app already uses successfully. Less flashy, always correct.
     stats = [
-        ("Ensemble R²", "0.917", None),
-        ("Lean pipeline speedup", "52x", "faster than the full 5-branch ensemble"),
-        ("CALCE conformal coverage", "6.1%", "of a 90% target - a known, disclosed gap"),
+        ("Ensemble R² (first pass)", "0.917", "SUPERSEDED: the final in-domain R² is 0.978 +/- 0.003 over five seeds (PAPER_RESULTS.md section 1). This card is the first-pass 32-battery value."),
+        ("Lean pipeline speedup", "52x", "faster than the full 5-branch ensemble (3.9 ms vs 201.9 ms; session result from DEVELOPMENT_LOG.md, not in PAPER_RESULTS.md)"),
+        ("CALCE static coverage (first pass)", "6.1%", "of a 90% target. SUPERSEDED: the final figure is 4.3% (PAPER_RESULTS.md section 6); a known, disclosed gap."),
         ("B0018 MAE, online-corrected", "2.86 pp", "from 4.64 pp raw - using the current River-based corrector; "
-         "the earlier linear corrector reached 4.43 pp on this same battery"),
+         "the earlier linear corrector reached 4.43 pp on this same battery (session result, DEVELOPMENT_LOG.md)"),
     ]
     cols = st.columns(len(stats))
     for col, (label, value, help_text) in zip(cols, stats):
@@ -2576,6 +2726,7 @@ def render_headline_numbers():
 
 def render_showcase_tab():
     st.markdown("## 🔋 Digital Twin Showcase")
+    status_banner("render_showcase_tab:Digital Twin Showcase")
     render_headline_numbers()
     st.warning(
         "🎬 **This is a REPLAY of already-recorded, already-verified results (sessions "
@@ -2609,7 +2760,7 @@ def render_showcase_tab():
         speed = st.slider("Replay speed (seconds/frame)", 0.01, 0.15, 0.03, step=0.01, key="showcase_speed")
     with col_play:
         st.write("")
-        play = st.button("▶ Play replay", key="showcase_play", use_container_width=True)
+        play = st.button("▶ Play replay", key="showcase_play", width="stretch")
 
     gauge_ph = st.empty()
     numbers_ph = st.empty()
@@ -2618,12 +2769,12 @@ def render_showcase_tab():
     def draw(i: int):
         row = play_df.iloc[i]
         seen = play_df.iloc[:i + 1]
-        gauge_ph.plotly_chart(_showcase_gauge(row, battery_id, last_cycle), use_container_width=True)
+        gauge_ph.plotly_chart(_showcase_gauge(row, battery_id, last_cycle), width="stretch")
         c1, c2, c3 = numbers_ph.columns(3)
         c1.metric("Frozen pipeline prediction", f"{row['raw_pred']:.1f}%")
         c2.metric("Digital-Twin prediction", f"{row['corrected_pred']:.1f}%")
         c3.metric("True SOH", f"{row['true_soh']:.1f}%")
-        chart_ph.plotly_chart(_showcase_trend(seen), use_container_width=True)
+        chart_ph.plotly_chart(_showcase_trend(seen), width="stretch")
 
     if play:
         for i in range(len(play_df)):
@@ -2990,11 +3141,7 @@ def render_streaming_twin_tab(res: dict):
 
 
 def main():
-    st.title("🔋 CellSense")
-    st.caption("Battery health, forecasted and explained - live State-of-Health and "
-               "Remaining-Useful-Life predictions, with a plain-language reason for every "
-               "number.")
-    render_about_section()
+    render_first_screen()
 
     # Part D #13: shareable URL state. Read once at the top so selectbox/
     # slider defaults can be seeded from the URL; each widget's own
@@ -3091,15 +3238,25 @@ def main():
         else:
             st.caption("CSV columns required: `cycle_idx, phase (charge/discharge), "
                        "time_s, voltage_v, current_a`. Optional: `temperature_c`.")
+            render_upload_help()
             uploaded = st.file_uploader("Upload cycle data CSV", type="csv")
             if uploaded is not None:
                 try:
                     df = pd.read_csv(uploaded)
                     cycles = parse_uploaded_csv(df)
-                    dataset, battery_id = "Uploaded", uploaded.name
-                    st.success(f"Parsed {len(cycles)} usable cycles.")
+                    if not cycles:
+                        st.error("No usable cycles found. Each cycle needs at least 2 charge rows and 2 discharge rows "
+                                 "(`phase` must be exactly `charge` or `discharge`). Open the column guide above and compare with the sample file.")
+                        cycles = None
+                    else:
+                        dataset, battery_id = "Uploaded", uploaded.name
+                        st.info(f"Parsed {len(cycles)} usable cycles.")
+                except ValueError as e:
+                    st.error(f"This file is missing something: {e}. Required columns: cycle_idx, phase, time_s, voltage_v, current_a. "
+                             f"Columns found: {', '.join(map(str, df.columns)) if 'df' in dir() else 'none'}.")
                 except Exception as e:
-                    st.error(f"Could not parse upload: {e}")
+                    st.error(f"Could not read this file as cycle data ({type(e).__name__}: {e}). Check that it is a CSV with a header row; "
+                             f"the sample file shows the expected layout.")
 
         if cycles:
             _qp_cycle = qp.get("cycle")
@@ -3181,6 +3338,8 @@ def main():
                     true_soh = round(float(row.iloc[0]["SOH"]), 1)
                     true_rul = int(row.iloc[0]["RUL"])
 
+            if not ctx.get("fusion_unreliable"):
+                render_result_card(ctx)
             render_domain_banner(ctx)
 
             if dataset == "Uploaded":
@@ -3245,38 +3404,38 @@ def main():
 
     tab_showcase, tab_prediction, tab_explain, tab_report, tab_stream, tab_world_model, tab_validation, tab_archive = st.tabs(
         ["🎬 Showcase", "🔮 Prediction", "🔍 Explainability", "📝 Health Report",
-         "🌊 Streaming Digital Twin", "🔭 World Model", "🧪 Model Validation", "📁 Full Results Archive"]
+         "🌊 Streaming Digital Twin", "🔭 World Model (experiment)", "🧪 Model Validation", "📁 Full Results Archive"],
+        on_change="rerun",  # lazy execution (2026-10-01): only the open tab's content is computed, which is most of the cold-start saving
     )
     with tab_showcase:
-        render_showcase_tab()
-    # Priority 3 (session 31): the 3 tabs below no longer repeat their own
-    # "select a battery" placeholder - the single shared message at line
-    # ~843 (`if selected_cycle is None: st.info(...)`), which renders
-    # above the tabs regardless of which one is active, already covers
-    # this. Previously each tab additionally showed its own near-
-    # identical copy, stacking 2 duplicate messages on top of each other
-    # for every one of these 3 tabs whenever no battery was selected
-    # (including the "data unavailable" case Priority 1 fixed above).
+        if tab_showcase.open:
+            render_showcase_tab()
+    # Tabs that need a selected battery skip rendering when ctx is None (the shared message above the tabs covers that case).
     with tab_prediction:
-        if ctx is not None:
+        if tab_prediction.open and ctx is not None:
             render_prediction_tab(ctx, true_soh, true_rul, dataset, battery_id, cycles)
     with tab_explain:
-        if ctx is not None:
+        if tab_explain.open and ctx is not None:
             render_explainability_tab(ctx)
     with tab_report:
-        if ctx is not None:
+        if tab_report.open and ctx is not None:
             render_health_report_tab(ctx, dataset, battery_id, cycles)
     with tab_stream:
-        render_streaming_twin_tab(get_resources())
+        if tab_stream.open:
+            render_streaming_twin_tab(get_resources())
     with tab_world_model:
-        render_world_model_tab()
+        if tab_world_model.open:
+            render_world_model_tab()
     with tab_validation:
-        render_evaluation_protocol_section()
-        st.divider()
-        st.markdown("## 🆚 Battery comparison mode")
-        render_battery_comparison_section()
+        if tab_validation.open:
+            render_evaluation_protocol_section()
+            st.divider()
+            st.markdown("## 🆚 Battery comparison mode")
+            status_banner("render_battery_comparison_section:Battery comparison mode")
+            render_battery_comparison_section()
     with tab_archive:
-        render_full_results_archive_tab()
+        if tab_archive.open:
+            render_full_results_archive_tab()
 
 
 if __name__ == "__main__":
