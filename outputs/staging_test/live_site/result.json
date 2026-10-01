@@ -1,0 +1,386 @@
+{
+ "url": "https://bat-pro.streamlit.app",
+ "label": "live_site",
+ "failures": [],
+ "all_passed": true,
+ "runs": [
+  {
+   "case": "A dataset NASA",
+   "viewport": "desktop",
+   "first_render_s": 11.8,
+   "result_card": true,
+   "rul_not_available": null,
+   "extension_caution": null,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "downloads": {
+    "json_bytes": 3058,
+    "pdf_bytes": 59351,
+    "soh": 71.7,
+    "flagged": false,
+    "rul": null
+   },
+   "pass": true
+  },
+  {
+   "case": "A dataset MIT",
+   "viewport": "desktop",
+   "first_render_s": 10.9,
+   "result_card": true,
+   "rul_not_available": null,
+   "extension_caution": null,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "pass": true
+  },
+  {
+   "case": "A dataset CALCE",
+   "viewport": "desktop",
+   "first_render_s": 11.1,
+   "result_card": true,
+   "rul_not_available": null,
+   "extension_caution": null,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "pass": true
+  },
+  {
+   "case": "A dataset Oxford",
+   "viewport": "desktop",
+   "first_render_s": 8.9,
+   "result_card": true,
+   "rul_not_available": null,
+   "extension_caution": null,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "downloads": {
+    "json_bytes": 3147,
+    "pdf_bytes": 59729,
+    "soh": 73.5,
+    "flagged": false,
+    "rul": null
+   },
+   "pass": true
+  },
+  {
+   "case": "A dataset HUST",
+   "viewport": "desktop",
+   "first_render_s": 10.9,
+   "result_card": true,
+   "rul_not_available": null,
+   "extension_caution": null,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "pass": true
+  },
+  {
+   "case": "A dataset XJTU",
+   "viewport": "desktop",
+   "first_render_s": 12.0,
+   "result_card": true,
+   "rul_not_available": null,
+   "extension_caution": null,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "pass": true
+  },
+  {
+   "case": "A dataset ul_pur",
+   "viewport": "desktop",
+   "first_render_s": 11.2,
+   "result_card": true,
+   "rul_not_available": true,
+   "extension_caution": true,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "downloads": {
+    "json_bytes": 3171,
+    "pdf_bytes": 60096,
+    "soh": 84.3,
+    "flagged": false,
+    "rul": null
+   },
+   "pass": true
+  },
+  {
+   "case": "A dataset hnei",
+   "viewport": "desktop",
+   "first_render_s": 10.1,
+   "result_card": true,
+   "rul_not_available": true,
+   "extension_caution": true,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "pass": true
+  },
+  {
+   "case": "A dataset snl",
+   "viewport": "desktop",
+   "first_render_s": 10.9,
+   "result_card": true,
+   "rul_not_available": true,
+   "extension_caution": true,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "pass": true
+  },
+  {
+   "case": "A dataset mich",
+   "viewport": "desktop",
+   "first_render_s": 9.8,
+   "result_card": true,
+   "rul_not_available": true,
+   "extension_caution": true,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "pass": true
+  },
+  {
+   "case": "A dataset tongji",
+   "viewport": "desktop",
+   "first_render_s": 10.1,
+   "result_card": true,
+   "rul_not_available": true,
+   "extension_caution": true,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "pass": true
+  },
+  {
+   "case": "A dataset isu_ilcc",
+   "viewport": "desktop",
+   "first_render_s": 11.2,
+   "result_card": true,
+   "rul_not_available": true,
+   "extension_caution": true,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "pass": true
+  },
+  {
+   "case": "C upload flagged_distorted",
+   "viewport": "desktop",
+   "message_shown": true,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "downloads": {
+    "json_bytes": 3141,
+    "pdf_bytes": 59243,
+    "soh": 84.4,
+    "flagged": true,
+    "rul": null
+   },
+   "pass": true
+  },
+  {
+   "case": "C upload unflagged_hnei",
+   "viewport": "desktop",
+   "sample_download_bytes": 2655230,
+   "message_shown": true,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "trusted_wording": [],
+   "downloads": {
+    "json_bytes": 3095,
+    "pdf_bytes": 59753,
+    "soh": 97.3,
+    "flagged": false,
+    "rul": null
+   },
+   "pass": true
+  },
+  {
+   "case": "D mobile oxford",
+   "viewport": "mobile",
+   "first_render_s": 11.0,
+   "horizontal_scroll": false,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "pass": true
+  },
+  {
+   "case": "D mobile ext_ul_pur",
+   "viewport": "mobile",
+   "first_render_s": 11.1,
+   "horizontal_scroll": false,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "pass": true
+  },
+  {
+   "case": "D mobile upload_unflagged",
+   "viewport": "mobile",
+   "first_render_s": 10.3,
+   "horizontal_scroll": false,
+   "exceptions_by_tab": {
+    "Showcase": 0,
+    "Prediction": 0,
+    "Explainability": 0,
+    "Health Report": 0,
+    "Streaming Digital Twin": 0,
+    "World Model": 0,
+    "Model Validation": 0,
+    "Full Results Archive": 0
+   },
+   "green": 0,
+   "pass": true
+  }
+ ]
+}
