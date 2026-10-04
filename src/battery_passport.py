@@ -61,7 +61,7 @@ def build_passport(ctx: dict, dataset: str, battery_id: str, n_cycles_in_data: i
         "expected_remaining_life": ({"cycles": _r(ctx.get("rul_pred"), 0), "interval_90_percent": [_r(ctx.get("rul_conformal_lo"), 0), _r(ctx.get("rul_conformal_hi"), 0)],
                                      "unit": "charge/discharge cycles to 80% SOH"} if rul_shown else
                                     {"cycles": None, "shown": False, "reason": ctx.get("rul_hidden_reason") or "not available for this battery",
-                                     "rule": "RUL is shown only when the nearest known source is NASA or MIT and the battery is not flagged"}),
+                                     "rule": "RUL is shown only for NASA and MIT batteries that the trust check does not flag; it is not offered for uploads or other sources"}),
         "cycle_count": {"cycles_in_data": n_cycles_in_data, "assessed_cycle": ctx.get("cycle_idx")},
         "trust_status": {"status": status, "flagged_as_unfamiliar": flagged, "score_name": li.OOD_SCORE, "score": _r(trust.get("nll_min"), 2),
                          "flag_threshold": round(li.OOD_NLL_THRESHOLD, 2), "nearest_known_source": trust.get("nearest_source"),
