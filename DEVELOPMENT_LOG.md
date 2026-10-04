@@ -15467,3 +15467,8 @@ Staging (https://bat-pro-stage2.streamlit.app, branch site-redesign, fresh boot)
 Live app rebooted by the user (log: fresh clone of 1,492 files, pyarrow installed, Python 3.14.7, server up 01:12:34 UTC, no ImportError). Live smoke test `src/staging_full_test.py https://bat-pro.streamlit.app live_site`: ALL PASSED (17/17) -
 six datasets + six extension sources (ul_pur, hnei, snl, mich, tongji, isu_ilcc) in Browse mode, every tab, 0 exceptions, 0 green elements, no "trusted" claims, extension caution caption and RUL hidden for the extension sources, flagged and unflagged uploads,
 sample-file download (2.66 MB), passport JSON/PDF downloads (NASA, Oxford, ul_pur, both uploads; JSON flag matches the message), mobile 390 px without horizontal scroll; first render 8.9-12.0 s (median about 11 s) vs 36-45 s cold before the redesign (AppTest). Evidence: outputs/staging_test/live_site/.
+
+### Health Report LLM change live (2026-10-04)
+
+master 0fe74ca (Gemini primary model gemini-3.5-flash-lite, key redaction in provider error text, no "unknownV" in prompts when there is no voltage region, 9 new tests; pytest 34 passed). Live app rebooted by the user after adding the two keys to Streamlit Secrets.
+Live checks: Health Report tab (Oxford) generated via Gemini, 0 exceptions, no "unknownV", no key-like strings on the page (outputs/staging_test/live_health_report.png); full live smoke test 17/17 passed, 0 exceptions, 0 green elements, median first render 10.1 s (outputs/staging_test/live_after_llm/). Local checks before the push: real Gemini call OK, real Gemini-failure -> Groq fallback OK (bad Gemini key = HTTP 401, Groq answered), both-failing -> structured-data display OK.
