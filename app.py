@@ -60,6 +60,7 @@ from live_inference import (
     OOD_NLL_THRESHOLD, OOD_NOVEL_DETECTED, OOD_KNOWN_FALSE_ALARM, OOD_WEAK_SOURCES, OOD_NOT_DETECTED_LINE, OOD_THRESHOLD_DATE,
 )
 from trust_report import nearest_source_trust_report
+from rul_messages import (rul_state, rul_not_shown_message, rul_shown_caption, why_not_shown_content, rul_crossdomain_table, WHY_TITLE)
 from battery_passport import build_passport, passport_json, passport_pdf, DISCLAIMER as PASSPORT_DISCLAIMER
 from generate_health_report import build_prompt, build_qa_prompt, call_llm
 from prescriptive_decision_layer import recommend
@@ -562,7 +563,7 @@ def render_first_screen():
     st.markdown(
         "**CellSense estimates how healthy a lithium-ion battery is (SOH) and how many cycles it has left (RUL), with a 90% "
         "interval and a check for batteries unlike the ones it was built on. It is a research prototype: it cannot certify a "
-        "battery, its intervals only hold for batteries similar to its training data, and RUL is shown only for NASA/MIT-like cells.**")
+        "battery, its intervals only hold for batteries similar to its training data, and RUL is shown only for NASA and MIT batteries that the check does not flag.**")
     st.caption("Choose a battery or upload cycle data in the sidebar. The result card comes first; the details follow below it.")
     c1, c2, c3 = st.columns(3)
     with c1.container(border=True):
@@ -583,7 +584,33 @@ def render_first_screen():
         render_about_section()
 
 
-def render_result_card(ctx: dict):
+def render_rul_why_expander(ctx: dict, dataset: str | None):
+    """'Why isn't RUL shown here?' under the RUL card: plain text and the report's cross-domain table; no LLM call."""
+    content = why_not_shown_content(ctx, dataset)
+    if content is None:
+        return
+    with st.expander(WHY_TITLE):
+        for para in content["paragraphs"][:-1]:
+            st.markdown(para)
+        try:
+            df = rul_crossdomain_table(OUT_DIR)
+            hl = content["highlight"]
+
+            def _row_style(row):
+                on = hl is not None and row["Dataset"] == hl
+                return ["background-color: #fff3cd; color: #1a1a1a; font-weight: 600" if on else ""] * len(row)
+            st.caption("RUL error by data source, from the report's cross-domain table (lower MAE and higher R2 are better; the in-domain MAE was not recorded).")
+            show = df.copy()
+            show["MAE (cycles)"] = ["not recorded" if v is None or v != v else f"{v:.1f}" for v in df["MAE (cycles)"]]
+            show["RMSE (cycles)"] = [f"{v:.1f}" for v in df["RMSE (cycles)"]]
+            show["R2"] = [f"{v:.2f}" for v in df["R2"]]
+            st.dataframe(show.style.apply(_row_style, axis=1), hide_index=True, width="stretch")
+        except Exception as e:
+            st.caption(f"Cross-domain RUL table unavailable: {type(e).__name__}")
+        st.markdown(content["paragraphs"][-1])
+
+
+def render_result_card(ctx: dict, dataset: str | None = None):
     """Result card at the top: SOH with its 90% interval, RUL only under the existing condition, the trust state in plain
     words with the validated detection figures, and where the passport is. Details (banner, checks, tabs) follow below."""
     flagged = bool(ctx["out_of_domain"])
@@ -594,12 +621,13 @@ def render_result_card(ctx: dict):
         c1.metric("Predicted SOH", f"{ctx['soh_pred']}%", help="State of health: remaining capacity as a percentage of the battery's early capacity.")
         c1.caption(f"90% interval {ctx['soh_conformal_lo']}% to {ctx['soh_conformal_hi']}%"
                    + (" - not reliable for this battery" if flagged else ""))
-        c2.metric("Predicted RUL", "not available" if rul_display is None else f"{rul_display} cycles",
-                  help="Remaining useful life: cycles until 80% SOH. Shown only when the nearest known source is NASA or MIT and the battery is not flagged.")
+        c2.metric("Predicted RUL", "not shown" if rul_display is None else f"{rul_display} cycles",
+                  help="Remaining useful life: cycles until 80% SOH. Shown only for NASA and MIT batteries that the familiarity check does not flag.")
         if rul_display is None:
-            c2.caption("Not shown: " + (ctx.get("rul_hidden_reason") or ctx.get("rul_unavailable_reason") or "not available for this battery")[:150])
+            c2.caption(rul_not_shown_message(rul_state(ctx)))
         else:
             c2.caption(f"90% interval {ctx['rul_conformal_lo']} to {ctx['rul_conformal_hi']} cycles")
+            c2.caption(rul_shown_caption(ctx))
         with c3:
             st.markdown("**Trust state**")
             if flagged:
@@ -608,6 +636,8 @@ def render_result_card(ctx: dict):
                 st.markdown("**No distribution shift detected.** This is not a guarantee.")
             st.caption(f"The check flags {OOD_NOVEL_DETECTED:.1%} of batteries from an unseen source and wrongly flags {OOD_KNOWN_FALSE_ALARM:.1%} "
                        f"of known ones; weakest for {', '.join(OOD_WEAK_SOURCES)}.")
+        if rul_display is None:
+            render_rul_why_expander(ctx, dataset)
         st.caption("Passport (JSON and printable PDF, research prototype): Prediction tab, bottom of the page.")
 
 
@@ -744,16 +774,8 @@ def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_i
                    unsafe_allow_html=True)
     with col2:
         if rul_display is None:
-            st.metric("Predicted RUL", "not available")
-            if ctx["rul_pred"] is None:
-                reason = ctx.get("rul_unavailable_reason") or "RUL needs this cycle raw curve, which is not available here."
-            elif ctx.get("rul_hidden_reason"):
-                reason = ("RUL is hidden rather than shown unreliably - " + ctx["rul_hidden_reason"]
-                          + ". RUL was never validated to work outside NASA+MIT (this project's own direct "
-                            "evidence: CALCE RUL R2=-566, a catastrophic cross-domain failure).")
-            else:
-                reason = "RUL is hidden rather than shown unreliably for this battery."
-            st.caption(f"ℹ️ {reason}")
+            st.metric("Predicted RUL", "not shown")
+            st.caption(f"ℹ️ {rul_not_shown_message(rul_state(ctx))}")
         else:
             delta = None if true_rul is None else round(rul_display - true_rul)
             st.metric("Predicted RUL", f"{rul_display} cycles",
@@ -763,6 +785,7 @@ def render_prediction_tab(ctx: dict, true_soh, true_rul, dataset: str, battery_i
                        unsafe_allow_html=True)
             st.caption("_RUL comes from a separate joint SOH+RUL model - the deployed "
                        "XGBoost-fusion model that predicts SOH does not predict RUL itself._")
+            st.caption(rul_shown_caption(ctx))
 
     st.divider()
     if ctx["anomaly_flag"]:
@@ -926,8 +949,9 @@ def _load_counterfactuals() -> pd.DataFrame | None:
 
 
 def render_health_report_tab(ctx: dict, dataset: str, battery_id: str, cycles: list[dict] | None):
-    st.caption("A plain-English summary of the two panels above, generated by an LLM from "
-               "the exact structured numbers shown there (no numbers are invented).")
+    st.caption("A plain-English summary written by an LLM (Gemini, or Groq if Gemini fails) from this battery's prediction numbers "
+               "(SOH, RUL if shown, top SHAP features, trust state). The model is told to use only those numbers, but it can still "
+               "make mistakes, so check the figures against the Prediction tab.")
 
     # Same rule as the Prediction tab: RUL hidden from the LLM's own context for
     # out-of-domain batteries, so neither the generated report nor the JSON fallback below
@@ -957,12 +981,11 @@ def render_health_report_tab(ctx: dict, dataset: str, battery_id: str, cycles: l
     st.divider()
     st.subheader("💬 Ask about this battery")
     st.caption(
-        "Free-text questions, answered through the SAME Gemini/Groq pipeline as the report "
-        "above - grounded strictly in THIS battery's own prediction, conformal interval, SHAP "
-        "features, and degradation-mode signature, not generic knowledge about batteries. If "
-        "the honest answer is genuine uncertainty (e.g. for an out-of-domain battery), it will "
-        "say so rather than sound confidently wrong - this project's own documented conformal-"
-        "coverage findings are given to it explicitly for exactly this reason."
+        "Free-text questions, answered through the same Gemini/Groq chain as the report above. "
+        "The model is given this battery's own prediction, 90% interval, SHAP features and "
+        "degradation-mode signature and is told to answer only from them. It is also given this "
+        "project's measured finding that the interval's real coverage can collapse on data unlike "
+        "NASA/MIT (for example CALCE), and is told to say so when that applies. It can still be wrong."
     )
     qa_context = dict(context_for_llm)
     qa_context["degradation_mode"] = _compute_degradation_mode(dataset, battery_id, cycles)
@@ -2913,25 +2936,27 @@ def render_streaming_twin_tab(res: dict):
         return
 
     st.caption(
-        "🔬 **Simulation-stage digital twin** - not live hardware. This replays an "
-        "already-recorded NASA/MIT TEST battery's cycles one at a time (from the exact "
-        "same raw data every other tab uses) with a short artificial delay, to emulate "
-        "data streaming in live. Unlike the 🔮 Prediction tab (a fresh, independent "
-        "full-pipeline rerun for whichever single cycle you pick - no memory between "
-        "cycles), this mode keeps a small **online-learning corrector** that updates, "
-        "cycle by cycle, using ONLY cycles already streamed in so far - a genuine "
-        "incremental model, not a lookup table replaying precomputed numbers. "
-        f"**What's frozen**: the XGBoost-fusion SOH model, the {glossary_term('ICA')} fusion "
-        f"encoder, the RUL model, and the anomaly detector - none of these are retrained here. "
-        "**What updates online**: a lightweight residual-correction term that learns as "
-        "each new cycle's true outcome is revealed - see the Full Results Archive for "
-        "exactly how it works, and an honest report of whether it actually helps.",
+        "🔬 **Simulation-stage digital twin** - not live hardware. This replays the already-recorded cycles of one of "
+        "this project's held-out NASA/MIT test batteries, one cycle at a time with a short artificial delay, to "
+        "emulate data streaming in. **Inputs**: on this deployed site the raw voltage/current curves are not "
+        "included, so each step uses the stored per-cycle health-indicator table (`hi_table.parquet`) and the stored "
+        "16-number encoder embeddings (`fusion_embeddings.csv`). On a machine that has the raw data, the same steps "
+        "compute these from the raw curves instead. "
+        "**Each step**: the XGBoost-fusion SOH model is run on that cycle's inputs, and a small online-learning "
+        "corrector updates using only the cycles already streamed in so far. The inputs are stored; the SOH "
+        "prediction and the corrector update are computed at every step. The 🔮 Prediction tab, by contrast, "
+        "predicts one chosen cycle on its own from the same stored inputs, with no memory between cycles. "
+        f"**Fixed, not retrained here**: the XGBoost-fusion SOH model, the {glossary_term('ICA')} fusion encoder "
+        "(on this site its embeddings are read from the stored table, not recomputed) and the anomaly detector. "
+        "This twin does not use the RUL model. "
+        "**What updates online**: a lightweight residual-correction term that learns as each new "
+        "cycle's true SOH is revealed. The Full Results Archive explains how it works and reports whether it helps.",
         unsafe_allow_html=True,
     )
 
     choice = st.selectbox(
-        "Battery to stream (restricted to this project's 6 held-out TEST batteries - "
-        "genuinely unseen by every frozen model here, for an honest demo)",
+        "Battery to stream (restricted to this project's 6 held-out test batteries, "
+        "which were kept out of training in this project's NASA+MIT split)",
         list(_STREAM_TEST_BATTERIES.keys()), key="stream_battery_choice",
     )
     dataset, battery_id = _STREAM_TEST_BATTERIES[choice]
@@ -2960,7 +2985,7 @@ def render_streaming_twin_tab(res: dict):
             "measurements were available - shown for information, not applied to the demo "
             "below (which still reveals every cycle's true SOH, its own existing, disclosed "
             "design). **Honest caveat, not glossed over**: Phase 2C's own validation found that "
-            "even the largest tested budget (40 labels) reached only ~51% average coverage "
+            "even the largest tested budget (40 labels) reached only about 50% average coverage "
             "against a 90% target on this project's external sources - a recommended schedule "
             "is the best AVAILABLE checkpoint placement, not a guarantee that this few "
             "measurements is actually enough."
@@ -3008,8 +3033,8 @@ def render_streaming_twin_tab(res: dict):
             stream_cycles = cycles[:5 + n_stream]
         else:
             st.info(f"ℹ️ {dataset}'s raw data isn't available in this deployment - streaming "
-                    f"from this project's own precomputed features instead (still a genuine "
-                    f"cycle-by-cycle simulated stream, not a replay).")
+                    f"from the stored per-cycle health indicators and encoder embeddings instead. "
+                    f"The SOH prediction and the corrector update still run at every streamed cycle.")
             series = load_precomputed_battery_series(dataset, battery_id, res)
             if not series:
                 st.error(f"No precomputed data available for {dataset}/{battery_id} either - "
@@ -3257,11 +3282,19 @@ def main():
                     elif dataset not in ("NASA", "MIT"):
                         st.caption(f"ℹ️ {dataset} was never part of this model's training data - "
                                    f"every prediction shown is a genuine zero-retrain evaluation.")
-                    st.caption("ℹ️ This deployment doesn't have this battery's raw cycling data, "
-                               "only its precomputed features - predictions and SHAP explanations "
-                               "below are still computed live from real model weights; RUL and the "
-                               "voltage-region explanation need the raw curve and aren't available "
-                               "here.")
+                    if dataset in ("NASA", "MIT"):
+                        st.caption("ℹ️ This deployment doesn't have this battery's raw cycling data, "
+                                   "only its precomputed features - SOH and SHAP explanations below are "
+                                   "still computed live from real model weights. RUL for batteries that "
+                                   "the trust check does not flag was precomputed offline from the raw "
+                                   "curves; the voltage-region explanation needs the raw curve and isn't "
+                                   "available here.")
+                    else:
+                        st.caption("ℹ️ This deployment doesn't have this battery's raw cycling data, "
+                                   "only its precomputed features - predictions and SHAP explanations "
+                                   "below are still computed live from real model weights; RUL and the "
+                                   "voltage-region explanation need the raw curve and aren't available "
+                                   "here.")
                     _cyc_options = precomputed_cycle_map[battery_id]
                     _qp_cycle = qp.get("cycle")
                     _cycle_default_idx = (
@@ -3363,6 +3396,10 @@ def main():
                     _upload_query_vec, _upload_trust = st.session_state[_cache_key]
                 ctx = predict_and_explain(selected_cycle, res, baseline_his=_baseline_his, dataset=dataset,
                                           trust=_upload_trust, battery_id=battery_id)
+                if dataset == "Uploaded" and "error" not in ctx:
+                    # RUL is not offered for uploads (it only holds for NASA/MIT batteries from the stored table).
+                    ctx.update({"is_upload": True, "rul_hidden": True, "rul_pred": None, "rul_conformal_lo": None,
+                                "rul_conformal_hi": None, "rul_hidden_reason": "RUL is not offered for uploaded data"})
 
         if "error" in ctx:
             st.error(ctx["error"])
@@ -3381,7 +3418,7 @@ def main():
 
             with result_slot:
                 if not ctx.get("fusion_unreliable"):
-                    render_result_card(ctx)
+                    render_result_card(ctx, dataset)
                 render_domain_banner(ctx)
 
             if dataset == "Uploaded":
