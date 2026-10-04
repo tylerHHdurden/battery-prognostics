@@ -33,3 +33,47 @@ def rul_not_shown_message(state: str) -> str:
 
 def rul_shown_caption(ctx: dict) -> str:
     return RUL_SHOWN_CAPTION if ctx.get("precomputed_fallback") else RUL_LIVE_CAPTION
+
+
+# ---- "Why isn't RUL shown here?" expander (plain text + one table; no LLM) ----------------------------------------------------------------
+EVALUATED_EXTERNAL = ("CALCE", "Oxford", "HUST", "XJTU")
+WHY_TITLE = "Why isn't RUL shown here?"
+WHY_TRAINED = ("The RUL model was trained only on NASA and MIT cells, and it is only reliable on familiar NASA/MIT batteries.")
+WHY_FLAGGED = "This battery was flagged as unfamiliar by the trust check, so RUL is hidden."
+WHY_NOT_EVALUATED = "RUL was not evaluated on this source. All four external sources that were tested failed, so we do not show one."
+WHY_REASONS = (
+    "The model learned an average lifetime and predicts roughly the same remaining life whatever the battery. Example, MIT battery b1c4: "
+    "the true RUL counts down from 1224 to 0 cycles, while the predictions stay in a narrow band around 600 cycles (middle half: 503 to 724).",
+    "On CALCE its predictions average -401 cycles, which is impossible for a remaining life.",
+    "The deployed site also has no raw curves for these sources, so RUL cannot be computed live there.",
+)
+WHY_INSTEAD = ("Use the SOH value with its 90% interval and the trust state instead, and check against a measured capacity when possible.")
+
+
+def rul_crossdomain_table(out_dir):
+    """Rows for the report's RUL cross-domain table, read from the same CSVs (stage4_step2b_summary.csv for in-domain,
+    finalpass_item5c_rul_crossdomain.csv for the four external sources). In-domain MAE is not recorded in either file."""
+    import pandas as pd
+    out_dir = __import__("pathlib").Path(out_dir)
+    s = pd.read_csv(out_dir / "stage4_step2b_summary.csv").set_index("metric")["value"]
+    x = pd.read_csv(out_dir / "finalpass_item5c_rul_crossdomain.csv").set_index("dataset")
+    rows = [{"Dataset": "In-domain (NASA+MIT test batteries)", "MAE (cycles)": None, "RMSE (cycles)": float(s["rul_joint_rmse"]), "R2": float(s["rul_joint_r2"])}]
+    for ds in EVALUATED_EXTERNAL:
+        rows.append({"Dataset": ds, "MAE (cycles)": float(x.loc[ds, "rul_mae"]), "RMSE (cycles)": float(x.loc[ds, "rul_rmse"]), "R2": float(x.loc[ds, "rul_r2"])})
+    return pd.DataFrame(rows)
+
+
+def why_not_shown_content(ctx: dict, dataset: str | None) -> dict | None:
+    """None when RUL is shown. Otherwise {"paragraphs": [...], "highlight": dataset-or-None, "show_table": True}."""
+    state = rul_state(ctx)
+    if state == "shown":
+        return None
+    paras = [WHY_TRAINED]
+    if state == "flagged":
+        paras.append(WHY_FLAGGED)
+    highlight = dataset if dataset in EVALUATED_EXTERNAL else None
+    if highlight is None and state != "flagged":
+        paras.append(WHY_NOT_EVALUATED)
+    paras.extend(WHY_REASONS)
+    paras.append(WHY_INSTEAD)
+    return {"paragraphs": paras, "highlight": highlight}

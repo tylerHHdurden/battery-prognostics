@@ -67,3 +67,49 @@ def test_twin_text_states_what_data_is_used():
 
 def test_upload_forced_hidden_in_app():
     assert 'ctx.update({"is_upload": True, "rul_hidden": True' in APP
+
+
+# ---- "Why isn't RUL shown here?" expander ----
+def _flat(content):
+    return " ".join(content["paragraphs"])
+
+
+def test_expander_absent_when_rul_shown(res):
+    assert rm.why_not_shown_content(_ctx(res, "NASA"), "NASA") is None
+
+
+def test_expander_for_each_evaluated_external_source_highlights_it(res):
+    for ds in ("CALCE", "Oxford", "HUST", "XJTU"):
+        c = rm.why_not_shown_content(_ctx(res, ds), ds)
+        assert c["highlight"] == ds and rm.WHY_TRAINED in c["paragraphs"] and rm.WHY_INSTEAD in c["paragraphs"]
+        assert rm.WHY_NOT_EVALUATED not in c["paragraphs"]
+        assert "-401 cycles" in _flat(c) and "no raw curves" in _flat(c) and "b1c4" in _flat(c)
+
+
+def test_expander_for_unevaluated_sources_and_uploads(res):
+    c = rm.why_not_shown_content(_ctx(res, "tongji"), "tongji")
+    assert c["highlight"] is None and rm.WHY_NOT_EVALUATED in c["paragraphs"]
+    up = rm.why_not_shown_content({"is_upload": True, "rul_hidden": True, "out_of_domain": False}, "Uploaded")
+    assert up["highlight"] is None and rm.WHY_NOT_EVALUATED in up["paragraphs"]
+
+
+def test_expander_for_flagged_nasa_battery(res):
+    avail = li.available_precomputed_cycles("NASA"); bid = sorted(avail)[0]
+    flagged = {"nearest_source": "NASA", "nll_min": 10.0, "gate_table_mae": 1.0, "lodo_family_mae": 5.0}
+    ctx = li.predict_and_explain_precomputed("NASA", bid, int(avail[bid][-1]), res, trust=flagged)
+    c = rm.why_not_shown_content(ctx, "NASA")
+    assert rm.WHY_FLAGGED in c["paragraphs"] and rm.WHY_NOT_EVALUATED not in c["paragraphs"] and c["highlight"] is None
+
+
+def test_crossdomain_table_values_come_from_the_csvs():
+    import pandas as pd
+    df = rm.rul_crossdomain_table(ROOT / "outputs")
+    x = pd.read_csv(ROOT / "outputs" / "finalpass_item5c_rul_crossdomain.csv").set_index("dataset")
+    assert list(df["Dataset"])[1:] == list(rm.EVALUATED_EXTERNAL)
+    assert df.loc[df.Dataset == "CALCE", "MAE (cycles)"].iloc[0] == pytest.approx(x.loc["CALCE", "rul_mae"])
+    assert df.loc[df.Dataset == "XJTU", "R2"].iloc[0] == pytest.approx(x.loc["XJTU", "rul_r2"])
+    assert df["R2"].iloc[0] == pytest.approx(0.374, abs=1e-3)
+
+
+def test_expander_wired_into_result_card():
+    assert "render_rul_why_expander(ctx, dataset)" in APP and "WHY_TITLE" in APP

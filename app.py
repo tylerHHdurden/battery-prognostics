@@ -60,7 +60,7 @@ from live_inference import (
     OOD_NLL_THRESHOLD, OOD_NOVEL_DETECTED, OOD_KNOWN_FALSE_ALARM, OOD_WEAK_SOURCES, OOD_NOT_DETECTED_LINE, OOD_THRESHOLD_DATE,
 )
 from trust_report import nearest_source_trust_report
-from rul_messages import rul_state, rul_not_shown_message, rul_shown_caption
+from rul_messages import (rul_state, rul_not_shown_message, rul_shown_caption, why_not_shown_content, rul_crossdomain_table, WHY_TITLE)
 from battery_passport import build_passport, passport_json, passport_pdf, DISCLAIMER as PASSPORT_DISCLAIMER
 from generate_health_report import build_prompt, build_qa_prompt, call_llm
 from prescriptive_decision_layer import recommend
@@ -584,7 +584,33 @@ def render_first_screen():
         render_about_section()
 
 
-def render_result_card(ctx: dict):
+def render_rul_why_expander(ctx: dict, dataset: str | None):
+    """'Why isn't RUL shown here?' under the RUL card: plain text and the report's cross-domain table; no LLM call."""
+    content = why_not_shown_content(ctx, dataset)
+    if content is None:
+        return
+    with st.expander(WHY_TITLE):
+        for para in content["paragraphs"][:-1]:
+            st.markdown(para)
+        try:
+            df = rul_crossdomain_table(OUT_DIR)
+            hl = content["highlight"]
+
+            def _row_style(row):
+                on = hl is not None and row["Dataset"] == hl
+                return ["background-color: #fff3cd; color: #1a1a1a; font-weight: 600" if on else ""] * len(row)
+            st.caption("RUL error by data source, from the report's cross-domain table (lower MAE and higher R2 are better; the in-domain MAE was not recorded).")
+            show = df.copy()
+            show["MAE (cycles)"] = ["not recorded" if v is None or v != v else f"{v:.1f}" for v in df["MAE (cycles)"]]
+            show["RMSE (cycles)"] = [f"{v:.1f}" for v in df["RMSE (cycles)"]]
+            show["R2"] = [f"{v:.2f}" for v in df["R2"]]
+            st.dataframe(show.style.apply(_row_style, axis=1), hide_index=True, width="stretch")
+        except Exception as e:
+            st.caption(f"Cross-domain RUL table unavailable: {type(e).__name__}")
+        st.markdown(content["paragraphs"][-1])
+
+
+def render_result_card(ctx: dict, dataset: str | None = None):
     """Result card at the top: SOH with its 90% interval, RUL only under the existing condition, the trust state in plain
     words with the validated detection figures, and where the passport is. Details (banner, checks, tabs) follow below."""
     flagged = bool(ctx["out_of_domain"])
@@ -610,6 +636,8 @@ def render_result_card(ctx: dict):
                 st.markdown("**No distribution shift detected.** This is not a guarantee.")
             st.caption(f"The check flags {OOD_NOVEL_DETECTED:.1%} of batteries from an unseen source and wrongly flags {OOD_KNOWN_FALSE_ALARM:.1%} "
                        f"of known ones; weakest for {', '.join(OOD_WEAK_SOURCES)}.")
+        if rul_display is None:
+            render_rul_why_expander(ctx, dataset)
         st.caption("Passport (JSON and printable PDF, research prototype): Prediction tab, bottom of the page.")
 
 
@@ -3390,7 +3418,7 @@ def main():
 
             with result_slot:
                 if not ctx.get("fusion_unreliable"):
-                    render_result_card(ctx)
+                    render_result_card(ctx, dataset)
                 render_domain_banner(ctx)
 
             if dataset == "Uploaded":
