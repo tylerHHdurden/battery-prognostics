@@ -6,7 +6,7 @@ interval, per-instance top SHAP features, per-instance voltage-region
 localization) and turns it into a short natural-language report via an
 LLM API call.
 
-API: Google Gemini (`gemini-2.5-flash`) via the Generative Language REST
+API: Google Gemini (primary model: GEMINI_MODEL below, a Flash-Lite model) via the Generative Language REST
 API, called directly via `requests` rather than the `google-genai` SDK,
 to avoid adding a dependency for one HTTP call (same reasoning as the
 project's other API integrations). Key is read from `GEMINI_API_KEY`,
@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -100,10 +101,27 @@ Remaining Useful Life (RUL) prediction: {rul_text}
 Top contributing factors to this SOH prediction, most important first:
 {top_features_text}
 
-Voltage region most associated with this cell's degradation signature: {v_lo}V - {v_hi}V (this region accounts for about {frac_pct}% of the model's attention in explaining this cell's discharge behavior)
+{voltage_region_line}
 
-Write the report now. Mention the SOH percentage and the voltage region likely driving degradation; mention the RUL estimate with its confidence range ONLY if one is given above (say plainly that RUL isn't available for this cycle if not) - in a natural, flowing style similar to this example: "This battery is at 84% health, likely due to degradation concentrated in the 3.6-3.8V region; expect approximately 120 cycles remaining, with 90% confidence between 95-145 cycles."
+Write the report now. Mention the SOH percentage and, ONLY if a voltage region is given above, the voltage region likely driving degradation; mention the RUL estimate with its confidence range ONLY if one is given above (say plainly that RUL isn't available for this cycle if not) - in a natural, flowing style similar to this example: "This battery is at 84% health, likely due to degradation concentrated in the 3.6-3.8V region; expect approximately 120 cycles remaining, with 90% confidence between 95-145 cycles."
 """
+
+
+VOLTAGE_REGION_UNAVAILABLE = ("Voltage region: not available in this deployment (it needs the raw voltage curve, which is not available here). "
+                              "Do not mention or guess a voltage region.")
+
+
+def _voltage_region_line(vr: dict | None, qa: bool = False) -> str:
+    """The voltage-region sentence for the prompt. When there is no region (the precomputed path has no raw curve) say so plainly instead of filling
+    placeholders with a made-up value - an earlier version printed 'unknownV - unknownV' and the model repeated it in the report."""
+    if not vr:
+        return VOLTAGE_REGION_UNAVAILABLE
+    pct = round(vr["frac_of_attribution"] * 100)
+    if qa:
+        return (f"Voltage region most associated with this cell's degradation signature: {vr['v_lo']}V - {vr['v_hi']}V "
+                f"({pct}% of the model's attribution)")
+    return (f"Voltage region most associated with this cell's degradation signature: {vr['v_lo']}V - {vr['v_hi']}V "
+            f"(this region accounts for about {pct}% of the model's attention in explaining this cell's discharge behavior)")
 
 
 def build_prompt(context: dict) -> str:
@@ -123,8 +141,7 @@ def build_prompt(context: dict) -> str:
         soh_conformal_hi=context["soh_conformal_hi"],
         rul_text=rul_text,
         top_features_text=top_features_text,
-        v_lo=vr["v_lo"] if vr else "unknown", v_hi=vr["v_hi"] if vr else "unknown",
-        frac_pct=round(vr["frac_of_attribution"] * 100) if vr else "unknown",
+        voltage_region_line=_voltage_region_line(vr),
     )
 
 
@@ -138,7 +155,7 @@ Remaining Useful Life (RUL) prediction: {rul_text}
 Top contributing factors to this SOH prediction, most important first:
 {top_features_text}
 
-Voltage region most associated with this cell's degradation signature: {v_lo}V - {v_hi}V ({frac_pct}% of the model's attribution)
+{voltage_region_line}
 
 Degradation-mode signature (from peak-tracking analysis): {degradation_mode}
 
@@ -171,20 +188,38 @@ def build_qa_prompt(context: dict, question: str) -> str:
         soh_conformal_hi=context["soh_conformal_hi"],
         rul_text=rul_text,
         top_features_text=top_features_text,
-        v_lo=vr["v_lo"] if vr else "unknown", v_hi=vr["v_hi"] if vr else "unknown",
-        frac_pct=round(vr["frac_of_attribution"] * 100) if vr else "unknown",
+        voltage_region_line=_voltage_region_line(vr, qa=True),
         degradation_mode=context.get("degradation_mode") or "not available for this battery",
         domain_status=domain_status,
         question=question,
     )
 
 
+def _scrub(msg: str) -> str:
+    """Remove API keys from an error message before it can reach the UI or a log. `requests` puts the full URL (including `?key=...` for Gemini)
+    into HTTPError text, and the Health Report tab shows that text when both providers fail, so every error string goes through here."""
+    msg = re.sub(r"([?&]key=)[^&\s)'\"]+", r"\g<1><redacted>", msg)
+    for name in ("GEMINI_API_KEY", "GROQ_API_KEY"):
+        v = os.environ.get(name)
+        if v:
+            msg = msg.replace(v, "<redacted>")
+    return msg
+
+
 def _is_error(text: str) -> bool:
     return text.startswith("NO_API_KEY") or text.startswith("API_ERROR")
 
 
-def call_gemini(prompt: str, model: str = "gemini-flash-latest") -> str:
+# Primary Gemini model (2026-10-04): a Flash-Lite model. Google's model list (https://ai.google.dev/gemini-api/docs/models) shows
+# `gemini-3.5-flash-lite` and `gemini-3.1-flash-lite` as stable Flash-Lite endpoints; the newest stable one is used. Flash-Lite is the tier that
+# stays on the free plan (third-party reports say free keys are limited to Gemini 3.5 Flash-Lite from 2026-10-09; Google's own pages only say limits
+# depend on the tier, so check AI Studio's rate-limit page). The fallback chain below is unchanged: Gemini -> Groq -> structured-data display.
+GEMINI_MODEL = "gemini-3.5-flash-lite"
+
+
+def call_gemini(prompt: str, model: str = GEMINI_MODEL) -> str:
     """
+    HISTORY (earlier default `gemini-flash-latest`, kept for the record):
     ASSUMPTION/deviation, disclosed: requested model was "gemini-2.5-flash",
     but the provided GEMINI_API_KEY's account gets a 404
     ("This model models/gemini-2.5-flash is no longer available to new
@@ -214,7 +249,7 @@ def call_gemini(prompt: str, model: str = "gemini-flash-latest") -> str:
         data = resp.json()
         return data["candidates"][0]["content"]["parts"][0]["text"].strip()
     except Exception as e:
-        return f"API_ERROR: Gemini call failed ({type(e).__name__}: {e})"
+        return f"API_ERROR: Gemini call failed ({type(e).__name__}: {_scrub(str(e))})"
 
 
 def call_groq(prompt: str, model: str = "openai/gpt-oss-120b") -> str:
@@ -247,10 +282,10 @@ def call_groq(prompt: str, model: str = "openai/gpt-oss-120b") -> str:
         data = resp.json()
         return data["choices"][0]["message"]["content"].strip()
     except Exception as e:
-        return f"API_ERROR: Groq call failed ({type(e).__name__}: {e})"
+        return f"API_ERROR: Groq call failed ({type(e).__name__}: {_scrub(str(e))})"
 
 
-def call_llm(prompt: str, gemini_model: str = "gemini-flash-latest",
+def call_llm(prompt: str, gemini_model: str = GEMINI_MODEL,
              groq_model: str = "openai/gpt-oss-120b") -> tuple[str, str | None]:
     """Try Gemini first; on any failure (missing key, rate limit, or any
     other error) fall through to Groq; only if both fail does the caller
