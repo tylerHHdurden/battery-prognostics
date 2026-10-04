@@ -599,7 +599,9 @@ def render_result_card(ctx: dict):
         if rul_display is None:
             c2.caption("Not shown: " + (ctx.get("rul_hidden_reason") or ctx.get("rul_unavailable_reason") or "not available for this battery")[:150])
         else:
-            c2.caption(f"90% interval {ctx['rul_conformal_lo']} to {ctx['rul_conformal_hi']} cycles")
+            c2.caption(f"90% interval {ctx['rul_conformal_lo']} to {ctx['rul_conformal_hi']} cycles"
+                       + (" - precomputed offline from the raw curve with the deployed joint model" if ctx.get("precomputed_fallback") else ""))
+            c2.caption("RUL was only validated on NASA and MIT-like cells; on other datasets it fails (CALCE R2 -566), so it is hidden for them and for flagged batteries.")
         with c3:
             st.markdown("**Trust state**")
             if flagged:
@@ -3257,11 +3259,19 @@ def main():
                     elif dataset not in ("NASA", "MIT"):
                         st.caption(f"ℹ️ {dataset} was never part of this model's training data - "
                                    f"every prediction shown is a genuine zero-retrain evaluation.")
-                    st.caption("ℹ️ This deployment doesn't have this battery's raw cycling data, "
-                               "only its precomputed features - predictions and SHAP explanations "
-                               "below are still computed live from real model weights; RUL and the "
-                               "voltage-region explanation need the raw curve and aren't available "
-                               "here.")
+                    if dataset in ("NASA", "MIT"):
+                        st.caption("ℹ️ This deployment doesn't have this battery's raw cycling data, "
+                                   "only its precomputed features - SOH and SHAP explanations below are "
+                                   "still computed live from real model weights. RUL for batteries that "
+                                   "the trust check does not flag was precomputed offline from the raw "
+                                   "curves; the voltage-region explanation needs the raw curve and isn't "
+                                   "available here.")
+                    else:
+                        st.caption("ℹ️ This deployment doesn't have this battery's raw cycling data, "
+                                   "only its precomputed features - predictions and SHAP explanations "
+                                   "below are still computed live from real model weights; RUL and the "
+                                   "voltage-region explanation need the raw curve and aren't available "
+                                   "here.")
                     _cyc_options = precomputed_cycle_map[battery_id]
                     _qp_cycle = qp.get("cycle")
                     _cycle_default_idx = (

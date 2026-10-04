@@ -274,6 +274,22 @@ def load_resources() -> dict:
 
 RUL_TRAINING_SOURCES = {"NASA", "MIT"}  # the only sources the joint RUL model was ever trained on
 _BUILTIN_TRUST = None
+_PRECOMPUTED_RUL = None
+
+
+def lookup_precomputed_rul(dataset: str | None, battery_id: str | None, cycle_idx) -> float | None:
+    """Deployed joint-model RUL (float cycles) for a NASA/MIT browse battery and cycle, computed OFFLINE from the raw curves by
+    src/precompute_rul_browse.py (Streamlit Cloud has no raw data). None for any other dataset or a cycle not in the file."""
+    global _PRECOMPUTED_RUL
+    if _PRECOMPUTED_RUL is None:
+        _PRECOMPUTED_RUL = {}
+        path = PROC_DIR / "precomputed_rul_nasa_mit.parquet"
+        if path.exists():
+            df = pd.read_parquet(path)
+            _PRECOMPUTED_RUL = {(d, b, int(c)): float(v) for d, b, c, v in zip(df["dataset"], df["battery_id"], df["cycle_idx"], df["rul_pred"])}
+    if dataset is None or battery_id is None:
+        return None
+    return _PRECOMPUTED_RUL.get((str(dataset), str(battery_id), int(cycle_idx)))
 
 
 def lookup_builtin_trust(dataset: str | None, battery_id: str | None) -> dict | None:
@@ -924,14 +940,21 @@ def predict_and_explain_precomputed(dataset: str, battery_id: str, cycle_idx: in
     top_features = _tree_shap_top_features(shap_vector, shap_model,
                                             shap_cols + [f"fusion_{i}" for i in range(16)])
 
+    # RUL on the precomputed (browse) path: only for NASA/MIT batteries that the trust check does not flag (verdict["rul_hidden"] is False exactly then);
+    # the value was precomputed offline from the raw curve with the deployed joint model. Every other case stays "not available".
+    rul_value = None
+    if dataset in RUL_TRAINING_SOURCES and not verdict["rul_hidden"]:
+        rul_value = lookup_precomputed_rul(dataset, battery_id, cycle_idx)
+    rul_half = res["constants"]["rul_conformal_half_width"]
+
     return {
         "soh_pred": round(pred_soh, 1),
         "soh_conformal_lo": round(pred_soh - soh_half, 1),
         "soh_conformal_hi": round(pred_soh + soh_half, 1),
-        "rul_pred": None,
-        "rul_conformal_lo": None,
-        "rul_conformal_hi": None,
-        "rul_unavailable_reason": unavailable_msg,
+        "rul_pred": None if rul_value is None else max(0, round(rul_value)),
+        "rul_conformal_lo": None if rul_value is None else max(0, round(rul_value - rul_half)),
+        "rul_conformal_hi": None if rul_value is None else round(rul_value + rul_half),
+        "rul_unavailable_reason": unavailable_msg if rul_value is None else None,
         "top_features": top_features,
         "voltage_region": None,
         "voltage_region_error": unavailable_msg,
