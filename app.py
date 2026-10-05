@@ -391,7 +391,11 @@ def glossary_term(term: str) -> str:
 
 @st.cache_resource
 def get_resources():
-    return load_resources()
+    try:
+        return load_resources()
+    except FileNotFoundError as e:
+        st.warning(f"Models not available on Cloud: {e}. Showcase tab will work, others skipped.")
+        return None
 
 
 @st.cache_data(show_spinner=False)
@@ -1163,6 +1167,9 @@ def render_battery_comparison_section():
         return
 
     res = get_resources()
+    if res is None:
+        st.info("Battery comparison unavailable on Cloud (model files not deployed).")
+        return
     with st.spinner("Running live inference for both batteries..."):
         ctx_a = (predict_and_explain(cyc_a, res, baseline_his=base_his_a, dataset=ds_a, battery_id=bid_a) if mode_a == "live"
                   else predict_and_explain_precomputed(ds_a, bid_a, cyc_a, res))
@@ -3348,6 +3355,8 @@ def main():
 
     if selected_cycle is None and not using_precomputed:
         st.info("👈 Select a battery (or upload a CSV) in the sidebar to begin.")
+    elif get_resources() is None:
+        st.info("Live prediction unavailable on Cloud (model files not deployed). See the Showcase tab for precomputed replay.")
     else:
         if using_precomputed:
             st.header(f"{battery_id} — cycle {selected_cycle_idx}")
@@ -3501,10 +3510,19 @@ def main():
             render_explainability_tab(ctx)
     with tab_report:
         if tab_report.open and ctx is not None:
-            render_health_report_tab(ctx, dataset, battery_id, cycles)
+            if get_resources() is not None:
+                render_health_report_tab(ctx, dataset, battery_id, cycles)
+            else:
+                st.info("Health Report unavailable (requires model files not deployed on Cloud).")
+        elif tab_report.open:
+            st.info("Health Report unavailable (select a battery first).")
     with tab_stream:
         if tab_stream.open:
-            render_streaming_twin_tab(get_resources())
+            res = get_resources()
+            if res is not None:
+                render_streaming_twin_tab(res)
+            else:
+                st.info("Streaming Digital Twin unavailable on Cloud (model files not deployed). See the Showcase tab for precomputed replay.")
     with tab_world_model:
         if tab_world_model.open:
             render_world_model_tab()
